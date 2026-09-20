@@ -17,6 +17,10 @@ meant to avoid.
 
 Uniquely among these recipes, the runtime is linked statically on purpose:
 elsewhere -static-libstdc++ would be contamination, here it is the subject.
+The C runtime is not, though - a bare -static would have dragged mingw-w64's
+own startup code and libmingwex in beside it, which are neither libstdc++
+nor this recipe's business.
+
 Version coverage is limited to whatever GCC the host toolchain provides;
 spreading it would need other mingw-w64 GCC builds.
 """
@@ -24,9 +28,15 @@ spreading it would need other mingw-w64 GCC builds.
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
-_BUILD = ("{cxx} -std=c++17 -O2 -o libstdcxx_exerciser.exe "
+# A DLL, not an EXE. The exerciser exports one function and defines no main,
+# so an executable link has no entry point and mingw's startup object asks for
+# WinMain instead. It also drops the bare -static, which pulled mingw-w64's
+# own CRT, libmingwex and the startup code into a sample that is supposed to
+# be libstdc++: -static-libstdc++ -static-libgcc bring in the subject, and the
+# C runtime stays where it belongs, imported from msvcrt.
+_BUILD = ("{cxx} -std=c++17 -O2 -shared -o libstdcxx_exerciser.dll "
           "{repo}/scripts/corpus/exercisers/libstdcxx.cpp "
-          "-static-libstdc++ -static-libgcc -static")
+          "-static-libstdc++ -static-libgcc")
 
 
 RECIPES = {
@@ -41,17 +51,20 @@ RECIPES = {
         source=Source(url="https://zlib.net/fossils/zlib-1.3.1.tar.gz",
                       sha256="9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23"),
         build=[BuildStep(_BUILD)],
-        artifacts=[Artifact(path="libstdcxx_exerciser.exe",
-                            component="libstdcxx_exerciser.exe")],
+        artifacts=[Artifact(path="libstdcxx_exerciser.dll",
+                            component="libstdcxx_exerciser.dll")],
         toolchains=["mingw_x86"],
-        build_flags="-O2 -std=c++17, statically linked runtime",
+        build_flags="-O2 -std=c++17 -static-libstdc++ -static-libgcc",
         # The runtime is what is being collected, so the glue filter must not
         # strip it back out.
         drop_crt_glue=False,
         notes="Built from an exerciser that instantiates a broad slice of the "
-              "standard library. Most of the sample is libstdc++ and libsupc++ "
-              "code, but the link is -static with the CRT-glue filter disabled, "
-              "so mingw-w64 CRT startup code, libmingwex and libgcc helpers are "
-              "retained as well and are not libstdc++'s.",
+              "standard library; the exerciser only selects which functions "
+              "are pulled in, the code is libstdc++'s. libgcc helpers and the "
+              "unwinder are in the sample too and are not libstdc++'s "
+              "strictly, but they are the same GCC runtime and belong with "
+              "it. The glue filter is off, because the probe it measures "
+              "against is itself linked -static-libstdc++ and would delete "
+              "exactly the code this recipe exists to collect.",
     ),
 }
