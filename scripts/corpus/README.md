@@ -59,12 +59,16 @@ by name - and `_vscprintf`, behind which sit `_emu_vscprintf` and
 `_init_vscprintf`. That round removed 277 functions from 37 artefacts and
 took the baselines from 3054 to 3101 symbols on x86, 2857 to 2900 on x64.
 
-Together: **425 functions** of compiler runtime, and `validate --deep` fell
-from 97 shared PicHashes to 79. Run `refilter --dry-run` first to see the
-scale of any future round.
+Together: **425 functions** of compiler runtime, and the cross-family
+PicHashes `validate --deep` reports fell from **76 to 58**. Run
+`refilter --dry-run` first to see the scale of any future round.
 
-The 79 that remain are the measured floor rather than an outstanding defect.
-Two kinds, both checked by hand:
+Count those off the `FAIL PicHash` lines rather than off validate's total:
+the total also carries the 21 pre-existing problems in `data/MSVC` and
+`data/Golang` described below, which are not collisions at all.
+
+The 58 that remain are the measured floor rather than an outstanding defect.
+`scripts/explain_collisions.py` sorts them into the two kinds:
 
 * **C++ standard library template instantiations** - `std::vector<T>::_M_realloc_insert`,
   `std::_Rb_tree`, `std::basic_string` constructors. These compile to
@@ -77,6 +81,10 @@ Two kinds, both checked by hand:
   against `_LZ4_compress_limited`). Those are not the same function; they are
   small bodies that happen to hash alike, which is what the instruction floor
   bounds rather than eliminates.
+
+Today that split is 26 standard-library instantiations, 27 short-body
+coincidences and 5 hashes that carry no symbol in any family, with nothing
+in the leakage bucket.
 
 Patching in place rather than rebuilding is only sound if it produces what a
 rebuild would, and that was measured, not assumed: re-exporting a committed
