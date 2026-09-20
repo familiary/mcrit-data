@@ -61,6 +61,13 @@ class Artifact:
     # upstream project whose code should not be attributed to the host family.
     family: Optional[str] = None
     is_library: bool = True
+    # A position-independent code blob rather than a PE/ELF image. Raw bytes
+    # carry no container header, so the bitness has to be stated and the base
+    # address is arbitrary; SMDA disassembles it as a buffer, which is the
+    # same route the aPLib reports in this repository took.
+    is_blob: bool = False
+    bitness: Optional[int] = None
+    base_addr: int = 0x400000
 
 
 @dataclass

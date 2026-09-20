@@ -1,0 +1,98 @@
+{
+  "pe_to_shellcode_1.0_mingw13_x64_stub2_x64": {
+    "architecture": "x64",
+    "build_flags": "MSVC /O1 (as committed upstream)",
+    "built_artifact": "pe2shc/stub2/stub64.bin",
+    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "stub2_x64",
+    "family": "pe_to_shellcode",
+    "generated": "2026-09-20",
+    "license": "BSD-2-Clause",
+    "mcrit": "data/pe_to_shellcode/x64/mcrit/pe_to_shellcode_1.0_mingw13_x64_stub2_x64.mcrit",
+    "notes": "Compiled by upstream with MSVC and committed; not rebuilt here.",
+    "num_functions": 10,
+    "sha256": "3c9f0a1e2efc6d1c289548a8ad3f5ca4a4d52595895e96aadfe3671c4be721aa",
+    "smda": "data/pe_to_shellcode/x64/smda/pe_to_shellcode_1.0_mingw13_x64_stub2_x64.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "7d91fccb04b6230988115fb758033077fee13ae1",
+      "git_ref": "7d91fccb04b6230988115fb758033077fee13ae1",
+      "git_url": "https://github.com/hasherezade/pe_to_shellcode.git"
+    },
+    "toolchain": "mingw13_x64",
+    "upstream": "https://github.com/hasherezade/pe_to_shellcode",
+    "version": "1.0"
+  },
+  "pe_to_shellcode_1.0_mingw13_x86_stub2_x86": {
+    "architecture": "x86",
+    "build_flags": "MSVC /O1 (as committed upstream)",
+    "built_artifact": "pe2shc/stub2/stub32.bin",
+    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "stub2_x86",
+    "family": "pe_to_shellcode",
+    "generated": "2026-09-20",
+    "license": "BSD-2-Clause",
+    "mcrit": "data/pe_to_shellcode/x86/mcrit/pe_to_shellcode_1.0_mingw13_x86_stub2_x86.mcrit",
+    "notes": "Compiled by upstream with MSVC and committed; not rebuilt here.",
+    "num_functions": 9,
+    "sha256": "604e61de74ca9d25afcf0dc623ec87fa798d9864acd8fe3cc423e13ba45b3c25",
+    "smda": "data/pe_to_shellcode/x86/smda/pe_to_shellcode_1.0_mingw13_x86_stub2_x86.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "7d91fccb04b6230988115fb758033077fee13ae1",
+      "git_ref": "7d91fccb04b6230988115fb758033077fee13ae1",
+      "git_url": "https://github.com/hasherezade/pe_to_shellcode.git"
+    },
+    "toolchain": "mingw13_x64",
+    "upstream": "https://github.com/hasherezade/pe_to_shellcode",
+    "version": "1.0"
+  },
+  "pe_to_shellcode_1.2_mingw13_x64_stub2_x64": {
+    "architecture": "x64",
+    "build_flags": "MSVC /O1 (as committed upstream)",
+    "built_artifact": "pe2shc/stub2/stub64.bin",
+    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "stub2_x64",
+    "family": "pe_to_shellcode",
+    "generated": "2026-09-20",
+    "license": "BSD-2-Clause",
+    "mcrit": "data/pe_to_shellcode/x64/mcrit/pe_to_shellcode_1.2_mingw13_x64_stub2_x64.mcrit",
+    "notes": "Compiled by upstream with MSVC and committed; not rebuilt here.",
+    "num_functions": 10,
+    "sha256": "e79c91e8157fef862be8cbe80bdf57b87a541416717265f81f669d751fca4a3d",
+    "smda": "data/pe_to_shellcode/x64/smda/pe_to_shellcode_1.2_mingw13_x64_stub2_x64.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "0f606929eac1530a4fb39b9494a0d46f4c73eaed",
+      "git_ref": "0f606929eac1530a4fb39b9494a0d46f4c73eaed",
+      "git_url": "https://github.com/hasherezade/pe_to_shellcode.git"
+    },
+    "toolchain": "mingw13_x64",
+    "upstream": "https://github.com/hasherezade/pe_to_shellcode",
+    "version": "1.2"
+  },
+  "pe_to_shellcode_1.2_mingw13_x86_stub2_x86": {
+    "architecture": "x86",
+    "build_flags": "MSVC /O1 (as committed upstream)",
+    "built_artifact": "pe2shc/stub2/stub32.bin",
+    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "stub2_x86",
+    "family": "pe_to_shellcode",
+    "generated": "2026-09-20",
+    "license": "BSD-2-Clause",
+    "mcrit": "data/pe_to_shellcode/x86/mcrit/pe_to_shellcode_1.2_mingw13_x86_stub2_x86.mcrit",
+    "notes": "Compiled by upstream with MSVC and committed; not rebuilt here.",
+    "num_functions": 9,
+    "sha256": "9c703588c7d8e1e4f0e949da269eee353bba661eadcd3011c829dde778526acf",
+    "smda": "data/pe_to_shellcode/x86/smda/pe_to_shellcode_1.2_mingw13_x86_stub2_x86.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "0f606929eac1530a4fb39b9494a0d46f4c73eaed",
+      "git_ref": "0f606929eac1530a4fb39b9494a0d46f4c73eaed",
+      "git_url": "https://github.com/hasherezade/pe_to_shellcode.git"
+    },
+    "toolchain": "mingw13_x64",
+    "upstream": "https://github.com/hasherezade/pe_to_shellcode",
+    "version": "1.2"
+  }
+}

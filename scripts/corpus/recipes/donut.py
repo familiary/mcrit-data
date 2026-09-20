@@ -17,11 +17,24 @@ def _donut(version, git_ref):
         upstream="https://github.com/TheWover/donut",
         license="BSD-3-Clause",
         source=Source(git_url="https://github.com/TheWover/donut.git", git_ref=git_ref),
+        # The committed loader_exe_*.h are MSVC-compiled and are what ships in
+        # the release binaries and the donut-shellcode PyPI package, so they
+        # are the more representative artefact. They must be extracted before
+        # the build, because Makefile.mingw regenerates those same headers
+        # from its own GCC output and overwrites them.
         build=[
+            BuildStep("python3 {repo}/scripts/corpus/extract_blob.py carray "
+                      "loader_exe_x86.h donut_loader_x86.bin"),
+            BuildStep("python3 {repo}/scripts/corpus/extract_blob.py carray "
+                      "loader_exe_x64.h donut_loader_x64.bin"),
             BuildStep("make -f Makefile.mingw clean", allow_failure=True),
             BuildStep("make -f Makefile.mingw"),
         ],
         artifacts=[
+            Artifact(path="donut_loader_x86.bin", component="loader_msvc_x86",
+                     is_blob=True, bitness=32, is_library=False),
+            Artifact(path="donut_loader_x64.bin", component="loader_msvc_x64",
+                     is_blob=True, bitness=64, is_library=False),
             Artifact(path="donut.exe", component="donut.exe", is_library=False),
         ],
         # Makefile.mingw is not parameterised by toolchain; it selects both

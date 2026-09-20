@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 
+from . import config
 from .toolchain import get_toolchain
 
 
@@ -34,6 +35,9 @@ def run_build(recipe, toolchain_id, source_root, log_path):
     toolchain = get_toolchain(toolchain_id)
     placeholders = toolchain.placeholders()
     placeholders["source_root"] = source_root
+    # Lets a recipe call a helper that ships with this tooling, e.g. the
+    # shellcode extractor, without hardcoding where the repository lives.
+    placeholders["repo"] = config.REPO_ROOT
 
     env = dict(os.environ)
     env.update(toolchain.build_env())

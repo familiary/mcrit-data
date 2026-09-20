@@ -34,8 +34,11 @@ def _xz(version, git_ref):
 
 
 RECIPES = {
-    # The long-lived 5.2 series embedded in a great deal of shipped software.
-    "liblzma_5.2.5": _xz("5.2.5", "v5.2.5"),
+    # Last of the 5.4 series, and the newest release predating the 5.6.0
+    # tarball backdoor. 5.2.x would be the wider-deployed pick but its CMake
+    # support is incomplete - the resource compiler cannot find config.h - so
+    # covering it would mean the autotools path and an autogen.sh run.
+    "liblzma_5.4.7": _xz("5.4.7", "v5.4.7"),
     # Current stable; the 5.4 -> 5.6 jump added the multithreaded .xz decoder,
     # a substantial block of new code relative to 5.2.
     "liblzma_5.8.1": _xz("5.8.1", "v5.8.1"),

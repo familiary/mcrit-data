@@ -61,6 +61,9 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                     drop_crt_glue=recipe.drop_crt_glue,
                     filename=os.path.basename(binary_path),
                     min_named_ratio=recipe.min_named_ratio,
+                    is_blob=artifact.is_blob,
+                    bitness=artifact.bitness,
+                    base_addr=artifact.base_addr,
                 )
                 arch = "x86" if report.bitness == 32 else "x64"
                 slug = recipe.slug(toolchain_id, artifact, arch)

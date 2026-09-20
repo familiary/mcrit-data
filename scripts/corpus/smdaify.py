@@ -31,6 +31,29 @@ def disassemble(path):
     return Disassembler(smda_config).disassembleFile(path)
 
 
+def disassemble_blob(path, bitness, base_addr):
+    """Disassemble position-independent code that has no container header.
+
+    Shellcode carries no PE/ELF header to read the architecture and bitness
+    from, so both have to be supplied. This is the same route the aPLib
+    reports in this repository came through, and their metadata records it
+    with ``is_buffer: true``.
+    """
+    from smda.Disassembler import Disassembler
+    from smda.SmdaConfig import SmdaConfig
+
+    with open(path, "rb") as handle:
+        content = handle.read()
+    smda_config = SmdaConfig()
+    smda_config.CALCULATE_SCC = True
+    smda_config.CALCULATE_NESTING = True
+    # oep=0 tells SMDA the blob is entered at its first byte, which is how
+    # shellcode is invoked. Without it the recursive pass starts elsewhere and
+    # recovers a fraction of the code (79 of ~750 instructions on sRDI x64).
+    return Disassembler(smda_config).disassembleBuffer(
+        content, base_addr, bitness=bitness, architecture="intel", oep=0)
+
+
 def _recompute_statistics(report):
     """Recompute the statistics block after functions have been removed.
 
@@ -93,9 +116,21 @@ def _drop_crt_glue(report, toolchain_id):
 
 def smdaify(binary_path, family, version, component, is_library=True,
             toolchain_id=None, drop_crt_glue=True, filename=None,
-            min_named_ratio=0.5):
+            min_named_ratio=0.5, is_blob=False, bitness=None,
+            base_addr=0x400000):
     """Disassemble ``binary_path`` and label it the way the corpus expects."""
-    report = disassemble(binary_path)
+    if is_blob:
+        if bitness not in (32, 64):
+            raise DisassemblyError(
+                "%s: a raw code blob has no header to read bitness from, so the "
+                "recipe must state it" % binary_path)
+        report = disassemble_blob(binary_path, bitness, base_addr)
+        # Nothing in a stripped shellcode blob carries a symbol, and no
+        # compiler runtime was linked in, so neither pass applies.
+        min_named_ratio = 0
+        drop_crt_glue = False
+    else:
+        report = disassemble(binary_path)
     if report.status != "ok":
         raise DisassemblyError("SMDA did not finish cleanly for %s: %s"
                                % (binary_path, report.message))
@@ -118,7 +153,13 @@ def smdaify(binary_path, family, version, component, is_library=True,
                 "most likely stripped them - pass STRIP=true to the build system"
                 % (binary_path, named, report.num_functions, 100 * ratio))
 
-    if report.num_functions < config.MIN_USEFUL_FUNCTIONS:
+    if is_blob:
+        recovered = report.statistics.num_instructions if report.statistics else 0
+        if recovered < config.MIN_USEFUL_BLOB_INSTRUCTIONS:
+            raise DisassemblyError(
+                "%s yielded only %d instructions, which is too little to be "
+                "useful reference data" % (binary_path, recovered))
+    elif report.num_functions < config.MIN_USEFUL_FUNCTIONS:
         raise DisassemblyError(
             "%s yielded only %d functions, which is too little to be useful reference data"
             % (binary_path, report.num_functions))
@@ -128,4 +169,7 @@ def smdaify(binary_path, family, version, component, is_library=True,
     report.component = component or ""
     report.is_library = is_library
     report.filename = filename or os.path.basename(binary_path)
+    if is_blob:
+        # Records how the report was produced, matching the aPLib entries.
+        report.is_buffer = True
     return report, removed

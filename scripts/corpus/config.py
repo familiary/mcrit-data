@@ -26,6 +26,13 @@ MAX_COMMITTED_FILE_SIZE = 100 * 1024 * 1024
 # (empty stub, wrong artefact picked up) rather than usable reference data.
 MIN_USEFUL_FUNCTIONS = 8
 
+# Shellcode is judged on instructions instead. Hand-tuned position-independent
+# code legitimately has very few function boundaries - sRDI's loader compiles
+# to two functions covering ~730 instructions, because MSVC /O1 inlines the
+# rest - and a couple of large functions still carry perfectly good minhashes.
+# Counting functions there would reject usable data.
+MIN_USEFUL_BLOB_INSTRUCTIONS = 100
+
 
 def ensure_dirs():
     for path in (DOWNLOAD_DIR, SOURCE_DIR, ARTIFACT_DIR, REPORT_DIR):
