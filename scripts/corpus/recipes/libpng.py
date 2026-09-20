@@ -1,21 +1,28 @@
 """libpng - found in old packers, installers and image-handling tooling.
 
-libpng needs zlib, which is staged into the source tree first so the whole
-build stays inside one source root and needs nothing preinstalled.
+libpng needs zlib. That dependency is fetched through the recipe's own Source
+so its digest is verified and recorded, rather than curl'd inside a build
+step where neither would happen.
 
-Two picks: the 1.2 branch, which is structurally different from 1.6 and
-still turns up in older software, and the current 1.6 release. Intra-branch
-churn in 1.6 is very low, so covering several 1.6 point releases would be
-padding.
+libpng is linked against zlib's *import* library rather than libz.a. Linking
+the static one pulled a whole copy of zlib into libpng16.dll - 62 of its 500
+functions were zlib's, byte-identical to data/libzlib - so zlib code was
+being attributed to the libpng family and any sample containing plain zlib
+would have matched libpng. Importing instead leaves libpng16.dll containing
+only libpng.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
-_ZLIB = ("curl -sSL --fail -o zlib.tar.gz https://zlib.net/fossils/zlib-1.3.1.tar.gz "
-         "&& tar xf zlib.tar.gz && mv zlib-1.3.1 zlib "
-         "&& make -C zlib -f win32/Makefile.gcc PREFIX={prefix} STRIP=true "
-         "-j$(nproc) libz.a")
+_ZLIB_VERSION = "1.3.1"
+_ZLIB_SHA256 = "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23"
+
+# zlib1.dll plus its import library, so libpng imports zlib rather than
+# absorbing it.
+_STAGE_ZLIB = ("tar xf {zlib_archive} && mv zlib-%s zlib && "
+               "make -C zlib -f win32/Makefile.gcc PREFIX={prefix} STRIP=true "
+               "-j$(nproc) zlib1.dll" % _ZLIB_VERSION)
 
 _CMAKE = ("cmake -S . -B build-{arch} -DCMAKE_SYSTEM_NAME=Windows "
           "-DCMAKE_C_COMPILER={cc} -DCMAKE_RC_COMPILER={windres} "
@@ -23,7 +30,7 @@ _CMAKE = ("cmake -S . -B build-{arch} -DCMAKE_SYSTEM_NAME=Windows "
           "-DPNG_SHARED=ON -DPNG_STATIC=OFF -DPNG_TESTS=OFF -DPNG_TOOLS=OFF "
           # Absolute, or CMake records it as a make target and the link step
           # fails with "No rule to make target 'zlib/libz.a'".
-          "-DZLIB_INCLUDE_DIR=$PWD/zlib -DZLIB_LIBRARY=$PWD/zlib/libz.a")
+          "-DZLIB_INCLUDE_DIR=$PWD/zlib -DZLIB_LIBRARY=$PWD/zlib/libz.dll.a")
 
 
 RECIPES = {
@@ -34,8 +41,12 @@ RECIPES = {
         license="libpng-2.0",
         source=Source(git_url="https://github.com/pnggroup/libpng.git",
                       git_ref="v1.6.50"),
+        # zlib is pinned by digest and staged before configure.
+        extra_sources={"zlib_archive": Source(
+            url="https://zlib.net/fossils/zlib-%s.tar.gz" % _ZLIB_VERSION,
+            sha256=_ZLIB_SHA256)},
         build=[
-            BuildStep(_ZLIB),
+            BuildStep(_STAGE_ZLIB),
             BuildStep(_CMAKE),
             BuildStep("cmake --build build-{arch} -j$(nproc)"),
         ],
@@ -43,5 +54,7 @@ RECIPES = {
                             component="libpng16.dll")],
         toolchains=["mingw_x86", "mingw_x64"],
         build_flags="-O3 (CMake Release)",
+        notes="Imports zlib %s rather than linking it statically, so this "
+              "sample contains libpng code only." % _ZLIB_VERSION,
     ),
 }

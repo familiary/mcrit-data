@@ -8,7 +8,7 @@ import subprocess
 from . import config, package
 from .build import BuildError, check_requirements, run_build
 from .export import export_reports
-from .fetch import fetch_source
+from .fetch import fetch_dependency, fetch_source
 from .smdaify import smdaify
 from .toolchain import get_toolchain
 
@@ -39,11 +39,18 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
         LOGGER.info("=== %s ===", name)
         try:
             source_root, source_provenance = fetch_source(recipe.source, name)
+            dependencies = {}
+            dependency_provenance = {}
+            for key, dependency in recipe.extra_sources.items():
+                path, recorded = fetch_dependency(dependency, "%s-%s" % (name, key))
+                dependencies[key] = path
+                dependency_provenance[key] = recorded
             log_path = os.path.join(config.WORK_DIR, "%s.log" % name)
             if dry_run:
                 results.append({"name": name, "status": "fetched", "source": source_provenance})
                 continue
-            produced = run_build(recipe, toolchain_id, source_root, log_path)
+            produced = run_build(recipe, toolchain_id, source_root, log_path,
+                                 dependencies=dependencies)
         except (BuildError, RuntimeError, subprocess.CalledProcessError) as error:
             LOGGER.error("%s failed: %s", name, error)
             results.append({"name": name, "status": "failed", "error": str(error)})
@@ -84,9 +91,13 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                 "component": artifact.component,
                 "architecture": arch,
                 "is_blob": artifact.is_blob,
-                "toolchain": toolchain.id,
-                "compiler": _compiler_version(toolchain),
-                "build_flags": recipe.build_flags,
+                # A blob was compiled upstream, so the host toolchain describes
+                # only what ran the extraction and must not be recorded as the
+                # thing that produced the code.
+                "toolchain": None if artifact.is_blob else toolchain.id,
+                "compiler": ("MSVC (upstream, exact version unknown)"
+                             if artifact.is_blob else _compiler_version(toolchain)),
+                "build_flags": artifact.build_flags or recipe.build_flags,
                 "upstream": recipe.upstream,
                 "license": recipe.license,
                 "source": source_provenance,
@@ -100,6 +111,8 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
             }
             if removed:
                 entry["removed_runtime_functions"] = sorted(removed)
+            if dependency_provenance:
+                entry["dependencies"] = dependency_provenance
             if recipe.notes:
                 entry["notes"] = recipe.notes
             package.write_provenance(artifact.family or recipe.family, {slug: entry})

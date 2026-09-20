@@ -68,6 +68,10 @@ class Artifact:
     is_blob: bool = False
     bitness: Optional[int] = None
     base_addr: int = 0x400000
+    # Overrides the recipe-level build_flags, for a recipe whose artefacts
+    # were not all produced the same way - donut ships both a GCC-built
+    # generator and MSVC-compiled loader blobs.
+    build_flags: Optional[str] = None
 
 
 @dataclass
@@ -82,6 +86,12 @@ class Recipe:
     artifacts: List[Artifact]
     # Toolchain ids from corpus.toolchain, e.g. ["mingw13_x86", "mingw13_x64"].
     toolchains: List[str]
+    # Additional pinned sources a build needs, as {placeholder: Source}. Each
+    # is fetched and verified like the main source, and the placeholder
+    # expands to the downloaded archive (or checkout) path inside build steps.
+    # Dependencies that are statically linked into the artefact have to come
+    # through here, or their version and digest go unrecorded.
+    extra_sources: Dict[str, Source] = field(default_factory=dict)
     # Free-form provenance recorded next to the generated data.
     upstream: str = ""
     license: str = ""
@@ -113,7 +123,11 @@ class Recipe:
         from .toolchain import get_toolchain
 
         toolchain = get_toolchain(toolchain_id)
-        parts = [self.family, self.version, toolchain.short_id, arch or toolchain.arch]
+        # A blob was compiled by whoever committed it upstream. Naming it after
+        # the toolchain that merely ran the extraction would be a lie baked
+        # into the filename, so those are labelled by their real compiler.
+        producer = "msvc" if artifact.is_blob else toolchain.short_id
+        parts = [self.family, self.version, producer, arch or toolchain.arch]
         component = artifact.component or _basename_component(artifact.path)
         parts.append(component)
         return "_".join(p for p in parts if p)

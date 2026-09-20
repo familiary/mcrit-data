@@ -76,23 +76,30 @@ def _recompute_statistics(report):
     statistics.num_basic_blocks = sum(f.num_blocks for f in functions)
     statistics.num_instructions = sum(f.num_instructions for f in functions)
     statistics.num_api_calls = sum(len(f.apirefs) for f in functions)
-    # A call only still counts when the instruction making it also survived.
-    statistics.num_function_calls = sum(
-        len([source for source in f.inrefs if source in retained_instructions])
-        for f in functions
-    )
+    # SMDA counts every reference to a function start, without regard to where
+    # it came from. Filtering to surviving callers would be defensible on its
+    # own terms but would stop this field meaning the same thing it means in
+    # every report already in the corpus, so SMDA's definition is kept.
+    statistics.num_function_calls = sum(len(f.inrefs) for f in functions)
     statistics.num_recursive_functions = len(
         [f for f in functions
          if any(f.offset in targets for targets in f.outrefs.values())]
     )
     statistics.num_leaf_functions = len([f for f in functions if f.num_outrefs == 0])
-    # Thunks and failures are properties of the disassembly pass itself; the
-    # pass ran over the whole binary regardless of what was retained.
+    statistics.num_thunk_functions = len([f for f in functions if f.isApiThunk()])
+    # Failures are properties of the disassembly pass itself; the pass ran over
+    # the whole binary regardless of what was retained afterwards.
     previous = report.statistics
-    statistics.num_thunk_functions = previous.num_thunk_functions if previous else 0
     statistics.num_failed_functions = previous.num_failed_functions if previous else 0
     statistics.num_failed_instructions = previous.num_failed_instructions if previous else 0
     report.statistics = statistics
+
+    # binweight and the cached block/instruction totals are computed once at
+    # construction and would otherwise keep describing the pre-removal set;
+    # binweight in particular is copied straight into the .mcrit sample entry.
+    report.binweight = sum(f.binweight for f in functions)
+    report._num_blocks = statistics.num_basic_blocks
+    report._num_instructions = statistics.num_instructions
 
 
 def _drop_crt_glue(report, toolchain_id):
@@ -108,6 +115,9 @@ def _drop_crt_glue(report, toolchain_id):
         if is_glue(function, toolchain_id):
             removed.append(function.function_name)
             del report.xcfg[offset]
+    # getFunctions() memoises its sorted list, so it has to be dropped or
+    # everything downstream keeps seeing the functions just removed.
+    report._sorted_functions = None
     if removed:
         _recompute_statistics(report)
         LOGGER.info("dropped %d MinGW runtime functions: %s", len(removed), ", ".join(sorted(removed)))

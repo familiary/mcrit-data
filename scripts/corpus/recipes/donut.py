@@ -31,20 +31,24 @@ def _donut(version, git_ref):
             BuildStep("make -f Makefile.mingw"),
         ],
         artifacts=[
-            Artifact(path="donut_loader_x86.bin", component="loader_msvc_x86",
-                     is_blob=True, bitness=32, is_library=False),
-            Artifact(path="donut_loader_x64.bin", component="loader_msvc_x64",
-                     is_blob=True, bitness=64, is_library=False),
-            Artifact(path="donut.exe", component="donut.exe", is_library=False),
+            Artifact(path="donut_loader_x86.bin", component="loader_x86",
+                     is_blob=True, bitness=32,
+                     build_flags="MSVC -Zp8 -Gy -Os -O1 -GR- -EHa -Oi -GS- "
+                                 "(Makefile.msvc, as committed upstream)"),
+            Artifact(path="donut_loader_x64.bin", component="loader_x64",
+                     is_blob=True, bitness=64,
+                     build_flags="MSVC -Zp8 -Gy -Os -O1 -GR- -EHa -Oi -GS- "
+                                 "(Makefile.msvc, as committed upstream)"),
+            Artifact(path="donut.exe", component="donut.exe"),
         ],
         # Makefile.mingw is not parameterised by toolchain; it selects both
         # cross compilers internally, so it is run once.
         toolchains=["mingw_x64"],
-        build_flags="-O2 (Makefile.mingw default for the generator)",
+        build_flags="-O0 (Makefile.mingw passes no -O for the generator)",
         notes="Upstream also ships MSVC-compiled loader blobs in "
-              "loader/loader_exe_x86.h and loader_exe_x64.h; this recipe covers "
-              "the generator as built by GCC on Linux, which is what the "
-              "project's own Docker image and source builds produce.",
+              "loader_exe_x86.h and loader_exe_x64.h at the repository root; "
+              "this recipe covers both those and "
+              "the generator as built by GCC on Linux.",
     )
 
 

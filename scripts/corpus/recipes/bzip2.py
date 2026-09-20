@@ -29,10 +29,10 @@ def _bzip2(version, sha256):
                       "libbz2.def *.o -Wl,--out-implib,libbz2.dll.a"),
             BuildStep("{cc} -O2 -o bzip2.exe bzip2.c *.o"),
         ],
-        artifacts=[
-            Artifact(path="libbz2.dll", component="libbz2.dll"),
-            Artifact(path="bzip2.exe", component="bzip2.exe", is_library=False),
-        ],
+        # bzip2.exe statically links the same objects as libbz2.dll: the two
+        # share 45 of the DLL's 46 functions, so shipping both would add one
+        # function and 45 duplicates. The EXE is the superset and is kept.
+        artifacts=[Artifact(path="bzip2.exe", component="bzip2.exe")],
         toolchains=["mingw_x86", "mingw_x64"],
         build_flags="-O2",
     )

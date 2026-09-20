@@ -85,6 +85,14 @@ __declspec(dllexport) void probe_runtime(const char *text, double value)
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 """
 
+# The EXE variant of the same probe. MinGW's mainCRTStartup path pulls in a
+# different object set from DllMainCRTStartup - __getmainargs, _setargv,
+# __set_app_type, _gnu_exception_handler, exit, _cexit and friends - none of
+# which a DLL-only baseline ever sees.
+_PROBE_EXE = _PROBE_DLL.replace(
+    "BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }",
+    "int main(int argc, char **argv) { probe_runtime(argv[0], (double)argc); return 0; }")
+
 # Anything linked with g++ drags in libstdc++ and the GCC unwinder, which are
 # far larger than the C runtime and belong to the compiler just the same.
 _PROBE_CXX = """\
@@ -126,22 +134,38 @@ __declspec(dllexport) void probe_cxx_runtime(const char *text)
 """
 
 
+# C++ EXE probe: libstdc++ plus the EXE startup path together.
+_PROBE_CXX_EXE = _PROBE_CXX + """
+int main(int argc, char **argv) { probe_cxx_runtime(argv[0]); return argc - argc; }
+"""
+
+
 @functools.lru_cache(maxsize=None)
 def crt_glue(toolchain_id):
     """Map symbol name -> set of PicHashes, measured from a project-free DLL."""
     from .smdaify import disassemble
 
     toolchain = get_toolchain(toolchain_id)
-    probes = [(toolchain.cc, "probe.c", _PROBE_DLL, []),
-              (toolchain.cxx, "probe.cpp", _PROBE_CXX, ["-static-libstdc++", "-static-libgcc"])]
+    # EXE and DLL startup are entirely different object sets in MinGW
+    # (crt1.o/crtexe.c versus dllcrt1.o/crtdll.c), so a DLL-only baseline
+    # misses every mainCRTStartup-side function and leaves ~21 runtime
+    # functions in each EXE artefact. All four are measured and unioned.
+    probes = [
+        (toolchain.cc, "probe.c", _PROBE_DLL, ["-shared"]),
+        (toolchain.cxx, "probe.cpp", _PROBE_CXX,
+         ["-shared", "-static-libstdc++", "-static-libgcc"]),
+        (toolchain.cc, "probe_exe.c", _PROBE_EXE, []),
+        (toolchain.cxx, "probe_exe.cpp", _PROBE_CXX_EXE,
+         ["-static-libstdc++", "-static-libgcc"]),
+    ]
     glue = {}
     with tempfile.TemporaryDirectory() as tmp:
         for compiler, filename, code, extra in probes:
             source = os.path.join(tmp, filename)
-            target = os.path.join(tmp, filename + ".dll")
+            target = os.path.join(tmp, filename + ".out.exe")
             with open(source, "w") as handle:
                 handle.write(code)
-            subprocess.run([compiler, "-shared", "-O2", "-o", target, source] + extra,
+            subprocess.run([compiler, "-O2", "-o", target, source] + extra,
                            check=True, capture_output=True)
             for function in disassemble(target).getFunctions():
                 if not function.function_name:
@@ -149,7 +173,7 @@ def crt_glue(toolchain_id):
                 glue.setdefault(function.function_name, set()).add(function.pic_hash)
     # The probe's own function is the one thing here that is not runtime code.
     for name in ("_probe_runtime", "probe_runtime", "_compare", "compare",
-                 "_probe_cxx_runtime", "probe_cxx_runtime"):
+                 "_probe_cxx_runtime", "probe_cxx_runtime", "_main", "main"):
         glue.pop(name, None)
     return glue
 

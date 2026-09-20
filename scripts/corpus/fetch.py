@@ -46,6 +46,23 @@ def download(url, expected_sha256=None):
     raise FetchError("unreachable")
 
 
+def fetch_dependency(source, name):
+    """Materialise a statically linked dependency, returning (path, provenance).
+
+    A dependency whose code ends up inside the artefact has to be pinned and
+    recorded just like the main source; fetching one inside a build step with
+    curl would verify nothing and record nothing.
+
+    A tarball is returned as the verified archive path, for the recipe to
+    unpack where it wants; a git source is returned as a checkout directory.
+    """
+    if source.git_url:
+        return fetch_source(source, name)
+    archive, digest = download(source.url, source.sha256)
+    return archive, {"url": source.url, "sha256": digest,
+                     "archive": os.path.basename(archive)}
+
+
 def _extract(archive, destination):
     os.makedirs(destination, exist_ok=True)
     if archive.endswith(".zip"):

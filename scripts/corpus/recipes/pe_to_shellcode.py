@@ -28,9 +28,9 @@ def _pe2shc(version, git_ref):
         build=[],
         artifacts=[
             Artifact(path="pe2shc/stub2/stub32.bin", component="stub2_x86",
-                     is_blob=True, bitness=32, is_library=False),
+                     is_blob=True, bitness=32),
             Artifact(path="pe2shc/stub2/stub64.bin", component="stub2_x64",
-                     is_blob=True, bitness=64, is_library=False),
+                     is_blob=True, bitness=64),
         ],
         toolchains=["mingw_x64"],
         build_flags="MSVC /O1 (as committed upstream)",

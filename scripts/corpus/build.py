@@ -24,7 +24,7 @@ def check_requirements(recipe):
         raise BuildError("missing required tools: %s" % ", ".join(missing))
 
 
-def run_build(recipe, toolchain_id, source_root, log_path):
+def run_build(recipe, toolchain_id, source_root, log_path, dependencies=None):
     """Execute every build step, then confirm the declared artefacts exist.
 
     A step that exits non-zero aborts the build unless it is marked
@@ -38,6 +38,8 @@ def run_build(recipe, toolchain_id, source_root, log_path):
     # Lets a recipe call a helper that ships with this tooling, e.g. the
     # shellcode extractor, without hardcoding where the repository lives.
     placeholders["repo"] = config.REPO_ROOT
+    # Pinned dependency archives/checkouts, addressable by their recipe key.
+    placeholders.update(dependencies or {})
 
     env = dict(os.environ)
     env.update(toolchain.build_env())

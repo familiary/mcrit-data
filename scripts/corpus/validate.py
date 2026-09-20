@@ -65,6 +65,11 @@ def validate_mcrit_file(path):
                             % (path, sample["family"]))
         if not sample.get("version"):
             problems.append("%s: sample %s has no version recorded" % (path, sha256[:12]))
+        # Every sample in this corpus is reference material. MCRIT keys its
+        # library-only views and its library-versus-malware family counts off
+        # this flag, so a false here makes a reference sample count as malware.
+        if not sample.get("is_library"):
+            problems.append("%s: sample %s is not marked is_library" % (path, sha256[:12]))
         if sample.get("statistics", {}).get("num_functions", 0) < 1:
             problems.append("%s: sample %s reports no functions" % (path, sha256[:12]))
     return problems
@@ -118,6 +123,35 @@ def find_duplicate_samples(root=None):
             else:
                 seen[sha256] = path
     return duplicates
+
+
+def find_cross_family_functions(root=None, threshold=3):
+    """Report PicHashes that appear under more than one family name.
+
+    A handful of shared hashes is normal - libraries do vendor each other, and
+    tiny thunks collide. A hash under several unrelated families is the
+    signature of compiler runtime or a statically linked dependency leaking in
+    under the host project's name, which is what the glue filter exists to
+    prevent and what commit 0108024 had to fix by hand.
+    """
+    from mcrit.libs.utility import decompress_decode
+
+    by_hash = {}
+    for path in _iter_data_files(".mcrit", root):
+        with open(path, encoding="utf-8") as handle:
+            try:
+                export = json.load(handle)
+            except ValueError:
+                continue
+        compressed = export.get("content", {}).get("is_compressed")
+        for sha256, blob in export.get("function_entries", {}).items():
+            family = export.get("sample_entries", {}).get(sha256, {}).get("family")
+            entries = json.loads(decompress_decode(blob)) if compressed else blob
+            for entry in entries.values():
+                pichash = entry.get("pichash")
+                if pichash:
+                    by_hash.setdefault(pichash, set()).add(family)
+    return {h: sorted(f) for h, f in by_hash.items() if len(f) >= threshold}
 
 
 def validate_all(root=None, check_size=True):

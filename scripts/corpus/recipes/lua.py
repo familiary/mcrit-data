@@ -27,8 +27,7 @@ def _lua(version, sha256):
             BuildStep("make clean", allow_failure=True),
             BuildStep('make generic CC={cc} AR="{ar} rcu" RANLIB={ranlib}'),
         ],
-        artifacts=[Artifact(path="src/lua.exe", component="lua.exe",
-                            is_library=False)],
+        artifacts=[Artifact(path="src/lua.exe", component="lua.exe")],
         toolchains=["mingw_x86", "mingw_x64"],
         build_flags="-O2 (upstream default)",
     )

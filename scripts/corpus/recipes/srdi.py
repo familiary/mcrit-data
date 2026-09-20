@@ -32,9 +32,9 @@ def _srdi(version, git_ref):
         ],
         artifacts=[
             Artifact(path="rdi_x86.bin", component="ShellcodeRDI_x86",
-                     is_blob=True, bitness=32, is_library=False),
+                     is_blob=True, bitness=32),
             Artifact(path="rdi_x64.bin", component="ShellcodeRDI_x64",
-                     is_blob=True, bitness=64, is_library=False),
+                     is_blob=True, bitness=64),
         ],
         # The blobs are already compiled; the toolchain here only selects which
         # machine runs the extraction, and the architecture comes from the blob.

@@ -24,7 +24,7 @@ def _q3vm(version, git_ref):
             BuildStep("make q3vm TOOLCHAIN={prefix} LINK_FLAGS=-Wl,--gc-sections"),
         ],
         # mingw-w64 appends .exe even though the makefile links to "q3vm".
-        artifacts=[Artifact(path="q3vm.exe", component="q3vm.exe", is_library=False)],
+        artifacts=[Artifact(path="q3vm.exe", component="q3vm.exe")],
         toolchains=["mingw_x86", "mingw_x64"],
         build_flags="-O2 -std=c89 -fno-crossjumping (upstream Makefile)",
         notes="GCC builds use computed-goto dispatch; the in-tree MSVC solution "

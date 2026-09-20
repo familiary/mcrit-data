@@ -31,7 +31,7 @@ def _memory_module(version, git_ref):
         ],
         artifacts=[
             Artifact(path="example/DllLoader/DllLoader.exe",
-                     component="DllLoader.exe", is_library=False),
+                     component="DllLoader.exe"),
         ],
         toolchains=["mingw_x86", "mingw_x64"],
         build_flags="-O2 (upstream default is -O0)",
