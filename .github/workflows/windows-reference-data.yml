@@ -29,6 +29,13 @@ on:
 permissions:
   contents: read
 
+# Each push supersedes the last, and these jobs take minutes of runner time
+# building real software. Without this, a quick succession of fixes leaves
+# several runs racing on commits nobody is waiting for any more.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: windows-2022
