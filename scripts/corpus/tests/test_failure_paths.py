@@ -153,7 +153,7 @@ class AtomicWriteTest(TempCase):
         with mock.patch("os.replace", side_effect=KeyboardInterrupt):
             with self.assertRaises(KeyboardInterrupt):
                 package.write_provenance("Fam", {"b": {"license": "MIT"}})
-        self.assertEqual(sorted(json.load(open(first))), ["a"])
+        self.assertEqual(sorted(json.loads(_text(first))), ["a"])
         self.assertEqual(os.listdir(os.path.dirname(first)), ["provenance.json"])
 
 
@@ -448,9 +448,6 @@ class CrossFamilyFloorTest(TempCase):
         self.assertEqual(validate.find_cross_family_functions(self.data), {})
 
 
-if __name__ == "__main__":
-    unittest.main(verbosity=2)
-
 
 class RefilterTest(TempCase):
     """The refilter has to be all-or-nothing across three files.
@@ -523,7 +520,7 @@ class RefilterTest(TempCase):
              mock.patch("corpus.refilter.is_glue", return_value=True), \
              mock.patch("smda.common.SmdaReport.SmdaReport.fromDict",
                         return_value=report):
-            changes, failures = refilter.refilter()
+            changes, failures, _ = refilter.refilter()
         self.assertEqual(changes, [])
         self.assertEqual(len(failures), 1)
         self.assertIn("no .mcrit", failures[0])
@@ -543,7 +540,7 @@ class RefilterTest(TempCase):
                         return_value=["___divdi3"]), \
              mock.patch("corpus.refilter._write_export",
                         side_effect=OSError("disk full")):
-            changes, failures = refilter.refilter()
+            changes, failures, _ = refilter.refilter()
         self.assertEqual(changes, [])
         self.assertIn("archive untouched", failures[0])
         self.assertEqual(_read(archive), before_archive)
@@ -573,7 +570,7 @@ class RefilterTest(TempCase):
                         return_value=report), \
              mock.patch("corpus.refilter._corrected_archive",
                         return_value=["___divdi3"]):
-            changes, failures = refilter.refilter(dry_run=True)
+            changes, failures, _ = refilter.refilter(dry_run=True)
         self.assertEqual(changes, [(slug, ["___divdi3"])])
         self.assertEqual(failures, [])
         self.assertEqual(_read(archive), before_archive)
@@ -590,7 +587,7 @@ class RefilterTest(TempCase):
              mock.patch("corpus.refilter.is_glue", return_value=False), \
              mock.patch("smda.common.SmdaReport.SmdaReport.fromDict",
                         return_value=report):
-            changes, failures = refilter.refilter()
+            changes, failures, _ = refilter.refilter()
         self.assertEqual((changes, failures), ([], []))
         self.assertEqual(_read(archive), before)
 
@@ -609,7 +606,7 @@ class RefilterTest(TempCase):
                         return_value=["___divdi3"]), \
              mock.patch("corpus.refilter._write_export"), \
              mock.patch("corpus.refilter._write_archive"):
-            changes, failures = refilter.refilter()
+            changes, failures, _ = refilter.refilter()
         self.assertEqual(failures, [])
         with open(os.path.join(self.data, "Fam", "provenance.json"),
                   encoding="utf-8") as handle:
@@ -617,3 +614,381 @@ class RefilterTest(TempCase):
         self.assertEqual(entry["removed_runtime_functions"],
                          ["___divdi3", "__chkstk", "__scrt"])
         self.assertEqual(entry["num_functions"], 1)
+
+
+class CorrectedArchiveTest(TempCase):
+    """The removal itself, which the failure-path tests only ever mocked."""
+
+    def _pair(self):
+        """A stored dict and a parsed report that agree, with three functions."""
+        from smda.common.SmdaReport import SmdaReport
+
+        report_dict = {
+            "architecture": "intel", "base_addr": 0, "binary_size": 64,
+            "bitness": 32, "code_areas": [], "code_sections": [],
+            "confidence_threshold": 0.0, "disassembly_errors": {},
+            "execution_time": 0.0, "identified_alignment": 0,
+            "message": "", "metadata": {"family": "Fam", "version": "1.0",
+                                        "component": "c", "is_library": True,
+                                        "filename": "f.dll", "binweight": 0,
+                                        # A real report carries this populated;
+                                        # left unset it serialises as None the
+                                        # first time and {} thereafter, so the
+                                        # fixture would not be a fixed point.
+                                        "language": {"c/asm": 0.1}},
+            "oep": 0, "sha256": "aa", "md5": "bb", "sha1": "cc",
+            "smda_version": "4.8.0", "status": "ok", "timestamp": "2026-01-01T00-00-00",
+            "statistics": {}, "xcfg": {}, "xdata_refs_from": {},
+            "xdata_refs_to": {}, "xheader": "4d5a", "xmetadata": {},
+            "pe_header_hash": "",
+        }
+        # Field shapes taken from a committed report rather than invented:
+        # blocks are {address: [[address, bytes, mnemonic, operands], ...]},
+        # and fromDict rejects anything else.
+        for offset, name in ((4096, "keep"), (8192, "___divdi3"), (12288, "___moddi3")):
+            report_dict["xcfg"][str(offset)] = {
+                "offset": offset, "apirefs": {}, "blockrefs": {},
+                "inrefs": [], "outrefs": {}, "stringrefs": {},
+                "is_exported": False,
+                "metadata": {"function_name": name, "is_library": False,
+                             "binweight": 1.0, "confidence": 1.0,
+                             "nesting_depth": 0, "characteristics": "",
+                             "pic_hash": offset,
+                             "strongly_connected_components": [],
+                             "tfidf": None},
+                "blocks": {str(offset): [[offset, "c3", "ret", ""]]},
+            }
+        # What a committed .7z holds: SMDA's own serialisation, through
+        # JSON, so every field toDict() emits is present and every key is a
+        # string. Hand-building the dict omitted fields and made comparisons
+        # against the pipeline fail for reasons unrelated to the filter.
+        stored = json.loads(json.dumps(SmdaReport.fromDict(report_dict).toDict()))
+        return stored, SmdaReport.fromDict(stored)
+
+    def test_both_structures_lose_exactly_the_named_functions(self):
+        from corpus import refilter
+
+        report_dict, report = self._pair()
+        removed = refilter._corrected_archive(report_dict, report, [8192, 12288])
+        self.assertEqual(removed, ["___divdi3", "___moddi3"])
+        self.assertEqual(sorted(report_dict["xcfg"]), ["4096"])
+        self.assertEqual(sorted(report.xcfg), [4096])
+        self.assertEqual(report.num_functions, 1)
+
+    def test_the_stored_statistics_are_rewritten_to_match_what_survives(self):
+        from corpus import refilter
+
+        report_dict, report = self._pair()
+        refilter._corrected_archive(report_dict, report, [8192, 12288])
+        self.assertEqual(report_dict["statistics"], report.statistics.toDict())
+        self.assertEqual(report_dict["statistics"]["num_functions"], 1)
+        self.assertEqual(report_dict["metadata"]["binweight"], report.binweight)
+
+    def test_it_writes_what_the_pipelines_own_filter_would_write(self):
+        """The whole design rests on this: in place must equal a rebuild.
+
+        So it is checked the way the pipeline actually produces an archive -
+        smdaify._drop_crt_glue over the report, then the serialisation
+        package.stage_smda_archive performs - rather than by recomputing the
+        statistics twice and comparing them to themselves, which is what an
+        earlier version of this test did and could not fail.
+        """
+        from corpus import refilter, smdaify
+
+        report_dict, report = self._pair()
+        refilter._corrected_archive(report_dict, report, [8192, 12288])
+
+        # What the pipeline would do to the same report: is_glue picks the
+        # same two functions, and the archive is written from toDict().
+        _, rebuilt = self._pair()
+        glue = {"___divdi3", "___moddi3"}
+        with mock.patch("corpus.smdaify.is_glue",
+                        side_effect=lambda f, _: f.function_name in glue):
+            removed = smdaify._drop_crt_glue(rebuilt, "mingw13_x86")
+        self.assertEqual(sorted(removed), ["___divdi3", "___moddi3"])
+
+        mine = json.dumps(report_dict, indent=1, sort_keys=True)
+        theirs = json.dumps(rebuilt.toDict(), indent=1, sort_keys=True)
+        # Equal as data. This is the property the module depends on.
+        self.assertEqual(json.loads(mine), json.loads(theirs))
+        self.assertEqual(report_dict["statistics"],
+                         rebuilt.statistics.toDict())
+        self.assertEqual(report_dict["metadata"]["binweight"],
+                         rebuilt.binweight)
+
+    def test_the_two_serialisations_can_differ_in_key_order_only(self):
+        """Documents the one way refilter's archive is not byte-identical.
+
+        toDict() hands back integer xcfg keys, so sort_keys orders them
+        numerically; the stored dict's keys are the strings JSON returned, and
+        the same call orders them lexicographically. The docstring used to
+        claim byte-identity, which held only where every offset had the same
+        number of digits. Pinned here so the claim cannot drift back.
+        """
+        from corpus import refilter, smdaify
+
+        report_dict, report = self._pair()
+        # 4096 and 12288 differ in width, which is what exposes the ordering.
+        refilter._corrected_archive(report_dict, report, [8192])
+        _, rebuilt = self._pair()
+        glue = {"___divdi3"}
+        with mock.patch("corpus.smdaify.is_glue",
+                        side_effect=lambda f, _: f.function_name in glue):
+            smdaify._drop_crt_glue(rebuilt, "mingw13_x86")
+
+        self.assertEqual(list(report_dict["xcfg"]), ["4096", "12288"])
+        self.assertEqual([str(k) for k in rebuilt.toDict()["xcfg"]],
+                         ["4096", "12288"])
+        # Same content, and any byte difference is confined to ordering.
+        self.assertEqual(json.loads(json.dumps(report_dict, sort_keys=True)),
+                         json.loads(json.dumps(rebuilt.toDict(), sort_keys=True)))
+
+    def test_a_missing_offset_leaves_both_structures_untouched(self):
+        """The half-edit the earlier single-offset test could not see."""
+        from corpus import refilter
+
+        report_dict, report = self._pair()
+        del report_dict["xcfg"]["12288"]
+        with self.assertRaises(refilter.RefilterError):
+            # 8192 is present and would be deleted first by a loop that
+            # checked as it went; 12288 is the one that is missing.
+            refilter._corrected_archive(report_dict, report, [8192, 12288])
+        self.assertEqual(sorted(report_dict["xcfg"]), ["4096", "8192"])
+        self.assertEqual(sorted(report.xcfg), [4096, 8192, 12288])
+
+
+class MinhashGuardTest(TempCase):
+    """A re-export that lost its minhashes must never replace a good one."""
+
+    def _export(self, hashed, total):
+        entries = {str(i): {"minhash": "ff" if i < hashed else ""}
+                   for i in range(total)}
+        return json.dumps({"content": {"is_compressed": False},
+                           "function_entries": {"aa": entries}})
+
+    def test_an_export_with_no_minhashes_at_all_is_refused(self):
+        from corpus import refilter
+
+        committed = self.write(os.path.join(self.tmp, "s.mcrit"),
+                               self._export(80, 88))
+        with self.assertRaises(refilter.RefilterError) as caught:
+            refilter._assert_minhashes_survived(self._export(0, 87), committed,
+                                                ["___divdi3"])
+        self.assertIn("no minhashes at all", str(caught.exception))
+
+    def test_a_partial_hashing_failure_is_refused(self):
+        from corpus import refilter
+
+        committed = self.write(os.path.join(self.tmp, "s.mcrit"),
+                               self._export(80, 88))
+        with self.assertRaises(refilter.RefilterError):
+            refilter._assert_minhashes_survived(self._export(40, 87), committed,
+                                                ["___divdi3"])
+
+    def test_losing_only_the_removed_functions_is_accepted(self):
+        from corpus import refilter
+
+        committed = self.write(os.path.join(self.tmp, "s.mcrit"),
+                               self._export(80, 88))
+        refilter._assert_minhashes_survived(self._export(79, 87), committed,
+                                            ["___divdi3"])
+
+    def test_a_function_count_that_does_not_match_the_removal_is_refused(self):
+        from corpus import refilter
+
+        committed = self.write(os.path.join(self.tmp, "s.mcrit"),
+                               self._export(80, 88))
+        with self.assertRaises(refilter.RefilterError) as caught:
+            refilter._assert_minhashes_survived(self._export(80, 85), committed,
+                                                ["___divdi3"])
+        self.assertIn("does not describe the same sample", str(caught.exception))
+
+    def test_a_compressed_export_is_counted_the_same_as_a_plain_one(self):
+        """Every export this pipeline writes is compressed; only the plain
+        form was covered, so the branch that actually runs was untested."""
+        from corpus import refilter
+        from mcrit.libs.utility import compress_encode
+
+        entries = {"0": {"minhash": "ff"}, "1": {"minhash": ""}}
+        blob = compress_encode(json.dumps(entries))
+        text = json.dumps({"content": {"is_compressed": True},
+                           "function_entries": {"aa": blob}})
+        self.assertEqual(refilter._minhash_coverage(text), (2, 1))
+
+    def test_unhashed_functions_below_mcrits_size_floor_are_not_a_failure(self):
+        """Most artefacts here carry fewer minhashes than functions."""
+        from corpus import refilter
+
+        committed = self.write(os.path.join(self.tmp, "s.mcrit"),
+                               self._export(617, 703))
+        refilter._assert_minhashes_survived(self._export(617, 699), committed,
+                                            ["a", "b", "c", "d"])
+
+
+class BaselineGuardTest(TempCase):
+    def test_a_toolchain_this_host_lacks_is_not_a_failure(self):
+        from corpus import refilter
+
+        with mock.patch("corpus.toolchain.get_toolchain",
+                        side_effect=KeyError("unknown toolchain 'msvc143_x64'")):
+            with self.assertRaises(refilter.ToolchainUnavailable):
+                refilter._usable_baseline("msvc143_x64")
+
+    def test_an_empty_baseline_is_a_failure_rather_than_a_quiet_no_op(self):
+        from corpus import refilter
+
+        with mock.patch("corpus.toolchain.get_toolchain", return_value=object()), \
+             mock.patch("corpus.refilter.crt_glue", return_value={}):
+            with self.assertRaises(refilter.RefilterError) as caught:
+                refilter._usable_baseline("mingw13_x86")
+        self.assertIn("came back empty", str(caught.exception))
+        self.assertNotIsInstance(caught.exception, refilter.ToolchainUnavailable)
+
+
+class ArchiveFailureIsCaughtTest(TempCase):
+    """7z exits non-zero; that is a CalledProcessError, not an OSError."""
+
+    def setUp(self):
+        super().setUp()
+        patch = mock.patch.object(config, "REPO_ROOT", self.tmp)
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def test_a_7z_failure_is_reported_rather_than_escaping(self):
+        from corpus import refilter
+
+        slug = "Fam_1.0_mingw13_x86_f.dll"
+        smda = os.path.join("data", "Fam", "x86", "smda", "%s.7z" % slug)
+        mcrit = os.path.join("data", "Fam", "x86", "mcrit", "%s.mcrit" % slug)
+        archive = os.path.join(self.tmp, smda)
+        os.makedirs(os.path.dirname(archive), exist_ok=True)
+        member = self.write(os.path.join(self.tmp, "r.smda"),
+                            json.dumps({"xcfg": {}, "sha256": "aa"}))
+        subprocess.run(list(package.ARCHIVE_COMMAND) + [archive, member],
+                       check=True, stdout=subprocess.DEVNULL)
+        self.write(os.path.join(self.tmp, mcrit),
+                   json.dumps({"sample_entries": {"aa": {}}}))
+        self.write(os.path.join(self.data, "Fam", "provenance.json"),
+                   json.dumps({slug: {"toolchain": "mingw13_x86", "smda": smda,
+                                      "mcrit": mcrit, "num_functions": 2}}))
+        report = mock.Mock(xcfg={4096: mock.Mock(function_name="___divdi3")},
+                           num_functions=1)
+        with mock.patch("corpus.recipes.all_recipes", return_value={}), \
+             mock.patch("corpus.refilter._usable_baseline"), \
+             mock.patch("corpus.refilter.is_glue", return_value=True), \
+             mock.patch("smda.common.SmdaReport.SmdaReport.fromDict",
+                        return_value=report), \
+             mock.patch("corpus.refilter._corrected_archive",
+                        return_value=["___divdi3"]), \
+             mock.patch("corpus.refilter._write_export") as written, \
+             mock.patch("corpus.refilter._write_archive",
+                        side_effect=subprocess.CalledProcessError(2, "7z")):
+            # Must return, not raise: a traceback here abandons the rest of
+            # the corpus and prints no FAIL line at all.
+            changes, failures, _ = refilter.refilter()
+        self.assertEqual(changes, [])
+        self.assertEqual(len(failures), 1)
+        self.assertIn("could not be", failures[0])
+        # The message claims the export was rewritten and the archive was not.
+        # That has to be true, or it sends whoever reads it to the wrong file.
+        self.assertEqual(written.call_count, 1)
+
+    def test_an_unreadable_archive_costs_only_itself(self):
+        from corpus import refilter
+
+        slug = "Fam_1.0_mingw13_x86_f.dll"
+        smda = os.path.join("data", "Fam", "x86", "smda", "%s.7z" % slug)
+        self.write(os.path.join(self.tmp, smda), "not an archive")
+        self.write(os.path.join(self.data, "Fam", "provenance.json"),
+                   json.dumps({slug: {"toolchain": "mingw13_x86", "smda": smda,
+                                      "mcrit": "x"}}))
+        with mock.patch("corpus.recipes.all_recipes", return_value={}), \
+             mock.patch("corpus.refilter._usable_baseline"):
+            changes, failures, _ = refilter.refilter()
+        self.assertEqual(changes, [])
+        self.assertEqual(len(failures), 1)
+        self.assertIn("not read", failures[0])
+
+
+class MiscountedProvenanceTest(TempCase):
+    def setUp(self):
+        super().setUp()
+        patch = mock.patch.object(config, "REPO_ROOT", self.tmp)
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def _family(self, recorded, held):
+        mcrit = os.path.join("data", "Fam", "x86", "mcrit", "s.mcrit")
+        self.write(os.path.join(self.tmp, mcrit), json.dumps(
+            {"content": {"num_functions": held}, "sample_entries": {"aa": {}}}))
+        self.write(os.path.join(self.data, "Fam", "provenance.json"),
+                   json.dumps({"s": {"num_functions": recorded, "mcrit": mcrit}}))
+
+    def test_a_record_left_behind_by_an_interrupted_refilter_is_reported(self):
+        from corpus import validate
+
+        self._family(recorded=88, held=85)
+        problems = validate.find_miscounted_provenance(self.data)
+        self.assertEqual(len(problems), 1)
+        self.assertIn("says 88 functions", problems[0])
+
+    def test_agreement_is_silent(self):
+        from corpus import validate
+
+        self._family(recorded=85, held=85)
+        self.assertEqual(validate.find_miscounted_provenance(self.data), [])
+
+    def test_a_record_with_no_count_is_not_a_problem(self):
+        """The IDA-derived families carry no provenance at all, but a record
+        that simply omits the field must not be invented a count for."""
+        from corpus import validate
+
+        mcrit = os.path.join("data", "Fam", "x86", "mcrit", "s.mcrit")
+        self.write(os.path.join(self.tmp, mcrit), json.dumps(
+            {"content": {"num_functions": 85}, "sample_entries": {"aa": {}}}))
+        self.write(os.path.join(self.data, "Fam", "provenance.json"),
+                   json.dumps({"s": {"mcrit": mcrit}}))
+        self.assertEqual(validate.find_miscounted_provenance(self.data), [])
+
+    def test_a_multi_sample_export_is_not_judged_against_one_record(self):
+        """content.num_functions covers every sample in the file, so it
+        answers for a record only when the file holds one sample."""
+        from corpus import validate
+
+        mcrit = os.path.join("data", "Fam", "x86", "mcrit", "s.mcrit")
+        self.write(os.path.join(self.tmp, mcrit), json.dumps(
+            {"content": {"num_functions": 170},
+             "sample_entries": {"aa": {}, "bb": {}}}))
+        self.write(os.path.join(self.data, "Fam", "provenance.json"),
+                   json.dumps({"s": {"num_functions": 85, "mcrit": mcrit}}))
+        self.assertEqual(validate.find_miscounted_provenance(self.data), [])
+
+    def test_a_missing_export_is_left_to_find_stale_provenance(self):
+        from corpus import validate
+
+        self.write(os.path.join(self.data, "Fam", "provenance.json"),
+                   json.dumps({"s": {"num_functions": 85,
+                                     "mcrit": "data/Fam/x86/mcrit/gone.mcrit"}}))
+        self.assertEqual(validate.find_miscounted_provenance(self.data), [])
+
+
+class HiddenDirectoriesTest(TempCase):
+    def test_a_staging_directory_left_by_a_crash_is_not_walked(self):
+        from corpus import validate
+
+        good = os.path.join(self.data, "Fam", "x86", "mcrit", "s.mcrit")
+        self.write(good, "{}")
+        # .reprocess-* is the one that really occurs: _write_archive stages
+        # beside the committed archive and has to, because os.replace is
+        # atomic only within a filesystem. The prune fixes the symptom; the
+        # cause stays, so the name under test is the real one.
+        self.write(os.path.join(self.data, "Fam", "x86", "mcrit",
+                                ".reprocess-abc", "s.mcrit"), "{}")
+        self.write(os.path.join(self.data, "Fam", "x86", "smda",
+                                ".refilter-abc", "s.mcrit"), "{}")
+        self.assertEqual(list(validate._iter_data_files(".mcrit", self.data)),
+                         [good])
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

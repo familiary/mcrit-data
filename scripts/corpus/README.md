@@ -31,21 +31,79 @@ actually changes:
 
 `refilter` exists because the glue baseline is measured rather than
 hardcoded, which keeps it from rotting with the next compiler but also lets
-it improve after a family has been committed. It did: the x86 probe gained
-64-bit division, and with it libgcc's six division helpers, which 44 of the
-154 committed MinGW artefacts were carrying under a library's name - one to
-six functions each, 148 in all. They matter out of proportion to their count,
-because `__udivmoddi4` is the same code in every x86 binary that divides a
-64-bit integer, so they are most of what survives the instruction floor on
-`validate --deep`. Run `refilter --dry-run` first to see the scale.
+it improve after a family has been committed. It has twice, and both rounds
+were found the same way: by running `validate --deep` over the whole corpus
+and asking what the surviving cross-family PicHashes actually were.
+
+**Round one, libgcc's division helpers.** The x86 probe gained 64-bit
+division, and with it `__divdi3`, `__moddi3`, `__udivdi3`, `__umoddi3`,
+`__divmoddi4` and `__udivmoddi4` - which 44 of the 154 committed MinGW
+artefacts were carrying under a library's name, one to six functions each,
+148 in all. `__udivmoddi4` is the same code in every x86 binary that divides
+a 64-bit integer, and at 122 to 175 instructions each carries a full minhash
+(MCRIT's floor is ten), so they distorted fuzzy similarity as well as exact
+matching.
+
+**Round two, the builtin trap.** The probe already *called* `floor`, `sin`
+and `localtime`, and it made no difference: GCC knows them as builtins and at
+`-O2` folds the call or emits an instruction, so the libmingwex bodies were
+never linked into the probe and never entered the baseline - while a library
+calling `floor()` on a value the compiler cannot see does link it. `floor`
+was sitting in Lua, libpng, libxml2 *and in `data/MinGW` itself*, which is as
+plain a demonstration of misattribution as this corpus offers. Taking the
+functions' addresses and calling through a volatile pointer defeats the
+builtin. The same round added both `time_t` widths of `gmtime_s` and
+`localtime_s` - MinGW's default is 64-bit, so a probe calling only `gmtime_s`
+never links the 32-bit pair that libraries built against older headers call
+by name - and `_vscprintf`, behind which sit `_emu_vscprintf` and
+`_init_vscprintf`. That round removed 277 functions from 37 artefacts and
+took the baselines from 3054 to 3101 symbols on x86, 2857 to 2900 on x64.
+
+Together: **425 functions** of compiler runtime, and `validate --deep` fell
+from 97 shared PicHashes to 79. Run `refilter --dry-run` first to see the
+scale of any future round.
+
+The 79 that remain are the measured floor rather than an outstanding defect.
+Two kinds, both checked by hand:
+
+* **C++ standard library template instantiations** - `std::vector<T>::_M_realloc_insert`,
+  `std::_Rb_tree`, `std::basic_string` constructors. These compile to
+  identical code for any pointer-sized `T`, so every C++ project using a
+  `vector` genuinely contains those bytes. Calling that misattribution would
+  mean claiming libstdc++ header code cannot appear in a library that uses
+  libstdc++.
+* **Short-body coincidences** - ten- to seventeen-instruction functions whose
+  names differ entirely between the families sharing them (`_EVP_EncryptInit_ex`
+  against `_LZ4_compress_limited`). Those are not the same function; they are
+  small bodies that happen to hash alike, which is what the instruction floor
+  bounds rather than eliminates.
 
 Patching in place rather than rebuilding is only sound if it produces what a
-rebuild would, and that was measured, not assumed: reading a committed report
-back, re-exporting it and diffing against the committed `.mcrit` leaves one
-difference, the `timestamp` inside each `function_labels` entry that MCRIT
-writes when it records a label. Labels, minhashes, PicHashes, sample entries
-and the export config are identical - and a rebuild would move that timestamp
-too. `refilter` changes `num_functions`, so follow it with `readme --update`.
+rebuild would, and that was measured, not assumed: re-exporting a committed
+report and diffing against the committed `.mcrit` leaves one difference, the
+`timestamp` inside each `function_labels` entry that MCRIT writes when it
+records a label. Labels, minhashes, PicHashes, sample entries and the export
+config are identical, and a rebuild would move that timestamp too. The
+archive holds the same functions, statistics and binweight the pipeline's own
+filter would write, and parses equal - though not always byte for byte, since
+the pipeline sorts integer keys numerically and this sorts the stored string
+keys lexicographically. Nothing reads them by key order.
+
+What it does *not* reproduce is anything describing the disassembly, because
+it does not re-run SMDA: the report's `timestamp` and `execution_time`, and
+provenance's `generated`, `smda_version` and `compiler`, are left as the
+build wrote them. The binary is not rebuilt, so the recorded `sha256` stays
+correct. The README tables render version, toolchain, component and paths -
+never function counts - so nothing needs re-rendering afterwards.
+
+Three ways this command could quietly do nothing, or quietly do damage, are
+refused rather than reported as success: a baseline that comes back empty
+because the probes did not build; a toolchain this host cannot measure at all
+(the MSVC families on a Linux checkout, which is skipped rather than failed);
+and a re-export that lost minhashes the committed file had, which MCRIT's
+hashing job can do without raising. That last one would be unrecoverable - a
+second pass finds no glue in the already-filtered archive and skips - so it
+is checked before the committed file is touched.
 
 Generated files land in `data/<Family>/<arch>/{smda,mcrit}/` under the naming
 scheme the `libzlib` family already uses,

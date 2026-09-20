@@ -20,7 +20,14 @@ class ValidationError(RuntimeError):
 
 def _iter_data_files(suffix, root=None):
     root = root or config.DATA_DIR
-    for dirpath, _, filenames in os.walk(root):
+    for dirpath, dirnames, filenames in os.walk(root):
+        # Scratch directories the in-place writers stage in are named with a
+        # leading dot and removed on the way out, but a crash or an OOM kill
+        # leaves one behind. Walking into it would find a copy of an export
+        # that is also committed a level up, and report the sample as a
+        # duplicate of itself - a confusing failure whose cause is not in the
+        # message. Pruning dirnames in place is what stops os.walk descending.
+        dirnames[:] = [name for name in dirnames if not name.startswith(".")]
         for filename in sorted(filenames):
             if filename.endswith(suffix):
                 yield os.path.join(dirpath, filename)
@@ -242,6 +249,58 @@ def find_stale_provenance(root=None):
     return problems
 
 
+def find_miscounted_provenance(root=None):
+    """Report records whose num_functions disagrees with their own export.
+
+    The count is written once when an artefact is built and then again by
+    anything that removes functions from a committed report. corpus.refilter
+    writes all three files that describe an artefact - the .7z, the .mcrit and
+    this record - and the record goes last, so it is the one that can be left
+    behind: an interruption after the data has landed leaves a record claiming
+    a count the data no longer has. Re-running does not repair it, because the
+    filtered archive no longer contains the glue and the artefact is skipped,
+    so without a check the corpus keeps a description that quietly disagrees
+    with what it describes.
+
+    The export is read rather than the archive because it is plain JSON - no
+    7z, no SMDA - which keeps this cheap enough to run with the rest of
+    validate rather than behind --deep.
+    """
+    problems = []
+    for path in _iter_data_files("provenance.json", root):
+        with open(path, encoding="utf-8") as handle:
+            try:
+                records = json.load(handle)
+            except ValueError:
+                # find_stale_provenance already reports this file.
+                continue
+        for slug, entry in sorted(records.items()):
+            if not isinstance(entry, dict):
+                continue
+            recorded = entry.get("num_functions")
+            relative = entry.get("mcrit")
+            if recorded is None or not relative:
+                continue
+            export_path = os.path.join(config.REPO_ROOT, relative)
+            if not os.path.exists(export_path):
+                continue  # find_stale_provenance reports this
+            with open(export_path, encoding="utf-8") as handle:
+                try:
+                    export = json.load(handle)
+                except ValueError:
+                    continue  # validate_mcrit_file reports this
+            counts = (export.get("content") or {}).get("num_functions")
+            if counts is None or len(export.get("sample_entries") or {}) != 1:
+                # The count in content covers every sample in the file, so it
+                # only answers for a record when the file holds one sample.
+                continue
+            if counts != recorded:
+                problems.append(
+                    "%s: record %s says %d functions, %s holds %d"
+                    % (path, slug, recorded, relative, counts))
+    return problems
+
+
 def _recorded_paths(family_dir):
     """Every artefact path data/<family>/provenance.json accounts for.
 
@@ -384,6 +443,7 @@ def validate_all(root=None, check_size=True, deep=False, min_instructions=None):
         problems.append("duplicate sample %s in %s and %s" % (sha256[:12], first, second))
     problems.extend(find_unpaired_artifacts(root))
     problems.extend(find_stale_provenance(root))
+    problems.extend(find_miscounted_provenance(root))
     problems.extend(find_unrecorded_artifacts(root))
     if deep:
         for pichash, (families, size) in sorted(

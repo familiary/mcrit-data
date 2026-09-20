@@ -94,16 +94,24 @@ def main():
 
     if args.command == "refilter":
         from corpus.refilter import refilter
-        changes, failures = refilter(args.family or None, dry_run=args.dry_run)
+        changes, failures, examined = refilter(args.family or None,
+                                               dry_run=args.dry_run)
         for failure in failures:
             print("FAIL %s" % failure)
         dropped = sum(len(names) for _, names in changes)
         print("%d artefact(s) %s, %d function(s)"
               % (len(changes), "would change" if args.dry_run else "corrected",
                  dropped))
-        if changes and not args.dry_run:
-            print("provenance num_functions changed: re-render the README "
-                  "tables with `readme --update`")
+        # "0 corrected" means one of two opposite things: the corpus is already
+        # filtered, or nothing here could be opened - a mistyped family name, a
+        # host whose MinGW is a different major than the one the records name.
+        # Both printed the same line and exited 0, so the second read as the
+        # first. Only the count of artefacts actually examined separates them.
+        if not examined:
+            print("no artefact was examined: every family was skipped, either "
+                  "because it was not named correctly or because this host "
+                  "cannot measure the toolchain its records were built with")
+            return 1
         # Same reasoning as reprocess: an artefact corrected in one of the
         # three files that describe it and not the others is worse than one
         # left alone, so a partial run must not look like success.

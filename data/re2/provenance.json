@@ -144,7 +144,7 @@
     "license": "BSD-3-Clause",
     "mcrit": "data/re2/x86/mcrit/re2_2022-06-01_mingw13_x86_re2.dll.mcrit",
     "notes": "Standalone; no Abseil. Built with the posix-threads compiler, because the win32-threads <mutex> is unusable.",
-    "num_functions": 1071,
+    "num_functions": 1070,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -169,6 +169,7 @@
       "___d2b_D2A",
       "___decrement_D2A",
       "___diff_D2A",
+      "___divdi3",
       "___do_global_ctors",
       "___do_global_dtors",
       "___dyn_tls_dtor@12",
@@ -247,9 +248,6 @@
       "_vfprintf",
       "std::_Rb_tree<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>, std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const, int>, std::_Select1st<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const, int>>, std::less<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>, std::allocator<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const, int>>>::_M_erase(std::_Rb_tree_node<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const, int>>*) (.isra.0)",
       "void std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct<char const*>(char const*, char const*, std::forward_iterator_tag) (.isra.0)",
-      "void std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct<char const*>(char const*, char const*, std::forward_iterator_tag) (.isra.0)",
-      "void std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct<char*>(char*, char*, std::forward_iterator_tag) (.isra.0)",
-      "void std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct<char*>(char*, char*, std::forward_iterator_tag) (.isra.0)",
       "void std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct<char*>(char*, char*, std::forward_iterator_tag) (.isra.0)",
       "void std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>>::_M_realloc_insert<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&>(__gnu_cxx::__normal_iterator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>*, std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>>>>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> const&)"
     ],
@@ -418,7 +416,7 @@
     "license": "BSD-3-Clause",
     "mcrit": "data/re2/x86/mcrit/re2_2025-11-05_mingw13_x86_re2.dll.mcrit",
     "notes": "Upstream's own libre2 DLL. Abseil is built alongside as DLLs and only imported, so no Abseil object code is attributed to re2; what is present is the Abseil inline and template code RE2 instantiates, as it would be in any RE2 binary. Built with the posix-threads compiler.",
-    "num_functions": 959,
+    "num_functions": 958,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -443,6 +441,7 @@
       "___d2b_D2A",
       "___decrement_D2A",
       "___diff_D2A",
+      "___divdi3",
       "___do_global_ctors",
       "___do_global_dtors",
       "___dyn_tls_dtor@12",

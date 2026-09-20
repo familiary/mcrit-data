@@ -41,8 +41,19 @@ _PROBE_DLL = """\
 #include <math.h>
 #include <errno.h>
 #include <locale.h>
+#include <stdarg.h>
 
 static int compare(const void *a, const void *b) { return *(const int *)a - *(const int *)b; }
+
+static int probe_vscprintf(const char *format, ...)
+{
+    va_list arguments;
+    int needed;
+    va_start(arguments, format);
+    needed = _vscprintf(format, arguments);
+    va_end(arguments);
+    return needed;
+}
 
 __declspec(dllexport) void probe_runtime(const char *text, double value)
 {
@@ -109,6 +120,82 @@ __declspec(dllexport) void probe_runtime(const char *text, double value)
         sink64 += (long long)(uwide % (unsigned long long)(wide | 13));
         (void)sink64;
     }
+    /* Calling a math function is not enough to get its library
+       implementation into the baseline. GCC knows sin, cos, floor and the
+       rest as builtins and at -O2 folds a call on a known value, or emits an
+       SSE instruction, so the libmingwex body is never linked - while a
+       library that calls floor() on a value the compiler cannot see does
+       link it. That is why floor, sin, cos, frexp, modf and atan2 were found
+       sitting in Lua, LuaJIT, libpng, libxml2 and abseil at once, and in
+       data/MinGW as well, after the division helpers had been dealt with.
+
+       Taking the address defeats the builtin: the symbol has to exist to be
+       pointed at, and calling through a volatile pointer stops the optimiser
+       proving what it points to. sinl/cosl bring __sinl_internal and
+       __cosl_internal, which are their own functions in libmingwex. */
+    {
+        volatile double (*const dd[])(double) = {
+            sin, cos, tan, asin, acos, atan, sinh, cosh, tanh,
+            floor, ceil, sqrt, log, log10, exp, fabs, round, trunc,
+        };
+        volatile double (*const dd2[])(double, double) = {pow, fmod, atan2, hypot};
+        volatile long double (*const ld[])(long double) = {sinl, cosl, tanl, logl, expl};
+        double accumulated = 0.0;
+        size_t index;
+
+        for (index = 0; index < sizeof(dd) / sizeof(dd[0]); index++)
+            accumulated += dd[index](value);
+        for (index = 0; index < sizeof(dd2) / sizeof(dd2[0]); index++)
+            accumulated += dd2[index](value, 2.0);
+        for (index = 0; index < sizeof(ld) / sizeof(ld[0]); index++)
+            accumulated += (double)ld[index]((long double)value);
+        {
+            int exponent = 0;
+            double integral = 0.0;
+            accumulated += frexp(value, &exponent);
+            accumulated += modf(value, &integral);
+            accumulated += ldexp(value, 2);
+            accumulated += integral + exponent;
+        }
+        snprintf(buffer, sizeof(buffer), "%f", accumulated);
+    }
+    /* The reentrant time conversions are separate functions from localtime()
+       above, and are what a library actually calls: gmtime_s and
+       localtime_s carry _int_gmtime64_s and friends behind them. */
+    {
+        struct tm parts;
+        gmtime_s(&parts, &now);
+        localtime_s(&parts, &now);
+        gmtime(&now);
+        mktime(&parts);
+        difftime(now, now);
+    }
+    /* _vscprintf brings MinGW's emulation of it - _emu_vscprintf and
+       _init_vscprintf - which turned up under abseil, libevent and libuv.
+       It has to be reached through a real varargs function: handing it a
+       va_list that was never started is undefined behaviour, and a probe
+       that relies on undefined behaviour is not a measurement. */
+    probe_vscprintf("%s %f %d", text, value, 1);
+    /* Both time_t widths. MinGW's time_t is 64-bit by default, so a probe
+       that only calls gmtime_s never links the 32-bit pair - and the 32-bit
+       ones are exactly what turned up under abseil, libevent and mbedTLS,
+       because a library built against an older header calls them by name. */
+    {
+        __time32_t narrow = 0;
+        __time64_t wide64 = 0;
+        struct tm parts;
+
+        _gmtime32_s(&parts, &narrow);
+        _gmtime64_s(&parts, &wide64);
+        _localtime32_s(&parts, &narrow);
+        _localtime64_s(&parts, &wide64);
+        /* No _mktime32 here: it does not exist on the 64-bit target, and a
+           probe that fails to link measures nothing at all - it took the
+           whole x64 baseline from 2893 symbols down to 2812. mktime() is
+           called above and covers the same ground. */
+    }
+    /* __get_errno, likewise its own function rather than a macro. */
+    _get_errno(&(int){0});
     errno = 0;
 }
 
@@ -253,6 +340,7 @@ def crt_glue(toolchain_id):
                 glue.setdefault(function.function_name, set()).add(function.pic_hash)
     # The probe's own function is the one thing here that is not runtime code.
     for name in ("_probe_runtime", "probe_runtime", "_compare", "compare",
+                 "_probe_vscprintf", "probe_vscprintf",
                  "_probe_cxx_runtime", "probe_cxx_runtime", "_main", "main",
                  "_probe_atl", "probe_atl"):
         glue.pop(name, None)
