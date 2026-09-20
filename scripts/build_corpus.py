@@ -52,6 +52,14 @@ def main():
         help="recompute the statistics block of committed reports in place")
     again.add_argument("family", nargs="*", help="families, default all")
 
+    sift = subparsers.add_parser(
+        "refilter",
+        help="re-apply the compiler-runtime filter to committed reports, for "
+             "when the measured baseline has improved since they were built")
+    sift.add_argument("family", nargs="*", help="families, default all")
+    sift.add_argument("--dry-run", action="store_true",
+                      help="report what would be dropped without writing")
+
     table = subparsers.add_parser("readme", help="render README table rows for a family")
     table.add_argument("family", nargs="?", help="corpus family, e.g. libzlib")
     table.add_argument("--update", action="store_true",
@@ -81,6 +89,26 @@ def main():
         # success.
         if failures:
             print("%d report(s) could not be corrected" % len(failures))
+            return 1
+        return 0
+
+    if args.command == "refilter":
+        from corpus.refilter import refilter
+        changes, failures = refilter(args.family or None, dry_run=args.dry_run)
+        for failure in failures:
+            print("FAIL %s" % failure)
+        dropped = sum(len(names) for _, names in changes)
+        print("%d artefact(s) %s, %d function(s)"
+              % (len(changes), "would change" if args.dry_run else "corrected",
+                 dropped))
+        if changes and not args.dry_run:
+            print("provenance num_functions changed: re-render the README "
+                  "tables with `readme --update`")
+        # Same reasoning as reprocess: an artefact corrected in one of the
+        # three files that describe it and not the others is worse than one
+        # left alone, so a partial run must not look like success.
+        if failures:
+            print("%d artefact(s) could not be corrected" % len(failures))
             return 1
         return 0
 

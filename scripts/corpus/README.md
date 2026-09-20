@@ -12,18 +12,40 @@ describes, with the IDA stage replaced by a direct SMDA pass over PE images:
     python scripts/build_corpus.py build libzlib_1.3.1
     python scripts/build_corpus.py validate            # --deep also looks for
                                                        # PicHashes shared across
-                                                       # families
+                                                       # families, above a
+                                                       # --min-instructions floor
     python scripts/build_corpus.py readme --update     # rewrite the README
                                                        # tables from provenance
 
-Two more commands exist for correcting what is already committed, so that a
-change which alters no disassembly does not cost an hours-long rebuild. Both
-are idempotent, and neither is a substitute for regenerating when a build
+Three more commands exist for correcting what is already committed, so that a
+change which alters no disassembly does not cost an hours-long rebuild. All
+are idempotent, and none is a substitute for regenerating when a build
 actually changes:
 
     python scripts/build_corpus.py reprocess    # recompute the statistics block
+    python scripts/build_corpus.py refilter     # re-apply the runtime filter,
+                                                # for when the measured baseline
+                                                # has improved since a build
     python scripts/refresh_provenance.py        # re-derive licence, build flags,
                                                 # upstream and notes from recipes
+
+`refilter` exists because the glue baseline is measured rather than
+hardcoded, which keeps it from rotting with the next compiler but also lets
+it improve after a family has been committed. It did: the x86 probe gained
+64-bit division, and with it libgcc's six division helpers, which 44 of the
+154 committed MinGW artefacts were carrying under a library's name - one to
+six functions each, 148 in all. They matter out of proportion to their count,
+because `__udivmoddi4` is the same code in every x86 binary that divides a
+64-bit integer, so they are most of what survives the instruction floor on
+`validate --deep`. Run `refilter --dry-run` first to see the scale.
+
+Patching in place rather than rebuilding is only sound if it produces what a
+rebuild would, and that was measured, not assumed: reading a committed report
+back, re-exporting it and diffing against the committed `.mcrit` leaves one
+difference, the `timestamp` inside each `function_labels` entry that MCRIT
+writes when it records a label. Labels, minhashes, PicHashes, sample entries
+and the export config are identical - and a rebuild would move that timestamp
+too. `refilter` changes `num_functions`, so follow it with `readme --update`.
 
 Generated files land in `data/<Family>/<arch>/{smda,mcrit}/` under the naming
 scheme the `libzlib` family already uses,

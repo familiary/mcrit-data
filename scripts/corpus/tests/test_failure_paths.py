@@ -31,6 +31,11 @@ def _read(path):
         return handle.read()
 
 
+def _text(path):
+    with open(path, encoding="utf-8") as handle:
+        return handle.read()
+
+
 class TempCase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp(prefix="corpus-test-")
@@ -63,8 +68,8 @@ class CommitArtifactsTest(TempCase):
         old_smda, old_mcrit = self._existing_pair()
         archive, export = self._staged_pair()
         package.commit_artifacts("Fam", "x64", "s", archive, export)
-        self.assertEqual(open(old_smda).read(), "new-7z")
-        self.assertEqual(open(old_mcrit).read(), "new-mcrit")
+        self.assertEqual(_text(old_smda), "new-7z")
+        self.assertEqual(_text(old_mcrit), "new-mcrit")
         self.assertFalse(os.path.exists(archive))
         self.assertFalse(os.path.exists(export))
         self.assertEqual(self._strays(), [])
@@ -87,8 +92,8 @@ class CommitArtifactsTest(TempCase):
         with mock.patch("os.replace", flaky):
             with self.assertRaises(OSError):
                 package.commit_artifacts("Fam", "x64", "s", archive, export)
-        self.assertEqual(open(old_smda).read(), "old-7z")
-        self.assertEqual(open(old_mcrit).read(), "old-mcrit")
+        self.assertEqual(_text(old_smda), "old-7z")
+        self.assertEqual(_text(old_mcrit), "old-mcrit")
         self.assertEqual(self._strays(), [])
 
     def test_failure_with_no_previous_pair_leaves_nothing_behind(self):
@@ -117,8 +122,8 @@ class CommitArtifactsTest(TempCase):
         with mock.patch("shutil.copyfile", side_effect=OSError("no space")):
             with self.assertRaises(OSError):
                 package.commit_artifacts("Fam", "x64", "s", archive, export)
-        self.assertEqual(open(old_smda).read(), "old-7z")
-        self.assertEqual(open(old_mcrit).read(), "old-mcrit")
+        self.assertEqual(_text(old_smda), "old-7z")
+        self.assertEqual(_text(old_mcrit), "old-mcrit")
         self.assertEqual(self._strays(), [])
 
     def _strays(self):
@@ -134,13 +139,13 @@ class AtomicWriteTest(TempCase):
         with mock.patch("os.replace", side_effect=KeyboardInterrupt):
             with self.assertRaises(KeyboardInterrupt):
                 package.atomic_write_text(path, "replacement\n")
-        self.assertEqual(open(path).read(), "original\n")
+        self.assertEqual(_text(path), "original\n")
         self.assertEqual(os.listdir(self.data), ["provenance.json"])
 
     def test_replaces_on_success(self):
         path = self.write(os.path.join(self.data, "provenance.json"), "original\n")
         package.atomic_write_text(path, "replacement\n")
-        self.assertEqual(open(path).read(), "replacement\n")
+        self.assertEqual(_text(path), "replacement\n")
         self.assertEqual(os.listdir(self.data), ["provenance.json"])
 
     def test_write_provenance_survives_an_interrupted_rewrite(self):
@@ -445,3 +450,170 @@ class CrossFamilyFloorTest(TempCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class RefilterTest(TempCase):
+    """The refilter has to be all-or-nothing across three files.
+
+    An artefact is described by its .7z, its .mcrit and a provenance record,
+    and one of them corrected without the others is worse than none: the
+    corpus would then disagree with itself about which functions a sample
+    has, which is the defect the whole in-place-correction class exists to
+    avoid. These check the abandon paths rather than the happy one - the
+    happy one is what a pipeline run already covers.
+    """
+
+    def setUp(self):
+        super().setUp()
+        patch = mock.patch.object(config, "REPO_ROOT", self.tmp)
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def _artefact(self, removed=("__old",)):
+        """A committed .7z / .mcrit / provenance trio for one x86 artefact."""
+        slug = "Fam_1.0_mingw13_x86_f.dll"
+        smda = os.path.join("data", "Fam", "x86", "smda", "%s.7z" % slug)
+        mcrit = os.path.join("data", "Fam", "x86", "mcrit", "%s.mcrit" % slug)
+        archive = os.path.join(self.tmp, smda)
+        os.makedirs(os.path.dirname(archive), exist_ok=True)
+        member = self.write(os.path.join(self.tmp, "r.smda"), json.dumps(
+            {"xcfg": {"4096": {}, "8192": {}}, "statistics": {}, "sha256": "aa"}))
+        subprocess.run(list(package.ARCHIVE_COMMAND) + [archive, member],
+                       check=True, stdout=subprocess.DEVNULL)
+        self.write(os.path.join(self.tmp, mcrit), json.dumps(
+            {"sample_entries": {"aa": {}}}))
+        self.write(os.path.join(self.data, "Fam", "provenance.json"),
+                   json.dumps({slug: {
+                       "toolchain": "mingw13_x86", "smda": smda, "mcrit": mcrit,
+                       "num_functions": 2,
+                       "removed_runtime_functions": list(removed)}}))
+        return slug, archive, os.path.join(self.tmp, mcrit)
+
+    def test_a_family_whose_recipe_disables_the_filter_is_skipped(self):
+        from corpus import refilter
+
+        self._artefact()
+        recipe = mock.Mock(family="Fam", drop_crt_glue=False)
+        with mock.patch("corpus.recipes.all_recipes", return_value={"r": recipe}):
+            self.assertEqual(list(refilter._artifacts()), [])
+
+    def test_a_family_with_no_provenance_is_not_touched(self):
+        from corpus import refilter
+
+        os.makedirs(os.path.join(self.data, "Ida", "x86", "smda"))
+        with mock.patch("corpus.recipes.all_recipes", return_value={}):
+            self.assertEqual([f for f, _, _, _ in refilter._artifacts()], [])
+
+    def test_a_blob_has_no_toolchain_and_is_not_filtered(self):
+        from corpus import refilter
+
+        self.write(os.path.join(self.data, "Fam", "provenance.json"),
+                   json.dumps({"s": {"toolchain": None, "smda": "x"}}))
+        with mock.patch("corpus.recipes.all_recipes", return_value={}):
+            self.assertEqual(list(refilter._artifacts()), [])
+
+    def test_a_missing_export_leaves_the_archive_alone(self):
+        from corpus import refilter
+
+        slug, archive, mcrit = self._artefact()
+        os.remove(mcrit)
+        before = _read(archive)
+        report = mock.Mock(xcfg={4096: mock.Mock(function_name="___divdi3")})
+        with mock.patch("corpus.recipes.all_recipes", return_value={}), \
+             mock.patch("corpus.refilter.is_glue", return_value=True), \
+             mock.patch("smda.common.SmdaReport.SmdaReport.fromDict",
+                        return_value=report):
+            changes, failures = refilter.refilter()
+        self.assertEqual(changes, [])
+        self.assertEqual(len(failures), 1)
+        self.assertIn("no .mcrit", failures[0])
+        self.assertEqual(_read(archive), before)
+
+    def test_a_failing_export_leaves_both_committed_files_alone(self):
+        from corpus import refilter
+
+        slug, archive, mcrit = self._artefact()
+        before_archive, before_mcrit = _read(archive), _read(mcrit)
+        report = mock.Mock(xcfg={4096: mock.Mock(function_name="___divdi3")})
+        with mock.patch("corpus.recipes.all_recipes", return_value={}), \
+             mock.patch("corpus.refilter.is_glue", return_value=True), \
+             mock.patch("smda.common.SmdaReport.SmdaReport.fromDict",
+                        return_value=report), \
+             mock.patch("corpus.refilter._corrected_archive",
+                        return_value=["___divdi3"]), \
+             mock.patch("corpus.refilter._write_export",
+                        side_effect=OSError("disk full")):
+            changes, failures = refilter.refilter()
+        self.assertEqual(changes, [])
+        self.assertIn("archive untouched", failures[0])
+        self.assertEqual(_read(archive), before_archive)
+        self.assertEqual(_read(mcrit), before_mcrit)
+
+    def test_an_offset_missing_from_the_stored_report_is_refused(self):
+        from corpus import refilter
+
+        report_dict = {"xcfg": {"4096": {}}}
+        report = mock.Mock(xcfg={8192: mock.Mock(function_name="___divdi3")})
+        with self.assertRaises(refilter.RefilterError):
+            refilter._corrected_archive(report_dict, report, [8192])
+        # The stored report is not half-edited by the attempt.
+        self.assertEqual(report_dict["xcfg"], {"4096": {}})
+
+    def test_dry_run_writes_nothing(self):
+        from corpus import refilter
+
+        slug, archive, mcrit = self._artefact()
+        before_archive, before_mcrit = _read(archive), _read(mcrit)
+        provenance = os.path.join(self.data, "Fam", "provenance.json")
+        before_provenance = _read(provenance)
+        report = mock.Mock(xcfg={4096: mock.Mock(function_name="___divdi3")})
+        with mock.patch("corpus.recipes.all_recipes", return_value={}), \
+             mock.patch("corpus.refilter.is_glue", return_value=True), \
+             mock.patch("smda.common.SmdaReport.SmdaReport.fromDict",
+                        return_value=report), \
+             mock.patch("corpus.refilter._corrected_archive",
+                        return_value=["___divdi3"]):
+            changes, failures = refilter.refilter(dry_run=True)
+        self.assertEqual(changes, [(slug, ["___divdi3"])])
+        self.assertEqual(failures, [])
+        self.assertEqual(_read(archive), before_archive)
+        self.assertEqual(_read(mcrit), before_mcrit)
+        self.assertEqual(_read(provenance), before_provenance)
+
+    def test_nothing_to_drop_is_not_a_write(self):
+        from corpus import refilter
+
+        slug, archive, mcrit = self._artefact()
+        before = _read(archive)
+        report = mock.Mock(xcfg={4096: mock.Mock(function_name="f")})
+        with mock.patch("corpus.recipes.all_recipes", return_value={}), \
+             mock.patch("corpus.refilter.is_glue", return_value=False), \
+             mock.patch("smda.common.SmdaReport.SmdaReport.fromDict",
+                        return_value=report):
+            changes, failures = refilter.refilter()
+        self.assertEqual((changes, failures), ([], []))
+        self.assertEqual(_read(archive), before)
+
+    def test_newly_removed_names_are_merged_into_the_recorded_ones(self):
+        """The record lists what the filter has ever taken, not the last pass."""
+        from corpus import refilter
+
+        slug, archive, mcrit = self._artefact(removed=("__scrt", "__chkstk"))
+        report = mock.Mock(xcfg={4096: mock.Mock(function_name="___divdi3")},
+                           num_functions=1)
+        with mock.patch("corpus.recipes.all_recipes", return_value={}), \
+             mock.patch("corpus.refilter.is_glue", return_value=True), \
+             mock.patch("smda.common.SmdaReport.SmdaReport.fromDict",
+                        return_value=report), \
+             mock.patch("corpus.refilter._corrected_archive",
+                        return_value=["___divdi3"]), \
+             mock.patch("corpus.refilter._write_export"), \
+             mock.patch("corpus.refilter._write_archive"):
+            changes, failures = refilter.refilter()
+        self.assertEqual(failures, [])
+        with open(os.path.join(self.data, "Fam", "provenance.json"),
+                  encoding="utf-8") as handle:
+            entry = json.load(handle)[slug]
+        self.assertEqual(entry["removed_runtime_functions"],
+                         ["___divdi3", "__chkstk", "__scrt"])
+        self.assertEqual(entry["num_functions"], 1)
