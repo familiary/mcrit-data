@@ -83,7 +83,57 @@ jobs:
               "VX-API_2.01.015 BlackBone_2023-07-17"
             }
           }
-          python scripts/build_corpus.py build $requested.Split(" ")
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          python scripts/build_corpus.py build $requested.Split(" ") 2>&1 |
+            Tee-Object -FilePath build/build-output.txt
+          exit $LASTEXITCODE
+
+      # What the job uploads has to be what the job built. data/ arrives from
+      # the checkout already holding the committed artefacts of both
+      # architectures, so without this the artifact is indistinguishable from
+      # a harvest of whatever happened to be committed - and provenance.json
+      # is per-family, not per-architecture, so unpacking both artifacts would
+      # leave one leg's records overwritten by the other's copy of the file.
+      - name: Scope the artefacts to what this job produced
+        if: success()
+        shell: pwsh
+        run: |
+          $py = @'
+          import json, os, re, sys
+
+          produced = set(re.findall(r"^OK\s+(\S+)",
+                                    open("build/build-output.txt",
+                                         encoding="utf-8", errors="replace").read(),
+                                    re.M))
+          if not produced:
+              sys.exit("the build reported no artefacts; nothing to upload")
+          print("produced this run: %s" % ", ".join(sorted(produced)))
+
+          arch = sys.argv[1]
+          for family in ("VX-API", "BlackBone", "SysWhispers"):
+              root = os.path.join("data", family)
+              path = os.path.join(root, "provenance.json")
+              if not os.path.exists(path):
+                  continue
+              with open(path, encoding="utf-8") as handle:
+                  records = json.load(handle)
+              mine = {k: v for k, v in records.items() if k in produced}
+              # provenance.json stays, pruned, because Validate reads it - but
+              # it is not what gets uploaded. The artifact carries the
+              # architecture-named copy instead, so unpacking both artifacts
+              # cannot leave one leg's records overwritten by the other's.
+              for name in ("provenance.json", "provenance.%s.json" % arch):
+                  with open(os.path.join(root, name), "w",
+                            encoding="utf-8") as handle:
+                      json.dump(mine, handle, indent=2, sort_keys=True)
+                      handle.write("\n")
+              for dirpath, _, names in os.walk(root):
+                  for name in names:
+                      stem = name.rsplit(".", 1)[0]
+                      if name.endswith((".7z", ".mcrit")) and stem not in produced:
+                          os.remove(os.path.join(dirpath, name))
+          '@
+          $py | python - "${{ matrix.arch }}"
 
       # Build output goes to build/*.log rather than stdout, so a failure
       # otherwise shows only which command failed and not why. Surfacing the
@@ -101,9 +151,11 @@ jobs:
 
       # Scoped to the families this workflow produces. Validating all of data/
       # would also re-report the twelve known defects in the pre-existing MSVC
-      # entries, so the job could never go green on its own work.
+      # entries, so the job could never go green on its own work. By this
+      # point the tree holds only what this job built, so this validates the
+      # run's own output rather than whatever the checkout carried.
       - name: Validate
-        if: always()
+        if: success()
         shell: pwsh
         run: |
           $families = "VX-API", "BlackBone", "SysWhispers"
@@ -114,27 +166,22 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "validation failed for $family" }
           }
 
-      # Also scoped: data/ holds the whole committed corpus, and uploading it
-      # wholesale pushes gigabytes of unchanged files through every run.
-      #
-      # Scoped to this job's own architecture too. The checkout already carries
-      # the committed data for the other one, so an unscoped upload put x64
-      # files in the x86 artifact - and whichever artifact an importer unpacked
-      # last then overwrote the architecture it had no business touching with
-      # whatever happened to be committed at checkout time.
+      # Only on success, and only the files the previous step left behind. An
+      # always() upload of a red run published the committed artefacts of
+      # whichever recipe had just failed, indistinguishable from freshly built
+      # ones - a maintainer harvesting that would have re-committed bytes
+      # nothing regenerated.
       - name: Upload reference data
-        if: always()
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: reference-data-${{ matrix.arch }}
           path: |
-            data/VX-API/provenance.json
-            data/VX-API/${{ matrix.arch }}/**
-            data/BlackBone/provenance.json
-            data/BlackBone/${{ matrix.arch }}/**
-            data/SysWhispers/provenance.json
-            data/SysWhispers/${{ matrix.arch }}/**
-          if-no-files-found: warn
+            data/VX-API/**
+            data/BlackBone/**
+            data/SysWhispers/**
+            !data/*/provenance.json
+          if-no-files-found: error
 
       - name: Upload build logs
         if: failure()

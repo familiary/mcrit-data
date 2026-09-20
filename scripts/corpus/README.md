@@ -86,12 +86,23 @@ with the build time; the MinGW side gets the same property from `7z
 -mtm=off -mtc=off -mta=off`, since the stored file times were otherwise the
 only thing that changed when a report did not.
 
-The `.smda` reports still differ between runs, in exactly two fields:
-`timestamp` and `execution_time`, which SMDA writes about its own run. Every
-report already in this repository carries those too, so they are left alone.
-What this means in practice is that a regeneration which changes no
-disassembly produces a diff in those two fields and nowhere else - small
-enough to read, which is the point.
+What is *not* reproducible, stated precisely, because the useful version of
+this claim is the narrow one:
+
+* The `.smda` report's own content differs between runs in exactly two
+  fields, `timestamp` and `execution_time`, which SMDA writes about its own
+  run. Every report already in this repository carries those, so they stay.
+* Those fields sit inside the compressed payload, so the `.7z` is a wholly
+  different blob even though the report is otherwise identical. git records
+  it as a binary change, not a two-line diff.
+* The `.mcrit` carries a third timestamp of its own, in the MCRIT sample
+  entry.
+* `provenance.json` records a `generated` date, which changes when a
+  regeneration crosses a day boundary.
+
+So: the *binaries* are reproducible and their recorded digests are stable,
+which is what provenance rests on. The files around them are not
+byte-stable, and a regeneration of unchanged data still shows up as a diff.
 
 ## A gap in the existing MinGW coverage
 
