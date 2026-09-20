@@ -164,6 +164,7 @@ scripts/*
 !scripts/build_tables.py
 !scripts/build_corpus.py
 !scripts/refresh_provenance.py
+!scripts/explain_collisions.py
 !scripts/requirements.txt
 !scripts/corpus/
 
