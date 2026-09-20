@@ -71,6 +71,20 @@ jobs:
           }
           python scripts/build_corpus.py build $requested.Split(" ")
 
+      # Build output goes to build/*.log rather than stdout, so a failure
+      # otherwise shows only which command failed and not why. Surfacing the
+      # tail of each log here is what makes a red run diagnosable from the
+      # job page alone.
+      - name: Show build logs
+        if: failure()
+        shell: pwsh
+        run: |
+          Get-ChildItem build/*.log -ErrorAction SilentlyContinue | ForEach-Object {
+            Write-Host "::group::$($_.Name)"
+            Get-Content $_.FullName -Tail 60
+            Write-Host "::endgroup::"
+          }
+
       # Scoped to the families this workflow produces. Validating all of data/
       # would also re-report the twelve known defects in the pre-existing MSVC
       # entries, so the job could never go green on its own work.

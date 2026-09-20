@@ -72,6 +72,11 @@ class Artifact:
     # were not all produced the same way - donut ships both a GCC-built
     # generator and MSVC-compiled loader blobs.
     build_flags: Optional[str] = None
+    # Path to a PDB, relative to the source root. MSVC keeps symbols in a
+    # separate PDB rather than in a COFF symbol table the way MinGW does, so
+    # without one SMDA can only name exported functions - a VX-API DLL that
+    # exports nothing came back with 1 of 4147 functions named.
+    pdb: Optional[str] = None
 
 
 @dataclass

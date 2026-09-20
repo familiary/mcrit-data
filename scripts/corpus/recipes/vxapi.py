@@ -16,14 +16,18 @@ calls - the point here is coverage, not a minimal binary.
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
-_COMPILE = ('for %f in (VX-API\\*.cpp) do @cl /nologo /c /O2 /std:c++20 /EHsc '
-            '/DUNICODE /D_UNICODE /IVX-API /Fo:obj\\ "%f" 2>nul & rem')
+# /Zi plus a shared /Fd writes debug info for every translation unit into one
+# PDB, which is where MSVC keeps symbols; without it SMDA can only name
+# exported functions and this DLL exports none.
+_COMPILE = ('for %f in (VX-API\\*.cpp) do @cl /nologo /c /O2 /Zi /std:c++20 /EHsc '
+            '/DUNICODE /D_UNICODE /IVX-API /Fdvxapi.pdb /Fo:obj\\ "%f" 2>nul & rem')
 
 # /FORCE:UNRESOLVED is load-bearing. The sources needing ATL or SEH are
 # skipped, so anything referencing them is left unresolved and the link would
 # otherwise stop at LNK1120. What is wanted here is the compiled function
 # bodies, not a loadable DLL, and /OPT:NOREF keeps routines nothing calls.
-_LINK = ('link /nologo /DLL /OPT:NOREF /FORCE:UNRESOLVED /OUT:vxapi.dll obj\\*.obj '
+_LINK = ('link /nologo /DLL /DEBUG /OPT:NOREF /FORCE:UNRESOLVED '
+         '/PDB:vxapi.pdb /OUT:vxapi.dll obj\\*.obj '
          'ws2_32.lib dnsapi.lib iphlpapi.lib crypt32.lib dbghelp.lib '
          'wtsapi32.lib urlmon.lib powrprof.lib imm32.lib comctl32.lib '
          'wevtapi.lib setupapi.lib wbemuuid.lib shlwapi.lib advapi32.lib '
@@ -47,9 +51,10 @@ RECIPES = {
             BuildStep(_COMPILE, allow_failure=True),
             BuildStep(_LINK),
         ],
-        artifacts=[Artifact(path="vxapi.dll", component="vxapi.dll")],
+        artifacts=[Artifact(path="vxapi.dll", component="vxapi.dll",
+                            pdb="vxapi.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
-        build_flags="/O2 /std:c++20",
+        build_flags="/O2 /Zi /std:c++20",
         notes="A small number of sources need ATL or __try/__except and are "
               "skipped; the rest of the collection is present. The link uses "
               "/FORCE:UNRESOLVED because references into the skipped sources "

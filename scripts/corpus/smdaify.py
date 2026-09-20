@@ -21,14 +21,14 @@ class DisassemblyError(RuntimeError):
     pass
 
 
-def disassemble(path):
+def disassemble(path, pdb_path=""):
     from smda.Disassembler import Disassembler
     from smda.SmdaConfig import SmdaConfig
 
     smda_config = SmdaConfig()
     smda_config.CALCULATE_SCC = True
     smda_config.CALCULATE_NESTING = True
-    return Disassembler(smda_config).disassembleFile(path)
+    return Disassembler(smda_config).disassembleFile(path, pdb_path=pdb_path)
 
 
 def disassemble_blob(path, bitness, base_addr):
@@ -127,7 +127,7 @@ def _drop_crt_glue(report, toolchain_id):
 def smdaify(binary_path, family, version, component, is_library=True,
             toolchain_id=None, drop_crt_glue=True, filename=None,
             min_named_ratio=0.5, is_blob=False, bitness=None,
-            base_addr=0x400000):
+            base_addr=0x400000, pdb_path=""):
     """Disassemble ``binary_path`` and label it the way the corpus expects."""
     if is_blob:
         if bitness not in (32, 64):
@@ -140,7 +140,7 @@ def smdaify(binary_path, family, version, component, is_library=True,
         min_named_ratio = 0
         drop_crt_glue = False
     else:
-        report = disassemble(binary_path)
+        report = disassemble(binary_path, pdb_path=pdb_path)
     if report.status != "ok":
         raise DisassemblyError("SMDA did not finish cleanly for %s: %s"
                                % (binary_path, report.message))

@@ -83,6 +83,8 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                     is_blob=artifact.is_blob,
                     bitness=artifact.bitness,
                     base_addr=artifact.base_addr,
+                    pdb_path=(os.path.join(source_root, artifact.pdb)
+                              if artifact.pdb else ""),
                 )
                 arch = "x86" if report.bitness == 32 else "x64"
                 slug = recipe.slug(toolchain_id, artifact, arch)
