@@ -9,16 +9,55 @@ so they are generated from the same provenance records the pipeline writes.
 
 import json
 import os
+import re
 
 from . import config
 
 
-HEADER = ("| Library  | Version | Compiler | MCRIT | SMDA |\n"
-          "| -------- | ------- | -------- | ----- | ---- |")
+HEADER = ("| Name     | Version | Compiler | MCRIT | SMDA |\n"
+          "|----------|---------|----------|-------|------|")
+
+# A generated table is fenced in the README so it can be rewritten in place.
+# The comments do not render. Only tables that come wholly from a
+# provenance.json are fenced: libzlib and aPLib carry a Date column this
+# tooling has no source for, and stay hand-maintained.
+FENCE = re.compile(
+    r"(?P<open><!-- generated: (?P<family>[A-Za-z0-9_.+-]+) -->\n)"
+    r".*?"
+    r"(?P<close>\n<!-- /generated -->)",
+    re.DOTALL)
 
 
 def _link(label, path):
     return "[%s](%s)" % (label, path)
+
+
+def update_readme(path=None):
+    """Rewrite every fenced table in the README from the provenance records.
+
+    Returns the families whose block changed. A fence naming a family with no
+    provenance is an error rather than a no-op: it means the data it
+    describes has gone, and leaving the stale table in place is exactly the
+    failure this is here to prevent.
+    """
+    path = path or os.path.join(config.REPO_ROOT, "README.md")
+    with open(path, encoding="utf-8") as handle:
+        original = handle.read()
+
+    changed = []
+
+    def _replace(match):
+        family = match.group("family")
+        new = match.group("open") + render_family(family) + match.group("close")
+        if new != match.group(0):
+            changed.append(family)
+        return new
+
+    updated = FENCE.sub(_replace, original)
+    if updated != original:
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(updated)
+    return changed
 
 
 def render_family(family):

@@ -230,105 +230,126 @@ The MinGW-w64 rows were built from unmodified upstream release tarballs with `sc
 bzip2 is a Burrows-Wheeler compressor found in installers and archivers for over two decades.  
 Generated with `scripts/build_corpus.py`; see `data/bzip2/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: bzip2 -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | bzip2 | 1.0.8 | MinGW-w64 GCC 13 | [x86 PE](data/bzip2/x86/mcrit/bzip2_1.0.8_mingw13_x86_bzip2.exe.mcrit) / [x64 PE](data/bzip2/x64/mcrit/bzip2_1.0.8_mingw13_x64_bzip2.exe.mcrit) | [x86 PE](data/bzip2/x86/smda/bzip2_1.0.8_mingw13_x86_bzip2.exe.7z) / [x64 PE](data/bzip2/x64/smda/bzip2_1.0.8_mingw13_x64_bzip2.exe.7z) |
 | bzip2 | 1.0.8 | MinGW-w64 GCC 13 | [x86 PE](data/bzip2/x86/mcrit/bzip2_1.0.8_mingw13_x86_libbz2.dll.mcrit) / [x64 PE](data/bzip2/x64/mcrit/bzip2_1.0.8_mingw13_x64_libbz2.dll.mcrit) | [x86 PE](data/bzip2/x86/smda/bzip2_1.0.8_mingw13_x86_libbz2.dll.7z) / [x64 PE](data/bzip2/x64/smda/bzip2_1.0.8_mingw13_x64_libbz2.dll.7z) |
+<!-- /generated -->
 
 ### cJSON<a id='cjson'></a>
 
 cJSON is a minimal JSON parser very widely vendored into C tooling.  
 Generated with `scripts/build_corpus.py`; see `data/cJSON/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: cJSON -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | cJSON | 1.7.15 | MinGW-w64 GCC 13 | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.7.15_mingw13_x86_libcjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.7.15_mingw13_x64_libcjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.7.15_mingw13_x86_libcjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.7.15_mingw13_x64_libcjson.dll.7z) |
 | cJSON | 1.7.19 | MinGW-w64 GCC 13 | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.7.19_mingw13_x86_libcjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.7.19_mingw13_x64_libcjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.7.19_mingw13_x86_libcjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.7.19_mingw13_x64_libcjson.dll.7z) |
+<!-- /generated -->
 
 ### libcurl<a id='libcurl'></a>
 
 libcurl is commonly statically linked into downloaders and droppers. Built against the Schannel TLS backend, which shapes the emitted code more than the version does.  
 Generated with `scripts/build_corpus.py`; see `data/libcurl/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: libcurl -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libcurl | 8.4.0 | MinGW-w64 GCC 13 | [x86 PE](data/libcurl/x86/mcrit/libcurl_8.4.0_mingw13_x86_libcurl.dll.mcrit) / [x64 PE](data/libcurl/x64/mcrit/libcurl_8.4.0_mingw13_x64_libcurl.dll.mcrit) | [x86 PE](data/libcurl/x86/smda/libcurl_8.4.0_mingw13_x86_libcurl.dll.7z) / [x64 PE](data/libcurl/x64/smda/libcurl_8.4.0_mingw13_x64_libcurl.dll.7z) |
 | libcurl | 8.15.0 | MinGW-w64 GCC 13 | [x86 PE](data/libcurl/x86/mcrit/libcurl_8.15.0_mingw13_x86_libcurl.dll.mcrit) / [x64 PE](data/libcurl/x64/mcrit/libcurl_8.15.0_mingw13_x64_libcurl.dll.mcrit) | [x86 PE](data/libcurl/x86/smda/libcurl_8.15.0_mingw13_x86_libcurl.dll.7z) / [x64 PE](data/libcurl/x64/smda/libcurl_8.15.0_mingw13_x64_libcurl.dll.7z) |
+<!-- /generated -->
 
 ### libevent<a id='libevent'></a>
 
 libevent is an event notification library linked into a lot of older tooling.  
 Generated with `scripts/build_corpus.py`; see `data/libevent/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: libevent -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libevent | 2.1.12 | MinGW-w64 GCC 13 | [x86 PE](data/libevent/x86/mcrit/libevent_2.1.12_mingw13_x86_libevent_core.dll.mcrit) / [x64 PE](data/libevent/x64/mcrit/libevent_2.1.12_mingw13_x64_libevent_core.dll.mcrit) | [x86 PE](data/libevent/x86/smda/libevent_2.1.12_mingw13_x86_libevent_core.dll.7z) / [x64 PE](data/libevent/x64/smda/libevent_2.1.12_mingw13_x64_libevent_core.dll.7z) |
 | libevent | 2.1.12 | MinGW-w64 GCC 13 | [x86 PE](data/libevent/x86/mcrit/libevent_2.1.12_mingw13_x86_libevent_extra.dll.mcrit) / [x64 PE](data/libevent/x64/mcrit/libevent_2.1.12_mingw13_x64_libevent_extra.dll.mcrit) | [x86 PE](data/libevent/x86/smda/libevent_2.1.12_mingw13_x86_libevent_extra.dll.7z) / [x64 PE](data/libevent/x64/smda/libevent_2.1.12_mingw13_x64_libevent_extra.dll.7z) |
+<!-- /generated -->
 
 ### liblzma<a id='liblzma'></a>
 
 liblzma provides LZMA/LZMA2, ubiquitous in installers. Built from signed git tags rather than release tarballs, because the 2024 backdoor (CVE-2024-3094) was present only in the tarballs.  
 Generated with `scripts/build_corpus.py`; see `data/liblzma/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: liblzma -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | liblzma | 5.4.7 | MinGW-w64 GCC 13 | [x86 PE](data/liblzma/x86/mcrit/liblzma_5.4.7_mingw13_x86_liblzma.dll.mcrit) / [x64 PE](data/liblzma/x64/mcrit/liblzma_5.4.7_mingw13_x64_liblzma.dll.mcrit) | [x86 PE](data/liblzma/x86/smda/liblzma_5.4.7_mingw13_x86_liblzma.dll.7z) / [x64 PE](data/liblzma/x64/smda/liblzma_5.4.7_mingw13_x64_liblzma.dll.7z) |
 | liblzma | 5.8.1 | MinGW-w64 GCC 13 | [x86 PE](data/liblzma/x86/mcrit/liblzma_5.8.1_mingw13_x86_liblzma.dll.mcrit) / [x64 PE](data/liblzma/x64/mcrit/liblzma_5.8.1_mingw13_x64_liblzma.dll.mcrit) | [x86 PE](data/liblzma/x86/smda/liblzma_5.8.1_mingw13_x86_liblzma.dll.7z) / [x64 PE](data/liblzma/x64/smda/liblzma_5.8.1_mingw13_x64_liblzma.dll.7z) |
+<!-- /generated -->
 
 ### libsodium<a id='libsodium'></a>
 
 libsodium provides X25519 and XSalsa20 and is linked by several ransomware families.  
 Generated with `scripts/build_corpus.py`; see `data/libsodium/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: libsodium -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libsodium | 1.0.18 | MinGW-w64 GCC 13 | [x86 PE](data/libsodium/x86/mcrit/libsodium_1.0.18_mingw13_x86_libsodium-23.dll.mcrit) / [x64 PE](data/libsodium/x64/mcrit/libsodium_1.0.18_mingw13_x64_libsodium-23.dll.mcrit) | [x86 PE](data/libsodium/x86/smda/libsodium_1.0.18_mingw13_x86_libsodium-23.dll.7z) / [x64 PE](data/libsodium/x64/smda/libsodium_1.0.18_mingw13_x64_libsodium-23.dll.7z) |
 | libsodium | 1.0.20 | MinGW-w64 GCC 13 | [x86 PE](data/libsodium/x86/mcrit/libsodium_1.0.20_mingw13_x86_libsodium-26.dll.mcrit) / [x64 PE](data/libsodium/x64/mcrit/libsodium_1.0.20_mingw13_x64_libsodium-26.dll.mcrit) | [x86 PE](data/libsodium/x86/smda/libsodium_1.0.20_mingw13_x86_libsodium-26.dll.7z) / [x64 PE](data/libsodium/x64/smda/libsodium_1.0.20_mingw13_x64_libsodium-26.dll.7z) |
+<!-- /generated -->
 
 ### libtomcrypt<a id='libtomcrypt'></a>
 
 LibTomCrypt is a crypto toolkit with a long history of reuse in malware. Built against LibTomMath for its bignum backend.  
 Generated with `scripts/build_corpus.py`; see `data/libtomcrypt/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: libtomcrypt -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libtomcrypt | 1.18.2 | MinGW-w64 GCC 13 | [x86 PE](data/libtomcrypt/x86/mcrit/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.mcrit) / [x64 PE](data/libtomcrypt/x64/mcrit/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.mcrit) | [x86 PE](data/libtomcrypt/x86/smda/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.7z) / [x64 PE](data/libtomcrypt/x64/smda/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.7z) |
+<!-- /generated -->
 
 ### libuv<a id='libuv'></a>
 
 libuv is the event loop behind Node.js and a good deal of C tooling.  
 Generated with `scripts/build_corpus.py`; see `data/libuv/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: libuv -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libuv | 1.44.2 | MinGW-w64 GCC 13 | [x86 PE](data/libuv/x86/mcrit/libuv_1.44.2_mingw13_x86_libuv.dll.mcrit) / [x64 PE](data/libuv/x64/mcrit/libuv_1.44.2_mingw13_x64_libuv.dll.mcrit) | [x86 PE](data/libuv/x86/smda/libuv_1.44.2_mingw13_x86_libuv.dll.7z) / [x64 PE](data/libuv/x64/smda/libuv_1.44.2_mingw13_x64_libuv.dll.7z) |
 | libuv | 1.52.1 | MinGW-w64 GCC 13 | [x86 PE](data/libuv/x86/mcrit/libuv_1.52.1_mingw13_x86_libuv.dll.mcrit) / [x64 PE](data/libuv/x64/mcrit/libuv_1.52.1_mingw13_x64_libuv.dll.mcrit) | [x86 PE](data/libuv/x86/smda/libuv_1.52.1_mingw13_x86_libuv.dll.7z) / [x64 PE](data/libuv/x64/smda/libuv_1.52.1_mingw13_x64_libuv.dll.7z) |
+<!-- /generated -->
 
 ### libxml2<a id='libxml2'></a>
 
 libxml2 is vendored into an enormous amount of software. ShiftMediaProject additionally publishes MSVC builds with PDBs, which would complement these.  
 Generated with `scripts/build_corpus.py`; see `data/libxml2/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: libxml2 -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libxml2 | 2.9.14 | MinGW-w64 GCC 13 | [x86 PE](data/libxml2/x86/mcrit/libxml2_2.9.14_mingw13_x86_libxml2.dll.mcrit) / [x64 PE](data/libxml2/x64/mcrit/libxml2_2.9.14_mingw13_x64_libxml2.dll.mcrit) | [x86 PE](data/libxml2/x86/smda/libxml2_2.9.14_mingw13_x86_libxml2.dll.7z) / [x64 PE](data/libxml2/x64/smda/libxml2_2.9.14_mingw13_x64_libxml2.dll.7z) |
 | libxml2 | 2.14.3 | MinGW-w64 GCC 13 | [x86 PE](data/libxml2/x86/mcrit/libxml2_2.14.3_mingw13_x86_libxml2.dll.mcrit) / [x64 PE](data/libxml2/x64/mcrit/libxml2_2.14.3_mingw13_x64_libxml2.dll.mcrit) | [x86 PE](data/libxml2/x86/smda/libxml2_2.14.3_mingw13_x86_libxml2.dll.7z) / [x64 PE](data/libxml2/x64/smda/libxml2_2.14.3_mingw13_x64_libxml2.dll.7z) |
+<!-- /generated -->
 
 ### lz4<a id='lz4'></a>
 
 lz4 is a fast compressor common in modern loaders, packers and Electron-derived software.  
 Generated with `scripts/build_corpus.py`; see `data/lz4/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: lz4 -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | lz4 | 1.9.4 | MinGW-w64 GCC 13 | [x86 PE](data/lz4/x86/mcrit/lz4_1.9.4_mingw13_x86_liblz4.dll.mcrit) / [x64 PE](data/lz4/x64/mcrit/lz4_1.9.4_mingw13_x64_liblz4.dll.mcrit) | [x86 PE](data/lz4/x86/smda/lz4_1.9.4_mingw13_x86_liblz4.dll.7z) / [x64 PE](data/lz4/x64/smda/lz4_1.9.4_mingw13_x64_liblz4.dll.7z) |
 | lz4 | 1.10.0 | MinGW-w64 GCC 13 | [x86 PE](data/lz4/x86/mcrit/lz4_1.10.0_mingw13_x86_liblz4.dll.mcrit) / [x64 PE](data/lz4/x64/mcrit/lz4_1.10.0_mingw13_x64_liblz4.dll.mcrit) | [x86 PE](data/lz4/x86/smda/lz4_1.10.0_mingw13_x86_liblz4.dll.7z) / [x64 PE](data/lz4/x64/smda/lz4_1.10.0_mingw13_x64_liblz4.dll.7z) |
+<!-- /generated -->
 
 ### mbedTLS<a id='mbedtls'></a>
 
 mbedTLS is the TLS and crypto stack of the embedded and IoT world. One build per code generation rather than per release.  
 Generated with `scripts/build_corpus.py`; see `data/mbedTLS/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: mbedTLS -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | mbedTLS | 2.16.12 | MinGW-w64 GCC 13 | [x86 PE](data/mbedTLS/x86/mcrit/mbedTLS_2.16.12_mingw13_x86_libmbedcrypto.dll.mcrit) / [x64 PE](data/mbedTLS/x64/mcrit/mbedTLS_2.16.12_mingw13_x64_libmbedcrypto.dll.mcrit) | [x86 PE](data/mbedTLS/x86/smda/mbedTLS_2.16.12_mingw13_x86_libmbedcrypto.dll.7z) / [x64 PE](data/mbedTLS/x64/smda/mbedTLS_2.16.12_mingw13_x64_libmbedcrypto.dll.7z) |
@@ -343,55 +364,66 @@ Generated with `scripts/build_corpus.py`; see `data/mbedTLS/provenance.json` for
 | mbedTLS | 3.6.7 | MinGW-w64 GCC 13 | [x86 PE](data/mbedTLS/x86/mcrit/mbedTLS_3.6.7_mingw13_x86_libmbedcrypto.dll.mcrit) / [x64 PE](data/mbedTLS/x64/mcrit/mbedTLS_3.6.7_mingw13_x64_libmbedcrypto.dll.mcrit) | [x86 PE](data/mbedTLS/x86/smda/mbedTLS_3.6.7_mingw13_x86_libmbedcrypto.dll.7z) / [x64 PE](data/mbedTLS/x64/smda/mbedTLS_3.6.7_mingw13_x64_libmbedcrypto.dll.7z) |
 | mbedTLS | 3.6.7 | MinGW-w64 GCC 13 | [x86 PE](data/mbedTLS/x86/mcrit/mbedTLS_3.6.7_mingw13_x86_libmbedtls.dll.mcrit) / [x64 PE](data/mbedTLS/x64/mcrit/mbedTLS_3.6.7_mingw13_x64_libmbedtls.dll.mcrit) | [x86 PE](data/mbedTLS/x86/smda/mbedTLS_3.6.7_mingw13_x86_libmbedtls.dll.7z) / [x64 PE](data/mbedTLS/x64/smda/mbedTLS_3.6.7_mingw13_x64_libmbedtls.dll.7z) |
 | mbedTLS | 3.6.7 | MinGW-w64 GCC 13 | [x86 PE](data/mbedTLS/x86/mcrit/mbedTLS_3.6.7_mingw13_x86_libmbedx509.dll.mcrit) / [x64 PE](data/mbedTLS/x64/mcrit/mbedTLS_3.6.7_mingw13_x64_libmbedx509.dll.mcrit) | [x86 PE](data/mbedTLS/x86/smda/mbedTLS_3.6.7_mingw13_x86_libmbedx509.dll.7z) / [x64 PE](data/mbedTLS/x64/smda/mbedTLS_3.6.7_mingw13_x64_libmbedx509.dll.7z) |
+<!-- /generated -->
 
 ### pcre2<a id='pcre2'></a>
 
 PCRE2 is the regular expression engine used by anything current. JIT is enabled, as it is in most distributions.  
 Generated with `scripts/build_corpus.py`; see `data/pcre2/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: pcre2 -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | pcre2 | 10.39 | MinGW-w64 GCC 13 | [x86 PE](data/pcre2/x86/mcrit/pcre2_10.39_mingw13_x86_libpcre2-8.dll.mcrit) / [x64 PE](data/pcre2/x64/mcrit/pcre2_10.39_mingw13_x64_libpcre2-8.dll.mcrit) | [x86 PE](data/pcre2/x86/smda/pcre2_10.39_mingw13_x86_libpcre2-8.dll.7z) / [x64 PE](data/pcre2/x64/smda/pcre2_10.39_mingw13_x64_libpcre2-8.dll.7z) |
 | pcre2 | 10.45 | MinGW-w64 GCC 13 | [x86 PE](data/pcre2/x86/mcrit/pcre2_10.45_mingw13_x86_libpcre2-8.dll.mcrit) / [x64 PE](data/pcre2/x64/mcrit/pcre2_10.45_mingw13_x64_libpcre2-8.dll.mcrit) | [x86 PE](data/pcre2/x86/smda/pcre2_10.45_mingw13_x86_libpcre2-8.dll.7z) / [x64 PE](data/pcre2/x64/smda/pcre2_10.45_mingw13_x64_libpcre2-8.dll.7z) |
+<!-- /generated -->
 
 ### sqlite3<a id='sqlite3'></a>
 
 SQLite is almost certainly the most widely embedded database on Windows. Built from the official amalgamation, which is how applications consume it.  
 Generated with `scripts/build_corpus.py`; see `data/sqlite3/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: sqlite3 -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | sqlite3 | 3.8.11.1 | MinGW-w64 GCC 13 | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.8.11.1_mingw13_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.8.11.1_mingw13_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.8.11.1_mingw13_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.8.11.1_mingw13_x64_sqlite3.dll.7z) |
 | sqlite3 | 3.31.1 | MinGW-w64 GCC 13 | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.31.1_mingw13_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.31.1_mingw13_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.31.1_mingw13_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.31.1_mingw13_x64_sqlite3.dll.7z) |
 | sqlite3 | 3.50.4 | MinGW-w64 GCC 13 | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.50.4_mingw13_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.50.4_mingw13_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.50.4_mingw13_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.50.4_mingw13_x64_sqlite3.dll.7z) |
+<!-- /generated -->
 
 ### libpng<a id='libpng'></a>
 
 libpng is found in old packers, installers and image-handling tooling. Built against a zlib staged into the source tree, so the build needs nothing preinstalled.  
 Generated with `scripts/build_corpus.py`; see `data/libpng/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: libpng -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libpng | 1.6.50 | MinGW-w64 GCC 13 | [x86 PE](data/libpng/x86/mcrit/libpng_1.6.50_mingw13_x86_libpng16.dll.mcrit) / [x64 PE](data/libpng/x64/mcrit/libpng_1.6.50_mingw13_x64_libpng16.dll.mcrit) | [x86 PE](data/libpng/x86/smda/libpng_1.6.50_mingw13_x86_libpng16.dll.7z) / [x64 PE](data/libpng/x64/smda/libpng_1.6.50_mingw13_x64_libpng16.dll.7z) |
+<!-- /generated -->
 
 ### libtiff<a id='libtiff'></a>
 
 libtiff has a long CVE history and is embedded widely. Codecs that would pull external dependencies are disabled; the core reader and writer is what matters for recognising reuse.  
 Generated with `scripts/build_corpus.py`; see `data/libtiff/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: libtiff -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libtiff | 4.0.10 | MinGW-w64 GCC 13 | [x86 PE](data/libtiff/x86/mcrit/libtiff_4.0.10_mingw13_x86_libtiff.dll.mcrit) / [x64 PE](data/libtiff/x64/mcrit/libtiff_4.0.10_mingw13_x64_libtiff.dll.mcrit) | [x86 PE](data/libtiff/x86/smda/libtiff_4.0.10_mingw13_x86_libtiff.dll.7z) / [x64 PE](data/libtiff/x64/smda/libtiff_4.0.10_mingw13_x64_libtiff.dll.7z) |
 | libtiff | 4.7.0 | MinGW-w64 GCC 13 | [x86 PE](data/libtiff/x86/mcrit/libtiff_4.7.0_mingw13_x86_libtiff.dll.mcrit) / [x64 PE](data/libtiff/x64/mcrit/libtiff_4.7.0_mingw13_x64_libtiff.dll.mcrit) | [x86 PE](data/libtiff/x86/smda/libtiff_4.7.0_mingw13_x86_libtiff.dll.7z) / [x64 PE](data/libtiff/x64/smda/libtiff_4.7.0_mingw13_x64_libtiff.dll.7z) |
+<!-- /generated -->
 
 ### wolfSSL<a id='wolfssl'></a>
 
 wolfSSL is an embedded TLS stack. One version only: it is genuinely uncommon in Windows malware compared with OpenSSL and mbedTLS.  
 Generated with `scripts/build_corpus.py`; see `data/wolfSSL/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: wolfSSL -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | wolfSSL | 5.9.2 | MinGW-w64 GCC 13 | [x86 PE](data/wolfSSL/x86/mcrit/wolfSSL_5.9.2_mingw13_x86_libwolfssl.dll.mcrit) / [x64 PE](data/wolfSSL/x64/mcrit/wolfSSL_5.9.2_mingw13_x64_libwolfssl.dll.mcrit) | [x86 PE](data/wolfSSL/x86/smda/wolfSSL_5.9.2_mingw13_x86_libwolfssl.dll.7z) / [x64 PE](data/wolfSSL/x64/smda/wolfSSL_5.9.2_mingw13_x64_libwolfssl.dll.7z) |
+<!-- /generated -->
 
 ## Runtimes
 
@@ -403,32 +435,38 @@ Interpreters and virtual machines that are commonly statically linked into tooli
 Lua is the reference implementation of the language, embedded in a great deal of tooling.  
 Generated with `scripts/build_corpus.py`; see `data/Lua/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: Lua -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Lua | 5.1.5 | MinGW-w64 GCC 13 | [x86 PE](data/Lua/x86/mcrit/Lua_5.1.5_mingw13_x86_lua.exe.mcrit) / [x64 PE](data/Lua/x64/mcrit/Lua_5.1.5_mingw13_x64_lua.exe.mcrit) | [x86 PE](data/Lua/x86/smda/Lua_5.1.5_mingw13_x86_lua.exe.7z) / [x64 PE](data/Lua/x64/smda/Lua_5.1.5_mingw13_x64_lua.exe.7z) |
 | Lua | 5.3.6 | MinGW-w64 GCC 13 | [x86 PE](data/Lua/x86/mcrit/Lua_5.3.6_mingw13_x86_lua.exe.mcrit) / [x64 PE](data/Lua/x64/mcrit/Lua_5.3.6_mingw13_x64_lua.exe.mcrit) | [x86 PE](data/Lua/x86/smda/Lua_5.3.6_mingw13_x86_lua.exe.7z) / [x64 PE](data/Lua/x64/smda/Lua_5.3.6_mingw13_x64_lua.exe.7z) |
 | Lua | 5.4.8 | MinGW-w64 GCC 13 | [x86 PE](data/Lua/x86/mcrit/Lua_5.4.8_mingw13_x86_lua.exe.mcrit) / [x64 PE](data/Lua/x64/mcrit/Lua_5.4.8_mingw13_x64_lua.exe.mcrit) | [x86 PE](data/Lua/x86/smda/Lua_5.4.8_mingw13_x86_lua.exe.7z) / [x64 PE](data/Lua/x64/smda/Lua_5.4.8_mingw13_x64_lua.exe.7z) |
+<!-- /generated -->
 
 ### LuaJIT<a id='luajit'></a>
 
 LuaJIT is the runtime behind the toolkit named in issue #1; the reusable machine code an analyst meets is this interpreter and JIT core, statically linked in. Upstream carries no git tags, so versions are pinned to the commit that set the version string.  
 Generated with `scripts/build_corpus.py`; see `data/LuaJIT/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: LuaJIT -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | LuaJIT | 2.0.5 | MinGW-w64 GCC 13 | [x86 PE](data/LuaJIT/x86/mcrit/LuaJIT_2.0.5_mingw13_x86_lua51.dll.mcrit) / [x64 PE](data/LuaJIT/x64/mcrit/LuaJIT_2.0.5_mingw13_x64_lua51.dll.mcrit) | [x86 PE](data/LuaJIT/x86/smda/LuaJIT_2.0.5_mingw13_x86_lua51.dll.7z) / [x64 PE](data/LuaJIT/x64/smda/LuaJIT_2.0.5_mingw13_x64_lua51.dll.7z) |
 | LuaJIT | 2.1.0-beta3 | MinGW-w64 GCC 13 | [x86 PE](data/LuaJIT/x86/mcrit/LuaJIT_2.1.0-beta3_mingw13_x86_lua51.dll.mcrit) / [x64 PE](data/LuaJIT/x64/mcrit/LuaJIT_2.1.0-beta3_mingw13_x64_lua51.dll.mcrit) | [x86 PE](data/LuaJIT/x86/smda/LuaJIT_2.1.0-beta3_mingw13_x86_lua51.dll.7z) / [x64 PE](data/LuaJIT/x64/smda/LuaJIT_2.1.0-beta3_mingw13_x64_lua51.dll.7z) |
 | LuaJIT | 2.1-rolling-2026-09-08 | MinGW-w64 GCC 13 | [x86 PE](data/LuaJIT/x86/mcrit/LuaJIT_2.1-rolling-2026-09-08_mingw13_x86_lua51.dll.mcrit) / [x64 PE](data/LuaJIT/x64/mcrit/LuaJIT_2.1-rolling-2026-09-08_mingw13_x64_lua51.dll.mcrit) | [x86 PE](data/LuaJIT/x86/smda/LuaJIT_2.1-rolling-2026-09-08_mingw13_x86_lua51.dll.7z) / [x64 PE](data/LuaJIT/x64/smda/LuaJIT_2.1-rolling-2026-09-08_mingw13_x64_lua51.dll.7z) |
+<!-- /generated -->
 
 ### q3vm<a id='q3vm'></a>
 
 q3vm is a standalone Quake 3 QVM interpreter. Its vm.c is written to be dropped into other projects, so the same shape appears in Quake3-engine derivatives and anything embedding a QVM sandbox.  
 Generated with `scripts/build_corpus.py`; see `data/q3vm/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: q3vm -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | q3vm | 1.3.1 | MinGW-w64 GCC 13 | [x86 PE](data/q3vm/x86/mcrit/q3vm_1.3.1_mingw13_x86_q3vm.exe.mcrit) / [x64 PE](data/q3vm/x64/mcrit/q3vm_1.3.1_mingw13_x64_q3vm.exe.mcrit) | [x86 PE](data/q3vm/x86/smda/q3vm_1.3.1_mingw13_x86_q3vm.exe.7z) / [x64 PE](data/q3vm/x64/smda/q3vm_1.3.1_mingw13_x64_q3vm.exe.7z) |
 | q3vm | 2026-03-06 | MinGW-w64 GCC 13 | [x86 PE](data/q3vm/x86/mcrit/q3vm_2026-03-06_mingw13_x86_q3vm.exe.mcrit) / [x64 PE](data/q3vm/x64/mcrit/q3vm_2026-03-06_mingw13_x64_q3vm.exe.mcrit) | [x86 PE](data/q3vm/x86/smda/q3vm_2026-03-06_mingw13_x86_q3vm.exe.7z) / [x64 PE](data/q3vm/x64/smda/q3vm_2026-03-06_mingw13_x64_q3vm.exe.7z) |
+<!-- /generated -->
 
 ## Loaders and shellcode
 
@@ -440,38 +478,46 @@ Position-independent loaders and the projects that generate them. Entries marked
 donut generates position-independent loaders. Both the GCC-built generator and the MSVC-compiled loader blobs that upstream commits are covered; the latter are what ship in the release binaries.  
 Generated with `scripts/build_corpus.py`; see `data/donut/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: donut -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | donut | 1.1 | MinGW-w64 GCC 13 | [x64 PE](data/donut/x64/mcrit/donut_1.1_mingw13_x64_donut.exe.mcrit) | [x64 PE](data/donut/x64/smda/donut_1.1_mingw13_x64_donut.exe.7z) |
 | donut | 1.1 | MSVC (as committed upstream) | [x86 code](data/donut/x86/mcrit/donut_1.1_mingw13_x86_loader_msvc_x86.mcrit) / [x64 code](data/donut/x64/mcrit/donut_1.1_mingw13_x64_loader_msvc_x64.mcrit) | [x86 code](data/donut/x86/smda/donut_1.1_mingw13_x86_loader_msvc_x86.7z) / [x64 code](data/donut/x64/smda/donut_1.1_mingw13_x64_loader_msvc_x64.7z) |
+<!-- /generated -->
 
 ### MemoryModule<a id='memorymodule'></a>
 
 MemoryModule is the canonical in-memory PE loader, reused verbatim by a long tail of packers and loaders, almost always as a vendored copy frozen at some old commit.  
 Generated with `scripts/build_corpus.py`; see `data/MemoryModule/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: MemoryModule -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | MemoryModule | 0.0.4 | MinGW-w64 GCC 13 | [x86 PE](data/MemoryModule/x86/mcrit/MemoryModule_0.0.4_mingw13_x86_DllLoader.exe.mcrit) / [x64 PE](data/MemoryModule/x64/mcrit/MemoryModule_0.0.4_mingw13_x64_DllLoader.exe.mcrit) | [x86 PE](data/MemoryModule/x86/smda/MemoryModule_0.0.4_mingw13_x86_DllLoader.exe.7z) / [x64 PE](data/MemoryModule/x64/smda/MemoryModule_0.0.4_mingw13_x64_DllLoader.exe.7z) |
 | MemoryModule | 2019-02-24 | MinGW-w64 GCC 13 | [x86 PE](data/MemoryModule/x86/mcrit/MemoryModule_2019-02-24_mingw13_x86_DllLoader.exe.mcrit) / [x64 PE](data/MemoryModule/x64/mcrit/MemoryModule_2019-02-24_mingw13_x64_DllLoader.exe.mcrit) | [x86 PE](data/MemoryModule/x86/smda/MemoryModule_2019-02-24_mingw13_x86_DllLoader.exe.7z) / [x64 PE](data/MemoryModule/x64/smda/MemoryModule_2019-02-24_mingw13_x64_DllLoader.exe.7z) |
+<!-- /generated -->
 
 ### pe_to_shellcode<a id='pe_to_shellcode'></a>
 
 pe_to_shellcode converts PE files to shellcode. The stub2 loaders committed upstream are covered; they are MSVC-built and cannot be reproduced without Visual Studio.  
 Generated with `scripts/build_corpus.py`; see `data/pe_to_shellcode/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: pe_to_shellcode -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | pe_to_shellcode | 1.0 | MSVC (as committed upstream) | [x86 code](data/pe_to_shellcode/x86/mcrit/pe_to_shellcode_1.0_mingw13_x86_stub2_x86.mcrit) / [x64 code](data/pe_to_shellcode/x64/mcrit/pe_to_shellcode_1.0_mingw13_x64_stub2_x64.mcrit) | [x86 code](data/pe_to_shellcode/x86/smda/pe_to_shellcode_1.0_mingw13_x86_stub2_x86.7z) / [x64 code](data/pe_to_shellcode/x64/smda/pe_to_shellcode_1.0_mingw13_x64_stub2_x64.7z) |
 | pe_to_shellcode | 1.2 | MSVC (as committed upstream) | [x86 code](data/pe_to_shellcode/x86/mcrit/pe_to_shellcode_1.2_mingw13_x86_stub2_x86.mcrit) / [x64 code](data/pe_to_shellcode/x64/mcrit/pe_to_shellcode_1.2_mingw13_x64_stub2_x64.mcrit) | [x86 code](data/pe_to_shellcode/x86/smda/pe_to_shellcode_1.2_mingw13_x86_stub2_x86.7z) / [x64 code](data/pe_to_shellcode/x64/smda/pe_to_shellcode_1.2_mingw13_x64_stub2_x64.7z) |
+<!-- /generated -->
 
 ### sRDI<a id='srdi'></a>
 
 sRDI implements reflective DLL injection. The compiled MSVC blobs committed upstream are covered rather than a rebuild, since those are what is encountered in the wild.  
 Generated with `scripts/build_corpus.py`; see `data/sRDI/provenance.json` for source digests, compiler and flags.
 
+<!-- generated: sRDI -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | sRDI | 2018-05-27 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2018-05-27_mingw13_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2018-05-27_mingw13_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2018-05-27_mingw13_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2018-05-27_mingw13_x64_ShellcodeRDI_x64.7z) |
 | sRDI | 2020-04-15 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2020-04-15_mingw13_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2020-04-15_mingw13_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2020-04-15_mingw13_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2020-04-15_mingw13_x64_ShellcodeRDI_x64.7z) |
 | sRDI | 2022-06-17 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2022-06-17_mingw13_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2022-06-17_mingw13_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2022-06-17_mingw13_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2022-06-17_mingw13_x64_ShellcodeRDI_x64.7z) |
+<!-- /generated -->

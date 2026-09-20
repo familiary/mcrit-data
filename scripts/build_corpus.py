@@ -37,7 +37,9 @@ def main():
     check.add_argument("path", nargs="?", help="directory to check, default data/")
 
     table = subparsers.add_parser("readme", help="render README table rows for a family")
-    table.add_argument("family", help="corpus family, e.g. libzlib")
+    table.add_argument("family", nargs="?", help="corpus family, e.g. libzlib")
+    table.add_argument("--update", action="store_true",
+                       help="rewrite every fenced table in README.md in place")
 
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -52,7 +54,14 @@ def main():
         return 0
 
     if args.command == "readme":
-        from corpus.readme import render_family
+        from corpus.readme import render_family, update_readme
+        if args.update:
+            changed = update_readme()
+            print("updated: %s" % ", ".join(changed) if changed
+                  else "README is already up to date")
+            return 0
+        if not args.family:
+            parser.error("readme needs a family, or --update")
         print(render_family(args.family))
         return 0
 
