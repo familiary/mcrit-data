@@ -1,7 +1,7 @@
 {
   "sqlite3_3.31.1_mingw13_x64_sqlite3.dll": {
     "architecture": "x64",
-    "build_flags": "-O2, FTS/RTREE/JSON1 enabled",
+    "build_flags": "-O2, FTS5/RTREE/JSON1 enabled",
     "built_artifact": "sqlite3.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "sqlite3.dll",
@@ -10,7 +10,7 @@
     "is_blob": false,
     "license": "public domain",
     "mcrit": "data/sqlite3/x64/mcrit/sqlite3_3.31.1_mingw13_x64_sqlite3.dll.mcrit",
-    "notes": "Compile-time feature flags change the emitted function set more than minor versions do; one profile is held constant across these builds.",
+    "notes": "Compile-time feature flags change the emitted function set more than minor versions do, so one profile is held constant across the post-FTS5 builds; 3.8.11.1 predates FTS5 and is built with FTS4 and RTREE only.",
     "num_functions": 1720,
     "removed_runtime_functions": [
       "DllEntryPoint",
@@ -75,7 +75,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "37f5910551c2864e78cd6388c9a5c582ce70927e8caf4b3f3d4d871bd8981d63",
+    "sha256": "8d16f86d806f9ad2b34523860628989b43ac86021acd3b0e5d7f4bcb8c855f52",
     "smda": "data/sqlite3/x64/smda/sqlite3_3.31.1_mingw13_x64_sqlite3.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -89,7 +89,7 @@
   },
   "sqlite3_3.31.1_mingw13_x86_sqlite3.dll": {
     "architecture": "x86",
-    "build_flags": "-O2, FTS/RTREE/JSON1 enabled",
+    "build_flags": "-O2, FTS5/RTREE/JSON1 enabled",
     "built_artifact": "sqlite3.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "sqlite3.dll",
@@ -98,7 +98,7 @@
     "is_blob": false,
     "license": "public domain",
     "mcrit": "data/sqlite3/x86/mcrit/sqlite3_3.31.1_mingw13_x86_sqlite3.dll.mcrit",
-    "notes": "Compile-time feature flags change the emitted function set more than minor versions do; one profile is held constant across these builds.",
+    "notes": "Compile-time feature flags change the emitted function set more than minor versions do, so one profile is held constant across the post-FTS5 builds; 3.8.11.1 predates FTS5 and is built with FTS4 and RTREE only.",
     "num_functions": 1720,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
@@ -162,7 +162,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "0a8684779ad178d90119cd282810212677bc0a9398fe825febd4ca32d807956d",
+    "sha256": "39d1d456e8f05fbc39380a038dc95f3234229929aea0e938e7c3347b5ea3b273",
     "smda": "data/sqlite3/x86/smda/sqlite3_3.31.1_mingw13_x86_sqlite3.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -176,7 +176,7 @@
   },
   "sqlite3_3.50.4_mingw13_x64_sqlite3.dll": {
     "architecture": "x64",
-    "build_flags": "-O2, FTS/RTREE/JSON1 enabled",
+    "build_flags": "-O2, FTS5/RTREE/JSON1 enabled",
     "built_artifact": "sqlite3.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "sqlite3.dll",
@@ -185,7 +185,7 @@
     "is_blob": false,
     "license": "public domain",
     "mcrit": "data/sqlite3/x64/mcrit/sqlite3_3.50.4_mingw13_x64_sqlite3.dll.mcrit",
-    "notes": "Compile-time feature flags change the emitted function set more than minor versions do; one profile is held constant across these builds.",
+    "notes": "Compile-time feature flags change the emitted function set more than minor versions do, so one profile is held constant across the post-FTS5 builds; 3.8.11.1 predates FTS5 and is built with FTS4 and RTREE only.",
     "num_functions": 1977,
     "removed_runtime_functions": [
       "DllEntryPoint",
@@ -252,7 +252,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "09ced5d75861b95c7befbfb06fffd4a17b2376609bf3eb8be3bf190ce3811b6e",
+    "sha256": "defc8d5997916d02405483aa7ff0fb5f6efbafdcf67267e4eb03293fb07fec72",
     "smda": "data/sqlite3/x64/smda/sqlite3_3.50.4_mingw13_x64_sqlite3.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -266,7 +266,7 @@
   },
   "sqlite3_3.50.4_mingw13_x86_sqlite3.dll": {
     "architecture": "x86",
-    "build_flags": "-O2, FTS/RTREE/JSON1 enabled",
+    "build_flags": "-O2, FTS5/RTREE/JSON1 enabled",
     "built_artifact": "sqlite3.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "sqlite3.dll",
@@ -275,7 +275,7 @@
     "is_blob": false,
     "license": "public domain",
     "mcrit": "data/sqlite3/x86/mcrit/sqlite3_3.50.4_mingw13_x86_sqlite3.dll.mcrit",
-    "notes": "Compile-time feature flags change the emitted function set more than minor versions do; one profile is held constant across these builds.",
+    "notes": "Compile-time feature flags change the emitted function set more than minor versions do, so one profile is held constant across the post-FTS5 builds; 3.8.11.1 predates FTS5 and is built with FTS4 and RTREE only.",
     "num_functions": 1989,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
@@ -341,7 +341,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "874b424a1825133bf6a1adb0b91d522ad86aac42882b7dbd4a10cac8aa5bfd92",
+    "sha256": "56f0b85c57a3e05f20ae7782f86cadb58592f35bb1bf190ebcdcbda7a3a394dd",
     "smda": "data/sqlite3/x86/smda/sqlite3_3.50.4_mingw13_x86_sqlite3.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -355,7 +355,7 @@
   },
   "sqlite3_3.8.11.1_mingw13_x64_sqlite3.dll": {
     "architecture": "x64",
-    "build_flags": "-O2, FTS/RTREE/JSON1 enabled",
+    "build_flags": "-O2, FTS4/RTREE enabled (no FTS5, no JSON1)",
     "built_artifact": "sqlite3.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "sqlite3.dll",
@@ -364,7 +364,7 @@
     "is_blob": false,
     "license": "public domain",
     "mcrit": "data/sqlite3/x64/mcrit/sqlite3_3.8.11.1_mingw13_x64_sqlite3.dll.mcrit",
-    "notes": "Compile-time feature flags change the emitted function set more than minor versions do; one profile is held constant across these builds.",
+    "notes": "Compile-time feature flags change the emitted function set more than minor versions do, so one profile is held constant across the post-FTS5 builds; 3.8.11.1 predates FTS5 and is built with FTS4 and RTREE only.",
     "num_functions": 1357,
     "removed_runtime_functions": [
       "DllEntryPoint",
@@ -424,7 +424,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "c0af42b3ba10f0b1f304f880346c3e9b1f93a072789225db9fa1a425c23b7fd7",
+    "sha256": "d30cf8526aa8d8fa743d0912a980fd63dcc8146b85c56a2194cb66735d638beb",
     "smda": "data/sqlite3/x64/smda/sqlite3_3.8.11.1_mingw13_x64_sqlite3.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -438,7 +438,7 @@
   },
   "sqlite3_3.8.11.1_mingw13_x86_sqlite3.dll": {
     "architecture": "x86",
-    "build_flags": "-O2, FTS/RTREE/JSON1 enabled",
+    "build_flags": "-O2, FTS4/RTREE enabled (no FTS5, no JSON1)",
     "built_artifact": "sqlite3.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "sqlite3.dll",
@@ -447,7 +447,7 @@
     "is_blob": false,
     "license": "public domain",
     "mcrit": "data/sqlite3/x86/mcrit/sqlite3_3.8.11.1_mingw13_x86_sqlite3.dll.mcrit",
-    "notes": "Compile-time feature flags change the emitted function set more than minor versions do; one profile is held constant across these builds.",
+    "notes": "Compile-time feature flags change the emitted function set more than minor versions do, so one profile is held constant across the post-FTS5 builds; 3.8.11.1 predates FTS5 and is built with FTS4 and RTREE only.",
     "num_functions": 1352,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
@@ -506,7 +506,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "dc7546cf77cd875a3cd068f43eb8052f6324de27bc269cc4c8b29a889b59590f",
+    "sha256": "7f54e2f502f5c8d234765471740037b289cf022aa38de1191377a58f7a609f61",
     "smda": "data/sqlite3/x86/smda/sqlite3_3.8.11.1_mingw13_x86_sqlite3.dll.7z",
     "smda_version": "4.8.0",
     "source": {

@@ -7,6 +7,7 @@
     "component": "liblz4.dll",
     "family": "lz4",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "BSD-2-Clause (library), GPL-2.0 (programs)",
     "mcrit": "data/lz4/x64/mcrit/lz4_1.10.0_mingw13_x64_liblz4.dll.mcrit",
     "notes": "The DLL carries lz4.c, lz4hc.c, lz4frame.c and xxhash.c.",
@@ -68,7 +69,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "b67715c80a4e2b8a8bf3ed6d70f9ba8c7e660c6bd9c9628c23fd6ad56d3a7754",
+    "sha256": "5c9dbe898134b927ac3619ce8398c87b02cf22974277be9540239f93a8a1cbb6",
     "smda": "data/lz4/x64/smda/lz4_1.10.0_mingw13_x64_liblz4.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -88,6 +89,7 @@
     "component": "liblz4.dll",
     "family": "lz4",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "BSD-2-Clause (library), GPL-2.0 (programs)",
     "mcrit": "data/lz4/x86/mcrit/lz4_1.10.0_mingw13_x86_liblz4.dll.mcrit",
     "notes": "The DLL carries lz4.c, lz4hc.c, lz4frame.c and xxhash.c.",
@@ -147,7 +149,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "e7ea3499488415733105a11f5ef0ec27278407ddda1b8224910e7ae7301a1c5d",
+    "sha256": "625833cce6f665c6d503600da98530edd90f89692d9a2c3e055c882ccba17cae",
     "smda": "data/lz4/x86/smda/lz4_1.10.0_mingw13_x86_liblz4.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -167,6 +169,7 @@
     "component": "liblz4.dll",
     "family": "lz4",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "BSD-2-Clause (library), GPL-2.0 (programs)",
     "mcrit": "data/lz4/x64/mcrit/lz4_1.9.4_mingw13_x64_liblz4.dll.mcrit",
     "notes": "The DLL carries lz4.c, lz4hc.c, lz4frame.c and xxhash.c.",
@@ -228,7 +231,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "170063c1de166a41059e81ab413967b62852d5bcb542db7fe78062c75539d8ad",
+    "sha256": "d1c050c4640761f3aec2955b5e986c5c8a99e707a2c79e0e6b63ad284c410782",
     "smda": "data/lz4/x64/smda/lz4_1.9.4_mingw13_x64_liblz4.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -248,6 +251,7 @@
     "component": "liblz4.dll",
     "family": "lz4",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "BSD-2-Clause (library), GPL-2.0 (programs)",
     "mcrit": "data/lz4/x86/mcrit/lz4_1.9.4_mingw13_x86_liblz4.dll.mcrit",
     "notes": "The DLL carries lz4.c, lz4hc.c, lz4frame.c and xxhash.c.",
@@ -307,7 +311,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "4559b56ff973c9d7e109380bb1a15b57f5c26a9a421e72c22ce1e9f28db879be",
+    "sha256": "cdc691fe1ae824e3c939bb12ef8318ee277a058a4e72bea19383d5ea4e0d123d",
     "smda": "data/lz4/x86/smda/lz4_1.9.4_mingw13_x86_liblz4.dll.7z",
     "smda_version": "4.8.0",
     "source": {

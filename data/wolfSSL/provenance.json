@@ -8,7 +8,7 @@
     "family": "wolfSSL",
     "generated": "2026-09-20",
     "is_blob": false,
-    "license": "GPL-2.0-or-later",
+    "license": "GPL-3.0-or-later",
     "mcrit": "data/wolfSSL/x64/mcrit/wolfSSL_5.9.2_mingw13_x64_libwolfssl.dll.mcrit",
     "num_functions": 1470,
     "removed_runtime_functions": [
@@ -144,7 +144,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "9e87868077068bd0270aa5b73896683dc3fae7721731820a215c7e86df736d70",
+    "sha256": "dd818f661fdfcfe735157ffba83784afd2a7262b791570dc7050ccc5eb2c49a4",
     "smda": "data/wolfSSL/x64/smda/wolfSSL_5.9.2_mingw13_x64_libwolfssl.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -165,7 +165,7 @@
     "family": "wolfSSL",
     "generated": "2026-09-20",
     "is_blob": false,
-    "license": "GPL-2.0-or-later",
+    "license": "GPL-3.0-or-later",
     "mcrit": "data/wolfSSL/x86/mcrit/wolfSSL_5.9.2_mingw13_x86_libwolfssl.dll.mcrit",
     "num_functions": 1445,
     "removed_runtime_functions": [
@@ -304,7 +304,7 @@
       "_wcsnlen",
       "_wcsrtombs"
     ],
-    "sha256": "ed42d021e6411c6dc6ca96d9ad7445b8f6911e5b70822f31b42c3ef93a335fab",
+    "sha256": "e324b48b21d10204a0e8014f57f76a8029b7eab4c1844eb3634bb2924a1aff11",
     "smda": "data/wolfSSL/x86/smda/wolfSSL_5.9.2_mingw13_x86_libwolfssl.dll.7z",
     "smda_version": "4.8.0",
     "source": {

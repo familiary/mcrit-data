@@ -70,7 +70,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "ab9c7dcbda02ae731a2eb965e4f1012ed0cb2f4057427f4066b46fa29591cc35",
+    "sha256": "2329d36599a64fb1767ad3a5419edb9acfdeefc3e6c8e9b2f1140622ce1b2070",
     "smda": "data/pcre2/x64/smda/pcre2_10.39_mingw13_x64_libpcre2-8.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -151,7 +151,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "88bb7a9067a6bda2cd755377c3cdd1f67ac76ba178466b26c5797cea4dd26ee7",
+    "sha256": "a66b6e00b5fcba482f649127bd042db7bbeb2f94882812239ca9feb2dba461ad",
     "smda": "data/pcre2/x86/smda/pcre2_10.39_mingw13_x86_libpcre2-8.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -234,7 +234,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "d9889612eb3153bd0aa0dc071530ba54dfff2cf79f0b169f19eef52e814c3be6",
+    "sha256": "15a4610e66829202a2fa35865349f445dd39f886ad84f14a5b43360d9ceee16a",
     "smda": "data/pcre2/x64/smda/pcre2_10.45_mingw13_x64_libpcre2-8.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -315,7 +315,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "e60945b6ce27e31b22d885c60df542e78df60fcab2eaf8db55860d58ce5f7190",
+    "sha256": "41d7092c12e185067290f0b0c44842128f49eed928339316b1c7e93d659b287c",
     "smda": "data/pcre2/x86/smda/pcre2_10.45_mingw13_x86_libpcre2-8.dll.7z",
     "smda_version": "4.8.0",
     "source": {
