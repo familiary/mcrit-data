@@ -28,7 +28,9 @@ RECIPES = {
         family="libtomcrypt",
         version="1.18.2",
         upstream="https://github.com/libtom/libtomcrypt",
-        license="public domain / Unlicense",
+        # Upstream's LICENSE offers a choice of two, and neither is the
+        # Unlicense: "LibTomCrypt is public domain" or WTFPL v2.
+        license="public domain / WTFPL-2.0 (dual, licensee's choice)",
         source=Source(git_url="https://github.com/libtom/libtomcrypt.git",
                       git_ref="v1.18.2"),
         extra_sources={"libtommath": Source(

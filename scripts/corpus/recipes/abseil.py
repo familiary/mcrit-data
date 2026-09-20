@@ -45,7 +45,14 @@ def _abseil(version, git_ref):
         ],
         artifacts=[Artifact(path="abseil.dll", component="abseil.dll")],
         toolchains=["mingw_x86", "mingw_x64"],
-        build_flags="-O2 -std=c++17",
+        # Two flag sets, and the one that matters is the first: every
+        # libabsl_*.a object - all the code that ends up in the sample - comes
+        # from the CMake Release build, which is CMake's GNU default of
+        # -O3 -DNDEBUG because Abseil sets no CMAKE_CXX_FLAGS_RELEASE of its
+        # own. The -O2 line applies only to the three-line anchor.cc stub the
+        # archives are linked around.
+        build_flags="-O3 -DNDEBUG -std=c++17 (CMake Release, all Abseil code); "
+                    "-O2 for the anchor.cc link stub only",
         notes="Includes the vendored CCTZ, so google/cctz is not processed "
               "separately. Built with the posix-threads compiler, because the "
               "win32-threads <mutex> and <condition_variable> are unusable.",

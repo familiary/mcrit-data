@@ -35,6 +35,10 @@ def main():
 
     check = subparsers.add_parser("validate", help="check generated artefacts")
     check.add_argument("path", nargs="?", help="directory to check, default data/")
+    check.add_argument("--deep", action="store_true",
+                       help="also look for PicHashes shared across families, "
+                            "which is how statically linked code leaks in "
+                            "under the wrong name; loads every .mcrit")
 
     again = subparsers.add_parser(
         "reprocess",
@@ -77,7 +81,7 @@ def main():
         return 0
 
     if args.command == "validate":
-        problems = validate.validate_all(args.path)
+        problems = validate.validate_all(args.path, deep=args.deep)
         for problem in problems:
             print("FAIL %s" % problem)
         print("%d problem(s)" % len(problems))

@@ -8,7 +8,7 @@ and in anything that embeds a QVM sandbox.
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
-def _q3vm(version, git_ref):
+def _q3vm(version, git_ref, build_flags):
     return Recipe(
         family="q3vm",
         version=version,
@@ -26,7 +26,11 @@ def _q3vm(version, git_ref):
         # mingw-w64 appends .exe even though the makefile links to "q3vm".
         artifacts=[Artifact(path="q3vm.exe", component="q3vm.exe")],
         toolchains=["mingw_x86", "mingw_x64"],
-        build_flags="-O2 -std=c89 -fno-crossjumping (upstream Makefile)",
+        # Per version: upstream added -fno-crossjumping to the Makefile after
+        # v1.3.1, to stop GCC merging the computed-goto tails of the opcode
+        # handlers. It changes the shape of the dispatch loop, so the two
+        # builds cannot share one flag string.
+        build_flags=build_flags,
         notes="GCC builds use computed-goto dispatch; the in-tree MSVC solution "
               "produces switch-based dispatch, which is not covered here.",
     )
@@ -34,9 +38,12 @@ def _q3vm(version, git_ref):
 
 RECIPES = {
     # The only released version, and what any tarball grab since 2018 carries.
-    "q3vm_1.3.1": _q3vm("1.3.1", "v1.3.1"),
+    "q3vm_1.3.1": _q3vm("1.3.1", "v1.3.1",
+                        build_flags="-O2 -std=c89 (upstream Makefile)"),
     # 31 commits and ~140 changed lines of vm.c/vm.h past v1.3.1, including
     # opcode handling changes - genuinely different code, not a rebuild.
     "q3vm_2026-03-06": _q3vm("2026-03-06",
-                             "df042e22febcd2851ff26db570f89d04899ca111"),
+                             "df042e22febcd2851ff26db570f89d04899ca111",
+                             build_flags="-O2 -std=c89 -fno-crossjumping "
+                                         "(upstream Makefile)"),
 }

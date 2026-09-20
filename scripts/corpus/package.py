@@ -19,6 +19,15 @@ class PackagingError(RuntimeError):
     pass
 
 
+# -mx=9 matches the compression level of the archives already committed.
+# -mt?=off drops the stored timestamps: they are the only part of the archive
+# that changes when the report does not, and with them in, regenerating
+# unchanged data always produces a diff and byte-for-byte reproducibility
+# cannot be checked at all. Shared with corpus.reprocess, which rewrites the
+# same archives in place and must write them identically.
+ARCHIVE_COMMAND = ("7z", "a", "-t7z", "-mx=9", "-mtm=off", "-mtc=off", "-mta=off")
+
+
 def smda_dir(family, arch):
     return os.path.join(config.DATA_DIR, family, arch, "smda")
 
@@ -27,33 +36,68 @@ def mcrit_dir(family, arch):
     return os.path.join(config.DATA_DIR, family, arch, "mcrit")
 
 
-def write_smda_archive(report, family, arch, slug):
-    """Serialise ``report`` and store it as data/<family>/<arch>/smda/<slug>.7z."""
-    target_dir = smda_dir(family, arch)
-    os.makedirs(target_dir, exist_ok=True)
-    archive = os.path.join(target_dir, "%s.7z" % slug)
+def check_7z():
+    """Fail before a build starts rather than after it, if 7z is missing.
+
+    Every artefact has to be archived, so a host without 7z cannot produce
+    anything - discovering that after a twenty minute compile is pure waste.
+    """
+    if shutil.which("7z") is None:
+        raise PackagingError("7z is not on PATH; it is required to write "
+                             "data/<family>/<arch>/smda/*.7z")
+
+
+def stage_smda_archive(report, slug, stage_dir=None):
+    """Serialise ``report`` into <work dir>/<slug>.7z and size-check it.
+
+    Staged rather than written straight into data/ so that a later failure -
+    a .mcrit over the GitHub blob limit, most of all - cannot leave a
+    committable .7z behind with no .mcrit and no provenance beside it.
+    """
+    stage_dir = stage_dir or config.WORK_DIR
+    os.makedirs(stage_dir, exist_ok=True)
+    archive = os.path.join(stage_dir, "%s.7z" % slug)
     if os.path.exists(archive):
         os.remove(archive)
     with tempfile.TemporaryDirectory() as tmp:
         report_path = os.path.join(tmp, "%s.smda" % slug)
         report.toFile(report_path)
-        # -mx=9 matches the compression level of the archives already committed.
-        subprocess.run(["7z", "a", "-t7z", "-mx=9", archive, report_path],
+        subprocess.run(list(ARCHIVE_COMMAND) + [archive, report_path],
                        check=True, stdout=subprocess.DEVNULL)
-    _check_size(archive)
+    check_size(archive)
     return archive
 
 
-def write_mcrit(export_path, family, arch, slug):
-    target_dir = mcrit_dir(family, arch)
-    os.makedirs(target_dir, exist_ok=True)
-    target = os.path.join(target_dir, "%s.mcrit" % slug)
-    shutil.move(export_path, target)
-    _check_size(target)
-    return target
+def commit_artifacts(family, arch, slug, archive, export_path):
+    """Move a staged .7z and .mcrit into data/ together.
+
+    Both are moved only once both exist and both passed the size check, so
+    data/ never gains half an artefact.
+    """
+    check_size(archive)
+    check_size(export_path)
+    archive_target = os.path.join(smda_dir(family, arch), "%s.7z" % slug)
+    mcrit_target = os.path.join(mcrit_dir(family, arch), "%s.mcrit" % slug)
+    os.makedirs(os.path.dirname(archive_target), exist_ok=True)
+    os.makedirs(os.path.dirname(mcrit_target), exist_ok=True)
+    moved = []
+    try:
+        for source, target in ((archive, archive_target), (export_path, mcrit_target)):
+            if os.path.exists(target):
+                os.remove(target)
+            shutil.move(source, target)
+            moved.append(target)
+    except OSError:
+        # Put data/ back the way it was; a lone .7z is exactly what this
+        # function exists to prevent.
+        for target in moved:
+            if os.path.exists(target):
+                os.remove(target)
+        raise
+    return archive_target, mcrit_target
 
 
-def _check_size(path):
+def check_size(path):
     size = os.path.getsize(path)
     if size > config.MAX_COMMITTED_FILE_SIZE:
         raise PackagingError(

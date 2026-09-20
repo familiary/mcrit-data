@@ -146,13 +146,72 @@ def find_cross_family_functions(root=None, threshold=3):
                 continue
         compressed = export.get("content", {}).get("is_compressed")
         for sha256, blob in export.get("function_entries", {}).items():
-            family = export.get("sample_entries", {}).get(sha256, {}).get("family")
+            # A sample with no family is already reported by validate_mcrit_file;
+            # here it only needs a name that sorts, so the report still renders.
+            family = export.get("sample_entries", {}).get(sha256, {}).get(
+                "family") or "(unknown)"
             entries = json.loads(decompress_decode(blob)) if compressed else blob
             for entry in entries.values():
                 pichash = entry.get("pichash")
                 if pichash:
                     by_hash.setdefault(pichash, set()).add(family)
     return {h: sorted(f) for h, f in by_hash.items() if len(f) >= threshold}
+
+
+def _counterpart(path, from_kind, to_kind, from_suffix, to_suffix):
+    """Map data/<fam>/<arch>/smda/<slug>.7z to its .mcrit sibling, or back."""
+    directory, filename = os.path.split(path)
+    parent, kind = os.path.split(directory)
+    if kind != from_kind or not filename.endswith(from_suffix):
+        return None
+    return os.path.join(parent, to_kind, filename[:-len(from_suffix)] + to_suffix)
+
+
+def find_unpaired_artifacts(root=None):
+    """Report a .7z without its .mcrit, or a .mcrit without its .7z.
+
+    The two are written together and are only useful together: an archive on
+    its own is a report nothing can import, an export on its own has no
+    disassembly behind it. A half-written pair is what a run that died between
+    the two writes leaves behind, and it is otherwise invisible.
+    """
+    problems = []
+    for suffix, args in ((".7z", ("smda", "mcrit", ".7z", ".mcrit")),
+                         (".mcrit", ("mcrit", "smda", ".mcrit", ".7z"))):
+        for path in _iter_data_files(suffix, root):
+            expected = _counterpart(path, *args)
+            if expected and not os.path.exists(expected):
+                problems.append("%s has no matching %s"
+                                % (path, os.path.basename(expected)))
+    return problems
+
+
+def find_stale_provenance(root=None):
+    """Report provenance records whose artefacts are not in the tree.
+
+    write_provenance merges new records over the existing file and never
+    prunes, so renaming a slug - a version string corrected, a component
+    renamed - leaves the old record behind for good, describing a file that
+    is no longer there.
+    """
+    problems = []
+    for path in _iter_data_files("provenance.json", root):
+        with open(path, encoding="utf-8") as handle:
+            try:
+                records = json.load(handle)
+            except ValueError as error:
+                problems.append("%s: not valid JSON (%s)" % (path, error))
+                continue
+        for slug, entry in sorted(records.items()):
+            if not isinstance(entry, dict):
+                continue
+            for key in ("smda", "mcrit"):
+                relative = entry.get(key)
+                if relative and not os.path.exists(
+                        os.path.join(config.REPO_ROOT, relative)):
+                    problems.append("%s: record %s points at %s, which does not exist"
+                                    % (path, slug, relative))
+    return problems
 
 
 _LINK = re.compile(r"\[[^\]]*\]\((data/[^)\s]+)\)")
@@ -195,7 +254,13 @@ def find_undocumented_families(root=None):
                   and name not in linked)
 
 
-def validate_all(root=None, check_size=True):
+def validate_all(root=None, check_size=True, deep=False):
+    """Check everything under ``root`` (default data/).
+
+    ``deep`` adds the cross-family PicHash check. It is opt-in because it
+    loads and decompresses every .mcrit in the corpus, which is far too slow
+    for the per-family check the Windows workflow runs after each build.
+    """
     problems = []
     for path in _iter_data_files(".mcrit", root):
         problems.extend(validate_mcrit_file(path))
@@ -207,6 +272,12 @@ def validate_all(root=None, check_size=True):
             problems.append("%s: exceeds the GitHub blob size limit" % path)
     for sha256, first, second in find_duplicate_samples(root):
         problems.append("duplicate sample %s in %s and %s" % (sha256[:12], first, second))
+    problems.extend(find_unpaired_artifacts(root))
+    problems.extend(find_stale_provenance(root))
+    if deep:
+        for pichash, families in sorted(find_cross_family_functions(root).items()):
+            problems.append("PicHash %s appears under %d families: %s"
+                            % (pichash, len(families), ", ".join(families)))
     # Only when the whole corpus is being checked: a run scoped to one family
     # cannot say anything about the README as a whole.
     if root is None:

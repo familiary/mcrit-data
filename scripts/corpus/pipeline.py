@@ -3,6 +3,7 @@
 import datetime
 import logging
 import os
+import shutil
 import subprocess
 
 from . import config, package
@@ -16,15 +17,41 @@ from .toolchain import get_toolchain
 LOGGER = logging.getLogger(__name__)
 
 
+class ToolchainUnusable(RuntimeError):
+    """A toolchain this host does register, but cannot actually run."""
+
+
+def _prepare_toolchain(toolchain):
+    """Return the compiler banner, or raise if the toolchain cannot be used.
+
+    Registration happens once at import time and only proves the compiler was
+    on PATH then. A toolchain whose compiler has since gone missing, or which
+    cannot be asked for its version, is broken rather than absent - and the
+    two must not end up looking alike, or a CI host whose MinGW install is
+    half-removed reports the same clean "skipped" as a host that never had it.
+    """
+    if toolchain.cc and shutil.which(toolchain.cc) is None:
+        raise ToolchainUnusable("toolchain %s is registered but its compiler %r "
+                                "is not on PATH" % (toolchain.id, toolchain.cc))
+    try:
+        return toolchain.version()
+    except (OSError, subprocess.SubprocessError) as error:
+        raise ToolchainUnusable("toolchain %s is registered but %r could not be "
+                                "run: %s" % (toolchain.id, toolchain.cc, error))
+
+
 def run_recipe(recipe, toolchain_ids=None, dry_run=False):
     """Produce every artefact of ``recipe`` for the requested toolchains.
 
     Returns a list of result dicts, one per (toolchain, artefact). A failure
     for one toolchain is recorded and the remaining ones still run, so a
     32-bit-only build problem does not cost the 64-bit coverage.
+
+    Every dict carries ``status`` ("ok", "fetched", "skipped" or "failed");
+    a "skipped" or "failed" dict also carries ``reason``, so a caller can tell
+    a toolchain this host simply does not have from one that is broken.
     """
     config.ensure_dirs()
-    check_requirements(recipe)
     results = []
     toolchain_ids = toolchain_ids or recipe.toolchains
 
@@ -40,11 +67,29 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
             LOGGER.info("skipping %s: toolchain %s is not available here",
                         recipe.family, toolchain_id)
             results.append({"name": "%s (%s)" % (recipe.family, toolchain_id),
-                            "status": "skipped"})
+                            "status": "skipped", "reason": "toolchain-absent"})
             continue
         name = "%s-%s-%s" % (recipe.family, recipe.version, toolchain.id)
         LOGGER.info("=== %s ===", name)
-        compiler_version = toolchain.version()
+        try:
+            compiler_version = _prepare_toolchain(toolchain)
+        except ToolchainUnusable as error:
+            LOGGER.error("%s failed: %s", name, error)
+            results.append({"name": name, "status": "failed",
+                            "reason": "toolchain-unusable", "error": str(error)})
+            continue
+        try:
+            # Checked here rather than once up front: raised outside a handler,
+            # one recipe missing a tool aborted every remaining recipe of a
+            # multi-recipe run. Both run before anything is fetched or built,
+            # so a host that cannot finish the job says so immediately.
+            check_requirements(recipe)
+            package.check_7z()
+        except (BuildError, RuntimeError) as error:
+            LOGGER.error("%s failed: %s", name, error)
+            results.append({"name": name, "status": "failed",
+                            "reason": "requirements", "error": str(error)})
+            continue
         try:
             source_root, source_provenance = fetch_source(recipe.source, name)
             dependencies = {}
@@ -59,9 +104,11 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                 continue
             produced = run_build(recipe, toolchain_id, source_root, log_path,
                                  dependencies=dependencies)
-        except (BuildError, RuntimeError, subprocess.CalledProcessError) as error:
+        except (BuildError, RuntimeError, OSError,
+                subprocess.CalledProcessError) as error:
             LOGGER.error("%s failed: %s", name, error)
-            results.append({"name": name, "status": "failed", "error": str(error)})
+            results.append({"name": name, "status": "failed", "reason": "build",
+                            "error": str(error)})
             continue
 
         for artifact, binary_path in produced:
@@ -87,12 +134,22 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                 export_path = os.path.join(config.WORK_DIR, "%s.mcrit" % slug)
                 export_reports([report], export_path)
                 family_dir = artifact.family or recipe.family
-                archive = package.write_smda_archive(report, family_dir, arch, slug)
-                mcrit_path = package.write_mcrit(export_path, family_dir, arch, slug)
-            except RuntimeError as error:
+                # Both files are staged in the work dir and only moved into
+                # data/ once each of them exists and is small enough to be
+                # committed. Writing the .7z into data/ first meant a failing
+                # size check on the .mcrit left a committable archive behind
+                # with no export and no provenance next to it.
+                staged_archive = package.stage_smda_archive(report, slug)
+                archive, mcrit_path = package.commit_artifacts(
+                    family_dir, arch, slug, staged_archive, export_path)
+            except (RuntimeError, OSError, subprocess.CalledProcessError) as error:
+                # 7z is run with check=True: CalledProcessError and a missing
+                # binary (OSError) are not RuntimeErrors and used to escape
+                # this handler and kill the whole run with a traceback.
                 label = "%s/%s" % (name, artifact.path)
                 LOGGER.error("%s failed: %s", label, error)
-                results.append({"name": label, "status": "failed", "error": str(error)})
+                results.append({"name": label, "status": "failed",
+                                "reason": "artefact", "error": str(error)})
                 continue
 
             entry = {

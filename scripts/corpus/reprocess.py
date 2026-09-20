@@ -28,7 +28,7 @@ import os
 import subprocess
 import tempfile
 
-from . import config
+from . import config, package
 from .smdaify import _recompute_statistics
 
 
@@ -58,7 +58,7 @@ def _write_archive(archive, member, report_dict):
             handle.write(json.dumps(report_dict, indent=1, sort_keys=True))
         if os.path.exists(archive):
             os.remove(archive)
-        subprocess.run(["7z", "a", "-t7z", "-mx=9", archive, path],
+        subprocess.run(list(package.ARCHIVE_COMMAND) + [archive, path],
                        check=True, stdout=subprocess.DEVNULL)
 
 

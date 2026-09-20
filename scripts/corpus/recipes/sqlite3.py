@@ -25,7 +25,14 @@ _BUILD_LEGACY = ("{cc} -O2 -shared -o sqlite3.dll sqlite3.c "
                  "-DSQLITE_ENABLE_FTS4 -DSQLITE_ENABLE_RTREE")
 
 
-def _sqlite(version, year, code, sha256, build=_BUILD):
+_FLAGS = "-O2, FTS5/RTREE/JSON1 enabled"
+# 3.8.x predates FTS5 and its build line asks for neither FTS5 nor JSON1, so
+# the family cannot state one feature set: the pre-FTS5 build genuinely has a
+# different function set, which is the reason it is covered at all.
+_FLAGS_LEGACY = "-O2, FTS4/RTREE enabled (no FTS5, no JSON1)"
+
+
+def _sqlite(version, year, code, sha256, build=_BUILD, build_flags=_FLAGS):
     return Recipe(
         family="sqlite3",
         version=version,
@@ -37,10 +44,11 @@ def _sqlite(version, year, code, sha256, build=_BUILD):
         build=[BuildStep(build)],
         artifacts=[Artifact(path="sqlite3.dll", component="sqlite3.dll")],
         toolchains=["mingw_x86", "mingw_x64"],
-        build_flags="-O2, FTS/RTREE/JSON1 enabled",
+        build_flags=build_flags,
         notes="Compile-time feature flags change the emitted function set more "
-              "than minor versions do; one profile is held constant across "
-              "these builds.",
+              "than minor versions do, so one profile is held constant across "
+              "the post-FTS5 builds; 3.8.11.1 predates FTS5 and is built with "
+              "FTS4 and RTREE only.",
     )
 
 
@@ -49,7 +57,7 @@ RECIPES = {
     "sqlite3_3.8.11.1": _sqlite(
         "3.8.11.1", "2015", "3081101",
         "a3b0c07d1398d60ae9d21c2cc7f9be6b1bc5b0168cd94c321ede9a0fce2b3cd7",
-        build=_BUILD_LEGACY),
+        build=_BUILD_LEGACY, build_flags=_FLAGS_LEGACY),
     # The generated-columns/UPSERT era, very widely shipped.
     "sqlite3_3.31.1": _sqlite(
         "3.31.1", "2020", "3310100",

@@ -1,6 +1,8 @@
 """Run a recipe's build steps against one toolchain."""
 
 import os
+import re
+import shlex
 import shutil
 import subprocess
 
@@ -12,10 +14,40 @@ class BuildError(RuntimeError):
     pass
 
 
+_PLACEHOLDER = re.compile(r"\{(\w+)\}")
+
+
 def _substitute(text, placeholders):
-    for key, value in placeholders.items():
-        text = text.replace("{%s}" % key, value)
-    return text
+    """Expand ``{key}`` placeholders in one pass.
+
+    One pass matters: replacing key by key meant a value that happened to
+    contain "{cc}" - a path, a flag - was itself rewritten by a later key.
+    Unknown placeholders are left alone, because build steps legitimately
+    contain braces of their own.
+    """
+    return _PLACEHOLDER.sub(
+        lambda match: placeholders.get(match.group(1), match.group(0)), text)
+
+
+def _shell_path(value):
+    """Quote a filesystem path for interpolation into a ``shell=True`` command.
+
+    REPO_ROOT and MCRIT_DATA_WORK_DIR are not under this tooling's control and
+    may contain spaces, which would split the command into two words. Only the
+    value is quoted, not the whole argument, because recipes glue suffixes on
+    ("{repo}/scripts/...", "-I{absl}"); both sh and the Windows argv parser
+    join adjacent quoted and unquoted runs back into a single word.
+    """
+    if os.name != "nt":
+        return shlex.quote(value)
+    # cmd.exe expands %VAR% even inside double quotes, and a literal double
+    # quote cannot be escaped in this position at all, so such a path cannot
+    # be made safe - fail rather than run a command that means something else.
+    if '"' in value or "%" in value:
+        raise BuildError("path %r contains a character that cannot be quoted "
+                         "for cmd.exe; move the checkout or set "
+                         "MCRIT_DATA_WORK_DIR somewhere without %% or \"" % value)
+    return '"%s"' % value if re.search(r"[\s&|<>^(),;=]", value) else value
 
 
 def check_requirements(recipe):
@@ -34,21 +66,39 @@ def run_build(recipe, toolchain_id, source_root, log_path, dependencies=None):
     """
     toolchain = get_toolchain(toolchain_id)
     placeholders = toolchain.placeholders()
-    placeholders["source_root"] = source_root
-    # Lets a recipe call a helper that ships with this tooling, e.g. the
-    # shellcode extractor, without hardcoding where the repository lives.
-    placeholders["repo"] = config.REPO_ROOT
+    dependencies = dependencies or {}
+    # A dependency key silently winning over a toolchain placeholder would
+    # rewrite every {cc} or {arch} in the recipe to a checkout path, and the
+    # build would fail somewhere far away from the cause.
+    shadowed = sorted(set(dependencies) & set(placeholders))
+    if shadowed:
+        raise BuildError("extra_sources key(s) %s shadow toolchain placeholders; "
+                         "rename them" % ", ".join(shadowed))
+
+    # Paths, kept unquoted here because these expansions land in cwd, in
+    # artefact paths and in env values, none of which go through a shell.
+    paths = {
+        "source_root": source_root,
+        # Lets a recipe call a helper that ships with this tooling, e.g. the
+        # shellcode extractor, without hardcoding where the repository lives.
+        "repo": config.REPO_ROOT,
+        # Documented in recipe.BuildStep: where a step may drop output that is
+        # not part of the source tree.
+        "out": config.ARTIFACT_DIR,
+    }
     # Pinned dependency archives/checkouts, addressable by their recipe key.
-    placeholders.update(dependencies or {})
+    paths.update(dependencies)
+    placeholders.update(paths)
+    shell_placeholders = dict(placeholders)
+    shell_placeholders.update({k: _shell_path(v) for k, v in paths.items()})
 
     env = dict(os.environ)
     env.update(toolchain.build_env())
-    env["PATH"] = env.get("PATH", "")
 
     with open(log_path, "w") as log:
         log.write("# toolchain: %s (%s)\n" % (toolchain.id, toolchain.cc))
         for step in recipe.build:
-            command = _substitute(step.command, placeholders)
+            command = _substitute(step.command, shell_placeholders)
             cwd = os.path.join(source_root, _substitute(step.cwd, placeholders))
             step_env = dict(env)
             step_env.update({k: _substitute(v, placeholders) for k, v in step.env.items()})

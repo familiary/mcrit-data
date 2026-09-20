@@ -21,7 +21,11 @@ RECIPES = {
         family="wolfSSL",
         version="5.9.2",
         upstream="https://github.com/wolfSSL/wolfssl",
-        license="GPL-2.0-or-later",
+        # COPYING at v5.9.2-stable is GPLv3 and every source header offers
+        # "version 3 ... or any later version". The GPLv2 fallback in LICENSING
+        # is not general: it applies only when wolfSSL is combined with one of
+        # the named Exception Software projects, which is not this build.
+        license="GPL-3.0-or-later",
         source=Source(git_url="https://github.com/wolfSSL/wolfssl.git",
                       git_ref="v5.9.2-stable"),
         build=[

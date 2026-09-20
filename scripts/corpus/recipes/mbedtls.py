@@ -42,7 +42,10 @@ def _mbedtls(version, git_ref):
                      component="libmbedtls.dll"),
         ],
         toolchains=["mingw_x86", "mingw_x64"],
-        build_flags="-O3 (CMake Release)",
+        # Not CMake's -O3 default: upstream's own CMakeLists.txt overwrites
+        # CMAKE_C_FLAGS_RELEASE with "-O2" in its GNU-compiler branch, so a
+        # Release build of any of these versions is compiled at -O2.
+        build_flags="-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     )
 
 
