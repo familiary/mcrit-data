@@ -1,0 +1,130 @@
+"""Re-derive the statistics block of already-committed reports.
+
+When a report has functions removed from it - compiler runtime glue, here -
+the statistics block has to be recomputed, and a defect in how that was done
+shipped wrong ``num_leaf_functions`` and ``num_recursive_functions`` into
+every affected sample. Those counts are copied into the .mcrit sample entry,
+so consumers were comparing a number SMDA defines one way against one this
+tooling defined another.
+
+Rebuilding every family from source to correct two integers would cost hours
+of compilation and would change nothing else, so this walks the committed
+reports instead and recomputes the block with the same function the pipeline
+now uses. It is not a substitute for regenerating: it only touches
+statistics, and anything that changes the disassembly itself needs a real
+rebuild.
+
+The stored JSON is edited rather than re-serialised from a parsed report.
+SmdaReport.toDict() does not round-trip every field - xdata_refs_from loses
+entries - so writing a parsed report back would quietly discard data that
+has nothing to do with this correction.
+
+    python scripts/build_corpus.py reprocess [family ...]
+"""
+
+import json
+import logging
+import os
+import subprocess
+import tempfile
+
+from . import config
+from .smdaify import _recompute_statistics
+
+
+LOGGER = logging.getLogger(__name__)
+
+
+def _read_archive(archive):
+    """Return (member name, parsed report) from a committed .7z."""
+    with tempfile.TemporaryDirectory() as tmp:
+        subprocess.run(["7z", "x", "-y", "-o%s" % tmp, archive],
+                       check=True, stdout=subprocess.DEVNULL)
+        members = [os.path.join(dirpath, name)
+                   for dirpath, _, names in os.walk(tmp) for name in names]
+        if len(members) != 1:
+            raise RuntimeError("%s holds %d files, expected exactly one"
+                               % (archive, len(members)))
+        with open(members[0], encoding="utf-8") as handle:
+            return os.path.basename(members[0]), json.load(handle)
+
+
+def _write_archive(archive, member, report_dict):
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, member)
+        with open(path, "w", encoding="utf-8") as handle:
+            # SMDA's own spelling, so a reprocessed report stays byte-identical
+            # to one the pipeline would write.
+            handle.write(json.dumps(report_dict, indent=1, sort_keys=True))
+        if os.path.exists(archive):
+            os.remove(archive)
+        subprocess.run(["7z", "a", "-t7z", "-mx=9", archive, path],
+                       check=True, stdout=subprocess.DEVNULL)
+
+
+def _statistics_for(report_dict):
+    from smda.common.SmdaReport import SmdaReport
+
+    report = SmdaReport.fromDict(report_dict)
+    _recompute_statistics(report)
+    return report.statistics.toDict()
+
+
+def _patch_export(path, statistics):
+    """Copy the corrected statistics into the .mcrit sample entry."""
+    with open(path, encoding="utf-8") as handle:
+        export = json.load(handle)
+    changed = False
+    for entry in export.get("sample_entries", {}).values():
+        if entry.get("statistics") != statistics:
+            entry["statistics"] = statistics
+            changed = True
+    if changed:
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(export, handle)
+    return changed
+
+
+def _archives(families):
+    root = config.DATA_DIR
+    names = families or sorted(name for name in os.listdir(root)
+                               if os.path.isdir(os.path.join(root, name)))
+    for family in names:
+        for dirpath, _, filenames in os.walk(os.path.join(root, family)):
+            if os.path.basename(dirpath) != "smda":
+                continue
+            for filename in sorted(filenames):
+                if filename.endswith(".7z"):
+                    yield family, os.path.join(dirpath, filename)
+
+
+def reprocess(families=None):
+    """Recompute statistics for every committed report. Returns the changes.
+
+    Each entry is (archive path, {field: (old, new)}). A report whose block is
+    already correct is left untouched, so this is idempotent and a second run
+    reports nothing.
+    """
+    changes = []
+    for family, archive in _archives(families):
+        member, report_dict = _read_archive(archive)
+        before = report_dict.get("statistics") or {}
+        after = _statistics_for(report_dict)
+        differences = {key: (before.get(key), after[key])
+                       for key in after if before.get(key) != after[key]}
+        if not differences:
+            continue
+        report_dict["statistics"] = after
+        _write_archive(archive, member, report_dict)
+        slug = os.path.basename(archive)[:-len(".7z")]
+        export = os.path.join(os.path.dirname(os.path.dirname(archive)),
+                              "mcrit", "%s.mcrit" % slug)
+        if os.path.exists(export):
+            _patch_export(export, after)
+        else:
+            LOGGER.warning("%s has no matching .mcrit at %s", archive, export)
+        LOGGER.info("%s: %s", slug,
+                    ", ".join("%s %s -> %s" % (k, o, n)
+                              for k, (o, n) in sorted(differences.items())))
+        changes.append((archive, differences))
+    return changes

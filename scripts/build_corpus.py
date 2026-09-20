@@ -36,6 +36,11 @@ def main():
     check = subparsers.add_parser("validate", help="check generated artefacts")
     check.add_argument("path", nargs="?", help="directory to check, default data/")
 
+    again = subparsers.add_parser(
+        "reprocess",
+        help="recompute the statistics block of committed reports in place")
+    again.add_argument("family", nargs="*", help="families, default all")
+
     table = subparsers.add_parser("readme", help="render README table rows for a family")
     table.add_argument("family", nargs="?", help="corpus family, e.g. libzlib")
     table.add_argument("--update", action="store_true",
@@ -51,6 +56,12 @@ def main():
             recipe = recipes.get(name)
             print("  %-28s %s %s -> %s" % (name, recipe.family, recipe.version,
                                            ", ".join(recipe.toolchains)))
+        return 0
+
+    if args.command == "reprocess":
+        from corpus.reprocess import reprocess
+        changes = reprocess(args.family or None)
+        print("%d report(s) corrected" % len(changes))
         return 0
 
     if args.command == "readme":
@@ -74,6 +85,7 @@ def main():
 
     names = sorted(recipes.all_recipes()) if args.recipe == ["all"] else args.recipe
     failures = 0
+    produced = 0
     for name in names:
         results = run_recipe(recipes.get(name), args.toolchains, dry_run=args.dry_run)
         for result in results:
@@ -81,7 +93,16 @@ def main():
             print("%-7s %s%s" % (status.upper(), result["name"],
                                  "" if status != "failed" else ": %s" % result["error"]))
             failures += status == "failed"
-    return 1 if failures else 0
+            produced += status in ("ok", "fetched")
+    if failures:
+        return 1
+    # A run where every recipe was skipped exits non-zero too. Otherwise a host
+    # whose cross compilers are missing prints a screen of SKIPPED and reports
+    # success, and CI cannot tell "nothing to do" from "nothing worked".
+    if not produced:
+        print("no artefacts were produced: every requested build was skipped")
+        return 1
+    return 0
 
 
 if __name__ == "__main__":

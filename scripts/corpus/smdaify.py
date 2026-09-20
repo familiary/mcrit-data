@@ -54,23 +54,42 @@ def disassemble_blob(path, bitness, base_addr):
         content, base_addr, bitness=bitness, architecture="intel", oep=0)
 
 
+def _call_offsets(function):
+    """Offsets of the call instructions in ``function``.
+
+    SMDA decides both "leaf" and "recursive" from call instructions
+    specifically, not from control-flow references in general, so anything
+    recomputing those counts has to find the calls again. CALL_INS comes from
+    SMDA itself so the two cannot drift apart; the mnemonic's last token is
+    what is matched, because a prefix such as ``bnd`` is written in front.
+    """
+    from smda.intel.definitions import CALL_INS
+
+    return {instruction.offset
+            for block in function.blocks.values()
+            for instruction in block
+            if (instruction.mnemonic or "").split(" ")[-1] in CALL_INS}
+
+
 def _recompute_statistics(report):
-    """Recompute the statistics block after functions have been removed.
+    """Recompute the statistics block over the functions the report still has.
 
     The counts end up in the .mcrit sample entry, so leaving them describing a
     function set that is no longer in the report would ship metadata that does
-    not match its own data. Cross-function counts are re-derived against the
-    retained set only, which is why the instruction map is built first.
+    not match its own data.
+
+    Every field is derived the way SMDA derives it, which matters more than it
+    looks: a report this tooling rewrites sits in the same corpus as reports
+    SMDA wrote itself, and a field that means one thing in some samples and
+    another in the rest is worse than no field at all. In particular a leaf is
+    a function containing no call instruction - not one with no outgoing
+    references, which would misclassify every function whose only calls go to
+    imports, and every tail-call - and a function is recursive when a *call*
+    targets its own entry, not when any reference does.
     """
     from smda.DisassemblyStatistics import DisassemblyStatistics
 
     functions = list(report.getFunctions())
-    retained_instructions = set()
-    for function in functions:
-        for block in function.blocks.values():
-            for instruction in block:
-                retained_instructions.add(instruction.offset)
-
     statistics = DisassemblyStatistics()
     statistics.num_functions = len(functions)
     statistics.num_basic_blocks = sum(f.num_blocks for f in functions)
@@ -81,11 +100,14 @@ def _recompute_statistics(report):
     # own terms but would stop this field meaning the same thing it means in
     # every report already in the corpus, so SMDA's definition is kept.
     statistics.num_function_calls = sum(len(f.inrefs) for f in functions)
+    calls = {f.offset: _call_offsets(f) for f in functions}
     statistics.num_recursive_functions = len(
         [f for f in functions
-         if any(f.offset in targets for targets in f.outrefs.values())]
+         if any(f.offset in f.outrefs.get(offset, ())
+                for offset in calls[f.offset])]
     )
-    statistics.num_leaf_functions = len([f for f in functions if f.num_outrefs == 0])
+    statistics.num_leaf_functions = len([f for f in functions
+                                         if not calls[f.offset]])
     statistics.num_thunk_functions = len([f for f in functions if f.isApiThunk()])
     # Failures are properties of the disassembly pass itself; the pass ran over
     # the whole binary regardless of what was retained afterwards.
