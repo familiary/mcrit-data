@@ -29,10 +29,18 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 #                       satisfy a newer compiler would not be.
 _MAKE = ("make -j$(nproc) -f ../../cmpl_gcc_{asm_arch}.mak IS_MINGW=1 "
          "MSYSTEM=1 USE_ASM= CROSS_COMPILE={prefix} RC={windres} "
-         "LFLAGS_STRIP= CFLAGS_WARN_WALL=")
+         "LFLAGS_STRIP= CFLAGS_WARN_WALL= %s")
+
+# 23.01 spells five of the Windows import libraries with capitals -
+# -lUser32, -lOle32, -lGdi32, -lComctl32, -lComdlg32, -lShell32 - which
+# only resolve on a case-insensitive filesystem. mingw-w64 ships them
+# lowercase, so the link fails on Linux. 26.03 lowercased them upstream,
+# which is why only this version needs the list restated.
+_LIB2_LOWERCASE = ('LIB2="-loleaut32 -luuid -ladvapi32 -luser32 -lole32 '
+                   '-lgdi32 -lcomctl32 -lcomdlg32 -lshell32"')
 
 
-def _sevenzip(version, code, sha256):
+def _sevenzip(version, code, sha256, extra=""):
     return Recipe(
         family="7-Zip",
         version=version,
@@ -41,7 +49,7 @@ def _sevenzip(version, code, sha256):
         source=Source(url="https://www.7-zip.org/a/7z%s-src.tar.xz" % code,
                       sha256=sha256),
         build=[
-            BuildStep(_MAKE, cwd="CPP/7zip/Bundles/Format7zF"),
+            BuildStep(_MAKE % extra, cwd="CPP/7zip/Bundles/Format7zF"),
         ],
         artifacts=[Artifact(path="CPP/7zip/Bundles/Format7zF/b/g_{asm_arch}/7z.dll",
                             component="7z.dll")],
@@ -59,7 +67,8 @@ RECIPES = {
     # Extremely widely deployed.
     "7-Zip_23.01": _sevenzip(
         "23.01", "2301",
-        "356071007360e5a1824d9904993e8b2480b51b570e8c9faf7c0f58ebe4bf9f74"),
+        "356071007360e5a1824d9904993e8b2480b51b570e8c9faf7c0f58ebe4bf9f74",
+        extra=_LIB2_LOWERCASE),
     # Current.
     "7-Zip_26.03": _sevenzip(
         "26.03", "2603",
