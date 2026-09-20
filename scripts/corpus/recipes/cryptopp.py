@@ -34,7 +34,7 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 # -march=native and make the artefact depend on whichever host built it.
 # Upstream's per-file ISA flags live in CRYPTOPP_CXXFLAGS and are unaffected.
 _MAKE = ('make -f GNUmakefile -j$(nproc) static '
-         'CXX={cxx}-posix AR={ar} RANLIB={ranlib} CXXFLAGS="-O2 -DNDEBUG"')
+         'CXX={cxx}-posix AR={ar} RANLIB={ranlib} CXXFLAGS="%s"')
 
 # -shared-libgcc, and no -static-libstdc++: linking the C++ runtime in would
 # add thousands of libstdc++ functions to this sample under the cryptopp
@@ -45,7 +45,7 @@ _LINK = ("echo 'int anchor(){return 0;}' > anchor.cpp && "
          "-lws2_32 -lwinpthread -shared-libgcc")
 
 
-def _cryptopp(version, git_ref):
+def _cryptopp(version, git_ref, cxxflags="-O2 -DNDEBUG"):
     return Recipe(
         family="cryptopp",
         version=version,
@@ -54,13 +54,13 @@ def _cryptopp(version, git_ref):
         source=Source(git_url="https://github.com/weidai11/cryptopp.git",
                       git_ref=git_ref),
         build=[
-            BuildStep(_MAKE),
+            BuildStep(_MAKE % cxxflags),
             BuildStep(_LINK),
         ],
         artifacts=[Artifact(path="cryptopp.dll", component="cryptopp.dll")],
         toolchains=["mingw_x86", "mingw_x64"],
-        build_flags="-O2 -DNDEBUG, plus the per-file ISA flags "
-                    "(-msse4.1, -mavx2, -msha, ...) upstream's makefile assigns",
+        build_flags="%s, plus the per-file ISA flags (-msse4.1, -mavx2, "
+                    "-msha, ...) upstream's makefile assigns" % cxxflags,
         notes="Whole library, not upstream's FIPS DLL subset. Crypto++ carries "
               "third-party code that lands in this sample under the cryptopp "
               "name: TweetNaCl (tweetnacl.cpp, 7.0 and later), Andrew Moon's "
@@ -72,9 +72,13 @@ def _cryptopp(version, git_ref):
 
 
 RECIPES = {
-    # Last of the 5.6 line, pre-C++11, and the one still embedded in older
-    # software.
-    "cryptopp_5.6.5": _cryptopp("5.6.5", "CRYPTOPP_5_6_5"),
+    # Last of the 5.6 line, and the one still embedded in older software.
+    # 5.6.5 puts `byte` in the global namespace, which C++17 made ambiguous
+    # against std::byte - 6.0 moved it into the CryptoPP namespace for exactly
+    # that reason. GCC 13 defaults to gnu++17, so the standard this release
+    # was written against is named explicitly instead of patching the source.
+    "cryptopp_5.6.5": _cryptopp("5.6.5", "CRYPTOPP_5_6_5",
+                                cxxflags="-O2 -DNDEBUG -std=c++11"),
     # Middle generation: C++11, SIMD split into its own translation units.
     "cryptopp_7.0.0": _cryptopp("7.0.0", "CRYPTOPP_7_0_0"),
     # Current release.
