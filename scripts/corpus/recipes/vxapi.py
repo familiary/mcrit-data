@@ -38,7 +38,11 @@ _COMPILE = ('for %f in (VX-API\\*.cpp) do @cl /nologo /c /O2 /MD /Zi /std:c++20 
 # so StringConcat and StringCopy came back as one entry. Folding is
 # right for a shipping binary and wrong here, where each routine is
 # supposed to be its own reference sample.
-_LINK = ('link /nologo /DLL /DEBUG /OPT:NOREF /OPT:NOICF /FORCE:UNRESOLVED '
+# /Brepro makes the link reproducible: without it MSVC stamps the PE with
+# the build time, so two runs over identical source produce artefacts
+# with different digests and provenance records that cannot be compared.
+_LINK = ('link /nologo /DLL /DEBUG /Brepro /OPT:NOREF /OPT:NOICF '
+         '/FORCE:UNRESOLVED '
          '/PDB:vxapi.pdb /OUT:vxapi.dll obj\\*.obj '
          'ws2_32.lib dnsapi.lib iphlpapi.lib crypt32.lib dbghelp.lib '
          'wtsapi32.lib urlmon.lib powrprof.lib imm32.lib comctl32.lib '

@@ -36,8 +36,10 @@ _EXPORTS = (
 
 # /NOENTRY with /NODEFAULTLIB keeps the C runtime out entirely: the stubs are
 # self-contained, and a DLL holding only them is reference data with nothing
-# to mis-attribute. It is not loadable, which does not matter here.
-_LINK = ('link /nologo /DLL /NOENTRY /NODEFAULTLIB /OPT:NOREF '
+# to mis-attribute. It is not loadable, which does not matter here. /Brepro
+# drops the build timestamp MSVC would otherwise stamp into the PE, so two
+# runs over identical source produce the same bytes.
+_LINK = ('link /nologo /DLL /NOENTRY /NODEFAULTLIB /Brepro /OPT:NOREF '
          '/DEF:syscalls.def /OUT:syscalls.dll syscalls.obj')
 
 

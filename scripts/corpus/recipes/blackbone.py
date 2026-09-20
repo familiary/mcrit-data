@@ -35,14 +35,19 @@ _CONFIG = "Release(DLL)"
 # qualified-id in a template argument list still needs "typename" even in
 # C++20. Rather than touch upstream source, /permissive is appended through
 # AdditionalOptions, which MSBuild emits last so it overrides the implied
-# /permissive-. This is the only place a compiler switch is added; the
-# project's own optimization and standard settings are left alone.
+# /permissive-. The same file carries /Brepro for the link, without which
+# MSVC stamps the PE with the build time and two runs over identical source
+# produce artefacts with different digests - the x86 DLL did exactly that
+# between two green runs. Nothing else is added; the project's own
+# optimization and standard settings are left alone.
 _CONFORMANCE = (
     'python -c "'
     "open('conformance.props','w').write("
     "'<Project><ItemDefinitionGroup><ClCompile>'"
     "'<AdditionalOptions>/permissive</AdditionalOptions>'"
-    "'</ClCompile></ItemDefinitionGroup></Project>')"
+    "'</ClCompile><Link>'"
+    "'<AdditionalOptions>/Brepro</AdditionalOptions>'"
+    "'</Link></ItemDefinitionGroup></Project>')"
     '"')
 
 # PlatformToolset has to be overridden: the project asks for v142, which the
