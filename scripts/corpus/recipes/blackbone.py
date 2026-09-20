@@ -29,11 +29,28 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 
 _CONFIG = "Release(DLL)"
 
+# The project asks for /std:c++latest, which on v143 implies /permissive-,
+# under which ProcessModules.cpp does not compile: it writes
+# modName->ptr<std::decay_t<decltype(ustr)>::type>(), and a dependent
+# qualified-id in a template argument list still needs "typename" even in
+# C++20. Rather than touch upstream source, /permissive is appended through
+# AdditionalOptions, which MSBuild emits last so it overrides the implied
+# /permissive-. This is the only place a compiler switch is added; the
+# project's own optimization and standard settings are left alone.
+_CONFORMANCE = (
+    'python -c "'
+    "open('conformance.props','w').write("
+    "'<Project><ItemDefinitionGroup><ClCompile>'"
+    "'<AdditionalOptions>/permissive</AdditionalOptions>'"
+    "'</ClCompile></ItemDefinitionGroup></Project>')"
+    '"')
+
 # PlatformToolset has to be overridden: the project asks for v142, which the
 # windows-2022 runner image does not carry - it ships VS2022 and v143 only.
 _MSBUILD = ('msbuild src\\BlackBone\\BlackBone.vcxproj '
             '/p:Configuration="%s" /p:Platform={msbuild_platform} '
             '/p:PlatformToolset=v143 /p:SolutionDir=%%CD%%\\ '
+            '/p:ForceImportBeforeCppTargets=%%CD%%\\conformance.props '
             '/m /v:minimal' % _CONFIG)
 
 
@@ -45,7 +62,7 @@ RECIPES = {
         license="MIT",
         source=Source(git_url="https://github.com/DarthTon/Blackbone.git",
                       git_ref="5ede6ce50cd8ad34178bfa6cae05768ff6b3859b"),
-        build=[BuildStep(_MSBUILD)],
+        build=[BuildStep(_CONFORMANCE), BuildStep(_MSBUILD)],
         artifacts=[
             Artifact(path="build\\{msbuild_platform}\\%s\\BlackBone.dll" % _CONFIG,
                      component="BlackBone.dll",

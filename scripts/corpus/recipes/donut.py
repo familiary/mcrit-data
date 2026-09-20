@@ -1,10 +1,19 @@
 """donut - position-independent loader generator (mcrit-data issue #5).
 
-The issue suggests "MinGW, MSVC, and the docker (might cover mingw already)".
-It does not: the Dockerfile installs mingw-w64 but only runs the plain
-Makefile, which builds the Linux ELF generator. Makefile.mingw is the target
-that produces Windows binaries, and it drives both cross compilers itself, so
-one run emits 32- and 64-bit output together.
+What is worth covering here is the loader, not the generator. The loader is
+the position-independent code donut embeds in whatever it is asked to
+package, so it is what turns up in samples; the generator is a builder that
+runs on the operator's machine. Upstream commits the loader as MSVC-compiled
+C arrays in loader_exe_x86.h and loader_exe_x64.h, and those same arrays are
+what ships in the release binaries and in the donut-shellcode PyPI package,
+so they are extracted and disassembled as buffers.
+
+The generator is deliberately not built. Makefile.mingw links
+lib/aplib64.lib, so donut.exe would statically contain aPLib's compressor -
+and aPLib is already its own family in this repository, so those functions
+would be duplicated under the donut name. The generator is also built
+without any -O, which makes for poor reference code even setting the
+duplication aside.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -17,18 +26,11 @@ def _donut(version, git_ref):
         upstream="https://github.com/TheWover/donut",
         license="BSD-3-Clause",
         source=Source(git_url="https://github.com/TheWover/donut.git", git_ref=git_ref),
-        # The committed loader_exe_*.h are MSVC-compiled and are what ships in
-        # the release binaries and the donut-shellcode PyPI package, so they
-        # are the more representative artefact. They must be extracted before
-        # the build, because Makefile.mingw regenerates those same headers
-        # from its own GCC output and overwrites them.
         build=[
             BuildStep("python3 {repo}/scripts/corpus/extract_blob.py carray "
                       "loader_exe_x86.h donut_loader_x86.bin"),
             BuildStep("python3 {repo}/scripts/corpus/extract_blob.py carray "
                       "loader_exe_x64.h donut_loader_x64.bin"),
-            BuildStep("make -f Makefile.mingw clean", allow_failure=True),
-            BuildStep("make -f Makefile.mingw"),
         ],
         artifacts=[
             Artifact(path="donut_loader_x86.bin", component="loader_x86",
@@ -39,16 +41,17 @@ def _donut(version, git_ref):
                      is_blob=True, bitness=64,
                      build_flags="MSVC -Zp8 -Gy -Os -O1 -GR- -EHa -Oi -GS- "
                                  "(Makefile.msvc, as committed upstream)"),
-            Artifact(path="donut.exe", component="donut.exe"),
         ],
-        # Makefile.mingw is not parameterised by toolchain; it selects both
-        # cross compilers internally, so it is run once.
+        # Nothing is compiled here - the blobs come out of the repository as
+        # upstream committed them - but the pipeline still needs one
+        # toolchain entry to run under.
         toolchains=["mingw_x64"],
-        build_flags="-O0 (Makefile.mingw passes no -O for the generator)",
-        notes="Upstream also ships MSVC-compiled loader blobs in "
-              "loader_exe_x86.h and loader_exe_x64.h at the repository root; "
-              "this recipe covers both those and "
-              "the generator as built by GCC on Linux.",
+        build_flags="see the per-artefact flags",
+        notes="The loader blobs committed upstream in loader_exe_x86.h and "
+              "loader_exe_x64.h, which is the code donut embeds in its "
+              "output. The generator is not built: it statically links the "
+              "vendored lib/aplib64.lib, and aPLib is already a family in "
+              "this repository.",
     )
 
 

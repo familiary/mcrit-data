@@ -16,11 +16,6 @@ from .toolchain import get_toolchain
 LOGGER = logging.getLogger(__name__)
 
 
-def _compiler_version(toolchain):
-    out = subprocess.run([toolchain.cc, "--version"], capture_output=True, text=True)
-    return out.stdout.splitlines()[0].strip() if out.stdout else "unknown"
-
-
 def run_recipe(recipe, toolchain_ids=None, dry_run=False):
     """Produce every artefact of ``recipe`` for the requested toolchains.
 
@@ -49,6 +44,7 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
             continue
         name = "%s-%s-%s" % (recipe.family, recipe.version, toolchain.id)
         LOGGER.info("=== %s ===", name)
+        compiler_version = toolchain.version()
         try:
             source_root, source_provenance = fetch_source(recipe.source, name)
             dependencies = {}
@@ -110,7 +106,7 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                 # thing that produced the code.
                 "toolchain": None if artifact.is_blob else toolchain.id,
                 "compiler": ("MSVC (upstream, exact version unknown)"
-                             if artifact.is_blob else _compiler_version(toolchain)),
+                             if artifact.is_blob else compiler_version),
                 "build_flags": artifact.build_flags or recipe.build_flags,
                 "upstream": recipe.upstream,
                 "license": recipe.license,

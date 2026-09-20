@@ -34,18 +34,23 @@ class Toolchain:
     # "mingw" or "msvc"; selects how probes and compiler flags are spelled.
     kind: str = "mingw"
 
-    def available(self):
-        return shutil.which(self.cc) is not None
-
     def version(self):
-        """Compiler version string, recorded as build provenance."""
+        """Compiler banner line, recorded as build provenance.
+
+        The first line is what every provenance record in this corpus already
+        carries for GCC ("...-gcc (GCC) 13.2.0"), so cl is read the same way -
+        which needs a separate path, because cl has no version flag and
+        prints its banner on stderr.
+        """
         if self.kind == "msvc":
-            # cl prints its banner on stderr and has no version flag.
             out = subprocess.run([self.cc], capture_output=True, text=True)
-            return (out.stderr or out.stdout).splitlines()[0].strip()
-        out = subprocess.run([self.cc, "-dumpfullversion", "-dumpversion"],
-                             capture_output=True, text=True, check=True)
-        return out.stdout.split()[0]
+            text = out.stderr or out.stdout
+        else:
+            out = subprocess.run([self.cc, "--version"], capture_output=True,
+                                 text=True, check=True)
+            text = out.stdout
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        return lines[0] if lines else "unknown"
 
     def probe_command(self, compiler, source, target, shared):
         """Command line that builds a CRT baseline probe with this toolchain."""
@@ -196,21 +201,6 @@ def _register_mingw():
         _TOOLCHAINS[toolchain.id] = toolchain
         # Stable alias so recipes do not have to name the host GCC version.
         _TOOLCHAINS["mingw_%s" % arch] = toolchain
-
-
-_register_mingw()
-_register_msvc()
-
-
-def _register_msvc():
-    detected = _detect_msvc()
-    if detected is None:
-        return
-    toolset, arch = detected
-    bitness = 64 if arch == "x64" else 32
-    toolchain = _msvc(arch, bitness, toolset)
-    _TOOLCHAINS[toolchain.id] = toolchain
-    _TOOLCHAINS["msvc_%s" % arch] = toolchain
 
 
 _register_mingw()
