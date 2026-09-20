@@ -118,5 +118,18 @@ def run_build(recipe, toolchain_id, source_root, log_path, dependencies=None):
                              % (path, log_path))
         if os.path.getsize(path) == 0:
             raise BuildError("build produced an empty artefact: %s" % path)
-        produced.append((artifact, path))
+        # A declared PDB is resolved here rather than by the caller, so it goes
+        # through the same substitution the artefact path does. It was not, and
+        # a BlackBone.pdb under build\{msbuild_platform}\ was handed to SMDA
+        # with the placeholder still in it - which SMDA has no way to report,
+        # so the build looked fine and produced 1837 anonymous functions.
+        pdb_path = ""
+        if artifact.pdb:
+            pdb_path = os.path.join(source_root, _substitute(artifact.pdb, placeholders))
+            if not os.path.isfile(pdb_path):
+                raise BuildError(
+                    "artefact %s declares a PDB that the build did not produce: "
+                    "%s\n  without it the report carries no symbols\n  see %s"
+                    % (artifact.path, pdb_path, log_path))
+        produced.append((artifact, path, pdb_path))
     return produced
