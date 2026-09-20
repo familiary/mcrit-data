@@ -72,6 +72,11 @@ shingler configuration hashes do not match the ones every `.mcrit` in this
 repository already carries - an export that disagrees would import but never
 match anything.
 
+In-memory is also the cost: exporting OpenSSL 3.5.8's `libcrypto.dll`, the
+largest sample here, peaked at 9.4 GB resident and was OOM-killed on a 15 GB
+machine that was running two other builds at the same time. The largest
+families are worth building on their own.
+
 ## A gap in the existing MinGW coverage
 
 Worth recording because it affects data that is already committed. The
