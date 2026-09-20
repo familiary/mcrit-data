@@ -64,8 +64,17 @@ def main():
 
     if args.command == "reprocess":
         from corpus.reprocess import reprocess
-        changes = reprocess(args.family or None)
+        changes, failures = reprocess(args.family or None)
+        for failure in failures:
+            print("FAIL %s" % failure)
         print("%d report(s) corrected" % len(changes))
+        # A report left half-corrected, or not corrected at all, means a .7z
+        # and its .mcrit may now describe the same sample differently. That is
+        # what this command exists to prevent, so it must not be reported as
+        # success.
+        if failures:
+            print("%d report(s) could not be corrected" % len(failures))
+            return 1
         return 0
 
     if args.command == "readme":

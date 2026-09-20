@@ -27,7 +27,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from corpus import config, recipes
+from corpus import config, package, recipes
 
 
 # Everything else in an entry - digests, source pin, compiler, counts, paths,
@@ -60,10 +60,10 @@ def _pick_artifact(recipe, entry):
     matching = [a for a in recipe.artifacts if a.component == component]
     if len(matching) == 1:
         return matching[0]
-    if not matching and len(recipe.artifacts) == 1:
-        # Older entries of single-artefact recipes may carry a component
-        # derived from the path rather than a declared one.
-        return recipe.artifacts[0]
+    # No fallback for an entry whose component names no artefact of the
+    # recipe: the pipeline records artifact.component verbatim, so such an
+    # entry means the recipe has been changed out from under data/ - which is
+    # a mismatch to report, not one to guess a build_flags override through.
     raise Unmatched("component %r matches %d artefacts of the recipe"
                     % (component, len(matching)))
 
@@ -116,9 +116,11 @@ def refresh_family(family, path, check=False):
             else:
                 entry[field] = value
     if changes and not check:
-        with open(path, "w", encoding="utf-8") as handle:
-            json.dump(entries, handle, indent=2, sort_keys=True)
-            handle.write("\n")
+        # Every record of the family is re-serialised here, so this is written
+        # beside the original and moved over it: a truncated provenance.json
+        # would lose the build history of artefacts this run never touched.
+        package.atomic_write_text(
+            path, json.dumps(entries, indent=2, sort_keys=True) + "\n")
     return changes, problems
 
 

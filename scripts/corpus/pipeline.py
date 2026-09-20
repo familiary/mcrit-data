@@ -153,10 +153,15 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                 staged_archive = package.stage_smda_archive(report, slug)
                 archive, mcrit_path = package.commit_artifacts(
                     family_dir, arch, slug, staged_archive, export_path)
-            except (RuntimeError, OSError, subprocess.CalledProcessError) as error:
+            except (RuntimeError, ValueError, OSError,
+                    subprocess.CalledProcessError) as error:
                 # 7z is run with check=True: CalledProcessError and a missing
                 # binary (OSError) are not RuntimeErrors and used to escape
                 # this handler and kill the whole run with a traceback.
+                # recipe.slug() raises ValueError over a stem that cannot be a
+                # filename or a README link, which is a fault in one artefact's
+                # labelling and must cost only that artefact, not every
+                # remaining recipe of a `build all`.
                 label = "%s/%s" % (name, artifact.path)
                 LOGGER.error("%s failed: %s", label, error)
                 results.append({"name": label, "status": "failed",
@@ -183,7 +188,11 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                 "sha256": report.sha256,
                 "num_functions": report.num_functions,
                 "smda_version": report.smda_version,
-                "generated": datetime.datetime.utcnow().strftime("%Y-%m-%d"),
+                # An explicit UTC clock: utcnow() is deprecated from 3.12 on,
+                # and the date recorded here must not depend on the runner's
+                # local timezone.
+                "generated": datetime.datetime.now(
+                    datetime.timezone.utc).strftime("%Y-%m-%d"),
                 "smda": _posix(os.path.relpath(archive, config.REPO_ROOT)),
                 "mcrit": _posix(os.path.relpath(mcrit_path, config.REPO_ROOT)),
             }

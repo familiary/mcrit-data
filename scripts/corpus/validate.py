@@ -214,10 +214,91 @@ def find_stale_provenance(root=None):
     return problems
 
 
+def _recorded_paths(family_dir):
+    """Every artefact path data/<family>/provenance.json accounts for.
+
+    None for a family that has no provenance.json: those predate this tooling
+    (the IDA-derived families) and record nothing by design.
+    """
+    path = os.path.join(family_dir, "provenance.json")
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as handle:
+        try:
+            records = json.load(handle)
+        except ValueError:
+            # Reported by find_stale_provenance; an unreadable file cannot say
+            # anything about which artefacts are recorded either way.
+            return None
+    recorded = set()
+    for entry in records.values():
+        if not isinstance(entry, dict):
+            continue
+        for key in ("smda", "mcrit"):
+            if entry.get(key):
+                recorded.add(entry[key])
+    return recorded
+
+
+def _producer(path):
+    """The toolchain segment of a corpus filename, or None if it has none.
+
+    Filenames follow recipe.slug(), <family>_<version>_<producer>_<arch>_..,
+    and both family and version can contain underscores themselves - so the
+    producer is located by the architecture that follows it rather than by
+    counting fields from the left.
+    """
+    parts = os.path.basename(path).split("_")
+    for index, part in enumerate(parts):
+        if index >= 2 and part in ("x86", "x64"):
+            return parts[index - 1]
+    return None
+
+
+def find_unrecorded_artifacts(root=None):
+    """Report generated artefacts that no provenance record accounts for.
+
+    find_stale_provenance checks the records against the tree; this checks the
+    tree against the records, and nothing else does. An artefact with no
+    record of how it was built cannot be retraced to upstream source, which is
+    the whole claim this corpus makes about its generated data - and a record
+    going missing is silent, where a missing file is not: a workflow that
+    scopes its artifact upload wrongly commits both architectures' files while
+    collecting only one architecture's records.
+
+    Scoped to artefacts built by a toolchain the same family already records,
+    because a family is not necessarily all one thing: data/libzlib holds the
+    MSVC-built reports that came with this corpus long before this tooling
+    alongside the MinGW ones generated here, and those record no provenance
+    and cannot be made to.
+    """
+    problems = []
+    by_family = {}
+    paths = sorted(set(_iter_data_files(".7z", root))
+                   | set(_iter_data_files(".mcrit", root)))
+    for path in paths:
+        # data/<family>/<arch>/<kind>/<file>
+        family_dir = os.path.dirname(os.path.dirname(os.path.dirname(path)))
+        if family_dir not in by_family:
+            recorded = _recorded_paths(family_dir)
+            by_family[family_dir] = (
+                recorded,
+                None if recorded is None else {_producer(p) for p in recorded})
+        recorded, producers = by_family[family_dir]
+        if recorded is None:
+            continue
+        relative = os.path.relpath(path, config.REPO_ROOT).replace(os.sep, "/")
+        if relative in recorded or _producer(relative) not in producers:
+            continue
+        problems.append("%s is not recorded in %s/provenance.json"
+                        % (relative, os.path.basename(family_dir)))
+    return problems
+
+
 _LINK = re.compile(r"\[[^\]]*\]\((data/[^)\s]+)\)")
 
 
-def find_broken_readme_links(root=None):
+def find_broken_readme_links():
     """Report README links that point at files which are not in the tree.
 
     The tables are the only index of this corpus, so a row pointing at a
@@ -238,7 +319,7 @@ def find_broken_readme_links(root=None):
     return missing
 
 
-def find_undocumented_families(root=None):
+def find_undocumented_families():
     """Report families present in data/ that no README link mentions.
 
     Data nobody can find from the README is data nobody will use.
@@ -274,6 +355,7 @@ def validate_all(root=None, check_size=True, deep=False):
         problems.append("duplicate sample %s in %s and %s" % (sha256[:12], first, second))
     problems.extend(find_unpaired_artifacts(root))
     problems.extend(find_stale_provenance(root))
+    problems.extend(find_unrecorded_artifacts(root))
     if deep:
         for pichash, families in sorted(find_cross_family_functions(root).items()):
             problems.append("PicHash %s appears under %d families: %s"

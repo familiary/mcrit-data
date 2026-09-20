@@ -121,6 +121,9 @@ class Recipe:
 
         ``<family>_<version>_<toolchain>_<arch>_<component>``
 
+        ``family`` is the artefact's, not the recipe's, so the stem always
+        names the directory the artefact is filed under.
+
         ``arch`` comes from the disassembled binary rather than the toolchain,
         because a build system can drive both cross compilers itself and emit
         32- and 64-bit output from a single run.
@@ -132,7 +135,13 @@ class Recipe:
         # the toolchain that merely ran the extraction would be a lie baked
         # into the filename, so those are labelled by their real compiler.
         producer = "msvc" if artifact.is_blob else toolchain.short_id
-        parts = [self.family, self.version, producer, arch or toolchain.arch]
+        # The artefact's own family, which is what the pipeline files it under
+        # (data/<artifact.family or recipe.family>/). Naming the stem after the
+        # recipe's family instead put an artefact attributed to a vendored
+        # project in that project's directory under a filename claiming the
+        # host project - the one case Artifact.family exists for.
+        family = artifact.family or self.family
+        parts = [family, self.version, producer, arch or toolchain.arch]
         component = artifact.component or _basename_component(artifact.path)
         parts.append(component)
         slug = "_".join(p for p in parts if p)
