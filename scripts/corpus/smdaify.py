@@ -125,7 +125,7 @@ def _recompute_statistics(report):
 
 
 def _drop_crt_glue(report, toolchain_id):
-    """Remove compiler runtime functions so they keep the MinGW family.
+    """Remove compiler runtime functions so they keep the compiler's family.
 
     A function is glue only when its symbol name and its PicHash both match a
     baseline measured from an otherwise empty DLL built with the same
@@ -142,7 +142,8 @@ def _drop_crt_glue(report, toolchain_id):
     report._sorted_functions = None
     if removed:
         _recompute_statistics(report)
-        LOGGER.info("dropped %d MinGW runtime functions: %s", len(removed), ", ".join(sorted(removed)))
+        LOGGER.info("dropped %d compiler runtime functions: %s",
+                    len(removed), ", ".join(sorted(removed)))
     return removed
 
 
