@@ -15,11 +15,15 @@ PicHash match the baseline, so a project that ships its own ``strlen`` keeps it.
 """
 
 import functools
+import logging
 import os
 import subprocess
 import tempfile
 
 from .toolchain import get_toolchain
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 # The probe has to *use* the runtime, not merely link against it: MinGW pulls
@@ -151,12 +155,8 @@ _PROBE_ATL = """\
 #include <windows.h>
 #include <atlbase.h>
 
-class CProbeModule : public ATL::CAtlDllModuleT<CProbeModule> {};
-CProbeModule _AtlModule;
-
 __declspec(dllexport) void probe_atl(const wchar_t *text)
 {
-    ATL::CComBSTR value(text);
     ATL::CComCriticalSection lock;
     ATL::CSimpleArray<int> items;
 
@@ -167,10 +167,12 @@ __declspec(dllexport) void probe_atl(const wchar_t *text)
     items.Add(1);
     items.Add(2);
     items.RemoveAll();
-    value.Append(text);
+    ATL::AtlThrowImpl(S_OK);
+    (void)text;
 }
-"""
 
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
 
 @functools.lru_cache(maxsize=None)
 def crt_glue(toolchain_id):
@@ -203,8 +205,21 @@ def crt_glue(toolchain_id):
             command = toolchain.probe_command(compiler, source, target, shared)
             command += [flag for flag in extra if flag != "-shared"
                         and toolchain.kind != "msvc"]
-            subprocess.run(command, check=True, capture_output=True,
-                           cwd=tmp)
+            built = subprocess.run(command, capture_output=True, cwd=tmp,
+                                   text=True, errors="replace")
+            if built.returncode != 0:
+                # A probe is a measurement, not a deliverable. One that will
+                # not build costs precision in the glue filter for this
+                # toolchain and nothing else, so it must not take a family's
+                # build down with it - but it must be loud, because a quietly
+                # missing probe is how the MSVC side ended up with no filter
+                # at all.
+                LOGGER.warning(
+                    "%s: the %s baseline probe did not build, so whatever it "
+                    "would have measured stays in this toolchain's artefacts."
+                    "\n%s", toolchain_id, filename,
+                    (built.stderr or built.stdout or "").strip()[-2000:])
+                continue
             probe = disassemble(target, pdb_path=toolchain.probe_pdb(target))
             for function in probe.getFunctions():
                 if not function.function_name:
