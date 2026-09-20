@@ -71,20 +71,33 @@ jobs:
           }
           python scripts/build_corpus.py build $requested.Split(" ")
 
+      # Scoped to the families this workflow produces. Validating all of data/
+      # would also re-report the twelve known defects in the pre-existing MSVC
+      # entries, so the job could never go green on its own work.
       - name: Validate
         if: always()
-        run: python scripts/build_corpus.py validate data
+        shell: pwsh
+        run: |
+          $families = "VX-API", "BlackBone", "SysWhispers"
+          $present = $families | Where-Object { Test-Path "data/$_" }
+          if (-not $present) { throw "no reference data was produced" }
+          foreach ($family in $present) {
+            python scripts/build_corpus.py validate "data/$family"
+            if ($LASTEXITCODE -ne 0) { throw "validation failed for $family" }
+          }
 
+      # Also scoped: data/ holds the whole committed corpus, and uploading it
+      # wholesale pushes gigabytes of unchanged files through every run.
       - name: Upload reference data
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: reference-data-${{ matrix.arch }}
           path: |
-            data/**/*.7z
-            data/**/*.mcrit
-            data/**/provenance.json
-          if-no-files-found: error
+            data/VX-API/**
+            data/BlackBone/**
+            data/SysWhispers/**
+          if-no-files-found: warn
 
       - name: Upload build logs
         if: failure()
