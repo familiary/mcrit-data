@@ -32,7 +32,11 @@ def render_family(family):
     # Group the per-architecture artefacts of one build onto a single row.
     grouped = {}
     for entry in entries.values():
-        key = (entry["version"], entry["toolchain"].rsplit("_", 1)[0],
+        # A blob records no toolchain at all - it was compiled upstream, and
+        # the host that ran the extraction is not what produced the code - so
+        # the grouping key falls back to the producer its filename names.
+        toolchain = entry.get("toolchain") or "msvc"
+        key = (entry["version"], toolchain.rsplit("_", 1)[0],
                _component_key(entry["component"]))
         grouped.setdefault(key, {})[entry["architecture"]] = entry
 
@@ -60,7 +64,7 @@ def _compiler_label(entry):
         # The blob was compiled by whoever committed it, not by the toolchain
         # that happened to run the extraction.
         return "MSVC (as committed upstream)"
-    if "mingw" in entry.get("toolchain", ""):
+    if "mingw" in (entry.get("toolchain") or ""):
         version = compiler.split("(GCC)")[-1].strip().split("-")[0] if "(GCC)" in compiler else "?"
         return "MinGW-w64 GCC %s" % version
     return compiler or entry.get("toolchain", "")
