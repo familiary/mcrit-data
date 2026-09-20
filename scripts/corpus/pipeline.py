@@ -34,7 +34,19 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
     toolchain_ids = toolchain_ids or recipe.toolchains
 
     for toolchain_id in toolchain_ids:
-        toolchain = get_toolchain(toolchain_id)
+        try:
+            toolchain = get_toolchain(toolchain_id)
+        except KeyError:
+            # A recipe names every toolchain it could be built with, but a
+            # given host has only some of them: an MSVC developer environment
+            # targets one architecture at a time, so msvc_x86 simply does not
+            # exist on an x64 runner. Skipping is correct; aborting the whole
+            # run over it is not.
+            LOGGER.info("skipping %s: toolchain %s is not available here",
+                        recipe.family, toolchain_id)
+            results.append({"name": "%s (%s)" % (recipe.family, toolchain_id),
+                            "status": "skipped"})
+            continue
         name = "%s-%s-%s" % (recipe.family, recipe.version, toolchain.id)
         LOGGER.info("=== %s ===", name)
         try:

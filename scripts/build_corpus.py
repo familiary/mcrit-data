@@ -69,7 +69,7 @@ def main():
         results = run_recipe(recipes.get(name), args.toolchains, dry_run=args.dry_run)
         for result in results:
             status = result["status"]
-            print("%-6s %s%s" % (status.upper(), result["name"],
+            print("%-7s %s%s" % (status.upper(), result["name"],
                                  "" if status != "failed" else ": %s" % result["error"]))
             failures += status == "failed"
     return 1 if failures else 0
