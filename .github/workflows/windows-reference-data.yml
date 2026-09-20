@@ -31,6 +31,14 @@ on:
       - scripts/corpus/toolchain.py
       - scripts/corpus/build.py
       - scripts/corpus/pipeline.py
+      # These decide what the artefacts contain, not merely whether the build
+      # runs: baseline.py is the glue filter, smdaify.py the disassembly and
+      # symbol handling, recipe.py the naming. A change to any of them that
+      # did not rebuild the MSVC families would leave them describing a
+      # pipeline this branch no longer has.
+      - scripts/corpus/baseline.py
+      - scripts/corpus/smdaify.py
+      - scripts/corpus/recipe.py
       - .github/workflows/windows-reference-data.yml
 
 permissions:
