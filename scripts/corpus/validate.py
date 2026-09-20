@@ -7,6 +7,7 @@ be re-checked after a contribution.
 
 import json
 import os
+import re
 import subprocess
 import tempfile
 
@@ -154,6 +155,46 @@ def find_cross_family_functions(root=None, threshold=3):
     return {h: sorted(f) for h, f in by_hash.items() if len(f) >= threshold}
 
 
+_LINK = re.compile(r"\[[^\]]*\]\((data/[^)\s]+)\)")
+
+
+def find_broken_readme_links(root=None):
+    """Report README links that point at files which are not in the tree.
+
+    The tables are the only index of this corpus, so a row pointing at a
+    filename that no longer exists is silently useless - which is how twelve
+    dead links survived in this README. Checking them here means a
+    regeneration that renames an artefact cannot be committed without the
+    table being brought along.
+    """
+    readme = os.path.join(config.REPO_ROOT, "README.md")
+    if not os.path.exists(readme):
+        return []
+    with open(readme, encoding="utf-8") as handle:
+        text = handle.read()
+    missing = []
+    for target in sorted(set(_LINK.findall(text))):
+        if not os.path.exists(os.path.join(config.REPO_ROOT, target)):
+            missing.append(target)
+    return missing
+
+
+def find_undocumented_families(root=None):
+    """Report families present in data/ that no README link mentions.
+
+    Data nobody can find from the README is data nobody will use.
+    """
+    readme = os.path.join(config.REPO_ROOT, "README.md")
+    if not os.path.exists(readme) or not os.path.isdir(config.DATA_DIR):
+        return []
+    with open(readme, encoding="utf-8") as handle:
+        linked = {target.split("/")[1] for target in _LINK.findall(handle.read())
+                  if target.count("/") > 1}
+    return sorted(name for name in os.listdir(config.DATA_DIR)
+                  if os.path.isdir(os.path.join(config.DATA_DIR, name))
+                  and name not in linked)
+
+
 def validate_all(root=None, check_size=True):
     problems = []
     for path in _iter_data_files(".mcrit", root):
@@ -166,4 +207,11 @@ def validate_all(root=None, check_size=True):
             problems.append("%s: exceeds the GitHub blob size limit" % path)
     for sha256, first, second in find_duplicate_samples(root):
         problems.append("duplicate sample %s in %s and %s" % (sha256[:12], first, second))
+    # Only when the whole corpus is being checked: a run scoped to one family
+    # cannot say anything about the README as a whole.
+    if root is None:
+        for target in find_broken_readme_links():
+            problems.append("README links %s, which does not exist" % target)
+        for family in find_undocumented_families():
+            problems.append("data/%s is not linked from the README" % family)
     return problems
