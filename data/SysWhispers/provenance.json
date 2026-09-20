@@ -1,0 +1,27 @@
+{
+  "SysWhispers_2021-07-06_msvc143_x64_syscalls.dll": {
+    "architecture": "x64",
+    "build_flags": "assembled with ml64, generated with --preset common",
+    "built_artifact": "syscalls.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "component": "syscalls.dll",
+    "family": "SysWhispers",
+    "generated": "2026-09-20",
+    "is_blob": false,
+    "license": "Apache-2.0",
+    "mcrit": "data/SysWhispers/x64/mcrit/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.mcrit",
+    "notes": "Built from the generator's own output. The DLL holds the 29 generated stubs and nothing else - no C runtime, no entry point - and exports them so each carries its name.",
+    "num_functions": 29,
+    "sha256": "343e699a2849666771e279bb45991ea9ae901ada41f5fe65d3ec24b727529219",
+    "smda": "data/SysWhispers/x64/smda/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "3960669f184388ea3cbd33ee5c9e345f2f702f08",
+      "git_ref": "3960669f184388ea3cbd33ee5c9e345f2f702f08",
+      "git_url": "https://github.com/jthuraisamy/SysWhispers.git"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://github.com/jthuraisamy/SysWhispers",
+    "version": "2021-07-06"
+  }
+}
