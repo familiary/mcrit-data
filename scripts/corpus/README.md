@@ -10,8 +10,20 @@ describes, with the IDA stage replaced by a direct SMDA pass over PE images:
     pip install -r scripts/requirements.txt
     python scripts/build_corpus.py list
     python scripts/build_corpus.py build libzlib_1.3.1
-    python scripts/build_corpus.py validate
-    python scripts/build_corpus.py readme libzlib
+    python scripts/build_corpus.py validate            # --deep also looks for
+                                                       # PicHashes shared across
+                                                       # families
+    python scripts/build_corpus.py readme --update     # rewrite the README
+                                                       # tables from provenance
+
+Two more commands exist for correcting what is already committed, so that a
+change which alters no disassembly does not cost an hours-long rebuild. Both
+are idempotent, and neither is a substitute for regenerating when a build
+actually changes:
+
+    python scripts/build_corpus.py reprocess    # recompute the statistics block
+    python scripts/refresh_provenance.py        # re-derive licence, build flags,
+                                                # upstream and notes from recipes
 
 Generated files land in `data/<Family>/<arch>/{smda,mcrit}/` under the naming
 scheme the `libzlib` family already uses,
@@ -87,18 +99,30 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
-| sRDI shellcode | #3 | needs MSVC `/ORDER:@…` and `/ENTRY:LoadDLL`; a MinGW port would be a code shape nobody ships |
-| VX-API | #4 | needs ATL and `__try/__except`; ~14 of 251 sources cannot be built here, and real-world use is MSVC |
-| pe_to_shellcode stubs | #6 | need `cl` + `ml`/`ml64` + the external `masm_shc`; the tools additionally need source patches |
-| BlackBone | #8 | library needs three source patches plus the DIA SDK and ATL; the driver needs the WDK |
-| SysWhispers 1, SysWhispers2_x86 | #9 | MASM-only output, rejected by both nasm and GAS; SysWhispers2_x86 also ships no licence |
-| SysWhispers2, SysWhispers3 | #9 | cross-build cleanly, but need a hand-written harness to link, and the generated stubs are 2-15 instructions - the reference value is in the `SW2_`/`SW3_` helper routines |
+| sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
+| donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
+| SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |
+| SysWhispers2, SysWhispers3 | #9 | cross-build cleanly, but the generated stubs are 2-15 instructions differing by one immediate - a large, low-value cluster. v1, whose stubs carry a full PEB version ladder, is covered instead |
 | sc4cpp | #14 | upstream repository and the owning GitHub account are both gone (404); the surviving derivative needs clang-cl |
 | BlackLotus | #15 | not an open-source project: leaked bootkit source with no licence, and the UEFI half does not build from the repository as published (it references `global/` and `gnu-efi/` directories that are not there) |
-| Crypto++ | #10 | the `cryptopp.dll` target is broken for GCC cross-builds upstream; the only working artefact is an 18 MB `cryptest.exe` with ~28k functions, which is a corpus-sizing decision rather than a build one |
 | gperftools (tcmalloc) | #10 | its Windows port targets MSVC; `src/windows/port.h` clashes with mingw's `nanosleep` linkage and needs a source patch |
 | google/tcmalloc | #10 | Bazel-only and Linux-only - it cannot produce a PE at all. Issue #10's "tcmalloc" is almost certainly gperftools |
 | gRPC | #10 | cross-building needs a full native build first to obtain `protoc` and `grpc_cpp_plugin`, plus boringssl (which needs Go); 45-90 minutes for two architectures, and its statically-linked-into-Windows-malware rate is close to zero |
+| BlackBone kernel driver | #8 | a separate solution needing the WDK; the user-mode library is built |
+
+VX-API (#4), BlackBone (#8) and SysWhispers v1 (#9) were on this list and are
+not any more: they need ATL, the DIA SDK or MASM, none of which exists for
+GCC, so they are built with MSVC on a `windows-2022` runner by
+`.github/workflows/windows-reference-data.yml` rather than approximated.
+Crypto++ (#10) has also left it - upstream's own `cryptopp.dll` target
+exports only the FIPS subset, but its GNUmakefile builds `libcryptopp.a`
+cleanly and that is linked into a DLL with `--whole-archive`.
+
+None of the three MSVC builds patches upstream source. BlackBone needs one
+compiler switch that its project file does not set (`/permissive`, because
+`/std:c++latest` on v143 implies `/permissive-` and `ProcessModules.cpp`
+omits a `typename`), and it arrives through an `ItemDefinitionGroup` imported
+with `ForceImportBeforeCppTargets`, which leaves the tree untouched.
 
 Anything requiring upstream source to be patched is deliberately absent:
 reference data is only worth having if it describes code that upstream
