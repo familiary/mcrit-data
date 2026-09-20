@@ -17,6 +17,18 @@ from .toolchain import get_toolchain
 LOGGER = logging.getLogger(__name__)
 
 
+def _posix(path):
+    """Record a repository-relative path the way the corpus spells them.
+
+    The MSVC families are produced on a Windows runner, where relpath returns
+    backslashes; everything else in this repository, including the links in
+    the README, uses forward slashes. Recording the separator the host
+    happened to use would make the same artefact look different depending on
+    which machine built it.
+    """
+    return path.replace(os.sep, "/")
+
+
 class ToolchainUnusable(RuntimeError):
     """A toolchain this host does register, but cannot actually run."""
 
@@ -167,13 +179,13 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                 "upstream": recipe.upstream,
                 "license": recipe.license,
                 "source": source_provenance,
-                "built_artifact": os.path.relpath(binary_path, source_root),
+                "built_artifact": _posix(os.path.relpath(binary_path, source_root)),
                 "sha256": report.sha256,
                 "num_functions": report.num_functions,
                 "smda_version": report.smda_version,
                 "generated": datetime.datetime.utcnow().strftime("%Y-%m-%d"),
-                "smda": os.path.relpath(archive, config.REPO_ROOT),
-                "mcrit": os.path.relpath(mcrit_path, config.REPO_ROOT),
+                "smda": _posix(os.path.relpath(archive, config.REPO_ROOT)),
+                "mcrit": _posix(os.path.relpath(mcrit_path, config.REPO_ROOT)),
             }
             if removed:
                 entry["removed_runtime_functions"] = sorted(removed)
