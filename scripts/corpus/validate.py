@@ -5,6 +5,7 @@ data directory, including everything that was already in the repository, can
 be re-checked after a contribution.
 """
 
+import collections
 import json
 import os
 import re
@@ -16,6 +17,118 @@ from . import config
 
 class ValidationError(RuntimeError):
     pass
+
+
+# What find_cross_family_functions reports per shared PicHash. A namedtuple
+# rather than a bare tuple because the third field arrived after callers were
+# written, and "which of these is the size" should not be a question.
+Collision = collections.namedtuple("Collision",
+                                   "families num_instructions names")
+
+# The four kinds of cross-family PicHash, and the only one that fails a run.
+# scripts/explain_collisions.py renders the same four; both get them from
+# classify_collision below, so the report and the gate cannot drift apart -
+# which they had already started to, the report calling a hash standard
+# library code while the gate called it a problem.
+LEAKAGE = "leakage"
+STDLIB = "stdlib"
+DIFFERENT_NAMES = "different-names"
+UNNAMED = "unnamed"
+
+# libstdc++, libsupc++ and their extensions. A symbol in one of these
+# namespaces legitimately carries one name and one body across unrelated
+# families: the header is instantiated into every binary that uses it.
+_STD_NAMESPACES = ("std::", "__gnu_cxx::", "__cxxabiv1::")
+# The same symbols when SMDA could not demangle them. _ZNSt/_ZSt is namespace
+# std, _ZNSs/_ZNSb the string abbreviations, and the two lengths spell out
+# __gnu_cxx and __cxxabiv1.
+_STD_MANGLED = ("ZSt", "ZNSt", "ZNKSt", "ZNSb", "ZNKSb", "ZNSs", "ZNKSs",
+                "ZTISt", "ZTVSt", "ZN9__gnu_cxx", "ZNK9__gnu_cxx",
+                "ZN10__cxxabiv1", "ZNK10__cxxabiv1", "ZTVN10__cxxabiv1")
+
+_TEMPLATE_ARGUMENTS = re.compile(r"<[^<>]*>")
+_CALL_ARGUMENTS = re.compile(r"\([^()]*\)")
+
+
+def _declaration(name):
+    """The qualified name a demangled symbol declares, alone.
+
+    ``void std::vector<int, std::allocator<int>>::_M_realloc_insert<int
+    const&>(...)`` declares ``std::vector::_M_realloc_insert``; everything
+    else in it is a return type, template arguments or parameters. Those have
+    to go before the namespace can be read off, because a project's own
+    function reads as standard library code the moment one of its arguments
+    is a ``std::string`` - ``google::protobuf::StringAppendF(std::__cxx11::
+    basic_string<...>*, char const*, ...)`` is protobuf's code, not
+    libstdc++'s, and exempting it would be exempting exactly the kind of
+    C++-into-C++ leakage this corpus can actually suffer.
+    """
+    bare = name
+    for pattern in (_TEMPLATE_ARGUMENTS, _CALL_ARGUMENTS):
+        while True:
+            shorter = pattern.sub("", bare)
+            if shorter == bare:
+                break
+            bare = shorter
+    parts = bare.split()
+    # What survives is "<return type> <qualified name>", or just the name.
+    return parts[-1] if parts else ""
+
+
+def _is_stdlib_symbol(name):
+    """Whether one symbol belongs to the C++ standard library itself."""
+    declaration = _declaration(name)
+    # The declaration is tried undecorated as well, for the same reason
+    # _same_symbol strips underscores: the 32-bit MinGW ABI puts one in front
+    # of a symbol the 64-bit ABI leaves bare, and the standard library
+    # namespaces are not exempt from that. Raw first, or __gnu_cxx:: and
+    # __cxxabiv1:: would lose the underscores that are part of their names.
+    if declaration.startswith(_STD_NAMESPACES):
+        return True
+    if declaration.lstrip("_").startswith(("std::", "gnu_cxx::", "cxxabiv1::")):
+        return True
+    # Mangled names carry no spaces or arguments to strip.
+    return name.lstrip("_").startswith(_STD_MANGLED)
+
+
+def _same_symbol(names):
+    """Whether every family calls this function by the same name.
+
+    Compared with a leading underscore stripped, because the 32-bit MinGW ABI
+    decorates cdecl symbols with one and the 64-bit ABI does not - the same
+    function is "_floor" in one artefact and "floor" in another, and treating
+    those as different names would hide exactly what this looks for.
+    """
+    return len({name.lstrip("_") for name in names}) == 1
+
+
+def classify_collision(names):
+    """Which kind of cross-family PicHash a set of symbol names describes.
+
+    * Every family calls it the same thing, and it is not standard library
+      code: one function wearing several project names, which is what
+      misattribution looks like. ``floor``, ``__udivmoddi4`` and
+      ``_emu_vscprintf`` were all found exactly this way, and this is the only
+      kind that fails a run.
+    * Every name is a libstdc++ symbol: expected. The same header is
+      instantiated into every binary that uses it, so one body under several
+      family names is correct rather than mistaken - and since a set of names
+      that are all standard library symbols and all equal is still standard
+      library code, this exemption can never launder a project's own symbol.
+    * The names differ: not one function under several names but several
+      functions that happen to hash alike, which the instruction floor bounds
+      rather than removes.
+    * No name anywhere: unclassifiable. Reported, never failed on, because
+      nothing here can tell a stripped runtime helper from a stripped library
+      function.
+    """
+    if not names:
+        return UNNAMED
+    if all(_is_stdlib_symbol(name) for name in names):
+        return STDLIB
+    if _same_symbol(names):
+        return LEAKAGE
+    return DIFFERENT_NAMES
 
 
 def _iter_data_files(suffix, root=None):
@@ -147,13 +260,16 @@ def find_cross_family_functions(root=None, threshold=3, min_instructions=None):
     measured to cost. Pass 0 to count every function, which is useful when
     investigating a specific collision by hand and useless as a gate.
 
-    Returns {pichash: (families, num_instructions)}, the size being the one
-    thing that tells a reader whether a hit is worth opening.
+    Returns {pichash: Collision(families, num_instructions, names)}. The size
+    is the one thing that tells a reader whether a hit is worth opening; the
+    symbol names are what classify_collision needs to tell leakage from the
+    two kinds of sharing that are correct.
     """
     if min_instructions is None:
         min_instructions = config.MIN_CROSS_FAMILY_INSTRUCTIONS
     by_hash = {}
     sizes = {}
+    names = {}
     decompress_decode = None
     for path in _iter_data_files(".mcrit", root):
         with open(path, encoding="utf-8") as handle:
@@ -189,8 +305,38 @@ def find_cross_family_functions(root=None, threshold=3, min_instructions=None):
                     continue
                 by_hash.setdefault(pichash, set()).add(family)
                 sizes[pichash] = instructions
-    return {h: (sorted(f), sizes[h])
+                if entry.get("function_name"):
+                    names.setdefault(pichash, set()).add(entry["function_name"])
+    return {h: Collision(sorted(f), sizes[h], sorted(names.get(h) or []))
             for h, f in by_hash.items() if len(f) >= threshold}
+
+
+def group_cross_family_functions(root=None, min_instructions=None):
+    """The cross-family PicHashes, sorted into the four kinds.
+
+    Returns {kind: [(pichash, Collision), ...]}, every kind present even when
+    empty, each list ordered by size so the largest - the ones worth opening
+    first - come out at the top.
+    """
+    grouped = {kind: [] for kind in (LEAKAGE, STDLIB, DIFFERENT_NAMES, UNNAMED)}
+    found = find_cross_family_functions(root, min_instructions=min_instructions)
+    for pichash, collision in sorted(
+            found.items(), key=lambda item: (-item[1].num_instructions, item[0])):
+        grouped[classify_collision(collision.names)].append((pichash, collision))
+    return grouped
+
+
+def describe_collisions(grouped, min_instructions=None):
+    """The non-failing half of the deep check, as lines for a caller to print."""
+    if min_instructions is None:
+        min_instructions = config.MIN_CROSS_FAMILY_INSTRUCTIONS
+    total = sum(len(rows) for rows in grouped.values())
+    return ["%d cross-family PicHash(es) at >= %d instructions: %d leakage, "
+            "%d standard library instantiation(s), %d whose symbol names "
+            "differ between families, %d carrying no symbol at all"
+            % (total, min_instructions, len(grouped[LEAKAGE]),
+               len(grouped[STDLIB]), len(grouped[DIFFERENT_NAMES]),
+               len(grouped[UNNAMED]))]
 
 
 def _counterpart(path, from_kind, to_kind, from_suffix, to_suffix):
@@ -422,41 +568,139 @@ def find_undocumented_families():
                   and name not in linked)
 
 
-def validate_all(root=None, check_size=True, deep=False, min_instructions=None):
+def is_generated_family(name):
+    """Whether data/<name> is a family this tooling generates and can fix.
+
+    A generated family carries a provenance.json saying where every artefact
+    in it came from. The families that came with the corpus - data/MSVC,
+    data/Golang, data/MinGW, data/Rust, data/nim, data/aPLib - are IDA-derived
+    and carry none, by design.
+
+    A name with no directory under data/ counts as generated, so that a tree
+    checked from somewhere else - a staged build, a CI workspace - is held to
+    the strict standard rather than excused wholesale by data/ not knowing
+    what it is.
+    """
+    family_dir = os.path.join(config.DATA_DIR, name)
+    if not os.path.isdir(family_dir):
+        return True
+    return os.path.exists(os.path.join(family_dir, "provenance.json"))
+
+
+def _family_of(path):
+    """The data/<family> component of a corpus path, or None if it has none."""
+    relative = os.path.relpath(os.path.abspath(path),
+                               os.path.abspath(config.DATA_DIR))
+    first = relative.split(os.sep)[0]
+    if first in (os.pardir, os.curdir):
+        return None
+    return first
+
+
+def _is_generated_path(path):
+    """Whether ``path`` belongs to a family this tooling generates.
+
+    A path that is not under data/ at all counts as generated, so that
+    anything unexpected fails the run rather than being quietly excused.
+    """
+    family = _family_of(path)
+    return family is None or is_generated_family(family)
+
+
+def validate_all(root=None, check_size=True, deep=False, min_instructions=None,
+                 strict=False, notes=None):
     """Check everything under ``root`` (default data/).
 
     ``deep`` adds the cross-family PicHash check. It is opt-in because it
     loads and decompresses every .mcrit in the corpus, which is far too slow
     for the per-family check the Windows workflow runs after each build.
     ``min_instructions`` is passed to it; None takes the default floor.
+
+    Two things are reported without failing the run, and ``notes`` - a list
+    the caller passes in - is where they go:
+
+    * Problems in the IDA-derived families, which carry no provenance.json.
+      They are real - data/MSVC has reports with no family or version
+      recorded, data/Golang four .7z files whose .mcrit never arrived - and
+      they are in data this tooling did not generate and cannot regenerate,
+      so no contribution here can clear them. Failing on them means the
+      command can never pass, which is how it came to be run by hand and
+      never by CI, and a check nobody runs catches nothing. They are still
+      printed, and ``strict`` puts them back among the problems for whoever
+      is actually repairing that data.
+    * Cross-family PicHashes that are not leakage: standard library
+      instantiations, short bodies whose names differ, and hashes carrying no
+      symbol at all. Counting those as failures is what made --deep
+      unusable; see classify_collision for what separates them.
     """
     problems = []
+    unowned = []
+    unowned_families = set()
+
+    def record(message, path=None):
+        """File one finding, under the family that owns the file it is about."""
+        if strict or path is None or _is_generated_path(path):
+            problems.append(message)
+        else:
+            unowned.append(message)
+            unowned_families.add(_family_of(path))
+
     for path in _iter_data_files(".mcrit", root):
-        problems.extend(validate_mcrit_file(path))
+        for problem in validate_mcrit_file(path):
+            record(problem, path)
         if check_size and os.path.getsize(path) > config.MAX_COMMITTED_FILE_SIZE:
-            problems.append("%s: exceeds the GitHub blob size limit" % path)
+            record("%s: exceeds the GitHub blob size limit" % path, path)
     for path in _iter_data_files(".7z", root):
-        problems.extend(validate_smda_archive(path))
+        for problem in validate_smda_archive(path):
+            record(problem, path)
         if check_size and os.path.getsize(path) > config.MAX_COMMITTED_FILE_SIZE:
-            problems.append("%s: exceeds the GitHub blob size limit" % path)
+            record("%s: exceeds the GitHub blob size limit" % path, path)
     for sha256, first, second in find_duplicate_samples(root):
-        problems.append("duplicate sample %s in %s and %s" % (sha256[:12], first, second))
-    problems.extend(find_unpaired_artifacts(root))
+        # Either copy being in a generated family makes it this tooling's
+        # problem, so the one that is gets to decide.
+        owner = first if _is_generated_path(first) else second
+        record("duplicate sample %s in %s and %s" % (sha256[:12], first, second),
+               owner)
+    for problem in find_unpaired_artifacts(root):
+        # The message is "<path> has no matching <name>", and corpus paths
+        # carry no spaces - see recipe.slug, which refuses them.
+        record(problem, problem.split(" ", 1)[0])
+    # The next three read provenance.json and so only ever speak about
+    # families that have one, which are generated by definition.
     problems.extend(find_stale_provenance(root))
     problems.extend(find_miscounted_provenance(root))
     problems.extend(find_unrecorded_artifacts(root))
     if deep:
-        for pichash, (families, size) in sorted(
-                find_cross_family_functions(
-                    root, min_instructions=min_instructions).items()):
-            problems.append(
-                "PicHash %s (%d instructions) appears under %d families: %s"
-                % (pichash, size, len(families), ", ".join(families)))
+        grouped = group_cross_family_functions(root,
+                                               min_instructions=min_instructions)
+        for pichash, collision in grouped[LEAKAGE]:
+            message = ("PicHash %s (%d instructions) appears under %d families "
+                       "as the same symbol %s: %s"
+                       % (pichash, collision.num_instructions,
+                          len(collision.families), sorted(collision.names)[0],
+                          ", ".join(collision.families)))
+            # Leakage among the IDA-derived families alone is somebody else's
+            # data; anything touching a generated family is this one's.
+            record(message, None if any(is_generated_family(family)
+                                        for family in collision.families)
+                   else os.path.join(config.DATA_DIR, collision.families[0]))
+        if notes is not None:
+            notes.extend(describe_collisions(grouped, min_instructions))
     # Only when the whole corpus is being checked: a run scoped to one family
     # cannot say anything about the README as a whole.
     if root is None:
         for target in find_broken_readme_links():
-            problems.append("README links %s, which does not exist" % target)
+            record("README links %s, which does not exist" % target,
+                   os.path.join(config.REPO_ROOT, target))
         for family in find_undocumented_families():
-            problems.append("data/%s is not linked from the README" % family)
+            record("data/%s is not linked from the README" % family,
+                   os.path.join(config.DATA_DIR, family))
+    if notes is not None and unowned:
+        notes.append("%d problem(s) below are in %s, which this tooling does "
+                     "not generate and cannot regenerate; --strict fails on "
+                     "them too"
+                     % (len(unowned),
+                        ", ".join("data/%s" % family
+                                  for family in sorted(unowned_families))))
+        notes.extend(unowned)
     return problems

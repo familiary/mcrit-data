@@ -10,6 +10,7 @@ repository an archive, and it is not caught by running the pipeline.
     python -m unittest discover -s scripts/corpus/tests
 """
 
+import io
 import json
 import os
 import shutil
@@ -420,7 +421,7 @@ class CrossFamilyFloorTest(TempCase):
                       "B": [("deadbeef", 40)],
                       "C": [("deadbeef", 40)]})
         self.assertEqual(validate.find_cross_family_functions(self.data),
-                         {"deadbeef": (["A", "B", "C"], 40)})
+                         {"deadbeef": (["A", "B", "C"], 40, [])})
 
     def test_zero_counts_everything_for_investigating_by_hand(self):
         from corpus import validate
@@ -430,7 +431,7 @@ class CrossFamilyFloorTest(TempCase):
                       "C": [("deadbeef", 3)]})
         found = validate.find_cross_family_functions(self.data,
                                                      min_instructions=0)
-        self.assertEqual(found, {"deadbeef": (["A", "B", "C"], 3)})
+        self.assertEqual(found, {"deadbeef": (["A", "B", "C"], 3, [])})
 
     def test_two_families_are_below_the_family_threshold(self):
         from corpus import validate
@@ -447,6 +448,414 @@ class CrossFamilyFloorTest(TempCase):
                       "C": [("deadbeef", 2)]})
         self.assertEqual(validate.find_cross_family_functions(self.data), {})
 
+
+class ClassifyCollisionTest(unittest.TestCase):
+    """What separates leakage from the two kinds of legitimate sharing.
+
+    This is the judgement the whole deep check rests on, and until now it
+    lived only in scripts/explain_collisions.py, where nothing tested it and
+    validate did not use it. Each branch is pinned with a name taken from the
+    corpus rather than invented, so a future edit that widens the standard
+    library exemption has to widen it past a real symbol.
+    """
+
+    def test_one_name_across_every_family_is_leakage(self):
+        from corpus import validate
+
+        self.assertEqual(validate.classify_collision(["__udivmoddi4"]),
+                         validate.LEAKAGE)
+
+    def test_the_32_bit_decoration_is_not_a_different_name(self):
+        """_floor and floor are one function: 32-bit MinGW decorates cdecl."""
+        from corpus import validate
+
+        self.assertEqual(validate.classify_collision(["_floor", "floor"]),
+                         validate.LEAKAGE)
+
+    def test_a_std_template_instantiation_is_expected(self):
+        from corpus import validate
+
+        # As SMDA demangles it: return type first, so the symbol does not
+        # start with "std::" and a startswith test alone would miss it.
+        self.assertEqual(validate.classify_collision([
+            "void std::vector<int, std::allocator<int>>::_M_realloc_insert"
+            "<int const&>(__gnu_cxx::__normal_iterator<int*, std::vector<int, "
+            "std::allocator<int>>>, int const&)"]), validate.STDLIB)
+
+    def test_the_symbol_that_the_first_version_of_the_explainer_got_wrong(self):
+        """std::__cxx11::basic_stringbuf, flagged as leakage once already."""
+        from corpus import validate
+
+        self.assertEqual(validate.classify_collision([
+            "std::__cxx11::basic_stringbuf<char, std::char_traits<char>, "
+            "std::allocator<char>>::~basic_stringbuf()"]), validate.STDLIB)
+
+    def test_an_undemangled_std_symbol_is_recognised_too(self):
+        """Several committed artefacts carry these unmangled; the x86 ABI
+        puts one more leading underscore on them than the x64 one does."""
+        from corpus import validate
+
+        for name in ("_ZNSt9bad_allocD0Ev", "__ZNSt9bad_allocD0Ev",
+                     "_ZNSsaSEPKc", "_ZN9__gnu_cxx20recursive_init_errorD0Ev",
+                     "_ZN10__cxxabiv117__class_type_infoD0Ev"):
+            self.assertEqual(validate.classify_collision([name]),
+                             validate.STDLIB, name)
+
+    def test_the_decoration_does_not_hide_the_namespace_either(self):
+        """_same_symbol strips the 32-bit leading underscore, so the standard
+        library test has to strip it too - otherwise a decorated std:: symbol
+        matches its undecorated self across families and is then called
+        leakage for a name the two ABIs simply spell differently."""
+        from corpus import validate
+
+        self.assertEqual(validate.classify_collision(
+            ["_std::vector<int>::~vector()", "std::vector<int>::~vector()"]),
+            validate.STDLIB)
+
+    def test_a_project_function_taking_a_std_string_is_not_std(self):
+        """The hole the exemption must not have.
+
+        protobuf, abseil and re2 are all in this corpus and all link each
+        other statically, so C++-into-C++ misattribution is the leakage this
+        gate is most likely to meet next. Every such symbol mentions std:: in
+        its arguments, and testing for "std:: appears anywhere in the name"
+        would excuse the lot of them.
+        """
+        from corpus import validate
+
+        self.assertEqual(validate.classify_collision([
+            "google::protobuf::StringAppendF(std::__cxx11::basic_string<char, "
+            "std::char_traits<char>, std::allocator<char>>*, char const*, ...)"]),
+            validate.LEAKAGE)
+
+    def test_names_that_differ_are_not_one_function(self):
+        from corpus import validate
+
+        self.assertEqual(
+            validate.classify_collision(["_EVP_EncryptInit_ex",
+                                         "_LZ4_compress_limitedOutput"]),
+            validate.DIFFERENT_NAMES)
+
+    def test_one_std_name_among_project_names_does_not_excuse_the_rest(self):
+        """A short body shared by libstdc++ and two C projects is a
+        coincidence, not an instantiation - so it is reported as differing
+        names rather than laundered into the standard library bucket by the
+        one std:: symbol in the set."""
+        from corpus import validate
+
+        self.assertEqual(
+            validate.classify_collision(["_BIO_printf", "___mingw_fscanf",
+                                         "std::ostream::flush()"]),
+            validate.DIFFERENT_NAMES)
+
+    def test_no_symbol_anywhere_cannot_be_classified(self):
+        from corpus import validate
+
+        self.assertEqual(validate.classify_collision([]), validate.UNNAMED)
+
+
+class CorpusTreeCase(TempCase):
+    """A temp corpus whose artefacts satisfy every check except the deep one.
+
+    The shallow checks are not what these tests are about, and a fixture that
+    trips them buries the finding under a screen of unrelated FAIL lines -
+    which is the very failure mode this change exists to end. So the fixture
+    writes a well-formed .mcrit and a real .7z for each family, and a family
+    is only "generated" - this tooling's to answer for - when it is given the
+    provenance.json that says so.
+    """
+
+    def setUp(self):
+        super().setUp()
+        patch = mock.patch.object(config, "REPO_ROOT", self.tmp)
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def family(self, name, functions=(), generated=True, version="1.0",
+               sha256=None):
+        """One family holding one sample.
+
+        ``functions`` is [(pichash, num_instructions, symbol name), ...].
+        ``version`` of None writes a sample validate_mcrit_file complains
+        about, which is how the pre-existing data/MSVC reports look.
+        """
+        sha256 = sha256 or (name.encode("utf-8").hex() + "0" * 8)
+        sample = {"sha256": sha256, "family": name, "is_library": True,
+                  "statistics": {"num_functions": max(len(functions), 1)}}
+        if version:
+            sample["version"] = version
+        export = {
+            "config": {"minhash": config.EXPECTED_MINHASH_CONFIG,
+                       "shingler": config.EXPECTED_SHINGLER_CONFIG},
+            # Uncompressed, so these tests need no mcrit import.
+            "content": {"num_samples": 1, "is_compressed": False},
+            "family_mapping": {"1": name},
+            "sample_entries": {sha256: sample},
+            "function_entries": {sha256: {
+                str(index): {"pichash": pichash, "num_instructions": size,
+                             "function_name": symbol}
+                for index, (pichash, size, symbol) in enumerate(functions)}},
+        }
+        self.write(os.path.join(self.data, name, "x64", "mcrit",
+                                "%s.mcrit" % name), json.dumps(export))
+        self._archive(name, version)
+        if generated:
+            self.write(os.path.join(self.data, name, "provenance.json"), "{}")
+
+    def _archive(self, name, version):
+        """The .7z beside it, or find_unpaired_artifacts reports the pair."""
+        member = self.write(os.path.join(self.tmp, "%s.smda" % name), json.dumps(
+            {"metadata": {"family": name, "version": version or "1.0"},
+             "status": "ok", "xcfg": {"4096": {}}}))
+        archive = os.path.join(self.data, name, "x64", "smda", "%s.7z" % name)
+        os.makedirs(os.path.dirname(archive), exist_ok=True)
+        subprocess.run(list(package.ARCHIVE_COMMAND) + [archive, member],
+                       check=True, stdout=subprocess.DEVNULL)
+
+    def shared(self, symbol, size=40, families=("A", "B", "C"), generated=None):
+        """The same PicHash in several families, under one symbol name."""
+        for name in families:
+            self.family(name, [("deadbeef", size, symbol)],
+                        generated=name in (families if generated is None
+                                           else generated))
+
+
+class DeepGateTest(CorpusTreeCase):
+    """--deep fails on leakage and on nothing else.
+
+    The command reported all 79 of its findings as failures, every one of
+    them benign, so it exited 1 on a corpus in the state its author intended
+    and could not be used as a gate. These fix both halves of that: the
+    benign kinds stop failing, and the leakage kind still does.
+    """
+
+    def test_the_same_symbol_in_three_families_fails_the_run(self):
+        from corpus import validate
+
+        self.shared("_floor")
+        problems = validate.validate_all(self.data, deep=True)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("_floor", problems[0])
+        self.assertIn("A, B, C", problems[0])
+
+    def test_a_standard_library_instantiation_does_not(self):
+        from corpus import validate
+
+        notes = []
+        self.shared("std::_Rb_tree<int, int>::_M_erase(int*)")
+        self.assertEqual(validate.validate_all(self.data, deep=True, notes=notes),
+                         [])
+        self.assertIn("1 standard library instantiation", notes[0])
+
+    def test_differing_names_do_not(self):
+        from corpus import validate
+
+        notes = []
+        for name, symbol in (("A", "_a"), ("B", "_b"), ("C", "_c")):
+            self.family(name, [("deadbeef", 40, symbol)])
+        self.assertEqual(validate.validate_all(self.data, deep=True, notes=notes),
+                         [])
+        self.assertIn("1 whose symbol names differ", notes[0])
+
+    def test_a_hash_with_no_symbol_anywhere_does_not(self):
+        from corpus import validate
+
+        notes = []
+        self.shared("")
+        self.assertEqual(validate.validate_all(self.data, deep=True, notes=notes),
+                         [])
+        self.assertIn("1 carrying no symbol", notes[0])
+
+    def test_the_counts_are_reported_even_when_nothing_fails(self):
+        """The numbers are the point of running it: a silent pass would say
+        only that the check ran, not what it saw."""
+        from corpus import validate
+
+        notes = []
+        self.shared("std::vector<int>::~vector()")
+        validate.validate_all(self.data, deep=True, notes=notes)
+        self.assertEqual(len(notes), 1)
+        self.assertIn("1 cross-family PicHash(es) at >= 10 instructions: "
+                      "0 leakage", notes[0])
+
+    def test_without_deep_the_collision_is_not_looked_for_at_all(self):
+        from corpus import validate
+
+        notes = []
+        self.shared("_floor")
+        self.assertEqual(validate.validate_all(self.data, notes=notes), [])
+        self.assertEqual(notes, [])
+
+    def test_leakage_confined_to_families_this_tooling_does_not_own(self):
+        """data/MSVC sharing a symbol with data/Golang is a real finding and
+        somebody else's data: reported, not failed on, exactly like the other
+        pre-existing problems in those families."""
+        from corpus import validate
+
+        notes = []
+        self.shared("_floor", families=("MSVC", "Golang", "MinGW"), generated=())
+        self.assertEqual(validate.validate_all(self.data, deep=True, notes=notes),
+                         [])
+        self.assertTrue(any("_floor" in note for note in notes), notes)
+
+    def test_a_tree_checked_from_outside_data_is_not_excused(self):
+        """A corpus staged somewhere else - a CI workspace, a build directory
+        - has no data/<family> to look up, and unknown data must fail rather
+        than inherit the excuse the IDA-derived families get."""
+        from corpus import validate
+
+        elsewhere = os.path.join(self.tmp, "staged")
+        with mock.patch.object(config, "DATA_DIR", elsewhere):
+            os.makedirs(elsewhere)
+            saved, self.data = self.data, elsewhere
+            try:
+                self.shared("_floor", generated=())
+            finally:
+                self.data = saved
+        # DATA_DIR is back to the empty temp corpus, so nothing in the staged
+        # tree resolves to a family - which is the situation under test.
+        problems = validate.validate_all(elsewhere, deep=True)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("_floor", problems[0])
+
+    def test_but_one_generated_family_in_it_makes_it_this_tooling_s_problem(self):
+        from corpus import validate
+
+        self.shared("_floor", families=("MinGW", "Golang", "A"),
+                    generated=("A",))
+        problems = validate.validate_all(self.data, deep=True)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("_floor", problems[0])
+
+    def test_explain_collisions_agrees_with_validate_on_the_same_corpus(self):
+        """The two must agree, which is why there is only one classifier."""
+        import explain_collisions
+        from corpus import validate
+
+        for name in ("A", "B", "C"):
+            self.family(name, [("aaaa", 40, "_floor" if name != "B" else "floor"),
+                               ("bbbb", 40, "std::x<int>::y()")])
+        grouped = validate.group_cross_family_functions(self.data)
+        self.assertEqual([h for h, _ in grouped[validate.LEAKAGE]], ["aaaa"])
+        self.assertEqual([h for h, _ in grouped[validate.STDLIB]], ["bbbb"])
+        with mock.patch.object(sys, "argv",
+                               ["explain_collisions.py", self.data]):
+            with mock.patch("sys.stdout", io.StringIO()) as out:
+                exit_code = explain_collisions.main()
+        # Same verdict as validate: one hash to chase, so a non-zero exit.
+        self.assertEqual(exit_code, 1)
+        self.assertIn("floor", out.getvalue())
+        self.assertEqual(len(validate.validate_all(self.data, deep=True)), 1)
+
+
+class UnownedFamilyScopeTest(CorpusTreeCase):
+    """The 21 problems in data/MSVC and data/Golang, which nobody can fix here.
+
+    They are genuine - reports with no family or version recorded, .7z files
+    whose .mcrit never arrived - and they are in IDA-derived data this
+    pipeline did not produce and cannot regenerate. Failing on them means
+    every run of validate is red regardless of the contribution being
+    checked, which is how a check stops being read. They are reported as
+    notes instead, and --strict puts them back.
+    """
+
+    def test_a_problem_in_a_family_with_no_provenance_is_a_note(self):
+        from corpus import validate
+
+        notes = []
+        self.family("MSVC", version=None, generated=False)
+        self.assertEqual(validate.validate_all(self.data, notes=notes), [])
+        self.assertIn("data/MSVC", notes[0])
+        self.assertTrue(any("no version recorded" in note for note in notes), notes)
+
+    def test_strict_puts_it_back_among_the_problems(self):
+        from corpus import validate
+
+        notes = []
+        self.family("MSVC", version=None, generated=False)
+        problems = validate.validate_all(self.data, strict=True, notes=notes)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertEqual(notes, [])
+
+    def test_the_same_problem_in_a_generated_family_still_fails(self):
+        """The scoping must not excuse the data this branch actually writes."""
+        from corpus import validate
+
+        self.family("libzlib", version=None, generated=True)
+        problems = validate.validate_all(self.data)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("no version recorded", problems[0])
+
+    def test_an_unpaired_archive_is_scoped_by_its_own_family(self):
+        """find_unpaired_artifacts reports a path rather than a family, and
+        four of the eight pre-existing Golang problems come from it."""
+        from corpus import validate
+
+        notes = []
+        self.family("libzlib")
+        self.family("Golang", generated=False)
+        os.remove(os.path.join(self.data, "Golang", "x64", "mcrit",
+                               "Golang.mcrit"))
+        self.assertEqual(validate.validate_all(self.data, notes=notes), [])
+        self.assertTrue(any("Golang.7z has no matching" in note
+                            for note in notes), notes)
+
+    def test_a_duplicate_shared_with_a_generated_family_is_not_excused(self):
+        """One sha256 in data/MSVC and in a generated family is this
+        tooling's problem: it is the generated side that would have to go."""
+        from corpus import validate
+
+        self.family("MSVC", generated=False, sha256="aa" * 32)
+        self.family("libzlib", generated=True, sha256="aa" * 32)
+        problems = validate.validate_all(self.data)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("duplicate sample aaaaaaaaaaaa", problems[0])
+
+
+class ValidateExitCodeTest(CorpusTreeCase):
+    """What CI actually observes: the process exit code and its output."""
+
+    def _run(self, *arguments):
+        import build_corpus
+
+        with mock.patch.object(sys, "argv",
+                               ["build_corpus.py", "validate"] + list(arguments)):
+            with mock.patch("sys.stdout", io.StringIO()) as out:
+                return build_corpus.main(), out.getvalue()
+
+    def test_a_clean_corpus_exits_zero_with_the_counts_printed(self):
+        self.shared("std::vector<int>::~vector()")
+        code, output = self._run("--deep", self.data)
+        self.assertEqual(code, 0, output)
+        self.assertIn("NOTE 1 cross-family PicHash(es)", output)
+        self.assertNotIn("FAIL", output)
+        self.assertIn("0 problem(s)", output)
+
+    def test_leakage_exits_one(self):
+        self.shared("_floor")
+        code, output = self._run("--deep", self.data)
+        self.assertEqual(code, 1, output)
+        self.assertIn("FAIL PicHash", output)
+        self.assertIn("1 problem(s)", output)
+
+    def test_the_pre_existing_problems_do_not_decide_the_exit_code(self):
+        """The whole point: a corpus whose only problems are in data nobody
+        here can regenerate is a pass, and says why."""
+        self.family("MSVC", version=None, generated=False)
+        code, output = self._run(self.data)
+        self.assertEqual(code, 0, output)
+        self.assertIn("--strict fails on them too", output)
+        self.assertIn("0 problem(s)", output)
+        self.assertEqual(self._run("--strict", self.data)[0], 1)
+
+    def test_the_floor_can_be_lowered_from_the_command_line(self):
+        """--min-instructions is for investigating by hand, and it has to
+        reach the report as well as the collection, or a hand run describes
+        the same corpus differently from the gate."""
+        self.shared("_floor")
+        code, output = self._run("--deep", "--min-instructions", "100", self.data)
+        self.assertEqual(code, 0, output)
+        self.assertIn("at >= 100 instructions", output)
 
 
 class RefilterTest(TempCase):

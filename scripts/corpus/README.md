@@ -14,6 +14,8 @@ describes, with the IDA stage replaced by a direct SMDA pass over PE images:
                                                        # PicHashes shared across
                                                        # families, above a
                                                        # --min-instructions floor
+                                                       # --strict also fails on
+                                                       # the IDA-derived data
     python scripts/build_corpus.py readme --update     # rewrite the README
                                                        # tables from provenance
 
@@ -63,12 +65,36 @@ Together: **425 functions** of compiler runtime, and the cross-family
 PicHashes `validate --deep` reports fell from **76 to 58**. Run
 `refilter --dry-run` first to see the scale of any future round.
 
-Count those off the `FAIL PicHash` lines rather than off validate's total:
-the total also carries the 21 pre-existing problems in `data/MSVC` and
-`data/Golang` described below, which are not collisions at all.
+The 58 that remain are the measured floor rather than an outstanding defect,
+and `validate --deep` no longer fails on them. It fails on one kind of
+collision only - the kind both rounds above were found by, one symbol name
+repeated across every family sharing the hash - and reports the rest as
+`NOTE` lines with their counts. The two commands agree because they share
+one classifier, `corpus.validate.classify_collision`.
 
-The 58 that remain are the measured floor rather than an outstanding defect.
-`scripts/explain_collisions.py` sorts them into the two kinds:
+For the same reason, the 21 pre-existing problems in `data/MSVC` and
+`data/Golang` described below are reported without failing the run: they are
+in IDA-derived families that carry no `provenance.json`, which this pipeline
+neither produced nor can regenerate. `--strict` fails on them too, for
+whoever is actually repairing that data. Everything in a generated family
+still fails as it always did.
+
+**Where the deep check belongs in CI.** Not in
+`.github/workflows/windows-reference-data.yml`, which is the only workflow
+here today. That job prunes `data/` down to the artefacts it has just built
+before it validates, so a whole-corpus run there would be measuring a corpus
+with most of three families deliberately removed - and would fail on the
+README links pointing at the files it removed. Its per-family
+`validate data/<family>` calls cannot host `--deep` either: a shared PicHash
+needs three families to be one, so a single-family root can never report
+anything. The check wants a Linux job over the whole committed corpus,
+triggered by changes to `data/**` or to the code that decides what
+artefacts contain (`corpus/baseline.py`, `corpus/smdaify.py`,
+`corpus/refilter.py`, `corpus/validate.py`), running
+`python scripts/build_corpus.py validate --deep`. Budget about twenty
+minutes: it extracts every `.7z` and decompresses every `.mcrit`.
+
+`scripts/explain_collisions.py` sorts the survivors into the two kinds:
 
 * **C++ standard library template instantiations** - `std::vector<T>::_M_realloc_insert`,
   `std::_Rb_tree`, `std::basic_string` constructors. These compile to
@@ -82,9 +108,25 @@ The 58 that remain are the measured floor rather than an outstanding defect.
   small bodies that happen to hash alike, which is what the instruction floor
   bounds rather than eliminates.
 
-Today that split is 26 standard-library instantiations, 27 short-body
+Today that split is 21 standard-library instantiations, 32 short-body
 coincidences and 5 hashes that carry no symbol in any family, with nothing
-in the leakage bucket.
+in the leakage bucket. (It was recorded here as 26 / 27; that count came
+from a rule which called a hash standard-library code as soon as *one* of
+the names sharing it was a `std::` one, so seven short-body coincidences
+that happened to include a libstdc++ symbol were filed under the wrong
+heading. A hash is standard-library code now only when every name sharing
+it is - which changes no verdict, since the leakage test needs all the
+names to be equal anyway.)
+
+Measured four ways, that bucket is empty on merit rather than by
+construction: with the standard-library exemption keyed on any name or on
+every name, and testing "the symbol is declared in `std::`" or the looser
+"`std::` occurs anywhere in the name", all four combinations put zero
+hashes in it. The tight test is the one in the code, because the loose one
+excuses `google::protobuf::StringAppendF(std::__cxx11::basic_string<...>*,
+...)` - protobuf's own code, in a corpus where protobuf, abseil and re2
+link each other statically, which is the next leakage this gate is likely
+to meet.
 
 Patching in place rather than rebuilding is only sound if it produces what a
 rebuild would, and that was measured, not assumed: re-exporting a committed

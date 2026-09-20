@@ -8,11 +8,6 @@ rounds of runtime removal, 58 after, and neither figure says whether what is
 left is compiler runtime leaking into library families or C++ header code
 that genuinely is in every binary that uses it.
 
-(Read that count off the "FAIL PicHash" lines, not off validate's total. The
-total includes 21 pre-existing problems in data/MSVC and data/Golang that
-have nothing to do with collisions, and conflating the two is how "58" first
-got written down as "79".)
-
 This groups the survivors by what they are called, which is the thing that
 distinguishes the two. It is how both rounds of leakage on this branch were
 found:
@@ -39,95 +34,32 @@ What it should NOT find, and what is expected to remain:
   several names; they are different functions that happen to hash alike, and
   the instruction floor bounds that rather than removing it.
 
-The rule of thumb: a hash whose symbol name is the SAME across families is
-leakage worth chasing; one whose names DIFFER is a coincidence worth
-ignoring. With one exception, which the first run of this script walked
-straight into: a C++ standard library symbol has the same name across
-families *and* the same code, legitimately, because libstdc++ instantiates
-the same template into each of them. Those are reported separately rather
-than as leakage, or the signal is drowned by the thing it is meant to
-distinguish itself from.
+The classification itself lives in ``corpus/validate.py`` and is imported
+from there, because ``validate --deep`` fails on exactly the bucket this
+prints first. Two copies of that judgement would drift, and had begun to:
+the first version of this script called ``std::__cxx11::basic_stringbuf``
+leakage while validate called every collision a problem, so the two
+disagreed about the same corpus on the same day.
 
     python scripts/explain_collisions.py
     python scripts/explain_collisions.py --min-instructions 20
 """
 
 import argparse
-import collections
-import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from corpus import config
+from corpus import config, validate
 
 
-def _iter_exports(root):
-    for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
-        for filename in sorted(filenames):
-            if filename.endswith(".mcrit"):
-                yield os.path.join(dirpath, filename)
-
-
-def collect(root, min_instructions):
-    """{pichash: (families, size, names)} for hashes shared by 3+ families."""
-    by_hash, sizes, names = {}, {}, {}
-    decompress = None
-    for path in _iter_exports(root):
-        with open(path, encoding="utf-8") as handle:
-            try:
-                export = json.load(handle)
-            except ValueError:
-                continue
-        compressed = (export.get("content") or {}).get("is_compressed")
-        samples = export.get("sample_entries") or {}
-        for sha256, blob in (export.get("function_entries") or {}).items():
-            family = (samples.get(sha256) or {}).get("family") or "(unknown)"
-            if compressed:
-                if decompress is None:
-                    from mcrit.libs.utility import decompress_decode as decompress
-                entries = json.loads(decompress(blob))
-            else:
-                entries = blob
-            for entry in entries.values():
-                pichash = entry.get("pichash")
-                size = entry.get("num_instructions") or 0
-                if not pichash or size < min_instructions:
-                    continue
-                by_hash.setdefault(pichash, set()).add(family)
-                sizes[pichash] = size
-                if entry.get("function_name"):
-                    names.setdefault(pichash, set()).add(entry["function_name"])
-    return {h: (sorted(f), sizes[h], sorted(names.get(h) or []))
-            for h, f in by_hash.items() if len(f) >= 3}
-
-
-def _is_stdlib(found):
-    """Whether this is C++ standard library code rather than a project's own.
-
-    libstdc++ instantiates the same templates into every binary that uses
-    them, so a std:: symbol legitimately carries one name and one body across
-    unrelated families. That is the one case where "same name everywhere" is
-    not evidence of misattribution, and without excluding it the leakage
-    bucket fills with basic_stringbuf and vector<T>::_M_realloc_insert.
-    """
-    return any(name.startswith(("std::", "__gnu_cxx::"))
-               or "std::" in name or "__gnu_cxx" in name
-               for name in found)
-
-
-def _same_symbol(found):
-    """Whether every family calls this function by the same name.
-
-    Compared with a leading underscore stripped, because the 32-bit MinGW ABI
-    decorates cdecl symbols with one and the 64-bit ABI does not - the same
-    function is "_floor" in one artefact and "floor" in another, and treating
-    those as different names would hide exactly what this looks for.
-    """
-    bare = {name.lstrip("_") for name in found}
-    return len(bare) == 1
+def _print_rows(rows):
+    for pichash, collision in rows:
+        print("  %4d ins  %-34s  %s"
+              % (collision.num_instructions,
+                 (sorted(collision.names)[0] if collision.names else "")[:34],
+                 ", ".join(collision.families)[:70]))
 
 
 def main():
@@ -141,41 +73,33 @@ def main():
     args = parser.parse_args()
 
     root = args.path or config.DATA_DIR
-    shared = collect(root, args.min_instructions)
+    grouped = validate.group_cross_family_functions(root, args.min_instructions)
+    total = sum(len(rows) for rows in grouped.values())
     print("cross-family PicHashes at >= %d instructions: %d\n"
-          % (args.min_instructions, len(shared)))
+          % (args.min_instructions, total))
 
-    suspect, stdlib, benign, unnamed = [], [], [], []
-    for pichash, (families, size, found) in shared.items():
-        if not found:
-            unnamed.append((pichash, families, size, found))
-        elif _is_stdlib(found):
-            stdlib.append((pichash, families, size, found))
-        elif _same_symbol(found):
-            suspect.append((pichash, families, size, found))
-        else:
-            benign.append((pichash, families, size, found))
-
+    suspect = grouped[validate.LEAKAGE]
     print("LIKELY LEAKAGE - one symbol name across every family sharing it")
-    print("(chase these: extend the baseline probe so they are recognised)")
+    print("(chase these: extend the baseline probe so they are recognised.")
+    print(" these, and only these, fail validate --deep)")
     if not suspect:
         print("  none\n")
-    for pichash, families, size, found in sorted(suspect, key=lambda r: -r[2]):
-        print("  %4d ins  %-34s  %s" % (size, sorted(found)[0][:34],
-                                        ", ".join(families)[:70]))
+    _print_rows(suspect)
     print()
 
     print("EXPECTED - C++ standard library instantiated into each project")
-    print("(%d hashes; same name and same code in every family, legitimately)"
-          % len(stdlib))
+    print("(%d hashes; every symbol sharing the hash is a libstdc++ one, so "
+          "the same\n header really is in each of these binaries)"
+          % len(grouped[validate.STDLIB]))
     print()
 
     print("EXPECTED - names differ between families, so not one function")
     print("(%d hashes; the instruction floor bounds these rather than removing them)"
-          % len(benign))
+          % len(grouped[validate.DIFFERENT_NAMES]))
     print()
-    if unnamed:
-        print("UNNAMED - %d hashes carry no symbol in any family" % len(unnamed))
+    if grouped[validate.UNNAMED]:
+        print("UNNAMED - %d hashes carry no symbol in any family"
+              % len(grouped[validate.UNNAMED]))
     return 1 if suspect else 0
 
 

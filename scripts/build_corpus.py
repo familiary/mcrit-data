@@ -38,7 +38,17 @@ def main():
     check.add_argument("--deep", action="store_true",
                        help="also look for PicHashes shared across families, "
                             "which is how statically linked code leaks in "
-                            "under the wrong name; loads every .mcrit")
+                            "under the wrong name; loads every .mcrit. Fails "
+                            "only on hashes carrying one symbol name across "
+                            "every family sharing them - the kind that has "
+                            "been misattribution every time - and reports "
+                            "the other kinds as notes")
+    check.add_argument("--strict", action="store_true",
+                       help="also fail on problems in the families this "
+                            "tooling does not generate (data/MSVC, "
+                            "data/Golang and the rest of the IDA-derived "
+                            "data, which carry no provenance.json). They are "
+                            "reported as notes either way")
     check.add_argument("--min-instructions", type=int, default=None,
                        metavar="N",
                        help="with --deep, ignore shared functions shorter "
@@ -133,8 +143,15 @@ def main():
         return 0
 
     if args.command == "validate":
+        notes = []
         problems = validate.validate_all(
-            args.path, deep=args.deep, min_instructions=args.min_instructions)
+            args.path, deep=args.deep, min_instructions=args.min_instructions,
+            strict=args.strict, notes=notes)
+        # Notes first: they are the context for the FAIL lines, and a reader
+        # who sees "0 problem(s)" at the bottom should not have to scroll back
+        # past them to find out what was checked and what was excused.
+        for note in notes:
+            print("NOTE %s" % note)
         for problem in problems:
             print("FAIL %s" % problem)
         print("%d problem(s)" % len(problems))
