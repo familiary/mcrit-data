@@ -1,13 +1,14 @@
 {
   "liblzma_5.4.7_mingw13_x64_liblzma.dll": {
     "architecture": "x64",
-    "build_flags": "-O2 (upstream overrides CMake Release's -O3)",
+    "build_flags": "-O3 (CMake Release)",
     "built_artifact": "build-x64/liblzma.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "liblzma.dll",
     "family": "liblzma",
     "generated": "2026-09-20",
-    "license": "0BSD (liblzma)",
+    "is_blob": false,
+    "license": "public domain (liblzma)",
     "mcrit": "data/liblzma/x64/mcrit/liblzma_5.4.7_mingw13_x64_liblzma.dll.mcrit",
     "num_functions": 362,
     "removed_runtime_functions": [
@@ -68,7 +69,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "676abc19241bccab9890a7c7e94cfb456a7af599474c94843b298420411ff74d",
+    "sha256": "8c405a673a9c1a692f0216437f3741443889023c5115573f43e19f48d67276ad",
     "smda": "data/liblzma/x64/smda/liblzma_5.4.7_mingw13_x64_liblzma.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -82,13 +83,14 @@
   },
   "liblzma_5.4.7_mingw13_x86_liblzma.dll": {
     "architecture": "x86",
-    "build_flags": "-O2 (upstream overrides CMake Release's -O3)",
+    "build_flags": "-O3 (CMake Release)",
     "built_artifact": "build-x86/liblzma.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "liblzma.dll",
     "family": "liblzma",
     "generated": "2026-09-20",
-    "license": "0BSD (liblzma)",
+    "is_blob": false,
+    "license": "public domain (liblzma)",
     "mcrit": "data/liblzma/x86/mcrit/liblzma_5.4.7_mingw13_x86_liblzma.dll.mcrit",
     "num_functions": 343,
     "removed_runtime_functions": [
@@ -148,7 +150,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "91e7bbdbac908de66a34d6795545e0506fe7804f224d5083d2cb94222ca61d98",
+    "sha256": "b73a41dd8749fb4a6a9e6fa6a8e1eda605bf06de34a0ee7b54f4937a5eb689bf",
     "smda": "data/liblzma/x86/smda/liblzma_5.4.7_mingw13_x86_liblzma.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -168,6 +170,7 @@
     "component": "liblzma.dll",
     "family": "liblzma",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "0BSD (liblzma)",
     "mcrit": "data/liblzma/x64/mcrit/liblzma_5.8.1_mingw13_x64_liblzma.dll.mcrit",
     "num_functions": 384,
@@ -229,7 +232,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "7de9eb946b1ac5502ce307748f3b8005055f4c6a2fcabaebe66e3e1cb07e67ad",
+    "sha256": "fb7a2e4c92987aac28ba0f9f60d567ca1dd97cd6be7fae5113fdb6ef5f38c1b9",
     "smda": "data/liblzma/x64/smda/liblzma_5.8.1_mingw13_x64_liblzma.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -249,6 +252,7 @@
     "component": "liblzma.dll",
     "family": "liblzma",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "0BSD (liblzma)",
     "mcrit": "data/liblzma/x86/mcrit/liblzma_5.8.1_mingw13_x86_liblzma.dll.mcrit",
     "num_functions": 370,
@@ -309,7 +313,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "a1d20e60765f55b9e43e0f53cb290eebf3f99212d024f820fb2906eea23105f5",
+    "sha256": "a52a2c6bb9c7183b5fc4a8bf5cabdbd456a461ec5dab5f2533b544988b53eb7d",
     "smda": "data/liblzma/x86/smda/liblzma_5.8.1_mingw13_x86_liblzma.dll.7z",
     "smda_version": "4.8.0",
     "source": {

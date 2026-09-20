@@ -7,9 +7,10 @@
     "component": "libuv.dll",
     "family": "libuv",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "MIT",
     "mcrit": "data/libuv/x64/mcrit/libuv_1.44.2_mingw13_x64_libuv.dll.mcrit",
-    "num_functions": 752,
+    "num_functions": 751,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -53,6 +54,7 @@
       "abort",
       "atexit",
       "calloc",
+      "fprintf",
       "free",
       "fwrite",
       "getenv",
@@ -70,7 +72,7 @@
       "wcscpy",
       "wcslen"
     ],
-    "sha256": "e77012fae14038d685e20c410353e857f96e453f619e111985ab2d4688ba386f",
+    "sha256": "d53663121d7270996a66111d47d47b077b43caa3d7efbb6a09e6070658dfb3f6",
     "smda": "data/libuv/x64/smda/libuv_1.44.2_mingw13_x64_libuv.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -90,9 +92,10 @@
     "component": "libuv.dll",
     "family": "libuv",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "MIT",
     "mcrit": "data/libuv/x86/mcrit/libuv_1.44.2_mingw13_x86_libuv.dll.mcrit",
-    "num_functions": 570,
+    "num_functions": 569,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -137,6 +140,7 @@
       "_atexit",
       "_atoi",
       "_calloc",
+      "_fprintf",
       "_free",
       "_fwrite",
       "_getenv",
@@ -154,7 +158,7 @@
       "_wcscpy",
       "_wcslen"
     ],
-    "sha256": "dddad28291c1c86dc190f3c9c7890191cd8bf70f8cf3a4f8f51971fad7f620f7",
+    "sha256": "d50815e1a5f97b3bb239ed87e9faa1e6c0678dad3f1827951f0637db916d7cf1",
     "smda": "data/libuv/x86/smda/libuv_1.44.2_mingw13_x86_libuv.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -174,6 +178,7 @@
     "component": "libuv.dll",
     "family": "libuv",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "MIT",
     "mcrit": "data/libuv/x64/mcrit/libuv_1.52.1_mingw13_x64_libuv.dll.mcrit",
     "num_functions": 801,
@@ -295,7 +300,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "902f2344e38b308b0a16fdc48b3082e6dcd62da698e2042725ca6f5ce9c76b57",
+    "sha256": "0ce83a874e613b91a6ad1ca8dc9e3e6706e72ea67154bc69063b25cc9c5205b3",
     "smda": "data/libuv/x64/smda/libuv_1.52.1_mingw13_x64_libuv.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -315,6 +320,7 @@
     "component": "libuv.dll",
     "family": "libuv",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "MIT",
     "mcrit": "data/libuv/x86/mcrit/libuv_1.52.1_mingw13_x86_libuv.dll.mcrit",
     "num_functions": 602,
@@ -440,7 +446,7 @@
       "_wcsnlen",
       "_wcsrtombs"
     ],
-    "sha256": "358e95e47edc42dde25ece1198b8eaa2dad5c2883403ca0efba13ebd2d32c7b0",
+    "sha256": "2fd3b58e8a36e4ee0a2bd3d1c3c22ee305cfe9bcd41378047c0b67c5a5278b92",
     "smda": "data/libuv/x86/smda/libuv_1.52.1_mingw13_x86_libuv.dll.7z",
     "smda_version": "4.8.0",
     "source": {

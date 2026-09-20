@@ -148,7 +148,7 @@
       "wcsrtombs",
       "write"
     ],
-    "sha256": "b25631bdda60f739672144bffbf45e47209c05cccc86067d69620b49ce7bfc17",
+    "sha256": "fbb6fb2ff8517ee069b0879f1a47f9d9ef4a0e44a7a93c91103cdfa4915ef346",
     "smda": "data/libtiff/x64/smda/libtiff_4.0.10_mingw13_x64_libtiff.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -313,7 +313,7 @@
       "_wcsrtombs",
       "_write"
     ],
-    "sha256": "1a9fbd456479cdbec3b8c3149a57f9ed2dfd86187bab463286680eb4b44126dd",
+    "sha256": "e5e350b659a983d8c65e3b6436d89155c93d84f5130a54797b06119e28eff7bc",
     "smda": "data/libtiff/x86/smda/libtiff_4.0.10_mingw13_x86_libtiff.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -469,7 +469,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "7f710168889cfb431a7e708e98f3db60d54037f87e623f79c7307e4b0b0f86f1",
+    "sha256": "cb5f497cdde3694ab0885b1bb97f6edada3fb01aaaf14ed7575053e4e458a88d",
     "smda": "data/libtiff/x64/smda/libtiff_4.7.0_mingw13_x64_libtiff.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -629,7 +629,7 @@
       "_wcsnlen",
       "_wcsrtombs"
     ],
-    "sha256": "750f89452b8d9f7d23059ace045d7b336460e6269a73b9c24f7762733710d769",
+    "sha256": "e7b3134890f68e3a1d7bc2e8c9db09d672163242aa2afb82d39b4d30d84bd454",
     "smda": "data/libtiff/x86/smda/libtiff_4.7.0_mingw13_x86_libtiff.dll.7z",
     "smda_version": "4.8.0",
     "source": {

@@ -7,6 +7,7 @@
     "component": "libcjson.dll",
     "family": "cJSON",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "MIT",
     "mcrit": "data/cJSON/x64/mcrit/cJSON_1.7.15_mingw13_x64_libcjson.dll.mcrit",
     "num_functions": 95,
@@ -106,7 +107,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "27878ab6227972bb79f47abb7c6262d74e1b0aa64774976dfa86ad5ac26c27fe",
+    "sha256": "e0b181f12ab8b5033bbc76ccdd1b43d312d47448ce710daa8f15270a15ecaf9c",
     "smda": "data/cJSON/x64/smda/cJSON_1.7.15_mingw13_x64_libcjson.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -126,6 +127,7 @@
     "component": "libcjson.dll",
     "family": "cJSON",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "MIT",
     "mcrit": "data/cJSON/x86/mcrit/cJSON_1.7.15_mingw13_x86_libcjson.dll.mcrit",
     "num_functions": 87,
@@ -224,7 +226,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "7f9938aa641b7b87513f502b5786a685436b6d6550bd8143ec8b11a0ee154836",
+    "sha256": "f700bac7d55d02ac28816b85679c9710449b39fd37390132a774a0fce9c88843",
     "smda": "data/cJSON/x86/smda/cJSON_1.7.15_mingw13_x86_libcjson.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -244,6 +246,7 @@
     "component": "libcjson.dll",
     "family": "cJSON",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "MIT",
     "mcrit": "data/cJSON/x64/mcrit/cJSON_1.7.19_mingw13_x64_libcjson.dll.mcrit",
     "num_functions": 96,
@@ -343,7 +346,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "56efde85518b1742cd72ead2f8c3fd003ae829fd29562a3140cc8a5d1b8517ff",
+    "sha256": "5a211cf266a0048cef2280c5fc733badc2d06d589940ccf17c3cd8794f7eaf8f",
     "smda": "data/cJSON/x64/smda/cJSON_1.7.19_mingw13_x64_libcjson.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -363,6 +366,7 @@
     "component": "libcjson.dll",
     "family": "cJSON",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "MIT",
     "mcrit": "data/cJSON/x86/mcrit/cJSON_1.7.19_mingw13_x86_libcjson.dll.mcrit",
     "num_functions": 88,
@@ -461,7 +465,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "ee577733f18dd64dc664fae5bdb355e6555cc9b1fe23f96800aa642c65d2792a",
+    "sha256": "574424b79ecb290e70a56e6d7f9a439da0a32bfe33a192d345889c187a8637d8",
     "smda": "data/cJSON/x86/smda/cJSON_1.7.19_mingw13_x86_libcjson.dll.7z",
     "smda_version": "4.8.0",
     "source": {

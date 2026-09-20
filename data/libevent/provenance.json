@@ -10,7 +10,7 @@
     "is_blob": false,
     "license": "BSD-3-Clause",
     "mcrit": "data/libevent/x64/mcrit/libevent_2.1.12_mingw13_x64_libevent_core.dll.mcrit",
-    "num_functions": 663,
+    "num_functions": 661,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -119,6 +119,7 @@
       "cleanup_return",
       "dtoa_lock",
       "dtoa_lock_cleanup",
+      "exit",
       "fputc",
       "free",
       "fwrite",
@@ -145,6 +146,7 @@
       "release_ptrs",
       "resize_wbuf",
       "rvOK.constprop.0.isra.0",
+      "signal",
       "sscanf.constprop.0",
       "strchr",
       "strcmp",
@@ -164,7 +166,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "fb06e0aef8b8876451929bbe23852cee3fdcd73d32d65c5be8dc6941c7f94618",
+    "sha256": "527cf8ef78d79a5e5b5e88d5a43b075afcf95bae188d9e2118c7813b45e81a15",
     "smda": "data/libevent/x64/smda/libevent_2.1.12_mingw13_x64_libevent_core.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -304,7 +306,7 @@
       "ungetc",
       "vfprintf"
     ],
-    "sha256": "3cb332b40964e265d1ddeb4f6eadc42c45137c0d03182f636a0964d29145c996",
+    "sha256": "321d2cc6a03e9cb3f39f051d9ef005217ab2640534bceec468ccb7b5fe63dc37",
     "smda": "data/libevent/x64/smda/libevent_2.1.12_mingw13_x64_libevent_extra.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -327,7 +329,7 @@
     "is_blob": false,
     "license": "BSD-3-Clause",
     "mcrit": "data/libevent/x86/mcrit/libevent_2.1.12_mingw13_x86_libevent_core.dll.mcrit",
-    "num_functions": 586,
+    "num_functions": 584,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -436,6 +438,7 @@
       "_cleanup_return",
       "_dtoa_lock",
       "_dtoa_lock_cleanup",
+      "_exit",
       "_fprintf.constprop.0",
       "_fputc",
       "_free",
@@ -467,6 +470,7 @@
       "_rvOK.constprop.0.isra.0",
       "_setlocale",
       "_setlocale_codepage_hack",
+      "_signal",
       "_sscanf.constprop.0",
       "_strchr",
       "_strcmp",
@@ -486,7 +490,7 @@
       "_wcsnlen",
       "_wcsrtombs"
     ],
-    "sha256": "5fbd1ebee354bc9016e1d0548e3a1d2e78d48eb973e16d6a7ad17593968e98bc",
+    "sha256": "33e5e55537d334dc5cf041db5796946e08007fd808335c5c78fa5b99edc2382f",
     "smda": "data/libevent/x86/smda/libevent_2.1.12_mingw13_x86_libevent_core.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -631,7 +635,7 @@
       "_ungetc",
       "_vfprintf"
     ],
-    "sha256": "61f66edc5f6221e4dbe5a5bfd5a44027e2df10c944c6ad1497bc7e0676a4631d",
+    "sha256": "edb3fdcf4f17e86aeafef8a9d1e07df9f1ea1143e9046c1abafbcd05dcd0aa27",
     "smda": "data/libevent/x86/smda/libevent_2.1.12_mingw13_x86_libevent_extra.dll.7z",
     "smda_version": "4.8.0",
     "source": {

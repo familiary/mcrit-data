@@ -68,7 +68,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "fbaaf59863eb1d2135654ec695de1334518e3aeafa6970fb9fb3476f963990fb",
+    "sha256": "1c1946afa562f1c8dbb71486aff60b650e7c62ad2e72ea51ddd888b4fdfb7179",
     "smda": "data/libsodium/x64/smda/libsodium_1.0.18_mingw13_x64_libsodium-23.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -147,7 +147,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "33cfe1e2df5f4e87eb586c431135f282d84dc9dda14251ddf7480780b9bf4eb2",
+    "sha256": "4e7a3d5363efad11898fc43bc0d0c2b738631b24c38d484d9f381ff26a8e26de",
     "smda": "data/libsodium/x86/smda/libsodium_1.0.18_mingw13_x86_libsodium-23.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -167,6 +167,7 @@
     "component": "libsodium-26.dll",
     "family": "libsodium",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "ISC",
     "mcrit": "data/libsodium/x64/mcrit/libsodium_1.0.20_mingw13_x64_libsodium-26.dll.mcrit",
     "num_functions": 877,
@@ -227,7 +228,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "b0342640a97bedbda3be70bdcde1205a6c0079688473719914959c4c89b71643",
+    "sha256": "d8de3ffa092e5d738be3d19622ccbd61b5d359a8c6a52b5d657ebcdb2e836e8a",
     "smda": "data/libsodium/x64/smda/libsodium_1.0.20_mingw13_x64_libsodium-26.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -247,6 +248,7 @@
     "component": "libsodium-26.dll",
     "family": "libsodium",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "ISC",
     "mcrit": "data/libsodium/x86/mcrit/libsodium_1.0.20_mingw13_x86_libsodium-26.dll.mcrit",
     "num_functions": 852,
@@ -305,7 +307,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "e0bfda304dff3fa7dab33af0e19708e0ea1a6b2dc544848c3ae05edebb1dc5f0",
+    "sha256": "929f4b6402c9f332d864522cbe8720bcadf5c90243876067f5715e1be9710315",
     "smda": "data/libsodium/x86/smda/libsodium_1.0.20_mingw13_x86_libsodium-26.dll.7z",
     "smda_version": "4.8.0",
     "source": {

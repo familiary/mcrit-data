@@ -144,7 +144,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "de5e43a52a358c30ea73539f286645096550036b743a772ab920206b5b3d6ac2",
+    "sha256": "0b030431101c8346030de5e3bedbb54a609caefab8289ec228eed94b8a03a773",
     "smda": "data/libcurl/x64/smda/libcurl_8.15.0_mingw13_x64_libcurl.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -305,7 +305,7 @@
       "_wcsnlen",
       "_wcsrtombs"
     ],
-    "sha256": "a9bbf4d405fe7f06329a4719960062dad6e47aef779f3c1c43f9825b57de287e",
+    "sha256": "fb33be645136c6982d9c2312beb488749d6886bcd8303357f449f175198bb056",
     "smda": "data/libcurl/x86/smda/libcurl_8.15.0_mingw13_x86_libcurl.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -500,7 +500,7 @@
       "wcsrtombs",
       "write"
     ],
-    "sha256": "2c8c4558903a2d40ce9b6bce0f0f16cae306341a1ed0213c81808bc295e5505b",
+    "sha256": "d2ae049add039426ba4178cdb22d58d5a24ec402fc545c992c962e482a88724d",
     "smda": "data/libcurl/x64/smda/libcurl_8.4.0_mingw13_x64_libcurl.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -700,7 +700,7 @@
       "_wcsrtombs",
       "_write"
     ],
-    "sha256": "24a62f6149d5db1165a922b743cd653b3142b2db918377be359f279b83b65966",
+    "sha256": "6f5cad312d0842fc9288f8cc3fd40eff1e420edbb0e10e76bf93b857f735d36c",
     "smda": "data/libcurl/x86/smda/libcurl_8.4.0_mingw13_x86_libcurl.dll.7z",
     "smda_version": "4.8.0",
     "source": {

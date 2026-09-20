@@ -5,12 +5,20 @@
     "built_artifact": "build-x64/libpng16.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libpng16.dll",
+    "dependencies": {
+      "zlib_archive": {
+        "archive": "zlib-1.3.1.tar.gz",
+        "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+        "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+      }
+    },
     "family": "libpng",
     "generated": "2026-09-20",
     "is_blob": false,
     "license": "libpng-2.0",
     "mcrit": "data/libpng/x64/mcrit/libpng_1.6.50_mingw13_x64_libpng16.dll.mcrit",
-    "num_functions": 515,
+    "notes": "Imports zlib 1.3.1 rather than linking it statically, so this sample contains libpng code only.",
+    "num_functions": 456,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -136,7 +144,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "fcfdc171c5f342df694169505c3319e2fb98581dd52bd7bdefe6dafd79121373",
+    "sha256": "2f42df7a002ac9e30ad8e40dbd4beeb1924b55e30e304226eb88c01dfebf8355",
     "smda": "data/libpng/x64/smda/libpng_1.6.50_mingw13_x64_libpng16.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -154,12 +162,20 @@
     "built_artifact": "build-x86/libpng16.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libpng16.dll",
+    "dependencies": {
+      "zlib_archive": {
+        "archive": "zlib-1.3.1.tar.gz",
+        "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+        "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+      }
+    },
     "family": "libpng",
     "generated": "2026-09-20",
     "is_blob": false,
     "license": "libpng-2.0",
     "mcrit": "data/libpng/x86/mcrit/libpng_1.6.50_mingw13_x86_libpng16.dll.mcrit",
-    "num_functions": 513,
+    "notes": "Imports zlib 1.3.1 rather than linking it statically, so this sample contains libpng code only.",
+    "num_functions": 454,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -289,7 +305,7 @@
       "_wcsnlen",
       "_wcsrtombs"
     ],
-    "sha256": "0ad0f046e560d09ec7a21d784d7580e913016c06665e096e39408e46de82229a",
+    "sha256": "7a5804d6b821c8ca29f7573926b26a88a7b1285b582bbdbe69c5690436d22917",
     "smda": "data/libpng/x86/smda/libpng_1.6.50_mingw13_x86_libpng16.dll.7z",
     "smda_version": "4.8.0",
     "source": {

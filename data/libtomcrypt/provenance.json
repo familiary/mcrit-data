@@ -1,18 +1,25 @@
 {
   "libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll": {
     "architecture": "x64",
-    "build_flags": "-O2",
+    "build_flags": "-O2 (both libtomcrypt and the bundled libtommath)",
     "built_artifact": "libtomcrypt.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libtomcrypt.dll",
+    "dependencies": {
+      "libtommath": {
+        "commit": "95d80fd8229d05dd6cb4ec88bc8d4f5377ff00ef",
+        "git_ref": "v1.3.0",
+        "git_url": "https://github.com/libtom/libtommath.git"
+      }
+    },
     "family": "libtomcrypt",
     "generated": "2026-09-20",
     "is_blob": false,
-    "license": "public domain / Unlicense",
+    "license": "public domain / WTFPL-2.0 (dual, licensee's choice)",
     "mcrit": "data/libtomcrypt/x64/mcrit/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.mcrit",
-    "notes": "makefile.mingw hardcodes -s on the DLL link line, so this artefact is stripped; it exports everything, so names still come from the export table rather than the symbol table.",
+    "notes": "Statically links LibTomMath 1.3.0, so roughly 175 of this sample's functions are mp_*/s_mp_*/fast_mp_* and belong to that project. Upstream's makefile.mingw forces -s, so the sample is stripped; with most functions unnamed the CRT-glue filter cannot act on them and MinGW runtime code remains present.",
     "num_functions": 787,
-    "sha256": "2bc9b47c03f8f5f2891d79802e84bdc363219d0541bb54fddbf5b912336f0747",
+    "sha256": "4233016727d51c1b6687357b41072878f31af7ea845f9601af07d90daa23dd26",
     "smda": "data/libtomcrypt/x64/smda/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -26,18 +33,25 @@
   },
   "libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll": {
     "architecture": "x86",
-    "build_flags": "-O2",
+    "build_flags": "-O2 (both libtomcrypt and the bundled libtommath)",
     "built_artifact": "libtomcrypt.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libtomcrypt.dll",
+    "dependencies": {
+      "libtommath": {
+        "commit": "95d80fd8229d05dd6cb4ec88bc8d4f5377ff00ef",
+        "git_ref": "v1.3.0",
+        "git_url": "https://github.com/libtom/libtommath.git"
+      }
+    },
     "family": "libtomcrypt",
     "generated": "2026-09-20",
     "is_blob": false,
-    "license": "public domain / Unlicense",
+    "license": "public domain / WTFPL-2.0 (dual, licensee's choice)",
     "mcrit": "data/libtomcrypt/x86/mcrit/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.mcrit",
-    "notes": "makefile.mingw hardcodes -s on the DLL link line, so this artefact is stripped; it exports everything, so names still come from the export table rather than the symbol table.",
+    "notes": "Statically links LibTomMath 1.3.0, so roughly 175 of this sample's functions are mp_*/s_mp_*/fast_mp_* and belong to that project. Upstream's makefile.mingw forces -s, so the sample is stripped; with most functions unnamed the CRT-glue filter cannot act on them and MinGW runtime code remains present.",
     "num_functions": 893,
-    "sha256": "bd5528b43072110b25fd797b984e0630f3628660a49a9d5d351a078846cf4ae2",
+    "sha256": "0a6e1cc07d003abbbe817f72e7e875e5bbdf27f19510ea926ad4bf8df2b1d443",
     "smda": "data/libtomcrypt/x86/smda/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.7z",
     "smda_version": "4.8.0",
     "source": {
