@@ -145,15 +145,15 @@ def smdaify(binary_path, family, version, component, is_library=True,
         raise DisassemblyError("SMDA did not finish cleanly for %s: %s"
                                % (binary_path, report.message))
 
-    removed = []
-    if drop_crt_glue and toolchain_id:
-        removed = _drop_crt_glue(report, toolchain_id)
-
     # MinGW writes a COFF symbol table unless the build strips it, and those
     # symbols are what makes this data comparable to the IDA-with-symbols
     # reports already in the corpus. A build system that strips by default
     # (zlib's win32/Makefile.gcc does) would otherwise quietly yield anonymous
     # reference data, so treat a symbol-poor report as a build failure.
+    #
+    # Measured before runtime glue is dropped: glue is almost entirely named,
+    # so removing it lowers the ratio without the build having changed. The
+    # question here is whether this build kept its symbols.
     named = len([f for f in report.getFunctions() if f.function_name])
     if min_named_ratio and report.num_functions:
         ratio = named / report.num_functions
@@ -162,6 +162,10 @@ def smdaify(binary_path, family, version, component, is_library=True,
                 "%s: only %d of %d functions carry symbols (%.0f%%); the build "
                 "most likely stripped them - pass STRIP=true to the build system"
                 % (binary_path, named, report.num_functions, 100 * ratio))
+
+    removed = []
+    if drop_crt_glue and toolchain_id:
+        removed = _drop_crt_glue(report, toolchain_id)
 
     if is_blob:
         recovered = report.statistics.num_instructions if report.statistics else 0
