@@ -1352,7 +1352,7 @@
     "license": "Apache-2.0",
     "mcrit": "data/OpenSSL/x64/mcrit/OpenSSL_3.5.8_mingw13_x64_libcrypto.mcrit",
     "notes": "perlasm generates GAS assembly, so no nasm is needed for the mingw targets.",
-    "num_functions": 13208,
+    "num_functions": 13206,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMainCRTStartup",
@@ -1448,6 +1448,7 @@
       "_initterm",
       "_lock",
       "_lock_file",
+      "_onexit",
       "_pei386_runtime_relocator",
       "_register_onexit_function",
       "_unlock",
@@ -1493,6 +1494,7 @@
       "release_ptrs",
       "resize_wbuf",
       "rvOK.constprop.0.isra.0",
+      "signal",
       "strcat",
       "strchr",
       "strcmp",
@@ -1514,7 +1516,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "26cd4a7b5e6f619350e953215d5edc5674fd53656ab7907d4c270174ce7ed305",
+    "sha256": "129676e4c31cd300cb59343653ae3bc1a5c1c3a8037d7f61eb03e092dfe3f895",
     "smda": "data/OpenSSL/x64/smda/OpenSSL_3.5.8_mingw13_x64_libcrypto.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1600,7 +1602,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "f47d79a3da0aa0931aa080e9ac4b143354070ab900420d3a40e3fd0e283aaf4e",
+    "sha256": "40fd87b48217e043075246a4a795bbd714a021bd99f442090f21ef298a0f60a0",
     "smda": "data/OpenSSL/x64/smda/OpenSSL_3.5.8_mingw13_x64_libssl.7z",
     "smda_version": "4.8.0",
     "source": {
