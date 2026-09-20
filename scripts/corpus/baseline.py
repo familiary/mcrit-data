@@ -12,6 +12,19 @@ baseline is measured: an empty translation unit is linked with the same
 toolchain, and the functions SMDA recovers from it define the glue set. A
 function in a real build counts as glue only when both its symbol name and its
 PicHash match the baseline, so a project that ships its own ``strlen`` keeps it.
+
+The MSVC side is the same idea with three more things to measure, because
+Microsoft's runtime is larger than GCC's in ways that matter here. ATL and
+the MSVC STL have no GCC counterpart and are instantiated per type, so a
+probe covers exactly the instantiations it names. And MSVC ships its C
+runtime twice: ``/MT`` links it statically while ``/MD`` leaves it in
+ucrtbase.dll and vcruntime140.dll behind a one-instruction import thunk, and
+the two flavours are not the same bytes even for the startup and /GS code
+that is statically linked either way. Both MSVC recipes in this repository
+build ``/MD``, so the probes are built both ways and unioned.
+
+What each MSVC probe is for was read off the committed reports rather than
+guessed; the comment above each one says which measurement it answers.
 """
 
 import functools
@@ -287,6 +300,623 @@ __declspec(dllexport) void probe_atl(const wchar_t *text)
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 """
 
+# MSVC only. The rest of ATL that the committed artefacts actually wear.
+#
+# Measured, not guessed: reading the four committed MSVC reports back
+# (VX-API and BlackBone, both architectures) and asking which ATL functions
+# the filter still leaves behind gives 26 in VX-API x64 and 28 in x86, and
+# they cluster. CComBSTR and CComVariant account for eight of them, the
+# CSimpleArray<unsigned short> instantiation for two, the module objects'
+# destructors and their compiler-generated atexit thunks for most of the
+# rest. _PROBE_ATL above instantiates CSimpleArray<int> and the critical
+# section only, so none of that is in the baseline.
+#
+# This is a separate translation unit rather than more lines in _PROBE_ATL
+# because _PROBE_ATL already works: a probe that fails to build is not a
+# neutral event, it silently shrinks the baseline and therefore the filter,
+# which is how the MinGW x64 side lost 81 symbols in one commit. Splitting
+# means a mistake here cannot take the working probe with it.
+#
+# ole32/oleaut32 are named explicitly: CComVariant calls VariantClear and
+# VariantCopy, and nothing in the ATL headers guarantees a #pragma comment
+# for them.
+_PROBE_ATL_COM = """\
+#include <windows.h>
+#include <atlbase.h>
+#include <atlcomcli.h>
+
+__declspec(dllexport) HRESULT probe_atl_com(const wchar_t *text)
+{
+    ATL::CComBSTR empty;
+    ATL::CComBSTR value(text);
+    ATL::CComBSTR copy(value);
+    ATL::CComVariant variant;
+    ATL::CComVariant fromText(text);
+    ATL::CComVariant fromLong((long)1);
+    ATL::CComPtr<IUnknown> unknown;
+    ATL::CAtlException error(E_FAIL);
+    BSTR raw;
+
+    value.Append(text);
+    value.Empty();
+    variant = fromText;
+    variant.Clear();
+    fromLong.Clear();
+    raw = copy;
+    (void)raw;
+    (void)&empty;
+    (void)&unknown;
+    return error.m_hr;
+}
+
+__declspec(dllexport) int probe_atl_containers(unsigned short word)
+{
+    /* CSimpleArray is instantiated per element type, like every other C++
+       template: the committed artefacts carry the unsigned short and the
+       HINSTANCE instantiations, and _PROBE_ATL only has the int one. */
+    ATL::CSimpleArray<unsigned short> words;
+    ATL::CSimpleArray<HINSTANCE> instances;
+    ATL::CComCriticalSection section;
+
+    words.Add(word);
+    words.Add((unsigned short)(word + 1));
+    words.RemoveAt(0);
+    words.RemoveAll();
+    instances.Add((HINSTANCE)NULL);
+    instances.RemoveAll();
+    section.Init();
+    {
+        ATL::CComCritSecLock<ATL::CComCriticalSection> guard(section, false);
+        guard.Lock();
+        guard.Unlock();
+    }
+    section.Term();
+    return words.GetSize() + instances.GetSize();
+}
+
+__declspec(dllexport) HINSTANCE probe_atl_modules(void)
+{
+    /* The module destructors and their atexit thunks are what survive in
+       VX-API: ~CAtlComModule, CAtlWinModule::Term, ~CAtlWinModule,
+       AtlWinModuleTerm and the "dynamic atexit destructor for" functions
+       the compiler emits for ATL's own _AtlComModule / _AtlWinModule
+       globals. Local instances give those destructors a second call site,
+       which is what keeps them out of line at /O2. */
+    ATL::CAtlWinModule window;
+    ATL::CAtlComModule com;
+
+    (void)window;
+    (void)com;
+    return ATL::_AtlBaseModule.GetModuleInstance();
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# MSVC only, and deliberately one line of substance. ATL::AtlThrowImpl is an
+# inline function; _PROBE_ATL calls it exactly once, so -O2 inlines it and
+# the baseline never gets a body, while VX-API - which calls it from many
+# places - keeps one out-of-line copy. That is the MinGW builtin trap in ATL
+# clothing and the fix is the same one: take the address.
+#
+# It is alone in its own translation unit because it is the only place in
+# this file that has to spell an ATL signature out by hand, and a wrong
+# guess at the calling convention must cost one function rather than twenty.
+_PROBE_ATL_THROW = """\
+#include <windows.h>
+#include <atlbase.h>
+
+typedef void (WINAPI *probe_atl_thrower)(HRESULT);
+
+__declspec(dllexport) probe_atl_thrower probe_atl_throw_address(int enabled)
+{
+    probe_atl_thrower thrower = ATL::AtlThrowImpl;
+    return enabled ? thrower : (probe_atl_thrower)0;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# MSVC only. Everything the /MD artefacts reach through the C runtime that a
+# call alone does not pin down.
+#
+# Two separate effects put these in the artefacts and not in the baseline,
+# and the committed data distinguishes them. memcpy, memset, memmove,
+# memcmp, strlen, __acrt_iob_func, _initterm, _purecall, _CxxThrowException,
+# __std_terminate and the rest all appear in VX-API and BlackBone as
+# *one-instruction* functions, every one of them carrying the same PicHash -
+# they are the linker's `jmp [__imp_...]` import thunks, because the recipes
+# build /MD and the runtime lives in ucrtbase.dll and vcruntime140.dll. The
+# probe builds /MT, so its memcpy is the 338-instruction static body (the
+# same one data/MSVC's merged .lib carries). Name matches, PicHash cannot.
+# The /MD probe variants registered below fix that.
+#
+# The second effect only bites once they are fixed: /O2 implies /Oi, so
+# memcpy and memset with a constant size are expanded inline and no thunk is
+# emitted at all. Taking the address forces the reference, exactly as it had
+# to for GCC's builtin sin and floor. An array of addresses is used rather
+# than #pragma function or calls through volatile pointers because it needs
+# no signature to be spelled out and no pragma to be accepted: a name that
+# the headers declare is all it takes.
+_PROBE_MSVCRT = """\
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <windows.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <wchar.h>
+
+typedef void (*probe_symbol)(void);
+
+/* Exported so nothing here can be dropped as unreferenced. */
+__declspec(dllexport) probe_symbol probe_msvcrt_symbols[] = {
+    (probe_symbol)memcpy,
+    (probe_symbol)memmove,
+    (probe_symbol)memset,
+    (probe_symbol)memcmp,
+    (probe_symbol)memchr,
+    (probe_symbol)strlen,
+    (probe_symbol)strcpy,
+    (probe_symbol)strcat,
+    (probe_symbol)strcmp,
+    (probe_symbol)strncmp,
+    (probe_symbol)strncpy,
+    (probe_symbol)strchr,
+    (probe_symbol)strrchr,
+    (probe_symbol)strstr,
+    (probe_symbol)wcslen,
+    (probe_symbol)wcscpy,
+    (probe_symbol)wcscat,
+    (probe_symbol)wcscmp,
+    (probe_symbol)wcsncmp,
+    (probe_symbol)wcschr,
+    (probe_symbol)wcsstr,
+    (probe_symbol)malloc,
+    (probe_symbol)calloc,
+    (probe_symbol)realloc,
+    (probe_symbol)free,
+    (probe_symbol)qsort,
+    (probe_symbol)bsearch,
+    (probe_symbol)abort,
+};
+
+__declspec(dllexport) int probe_msvcrt_frames(const char *text, int value)
+{
+    /* A stack array is what makes the compiler emit the /GS cookie check.
+       __security_check_cookie is not an import thunk - it is linked in - but
+       its body still differs between the two runtime flavours: the copy in
+       data/MSVC's static-CRT reference and the copy in these /MD artefacts
+       are both eight instructions and have different PicHashes. */
+    char buffer[256];
+    wchar_t wide[64];
+    int result;
+
+    _snprintf(buffer, sizeof(buffer), "%s %d", text, value);
+    swprintf(wide, 64, L"%d", value);
+    __try {
+        result = (int)strlen(buffer) + (int)wcslen(wide);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        result = -1;
+    }
+    fprintf(stderr, "%s", buffer);
+    return result;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# MSVC only. The STL, which MSVC instantiates per type, so a probe covers
+# exactly the instantiations it names and nothing else.
+#
+# This is the direct analogue of the libstdc++ instantiations that make up 26
+# of this corpus's 58 surviving cross-family collisions, and it is already
+# the largest bucket on the MSVC side: of BlackBone x64's 1759 functions, 240
+# are MSVC STL and 128 of those are instantiated over standard or built-in
+# types alone, which is the part a probe can reach. (The other 112 are
+# instantiated over blackbone's own structs - std::vector<blackbone::
+# ProcessInfo>::... - and no baseline can ever contain them. That distinction
+# matters for what success looks like here.)
+#
+# Every type below was read off that measurement rather than chosen:
+# vector over unsigned char, unsigned long, unsigned long long, void *,
+# std::pair of both widths, std::wstring, MEMORY_BASIC_INFORMATION64 and
+# IMAGE_SECTION_HEADER; string and wstring; map keyed by unsigned long long,
+# by a pair, and by a pair of wstrings; set<int>; unordered_map over wstring,
+# unsigned long, unsigned long long and FARPROC - FARPROC because the PDB
+# spells BlackBone's export map as __int64 (__cdecl*)(void) on x64 and
+# int (__stdcall*)(void) on x86, which is that typedef on each.
+#
+# Split three ways, on the same reasoning as the ATL probes: one bad line
+# should cost one container family, not all of them.
+_PROBE_STL_SEQ = """\
+#include <windows.h>
+#include <algorithm>
+#include <memory>
+#include <random>
+#include <sstream>
+#include <string>
+#include <vector>
+
+__declspec(dllexport) std::size_t probe_stl_vector(const unsigned char *data,
+                                                   std::size_t size)
+{
+    std::vector<unsigned char> bytes(data, data + size);
+    std::vector<unsigned char> copy;
+    std::vector<unsigned long> words;
+    std::vector<unsigned long long> quads;
+    std::vector<int> numbers;
+    std::vector<void *> pointers;
+    std::size_t index;
+
+    bytes.reserve(size + 64);
+    bytes.resize(size + 8);
+    bytes.push_back((unsigned char)0x90);
+    bytes.insert(bytes.end(), data, data + size);
+    copy = bytes;
+    copy.assign(data, data + size);
+    copy.erase(copy.begin());
+    copy.clear();
+    for (index = 0; index < size; ++index) {
+        words.push_back((unsigned long)data[index]);
+        quads.push_back((unsigned long long)data[index]);
+        numbers.push_back((int)data[index]);
+        pointers.push_back((void *)(data + index));
+    }
+    words.resize(size + 4);
+    quads.resize(size + 4);
+    numbers.resize(size + 4);
+    pointers.resize(size + 4);
+    return bytes.size() + copy.capacity() + words.size() + quads.size()
+           + numbers.size() + pointers.size();
+}
+
+__declspec(dllexport) std::size_t probe_stl_vector_records(std::size_t count,
+                                                           const wchar_t *name)
+{
+    std::vector<MEMORY_BASIC_INFORMATION64> regions;
+    std::vector<IMAGE_SECTION_HEADER> sections;
+    std::vector<std::pair<unsigned long long, unsigned long long> > ranges;
+    std::vector<std::pair<unsigned int, unsigned int> > pairs;
+    std::vector<std::wstring> names;
+    std::size_t index;
+
+    regions.resize(count);
+    sections.resize(count);
+    for (index = 0; index < count; ++index) {
+        ranges.push_back(std::make_pair((unsigned long long)index,
+                                        (unsigned long long)index + 1));
+        pairs.push_back(std::make_pair((unsigned int)index,
+                                       (unsigned int)index + 1));
+        names.push_back(std::wstring(name));
+    }
+    std::sort(names.begin(), names.end());
+    std::sort(ranges.begin(), ranges.end());
+    return regions.size() + sections.size() + ranges.size() + pairs.size()
+           + names.size();
+}
+
+__declspec(dllexport) std::size_t probe_stl_string(const char *text,
+                                                   const wchar_t *wide)
+{
+    /* substr() is what reaches _String_val::_Xran and growth is what
+       reaches _Xlen_string; both survive the filter in BlackBone today. */
+    std::string narrow(text);
+    std::wstring wideText(wide);
+
+    narrow.append(text);
+    narrow.assign(text);
+    narrow += text;
+    narrow.reserve(narrow.size() + 128);
+    narrow.resize(narrow.size() + 8, 'x');
+    narrow.insert(narrow.begin(), 'y');
+    wideText.append(wide);
+    wideText.assign(wide);
+    wideText += wide;
+    wideText.reserve(wideText.size() + 128);
+    wideText.resize(wideText.size() + 8, L'x');
+
+    std::string joined = narrow + text;
+    std::string part = joined.substr(1, 4);
+    std::wstring wjoined = wideText + wide;
+    std::wstring wpart = wjoined.substr(1, 4);
+    std::wstring number = std::to_wstring((unsigned long long)joined.size());
+    std::string narrowNumber = std::to_string((int)part.size());
+
+    return joined.size() + part.size() + wjoined.size() + wpart.size()
+           + number.size() + narrowNumber.size();
+}
+
+__declspec(dllexport) std::size_t probe_stl_stream(const wchar_t *text, int value)
+{
+    std::wstring source(text);
+    std::wostringstream out;
+    std::wstringstream both;
+    std::wistringstream in(source);
+    std::wstring token;
+
+    out << text << L' ' << value << L' ' << (unsigned long long)value;
+    both << out.str() << L' ' << value;
+    in >> token;
+    return out.str().size() + both.str().size() + token.size();
+}
+
+__declspec(dllexport) unsigned long long probe_stl_smart(std::size_t size)
+{
+    std::unique_ptr<unsigned char[]> buffer(new unsigned char[size]);
+    std::unique_ptr<IMAGE_EXPORT_DIRECTORY> directory(new IMAGE_EXPORT_DIRECTORY());
+    std::unique_ptr<IMAGE_DOS_HEADER> header(new IMAGE_DOS_HEADER());
+    std::shared_ptr<std::vector<unsigned char> > shared(
+        new std::vector<unsigned char>(size));
+
+    buffer[0] = 0;
+    directory->NumberOfNames = 0;
+    header->e_magic = 0;
+    shared->push_back(1);
+    return (unsigned long long)buffer[0]
+           + (unsigned long long)directory->NumberOfNames
+           + (unsigned long long)header->e_magic
+           + (unsigned long long)shared->size();
+}
+
+__declspec(dllexport) unsigned long long probe_stl_algorithm(unsigned long long seed)
+{
+    /* std::shuffle over a vector is what instantiates _Rng_from_urng_v2,
+       which BlackBone carries on both architectures. */
+    std::vector<unsigned long long> values;
+    std::vector<unsigned char> bytes;
+    std::random_device device;
+    int index;
+
+    for (index = 0; index < 16; ++index) {
+        values.push_back(seed + (unsigned long long)index);
+        bytes.push_back((unsigned char)index);
+    }
+    std::sort(values.begin(), values.end());
+    std::sort(bytes.begin(), bytes.end());
+    std::shuffle(values.begin(), values.end(), device);
+    std::reverse(values.begin(), values.end());
+    return values.front() + (unsigned long long)bytes.front()
+           + (unsigned long long)std::count(bytes.begin(), bytes.end(), 0);
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+_PROBE_STL_ASSOC = """\
+#include <windows.h>
+#include <map>
+#include <set>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+__declspec(dllexport) std::size_t probe_stl_tree(unsigned long long key,
+                                                 unsigned int tag,
+                                                 const wchar_t *name)
+{
+    /* _Tree_val::_Insert_node, _Tree_temp_node, _Tree_head_scoped_ptr,
+       _Erase_tree and _Throw_tree_length_error all come from here. */
+    std::map<unsigned long long, unsigned long long> byAddress;
+    std::map<std::pair<unsigned long long, unsigned int>, unsigned long long> byRegion;
+    std::map<std::pair<std::wstring, std::wstring>, unsigned long long> byName;
+    std::map<std::wstring, unsigned long> byModule;
+    std::set<int> identifiers;
+    std::set<unsigned long long> addresses;
+    std::size_t total;
+    int index;
+
+    byAddress[key] = key + 1;
+    byAddress.insert(std::make_pair(key + 2, key + 3));
+    byAddress.emplace(key + 4, key + 5);
+    byAddress.erase(key + 2);
+    if (byAddress.find(key) != byAddress.end()) {
+        byAddress.erase(byAddress.begin());
+    }
+    byRegion[std::make_pair(key, tag)] = key;
+    byName[std::make_pair(std::wstring(name), std::wstring(name))] = key;
+    byModule[std::wstring(name)] = (unsigned long)tag;
+    for (index = 0; index < 8; ++index) {
+        identifiers.insert(index);
+        addresses.insert(key + (unsigned long long)index);
+    }
+    identifiers.erase(1);
+    addresses.erase(key);
+
+    total = byAddress.size() + byRegion.size() + byName.size()
+            + byModule.size() + identifiers.size() + addresses.size();
+    byAddress.clear();
+    byRegion.clear();
+    byName.clear();
+    byModule.clear();
+    identifiers.clear();
+    addresses.clear();
+    return total;
+}
+
+__declspec(dllexport) std::size_t probe_stl_hash(unsigned long long key,
+                                                 unsigned long id,
+                                                 const wchar_t *name,
+                                                 const char *symbol)
+{
+    /* MSVC builds unordered_map on std::list, so _Hash::*, _Hash_vec,
+       _List_node_emplace_op2 and _Alloc_construct_ptr all arrive together -
+       which is exactly the shape of what survives in BlackBone. */
+    std::unordered_map<std::wstring, unsigned int> byName;
+    std::unordered_map<std::wstring, std::vector<std::wstring> > byDirectory;
+    std::unordered_map<unsigned long, int> byId;
+    std::unordered_map<unsigned long long, std::pair<unsigned long long, bool> > byOffset;
+    std::unordered_map<std::string, FARPROC> byExport;
+    std::unordered_map<void *, void *> byPointer;
+    std::size_t total;
+    int index;
+
+    for (index = 0; index < 8; ++index) {
+        byName[std::wstring(name)] = (unsigned int)index;
+        byId[id + (unsigned long)index] = index;
+        byOffset.emplace(key + (unsigned long long)index,
+                         std::make_pair(key, true));
+    }
+    byName.emplace(std::wstring(name), 2u);
+    byDirectory[std::wstring(name)].push_back(std::wstring(name));
+    byId.erase(id);
+    byOffset.count(key);
+    byOffset.find(key);
+    byExport[std::string(symbol)] = (FARPROC)0;
+    byPointer[(void *)name] = (void *)symbol;
+
+    total = byName.size() + byDirectory.size() + byId.size()
+            + byOffset.size() + byExport.size() + byPointer.size();
+    byName.clear();
+    byDirectory.clear();
+    byId.clear();
+    byOffset.clear();
+    byExport.clear();
+    byPointer.clear();
+    return total;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+_PROBE_STL_FUNC = """\
+#include <windows.h>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
+
+static bool probe_stl_collect(unsigned long long address,
+                              std::vector<unsigned long long> &found,
+                              unsigned long long limit)
+{
+    found.push_back(address);
+    return found.size() < (std::size_t)limit;
+}
+
+static void probe_stl_nothing(void)
+{
+}
+
+static bool probe_stl_is_empty(const std::wstring &value)
+{
+    return value.empty();
+}
+
+/* An abstract class is what puts _purecall in an image; BlackBone carries
+   it. No lambdas anywhere in this file: MSVC names a lambda after the
+   enclosing scope in a spelling that starts with a backtick, which would
+   make the probe's own functions harder to keep out of the baseline. */
+struct ProbeInterface
+{
+    virtual ~ProbeInterface() {}
+    virtual unsigned long long value() const = 0;
+};
+
+struct ProbeImplementation : ProbeInterface
+{
+    virtual unsigned long long value() const { return 1; }
+};
+
+static std::vector<unsigned long long> &probe_stl_shared_state(void)
+{
+    /* A function-local static with a non-trivial constructor is what emits
+       _Init_thread_header, _Init_thread_footer and _Init_thread_abort. */
+    static std::vector<unsigned long long> state(4);
+    return state;
+}
+
+__declspec(dllexport) std::size_t probe_stl_callable(unsigned long long limit)
+{
+    /* std::bind over a free function taking a vector by reference is the
+       shape BlackBone's pattern search uses, down to the _Binder arguments:
+       a placeholder, a reference_wrapper and a bound lvalue. */
+    std::vector<unsigned long long> found;
+    unsigned long long bound = limit;
+    std::function<bool(unsigned long long)> callback =
+        std::bind(probe_stl_collect, std::placeholders::_1,
+                  std::ref(found), bound);
+    std::function<bool(unsigned long long)> copy(callback);
+    std::function<void(void)> simple = probe_stl_nothing;
+    std::function<bool(const std::wstring &)> byName = probe_stl_is_empty;
+
+    callback(limit);
+    copy(limit + 1);
+    simple();
+    byName(std::wstring(L"x"));
+    callback = nullptr;
+    return found.size();
+}
+
+__declspec(dllexport) std::size_t probe_stl_optional(const wchar_t *text)
+{
+    /* optional::value() is what reaches _Throw_bad_optional_access and the
+       bad_optional_access constructors, three functions BlackBone carries
+       on both architectures. */
+    std::optional<std::wstring> maybe;
+    std::optional<unsigned long long> number;
+    ProbeImplementation implementation;
+    ProbeInterface *held = &implementation;
+
+    maybe = std::wstring(text);
+    number = 1;
+    return maybe.value().size()
+           + (std::size_t)number.value_or(0)
+           + (std::size_t)held->value()
+           + probe_stl_shared_state().size();
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+
+def _msvc_probes(toolchain):
+    """The MSVC-only half of the baseline.
+
+    Two things make it bigger than the MinGW side rather than smaller. ATL
+    and the MSVC STL have no GCC equivalent, and MSVC ships its C runtime in
+    two flavours: /MT links it statically, /MD leaves it in ucrtbase.dll and
+    vcruntime140.dll with a one-instruction import thunk in its place. Both
+    MSVC recipes here build /MD, so every probe registered below that is
+    meant to match them says so.
+
+    The /MT probes are kept as well, not replaced. They are what currently
+    filters _DllMainCRTStartup, __security_init_cookie, __GSHandlerCheck,
+    __report_gsfailure and about a hundred more out of VX-API and BlackBone,
+    and that is measured from the committed reports - dropping them to
+    "fix" the flavour mismatch would trade a known win for an unknown one.
+    """
+    probes = [
+        (toolchain.cxx, "probe_atl.cpp", _PROBE_ATL, ["-shared"]),
+        # The same four sources again against the DLL runtime. No new code,
+        # and it is where most of the surviving CRT residue lives.
+        (toolchain.cc, "probe_md.c", _PROBE_DLL, ["-shared", "/MD"]),
+        (toolchain.cxx, "probe_md.cpp", _PROBE_CXX, ["-shared", "/MD", "/EHsc"]),
+        (toolchain.cc, "probe_md_exe.c", _PROBE_EXE, ["/MD"]),
+        (toolchain.cxx, "probe_md_exe.cpp", _PROBE_CXX_EXE, ["/MD", "/EHsc"]),
+        (toolchain.cxx, "probe_atl_md.cpp", _PROBE_ATL,
+         ["-shared", "/MD", "/EHsc"]),
+        (toolchain.cc, "probe_msvcrt.c", _PROBE_MSVCRT, ["-shared", "/MD"]),
+        (toolchain.cxx, "probe_atl_com.cpp", _PROBE_ATL_COM,
+         ["-shared", "/MD", "/EHsc", "ole32.lib", "oleaut32.lib"]),
+        (toolchain.cxx, "probe_atl_throw.cpp", _PROBE_ATL_THROW,
+         ["-shared", "/MD", "/EHsc"]),
+    ]
+    # Which templates the STL headers instantiate depends on the language
+    # version, and the two recipes disagree: vxapi.py builds /std:c++20 and
+    # BlackBone's own Release(DLL) project asks for /std:c++latest. Both are
+    # measured and unioned rather than one being guessed at.
+    for standard, suffix in (("/std:c++20", "20"), ("/std:c++latest", "latest")):
+        for part, code in (("seq", _PROBE_STL_SEQ),
+                           ("assoc", _PROBE_STL_ASSOC),
+                           ("func", _PROBE_STL_FUNC)):
+            probes.append((toolchain.cxx,
+                           "probe_stl_%s_%s.cpp" % (part, suffix), code,
+                           ["-shared", "/MD", "/EHsc", standard]))
+    return probes
+
+
 @functools.lru_cache(maxsize=None)
 def crt_glue(toolchain_id):
     """Map symbol name -> set of PicHashes, measured from a project-free DLL."""
@@ -306,7 +936,7 @@ def crt_glue(toolchain_id):
          ["-static-libstdc++", "-static-libgcc"]),
     ]
     if toolchain.kind == "msvc":
-        probes.append((toolchain.cxx, "probe_atl.cpp", _PROBE_ATL, ["-shared"]))
+        probes += _msvc_probes(toolchain)
     glue = {}
     with tempfile.TemporaryDirectory() as tmp:
         for compiler, filename, code, extra in probes:
@@ -316,8 +946,19 @@ def crt_glue(toolchain_id):
                 handle.write(code)
             shared = "-shared" in extra
             command = toolchain.probe_command(compiler, source, target, shared)
-            command += [flag for flag in extra if flag != "-shared"
-                        and toolchain.kind != "msvc"]
+            if toolchain.kind == "msvc":
+                # cl's own options and any extra .lib have to go in front of
+                # the /link separator; everything after it belongs to the
+                # linker, which would reject /MD and /std:c++20 outright.
+                cl_arguments = [flag for flag in extra
+                                if flag.startswith("/") or flag.endswith(".lib")]
+                if cl_arguments and "/link" in command:
+                    split = command.index("/link")
+                    command[split:split] = cl_arguments
+                else:
+                    command += cl_arguments
+            else:
+                command += [flag for flag in extra if flag != "-shared"]
             built = subprocess.run(command, capture_output=True, cwd=tmp,
                                    text=True, errors="replace")
             if built.returncode != 0:
@@ -339,10 +980,32 @@ def crt_glue(toolchain_id):
                     continue
                 glue.setdefault(function.function_name, set()).add(function.pic_hash)
     # The probe's own function is the one thing here that is not runtime code.
+    #
+    # The names the four shared probes contribute are still listed one by one
+    # rather than matched by prefix, because the MinGW baseline is a measured
+    # constant this branch is not allowed to move and a prefix rule does move
+    # it: GCC emits `probe_vscprintf.constprop.0`, `probe_cxx_runtime(char
+    # const*)` and a `.cold` partition of the same, none of which this list
+    # catches, so three x86 and two x64 entries in the MinGW glue set are in
+    # fact the probe's own code. Harmless - no library has a function called
+    # `probe_cxx_runtime(char const*)` - but worth a separate decision rather
+    # than being smuggled in with an MSVC change.
     for name in ("_probe_runtime", "probe_runtime", "_compare", "compare",
                  "_probe_vscprintf", "probe_vscprintf",
                  "_probe_cxx_runtime", "probe_cxx_runtime", "_main", "main",
                  "_probe_atl", "probe_atl"):
+        glue.pop(name, None)
+    # The MSVC-only probes below are matched by prefix instead. They have
+    # helpers and classes of their own, and a hand-kept list is exactly the
+    # kind that acquires a gap - the one name that is forgotten becomes a
+    # function this repository starts deleting out of somebody's library.
+    # None of these prefixes can reach a MinGW baseline: the sources that
+    # define them are only ever compiled by cl.
+    for name in [name for name in glue
+                 if name.startswith(("probe_atl_", "_probe_atl_",
+                                     "probe_msvcrt_", "_probe_msvcrt_",
+                                     "probe_stl_", "_probe_stl_",
+                                     "ProbeInterface", "ProbeImplementation"))]:
         glue.pop(name, None)
     return glue
 
