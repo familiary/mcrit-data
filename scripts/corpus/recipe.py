@@ -135,7 +135,18 @@ class Recipe:
         parts = [self.family, self.version, producer, arch or toolchain.arch]
         component = artifact.component or _basename_component(artifact.path)
         parts.append(component)
-        return "_".join(p for p in parts if p)
+        slug = "_".join(p for p in parts if p)
+        # The stem becomes a filename and then a URL in the README table. A
+        # space truncates a markdown link and a parenthesis closes it early,
+        # so a version like "GCC 13.2 (mingw-w64)" yields a row that points
+        # nowhere - which is worth failing the build over rather than
+        # discovering in rendered markdown.
+        hostile = set(slug) & set(' ()[]<>"\'`|#?%')
+        if hostile:
+            raise ValueError(
+                "%r is not usable as a filename or a URL: remove %s from the "
+                "family, version or component" % (slug, "".join(sorted(hostile))))
+        return slug
 
 
 def _basename_component(path):

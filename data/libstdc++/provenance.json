@@ -1,0 +1,27 @@
+{
+  "libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll": {
+    "architecture": "x86",
+    "build_flags": "-O2 -std=c++17 -static-libstdc++ -static-libgcc",
+    "built_artifact": "libstdcxx_exerciser.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "libstdcxx_exerciser.dll",
+    "family": "libstdc++",
+    "generated": "2026-09-20",
+    "is_blob": false,
+    "license": "GPL-3.0 with GCC Runtime Library Exception",
+    "mcrit": "data/libstdc++/x86/mcrit/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.mcrit",
+    "notes": "Built from an exerciser that instantiates a broad slice of the standard library; the exerciser only selects which functions are pulled in, the code is libstdc++'s. libgcc helpers and the unwinder are in the sample too and are not libstdc++'s strictly, but they are the same GCC runtime and belong with it. The glue filter is off, because the probe it measures against is itself linked -static-libstdc++ and would delete exactly the code this recipe exists to collect.",
+    "num_functions": 4681,
+    "sha256": "571e264ef1aa8c45a938b505794dc0e1f0a21e712bce5ca8d2ccffa17c1a1c73",
+    "smda": "data/libstdc++/x86/smda/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://gcc.gnu.org/",
+    "version": "13.2-mingw-w64"
+  }
+}

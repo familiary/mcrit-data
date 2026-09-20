@@ -42,7 +42,7 @@ _BUILD = ("{cxx} -std=c++17 -O2 -shared -o libstdcxx_exerciser.dll "
 RECIPES = {
     "libstdcxx_gcc13": Recipe(
         family="libstdc++",
-        version="GCC 13.2 (mingw-w64)",
+        version="13.2-mingw-w64",
         upstream="https://gcc.gnu.org/",
         license="GPL-3.0 with GCC Runtime Library Exception",
         # The runtime ships with the toolchain, so there is nothing to fetch;

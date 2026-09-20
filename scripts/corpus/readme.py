@@ -21,10 +21,15 @@ HEADER = ("| Name     | Version | Compiler | MCRIT | SMDA |\n"
 # The comments do not render. Only tables that come wholly from a
 # provenance.json are fenced: libzlib and aPLib carry a Date column this
 # tooling has no source for, and stay hand-maintained.
+# Neither marker takes the surrounding newline with it. It did, and an empty
+# fence - a section added before its data existed - then could not match at
+# all: the opening marker had already eaten the newline the closing one was
+# looking for, so the match ran on to the *next* fence's close and the
+# rewrite swallowed every section in between. Six went missing that way.
 FENCE = re.compile(
-    r"(?P<open><!-- generated: (?P<family>[A-Za-z0-9_.+-]+) -->\n)"
+    r"(?P<open><!-- generated: (?P<family>[A-Za-z0-9_.+-]+) -->)"
     r".*?"
-    r"(?P<close>\n<!-- /generated -->)",
+    r"(?P<close><!-- /generated -->)",
     re.DOTALL)
 
 
@@ -48,12 +53,23 @@ def update_readme(path=None):
 
     def _replace(match):
         family = match.group("family")
-        new = match.group("open") + render_family(family) + match.group("close")
+        new = "%s\n%s\n%s" % (match.group("open"), render_family(family),
+                              match.group("close"))
         if new != match.group(0):
             changed.append(family)
         return new
 
     updated = FENCE.sub(_replace, original)
+    # A rewrite may only ever change what is inside the fences. Checking the
+    # headings survive is cheap and catches the class of bug that made this
+    # function delete six sections: anything that makes a fence fail to match
+    # lets the next match run past it and take real content with it.
+    before = original.count("\n### ")
+    after = updated.count("\n### ")
+    if before != after:
+        raise ValueError(
+            "rewriting the README would change the number of sections from "
+            "%d to %d; refusing to write it" % (before, after))
     if updated != original:
         with open(path, "w", encoding="utf-8") as handle:
             handle.write(updated)

@@ -50,6 +50,7 @@ Libraries
 * [PCRE](#pcre)
 * [abseil](#abseil)
 * [re2](#re2)
+* [protobuf](#protobuf)
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [libstdc++](#libstdcxx)
@@ -256,7 +257,6 @@ Generated with `scripts/build_corpus.py`; see `data/bzip2/provenance.json` for s
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | bzip2 | 1.0.8 | MinGW-w64 GCC 13 | [x86 PE](data/bzip2/x86/mcrit/bzip2_1.0.8_mingw13_x86_bzip2.exe.mcrit) / [x64 PE](data/bzip2/x64/mcrit/bzip2_1.0.8_mingw13_x64_bzip2.exe.mcrit) | [x86 PE](data/bzip2/x86/smda/bzip2_1.0.8_mingw13_x86_bzip2.exe.7z) / [x64 PE](data/bzip2/x64/smda/bzip2_1.0.8_mingw13_x64_bzip2.exe.7z) |
-| bzip2 | 1.0.8 | MinGW-w64 GCC 13 | [x86 PE](data/bzip2/x86/mcrit/bzip2_1.0.8_mingw13_x86_libbz2.dll.mcrit) / [x64 PE](data/bzip2/x64/mcrit/bzip2_1.0.8_mingw13_x64_libbz2.dll.mcrit) | [x86 PE](data/bzip2/x86/smda/bzip2_1.0.8_mingw13_x86_libbz2.dll.7z) / [x64 PE](data/bzip2/x64/smda/bzip2_1.0.8_mingw13_x64_libbz2.dll.7z) |
 <!-- /generated -->
 
 ### cJSON<a id='cjson'></a>
@@ -267,6 +267,7 @@ Generated with `scripts/build_corpus.py`; see `data/cJSON/provenance.json` for s
 <!-- generated: cJSON -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| cJSON | 1.6.0 | MinGW-w64 GCC 13 | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.6.0_mingw13_x86_libcjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.6.0_mingw13_x64_libcjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.6.0_mingw13_x86_libcjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.6.0_mingw13_x64_libcjson.dll.7z) |
 | cJSON | 1.7.15 | MinGW-w64 GCC 13 | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.7.15_mingw13_x86_libcjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.7.15_mingw13_x64_libcjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.7.15_mingw13_x86_libcjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.7.15_mingw13_x64_libcjson.dll.7z) |
 | cJSON | 1.7.19 | MinGW-w64 GCC 13 | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.7.19_mingw13_x86_libcjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.7.19_mingw13_x64_libcjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.7.19_mingw13_x86_libcjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.7.19_mingw13_x64_libcjson.dll.7z) |
 <!-- /generated -->
@@ -455,6 +456,14 @@ OpenSSL in the wild is overwhelmingly MSVC-built, so a MinGW reference matches t
 Generated with `scripts/build_corpus.py`; see `data/OpenSSL/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: OpenSSL -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| OpenSSL | 1.1.1w | MinGW-w64 GCC 13 | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_1.1.1w_mingw13_x86_libcrypto.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_1.1.1w_mingw13_x64_libcrypto.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_1.1.1w_mingw13_x86_libcrypto.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_1.1.1w_mingw13_x64_libcrypto.7z) |
+| OpenSSL | 1.1.1w | MinGW-w64 GCC 13 | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_1.1.1w_mingw13_x86_libssl.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_1.1.1w_mingw13_x64_libssl.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_1.1.1w_mingw13_x86_libssl.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_1.1.1w_mingw13_x64_libssl.7z) |
+| OpenSSL | 3.0.15 | MinGW-w64 GCC 13 | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_3.0.15_mingw13_x86_libcrypto.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_3.0.15_mingw13_x64_libcrypto.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_3.0.15_mingw13_x86_libcrypto.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_3.0.15_mingw13_x64_libcrypto.7z) |
+| OpenSSL | 3.0.15 | MinGW-w64 GCC 13 | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_3.0.15_mingw13_x86_libssl.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_3.0.15_mingw13_x64_libssl.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_3.0.15_mingw13_x86_libssl.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_3.0.15_mingw13_x64_libssl.7z) |
+| OpenSSL | 3.5.8 | MinGW-w64 GCC 13 | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_3.5.8_mingw13_x86_libcrypto.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_3.5.8_mingw13_x64_libcrypto.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_3.5.8_mingw13_x86_libcrypto.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_3.5.8_mingw13_x64_libcrypto.7z) |
+| OpenSSL | 3.5.8 | MinGW-w64 GCC 13 | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_3.5.8_mingw13_x86_libssl.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_3.5.8_mingw13_x64_libssl.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_3.5.8_mingw13_x86_libssl.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_3.5.8_mingw13_x64_libssl.7z) |
 <!-- /generated -->
 
 ### Crypto++<a id='cryptopp'></a>
@@ -465,6 +474,11 @@ The compilation is under the Boost Software License 1.0 while the individual fil
 Generated with `scripts/build_corpus.py`; see `data/cryptopp/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: cryptopp -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| cryptopp | 5.6.5 | MinGW-w64 GCC 13 | [x86 PE](data/cryptopp/x86/mcrit/cryptopp_5.6.5_mingw13_x86_cryptopp.dll.mcrit) / [x64 PE](data/cryptopp/x64/mcrit/cryptopp_5.6.5_mingw13_x64_cryptopp.dll.mcrit) | [x86 PE](data/cryptopp/x86/smda/cryptopp_5.6.5_mingw13_x86_cryptopp.dll.7z) / [x64 PE](data/cryptopp/x64/smda/cryptopp_5.6.5_mingw13_x64_cryptopp.dll.7z) |
+| cryptopp | 7.0.0 | MinGW-w64 GCC 13 | [x86 PE](data/cryptopp/x86/mcrit/cryptopp_7.0.0_mingw13_x86_cryptopp.dll.mcrit) / [x64 PE](data/cryptopp/x64/mcrit/cryptopp_7.0.0_mingw13_x64_cryptopp.dll.mcrit) | [x86 PE](data/cryptopp/x86/smda/cryptopp_7.0.0_mingw13_x86_cryptopp.dll.7z) / [x64 PE](data/cryptopp/x64/smda/cryptopp_7.0.0_mingw13_x64_cryptopp.dll.7z) |
+| cryptopp | 8.9.0 | MinGW-w64 GCC 13 | [x86 PE](data/cryptopp/x86/mcrit/cryptopp_8.9.0_mingw13_x86_cryptopp.dll.mcrit) / [x64 PE](data/cryptopp/x64/mcrit/cryptopp_8.9.0_mingw13_x64_cryptopp.dll.mcrit) | [x86 PE](data/cryptopp/x86/smda/cryptopp_8.9.0_mingw13_x86_cryptopp.dll.7z) / [x64 PE](data/cryptopp/x64/smda/cryptopp_8.9.0_mingw13_x64_cryptopp.dll.7z) |
 <!-- /generated -->
 
 ### 7-Zip<a id='7-zip'></a>
@@ -475,6 +489,10 @@ Generated with `scripts/build_corpus.py`; see `data/cryptopp/provenance.json` fo
 Generated with `scripts/build_corpus.py`; see `data/7-Zip/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: 7-Zip -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| 7-Zip | 23.01 | MinGW-w64 GCC 13 | [x86 PE](data/7-Zip/x86/mcrit/7-Zip_23.01_mingw13_x86_7z.dll.mcrit) / [x64 PE](data/7-Zip/x64/mcrit/7-Zip_23.01_mingw13_x64_7z.dll.mcrit) | [x86 PE](data/7-Zip/x86/smda/7-Zip_23.01_mingw13_x86_7z.dll.7z) / [x64 PE](data/7-Zip/x64/smda/7-Zip_23.01_mingw13_x64_7z.dll.7z) |
+| 7-Zip | 26.03 | MinGW-w64 GCC 13 | [x86 PE](data/7-Zip/x86/mcrit/7-Zip_26.03_mingw13_x86_7z.dll.mcrit) / [x64 PE](data/7-Zip/x64/mcrit/7-Zip_26.03_mingw13_x64_7z.dll.mcrit) | [x86 PE](data/7-Zip/x86/smda/7-Zip_26.03_mingw13_x86_7z.dll.7z) / [x64 PE](data/7-Zip/x64/smda/7-Zip_26.03_mingw13_x64_7z.dll.7z) |
 <!-- /generated -->
 
 ### PCRE<a id='pcre'></a>
@@ -484,6 +502,9 @@ PCRE1 ended at 8.45 but is still linked into a great deal of legacy Windows soft
 Generated with `scripts/build_corpus.py`; see `data/pcre/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: pcre -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| pcre | 8.45 | MinGW-w64 GCC 13 | [x86 PE](data/pcre/x86/mcrit/pcre_8.45_mingw13_x86_libpcre.dll.mcrit) / [x64 PE](data/pcre/x64/mcrit/pcre_8.45_mingw13_x64_libpcre.dll.mcrit) | [x86 PE](data/pcre/x86/smda/pcre_8.45_mingw13_x86_libpcre.dll.7z) / [x64 PE](data/pcre/x64/smda/pcre_8.45_mingw13_x64_libpcre.dll.7z) |
 <!-- /generated -->
 
 ### abseil<a id='abseil'></a>
@@ -493,6 +514,10 @@ Abseil also covers CCTZ, which is vendored inside it as absl/time/internal/cctz,
 Generated with `scripts/build_corpus.py`; see `data/abseil/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: abseil -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| abseil | 20220623.1 | MinGW-w64 GCC 13 | [x86 PE](data/abseil/x86/mcrit/abseil_20220623.1_mingw13_x86_abseil.dll.mcrit) / [x64 PE](data/abseil/x64/mcrit/abseil_20220623.1_mingw13_x64_abseil.dll.mcrit) | [x86 PE](data/abseil/x86/smda/abseil_20220623.1_mingw13_x86_abseil.dll.7z) / [x64 PE](data/abseil/x64/smda/abseil_20220623.1_mingw13_x64_abseil.dll.7z) |
+| abseil | 20250127.1 | MinGW-w64 GCC 13 | [x86 PE](data/abseil/x86/mcrit/abseil_20250127.1_mingw13_x86_abseil.dll.mcrit) / [x64 PE](data/abseil/x64/mcrit/abseil_20250127.1_mingw13_x64_abseil.dll.mcrit) | [x86 PE](data/abseil/x86/smda/abseil_20250127.1_mingw13_x86_abseil.dll.7z) / [x64 PE](data/abseil/x64/smda/abseil_20250127.1_mingw13_x64_abseil.dll.7z) |
 <!-- /generated -->
 
 ### re2<a id='re2'></a>
@@ -503,6 +528,10 @@ For the Abseil-based version, Abseil supplies headers only and is left unlinked,
 Generated with `scripts/build_corpus.py`; see `data/re2/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: re2 -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| re2 | 2022-06-01 | MinGW-w64 GCC 13 | [x86 PE](data/re2/x86/mcrit/re2_2022-06-01_mingw13_x86_re2.dll.mcrit) / [x64 PE](data/re2/x64/mcrit/re2_2022-06-01_mingw13_x64_re2.dll.mcrit) | [x86 PE](data/re2/x86/smda/re2_2022-06-01_mingw13_x86_re2.dll.7z) / [x64 PE](data/re2/x64/smda/re2_2022-06-01_mingw13_x64_re2.dll.7z) |
+| re2 | 2025-11-05 | MinGW-w64 GCC 13 | [x86 PE](data/re2/x86/mcrit/re2_2025-11-05_mingw13_x86_re2.dll.mcrit) / [x64 PE](data/re2/x64/mcrit/re2_2025-11-05_mingw13_x64_re2.dll.mcrit) | [x86 PE](data/re2/x86/smda/re2_2025-11-05_mingw13_x86_re2.dll.7z) / [x64 PE](data/re2/x64/smda/re2_2025-11-05_mingw13_x64_re2.dll.7z) |
 <!-- /generated -->
 
 ### nlohmann/json<a id='nlohmann_json'></a>
@@ -512,6 +541,25 @@ nlohmann/json is header-only, so none of it exists in a binary until a translati
 Generated with `scripts/build_corpus.py`; see `data/nlohmann_json/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: nlohmann_json -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| nlohmann_json | 3.10.5 | MinGW-w64 GCC 13 | [x86 PE](data/nlohmann_json/x86/mcrit/nlohmann_json_3.10.5_mingw13_x86_nlohmann_json.dll.mcrit) / [x64 PE](data/nlohmann_json/x64/mcrit/nlohmann_json_3.10.5_mingw13_x64_nlohmann_json.dll.mcrit) | [x86 PE](data/nlohmann_json/x86/smda/nlohmann_json_3.10.5_mingw13_x86_nlohmann_json.dll.7z) / [x64 PE](data/nlohmann_json/x64/smda/nlohmann_json_3.10.5_mingw13_x64_nlohmann_json.dll.7z) |
+| nlohmann_json | 3.11.3 | MinGW-w64 GCC 13 | [x86 PE](data/nlohmann_json/x86/mcrit/nlohmann_json_3.11.3_mingw13_x86_nlohmann_json.dll.mcrit) / [x64 PE](data/nlohmann_json/x64/mcrit/nlohmann_json_3.11.3_mingw13_x64_nlohmann_json.dll.mcrit) | [x86 PE](data/nlohmann_json/x86/smda/nlohmann_json_3.11.3_mingw13_x86_nlohmann_json.dll.7z) / [x64 PE](data/nlohmann_json/x64/smda/nlohmann_json_3.11.3_mingw13_x64_nlohmann_json.dll.7z) |
+| nlohmann_json | 3.12.0 | MinGW-w64 GCC 13 | [x86 PE](data/nlohmann_json/x86/mcrit/nlohmann_json_3.12.0_mingw13_x86_nlohmann_json.dll.mcrit) / [x64 PE](data/nlohmann_json/x64/mcrit/nlohmann_json_3.12.0_mingw13_x64_nlohmann_json.dll.mcrit) | [x86 PE](data/nlohmann_json/x86/smda/nlohmann_json_3.12.0_mingw13_x86_nlohmann_json.dll.7z) / [x64 PE](data/nlohmann_json/x64/smda/nlohmann_json_3.12.0_mingw13_x64_nlohmann_json.dll.7z) |
+<!-- /generated -->
+
+### protobuf<a id='protobuf'></a>
+
+Protocol Buffers, in three generations chosen where the library was rebuilt rather than by recency: 3.6.1 still parses the wire format down the old recursive path (`EpsCopyInputStream` arrives in 3.11, the table-driven parser in 3.19), 21.12 is the last release before the hard Abseil dependency and the generation embedded nearly everywhere, and 31.1 is current and Abseil-based throughout.  
+31.1 is built shared so Abseil and utf8_range are imported rather than linked in; about 15% of its functions still demangle to `absl::` names, which are instantiations over protobuf's own types and are in any real protobuf binary.  
+Generated with `scripts/build_corpus.py`; see `data/protobuf/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: protobuf -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| protobuf | 3.6.1 | MinGW-w64 GCC 13 | [x86 PE](data/protobuf/x86/mcrit/protobuf_3.6.1_mingw13_x86_protobuf.dll.mcrit) / [x64 PE](data/protobuf/x64/mcrit/protobuf_3.6.1_mingw13_x64_protobuf.dll.mcrit) | [x86 PE](data/protobuf/x86/smda/protobuf_3.6.1_mingw13_x86_protobuf.dll.7z) / [x64 PE](data/protobuf/x64/smda/protobuf_3.6.1_mingw13_x64_protobuf.dll.7z) |
+| protobuf | 21.12 | MinGW-w64 GCC 13 | [x86 PE](data/protobuf/x86/mcrit/protobuf_21.12_mingw13_x86_protobuf.dll.mcrit) / [x64 PE](data/protobuf/x64/mcrit/protobuf_21.12_mingw13_x64_protobuf.dll.mcrit) | [x86 PE](data/protobuf/x86/smda/protobuf_21.12_mingw13_x86_protobuf.dll.7z) / [x64 PE](data/protobuf/x64/smda/protobuf_21.12_mingw13_x64_protobuf.dll.7z) |
+| protobuf | 31.1 | MinGW-w64 GCC 13 | [x86 PE](data/protobuf/x86/mcrit/protobuf_31.1_mingw13_x86_protobuf.dll.mcrit) / [x64 PE](data/protobuf/x64/mcrit/protobuf_31.1_mingw13_x64_protobuf.dll.mcrit) | [x86 PE](data/protobuf/x86/smda/protobuf_31.1_mingw13_x86_protobuf.dll.7z) / [x64 PE](data/protobuf/x64/smda/protobuf_31.1_mingw13_x64_protobuf.dll.7z) |
 <!-- /generated -->
 
 ### jemalloc<a id='jemalloc'></a>
@@ -521,6 +569,9 @@ jemalloc has a real, if niche, Windows presence: Firefox-derived code, and some 
 Generated with `scripts/build_corpus.py`; see `data/jemalloc/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: jemalloc -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| jemalloc | 5.3.0 | MinGW-w64 GCC 13 | [x86 PE](data/jemalloc/x86/mcrit/jemalloc_5.3.0_mingw13_x86_jemalloc.dll.mcrit) / [x64 PE](data/jemalloc/x64/mcrit/jemalloc_5.3.0_mingw13_x64_jemalloc.dll.mcrit) | [x86 PE](data/jemalloc/x86/smda/jemalloc_5.3.0_mingw13_x86_jemalloc.dll.7z) / [x64 PE](data/jemalloc/x64/smda/jemalloc_5.3.0_mingw13_x64_jemalloc.dll.7z) |
 <!-- /generated -->
 
 ### libstdc++<a id='libstdcxx'></a>
@@ -531,6 +582,9 @@ Reprocessing the MinGW x86 inputs is the real fix and is a question for the main
 Generated with `scripts/build_corpus.py`; see `data/libstdc++/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: libstdc++ -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| libstdc++ | 13.2-mingw-w64 | MinGW-w64 GCC 13 | [x86 PE](data/libstdc++/x86/mcrit/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.mcrit) | [x86 PE](data/libstdc++/x86/smda/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.7z) |
 <!-- /generated -->
 
 ## Runtimes
@@ -589,8 +643,7 @@ Generated with `scripts/build_corpus.py`; see `data/donut/provenance.json` for s
 <!-- generated: donut -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
-| donut | 1.1 | MinGW-w64 GCC 13 | [x64 PE](data/donut/x64/mcrit/donut_1.1_mingw13_x64_donut.exe.mcrit) | [x64 PE](data/donut/x64/smda/donut_1.1_mingw13_x64_donut.exe.7z) |
-| donut | 1.1 | MSVC (as committed upstream) | [x86 code](data/donut/x86/mcrit/donut_1.1_mingw13_x86_loader_msvc_x86.mcrit) / [x64 code](data/donut/x64/mcrit/donut_1.1_mingw13_x64_loader_msvc_x64.mcrit) | [x86 code](data/donut/x86/smda/donut_1.1_mingw13_x86_loader_msvc_x86.7z) / [x64 code](data/donut/x64/smda/donut_1.1_mingw13_x64_loader_msvc_x64.7z) |
+| donut | 1.1 | MSVC (as committed upstream) | [x86 code](data/donut/x86/mcrit/donut_1.1_msvc_x86_loader_x86.mcrit) / [x64 code](data/donut/x64/mcrit/donut_1.1_msvc_x64_loader_x64.mcrit) | [x86 code](data/donut/x86/smda/donut_1.1_msvc_x86_loader_x86.7z) / [x64 code](data/donut/x64/smda/donut_1.1_msvc_x64_loader_x64.7z) |
 <!-- /generated -->
 
 ### MemoryModule<a id='memorymodule'></a>
@@ -613,8 +666,8 @@ Generated with `scripts/build_corpus.py`; see `data/pe_to_shellcode/provenance.j
 <!-- generated: pe_to_shellcode -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
-| pe_to_shellcode | 1.0 | MSVC (as committed upstream) | [x86 code](data/pe_to_shellcode/x86/mcrit/pe_to_shellcode_1.0_mingw13_x86_stub2_x86.mcrit) / [x64 code](data/pe_to_shellcode/x64/mcrit/pe_to_shellcode_1.0_mingw13_x64_stub2_x64.mcrit) | [x86 code](data/pe_to_shellcode/x86/smda/pe_to_shellcode_1.0_mingw13_x86_stub2_x86.7z) / [x64 code](data/pe_to_shellcode/x64/smda/pe_to_shellcode_1.0_mingw13_x64_stub2_x64.7z) |
-| pe_to_shellcode | 1.2 | MSVC (as committed upstream) | [x86 code](data/pe_to_shellcode/x86/mcrit/pe_to_shellcode_1.2_mingw13_x86_stub2_x86.mcrit) / [x64 code](data/pe_to_shellcode/x64/mcrit/pe_to_shellcode_1.2_mingw13_x64_stub2_x64.mcrit) | [x86 code](data/pe_to_shellcode/x86/smda/pe_to_shellcode_1.2_mingw13_x86_stub2_x86.7z) / [x64 code](data/pe_to_shellcode/x64/smda/pe_to_shellcode_1.2_mingw13_x64_stub2_x64.7z) |
+| pe_to_shellcode | 1.0 | MSVC (as committed upstream) | [x86 code](data/pe_to_shellcode/x86/mcrit/pe_to_shellcode_1.0_msvc_x86_stub2_x86.mcrit) / [x64 code](data/pe_to_shellcode/x64/mcrit/pe_to_shellcode_1.0_msvc_x64_stub2_x64.mcrit) | [x86 code](data/pe_to_shellcode/x86/smda/pe_to_shellcode_1.0_msvc_x86_stub2_x86.7z) / [x64 code](data/pe_to_shellcode/x64/smda/pe_to_shellcode_1.0_msvc_x64_stub2_x64.7z) |
+| pe_to_shellcode | 1.2 | MSVC (as committed upstream) | [x86 code](data/pe_to_shellcode/x86/mcrit/pe_to_shellcode_1.2_msvc_x86_stub2_x86.mcrit) / [x64 code](data/pe_to_shellcode/x64/mcrit/pe_to_shellcode_1.2_msvc_x64_stub2_x64.mcrit) | [x86 code](data/pe_to_shellcode/x86/smda/pe_to_shellcode_1.2_msvc_x86_stub2_x86.7z) / [x64 code](data/pe_to_shellcode/x64/smda/pe_to_shellcode_1.2_msvc_x64_stub2_x64.7z) |
 <!-- /generated -->
 
 ### sRDI<a id='srdi'></a>
@@ -625,9 +678,9 @@ Generated with `scripts/build_corpus.py`; see `data/sRDI/provenance.json` for so
 <!-- generated: sRDI -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
-| sRDI | 2018-05-27 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2018-05-27_mingw13_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2018-05-27_mingw13_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2018-05-27_mingw13_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2018-05-27_mingw13_x64_ShellcodeRDI_x64.7z) |
-| sRDI | 2020-04-15 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2020-04-15_mingw13_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2020-04-15_mingw13_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2020-04-15_mingw13_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2020-04-15_mingw13_x64_ShellcodeRDI_x64.7z) |
-| sRDI | 2022-06-17 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2022-06-17_mingw13_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2022-06-17_mingw13_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2022-06-17_mingw13_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2022-06-17_mingw13_x64_ShellcodeRDI_x64.7z) |
+| sRDI | 2018-05-27 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2018-05-27_msvc_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2018-05-27_msvc_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2018-05-27_msvc_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2018-05-27_msvc_x64_ShellcodeRDI_x64.7z) |
+| sRDI | 2020-04-15 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2020-04-15_msvc_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2020-04-15_msvc_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2020-04-15_msvc_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2020-04-15_msvc_x64_ShellcodeRDI_x64.7z) |
+| sRDI | 2022-06-17 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2022-06-17_msvc_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2022-06-17_msvc_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2022-06-17_msvc_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2022-06-17_msvc_x64_ShellcodeRDI_x64.7z) |
 <!-- /generated -->
 
 ## Offensive tooling
@@ -640,6 +693,9 @@ A collection of Win32 API-abuse routines. Upstream ships no static-library or DL
 Generated with `scripts/build_corpus.py`; see `data/VX-API/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: VX-API -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| VX-API | 2.01.015 | Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64 | [x86 PE](data/VX-API/x86/mcrit/VX-API_2.01.015_msvc143_x86_vxapi.dll.mcrit) / [x64 PE](data/VX-API/x64/mcrit/VX-API_2.01.015_msvc143_x64_vxapi.dll.mcrit) | [x86 PE](data/VX-API/x86/smda/VX-API_2.01.015_msvc143_x86_vxapi.dll.7z) / [x64 PE](data/VX-API/x64/smda/VX-API_2.01.015_msvc143_x64_vxapi.dll.7z) |
 <!-- /generated -->
 
 ### BlackBone<a id='blackbone'></a>
@@ -649,6 +705,9 @@ A Windows memory-hacking library: process and module management, manual PE mappi
 Generated with `scripts/build_corpus.py`; see `data/BlackBone/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: BlackBone -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| BlackBone | 2023-07-17 | Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64 | [x86 PE](data/BlackBone/x86/mcrit/BlackBone_2023-07-17_msvc143_x86_BlackBone.dll.mcrit) / [x64 PE](data/BlackBone/x64/mcrit/BlackBone_2023-07-17_msvc143_x64_BlackBone.dll.mcrit) | [x86 PE](data/BlackBone/x86/smda/BlackBone_2023-07-17_msvc143_x86_BlackBone.dll.7z) / [x64 PE](data/BlackBone/x64/smda/BlackBone_2023-07-17_msvc143_x64_BlackBone.dll.7z) |
 <!-- /generated -->
 
 ### SysWhispers<a id='syswhispers'></a>
@@ -659,4 +718,7 @@ The DLL holds the generated stubs and nothing else - no C runtime, no entry poin
 Generated with `scripts/build_corpus.py`; see `data/SysWhispers/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: SysWhispers -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| SysWhispers | 2021-07-06 | Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64 | [x64 PE](data/SysWhispers/x64/mcrit/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.mcrit) | [x64 PE](data/SysWhispers/x64/smda/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.7z) |
 <!-- /generated -->

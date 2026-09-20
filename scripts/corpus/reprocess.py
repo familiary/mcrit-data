@@ -14,6 +14,10 @@ now uses. It is not a substitute for regenerating: it only touches
 statistics, and anything that changes the disassembly itself needs a real
 rebuild.
 
+It touches only the reports that had functions removed, which are the only
+ones whose block the pipeline recomputed in the first place - see
+_had_functions_removed.
+
 The stored JSON is edited rather than re-serialised from a parsed report.
 SmdaReport.toDict() does not round-trip every field - xdata_refs_from loses
 entries - so writing a parsed report back would quietly discard data that
@@ -105,15 +109,39 @@ def _archives(families):
                     yield family, os.path.join(dirpath, filename)
 
 
-def reprocess(families=None):
-    """Recompute statistics for every committed report. Returns the changes.
+def _had_functions_removed(family, slug):
+    """Whether this artefact's report had functions taken out of it.
 
-    Each entry is (archive path, {field: (old, new)}). A report whose block is
-    already correct is left untouched, so this is idempotent and a second run
-    reports nothing.
+    Only those need their statistics recomputed - and only those may have
+    them recomputed. Where nothing was removed the block is SMDA's own, and
+    SMDA's bookkeeping does not always agree with a recomputation from the
+    finished report: on the libstdc++ sample it marks four more functions
+    non-leaf than any rule applied to the emitted blocks can account for,
+    presumably from calls analysed during a pass whose instructions did not
+    survive into the function. Rewriting those would replace SMDA's numbers
+    with this tooling's opinion of them, which is the mixed-definition
+    problem this whole exercise exists to remove.
+    """
+    path = os.path.join(config.DATA_DIR, family, "provenance.json")
+    if not os.path.exists(path):
+        return False
+    with open(path, encoding="utf-8") as handle:
+        entry = json.load(handle).get(slug) or {}
+    return bool(entry.get("removed_runtime_functions"))
+
+
+def reprocess(families=None):
+    """Recompute statistics for the committed reports that need it.
+
+    Each returned entry is (archive path, {field: (old, new)}). A report whose
+    block is already correct is left untouched, so this is idempotent and a
+    second run reports nothing.
     """
     changes = []
     for family, archive in _archives(families):
+        slug = os.path.basename(archive)[:-len(".7z")]
+        if not _had_functions_removed(family, slug):
+            continue
         member, report_dict = _read_archive(archive)
         before = report_dict.get("statistics") or {}
         after = _statistics_for(report_dict)
@@ -123,7 +151,6 @@ def reprocess(families=None):
             continue
         report_dict["statistics"] = after
         _write_archive(archive, member, report_dict)
-        slug = os.path.basename(archive)[:-len(".7z")]
         export = os.path.join(os.path.dirname(os.path.dirname(archive)),
                               "mcrit", "%s.mcrit" % slug)
         if os.path.exists(export):
