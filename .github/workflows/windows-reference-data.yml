@@ -1,0 +1,95 @@
+name: Windows reference data
+
+# Generates reference data for the projects that cannot be built with GCC.
+#
+# VX-API needs ATL, BlackBone needs ATL and the DIA SDK, and SysWhispers v1
+# emits MASM that neither nasm nor GAS will assemble. The windows-2022 runner
+# image carries Visual Studio 2022 with ATL and MFC, four Windows SDKs,
+# ml/ml64 and the WDK, which covers all of them.
+#
+# The same scripts/build_corpus.py drives this as the Linux side; only the
+# toolchain differs. Results are uploaded as artifacts rather than committed,
+# so a maintainer reviews them before they enter the corpus.
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipes:
+        description: Recipes to build (space separated, or "all-msvc")
+        required: false
+        default: all-msvc
+  pull_request:
+    paths:
+      - scripts/corpus/recipes/vxapi.py
+      - scripts/corpus/recipes/blackbone.py
+      - scripts/corpus/recipes/syswhispers.py
+      - scripts/corpus/toolchain.py
+      - .github/workflows/windows-reference-data.yml
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    strategy:
+      # One architecture failing should not hide the other's result.
+      fail-fast: false
+      matrix:
+        arch: [x86, x64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install analysis dependencies
+        run: python -m pip install --quiet -r scripts/requirements.txt
+
+      # Puts cl, link, ml/ml64, rc and msbuild on PATH for the chosen target.
+      # scripts/corpus/toolchain.py registers the MSVC toolchain from that.
+      - name: Set up MSVC (${{ matrix.arch }})
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch == 'x64' && 'amd64' || 'x86' }}
+
+      - name: Show detected toolchains
+        run: python scripts/build_corpus.py list
+
+      - name: Build
+        shell: pwsh
+        run: |
+          $requested = "${{ github.event.inputs.recipes }}"
+          if (-not $requested -or $requested -eq "all-msvc") {
+            # SysWhispers v1 is x64-only: its generator emits MASM for x64.
+            $requested = if ("${{ matrix.arch }}" -eq "x64") {
+              "VX-API_2.01.015 BlackBone_2023-07-17 SysWhispers_2021-07-06"
+            } else {
+              "VX-API_2.01.015 BlackBone_2023-07-17"
+            }
+          }
+          python scripts/build_corpus.py build $requested.Split(" ")
+
+      - name: Validate
+        if: always()
+        run: python scripts/build_corpus.py validate data
+
+      - name: Upload reference data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reference-data-${{ matrix.arch }}
+          path: |
+            data/**/*.7z
+            data/**/*.mcrit
+            data/**/provenance.json
+          if-no-files-found: error
+
+      - name: Upload build logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ matrix.arch }}
+          path: build/*.log
+          if-no-files-found: ignore

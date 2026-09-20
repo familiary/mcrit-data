@@ -165,8 +165,12 @@ def crt_glue(toolchain_id):
             target = os.path.join(tmp, filename + ".out.exe")
             with open(source, "w") as handle:
                 handle.write(code)
-            subprocess.run([compiler, "-O2", "-o", target, source] + extra,
-                           check=True, capture_output=True)
+            shared = "-shared" in extra
+            command = toolchain.probe_command(compiler, source, target, shared)
+            command += [flag for flag in extra if flag != "-shared"
+                        and toolchain.kind != "msvc"]
+            subprocess.run(command, check=True, capture_output=True,
+                           cwd=tmp)
             for function in disassemble(target).getFunctions():
                 if not function.function_name:
                     continue
