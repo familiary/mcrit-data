@@ -83,6 +83,32 @@ __declspec(dllexport) void probe_runtime(const char *text, double value)
     fprintf(stderr, "%s", buffer);
     pow(value, 2.0); fmod(value, 2.0); floor(value); ceil(value); sqrt(value); log(value); exp(value);
     abs((int)value); labs((long)value); ldiv((long)value, 2);
+    /* 64-bit division on a 32-bit target is a libgcc call, not an
+       instruction: __divdi3, __moddi3, __udivmoddi4 and __umoddi3 are
+       emitted into whatever links them. Without this they are absent from
+       the baseline, and a cross-family sweep finds them sitting in 7-Zip,
+       Lua, OpenSSL and libstdc++ at once - four of the eighty-four functions
+       the whole corpus shares across three families or more. */
+    {
+        long long wide = (long long)value * 1000003LL + 7;
+        unsigned long long uwide = (unsigned long long)wide | 1ULL;
+        long long sdiv = (long long)(uwide | 3);
+        unsigned long long udiv = (unsigned long long)(wide | 9);
+        volatile long long sink64;
+        /* Both shapes are needed. A quotient and a remainder over the same
+           divisor fold into one __divmoddi4/__udivmoddi4 call; over
+           different divisors they stay as __divdi3, __moddi3, __udivdi3 and
+           __umoddi3. All six turn up in real builds. */
+        sink64 = wide / sdiv;
+        sink64 += wide % sdiv;
+        sink64 += (long long)(uwide / udiv);
+        sink64 += (long long)(uwide % udiv);
+        sink64 += wide / (long long)(uwide | 5);
+        sink64 += wide % (long long)(uwide | 7);
+        sink64 += (long long)(uwide / (unsigned long long)(wide | 11));
+        sink64 += (long long)(uwide % (unsigned long long)(wide | 13));
+        (void)sink64;
+    }
     errno = 0;
 }
 
