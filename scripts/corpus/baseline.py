@@ -1,4 +1,4 @@
-"""Identify MinGW C runtime glue so it is not attributed to a library family.
+"""Identify compiler runtime glue so it is not attributed to a library family.
 
 Every MinGW-linked DLL or EXE carries startup, unwind-registration and CRT
 import glue that belongs to the compiler runtime, not to the project being
@@ -140,6 +140,38 @@ int main(int argc, char **argv) { probe_cxx_runtime(argv[0]); return argc - argc
 """
 
 
+# MSVC only, and only because two families here need ATL. A DLL that merely
+# instantiates ATL's module object drags in CAtlBaseModule, CAtlWinModule,
+# CComCriticalSection and the CSimpleArray instantiations behind them - around
+# ninety functions that are Microsoft's, already covered by data/MSVC, and
+# were being filed under VX-API and BlackBone. There is no MinGW equivalent:
+# ATL does not exist for GCC, which is half the reason those families are
+# built on a Windows runner at all.
+_PROBE_ATL = """\
+#include <windows.h>
+#include <atlbase.h>
+
+class CProbeModule : public ATL::CAtlDllModuleT<CProbeModule> {};
+CProbeModule _AtlModule;
+
+__declspec(dllexport) void probe_atl(const wchar_t *text)
+{
+    ATL::CComBSTR value(text);
+    ATL::CComCriticalSection lock;
+    ATL::CSimpleArray<int> items;
+
+    lock.Init();
+    lock.Lock();
+    lock.Unlock();
+    lock.Term();
+    items.Add(1);
+    items.Add(2);
+    items.RemoveAll();
+    value.Append(text);
+}
+"""
+
+
 @functools.lru_cache(maxsize=None)
 def crt_glue(toolchain_id):
     """Map symbol name -> set of PicHashes, measured from a project-free DLL."""
@@ -158,6 +190,8 @@ def crt_glue(toolchain_id):
         (toolchain.cxx, "probe_exe.cpp", _PROBE_CXX_EXE,
          ["-static-libstdc++", "-static-libgcc"]),
     ]
+    if toolchain.kind == "msvc":
+        probes.append((toolchain.cxx, "probe_atl.cpp", _PROBE_ATL, ["-shared"]))
     glue = {}
     with tempfile.TemporaryDirectory() as tmp:
         for compiler, filename, code, extra in probes:
@@ -171,13 +205,15 @@ def crt_glue(toolchain_id):
                         and toolchain.kind != "msvc"]
             subprocess.run(command, check=True, capture_output=True,
                            cwd=tmp)
-            for function in disassemble(target).getFunctions():
+            probe = disassemble(target, pdb_path=toolchain.probe_pdb(target))
+            for function in probe.getFunctions():
                 if not function.function_name:
                     continue
                 glue.setdefault(function.function_name, set()).add(function.pic_hash)
     # The probe's own function is the one thing here that is not runtime code.
     for name in ("_probe_runtime", "probe_runtime", "_compare", "compare",
-                 "_probe_cxx_runtime", "probe_cxx_runtime", "_main", "main"):
+                 "_probe_cxx_runtime", "probe_cxx_runtime", "_main", "main",
+                 "_probe_atl", "probe_atl"):
         glue.pop(name, None)
     return glue
 

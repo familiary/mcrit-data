@@ -53,13 +53,28 @@ class Toolchain:
         return lines[0] if lines else "unknown"
 
     def probe_command(self, compiler, source, target, shared):
-        """Command line that builds a CRT baseline probe with this toolchain."""
+        """Command line that builds a CRT baseline probe with this toolchain.
+
+        The MSVC probe is built with debug info on purpose. MSVC keeps symbols
+        in a PDB rather than in a COFF symbol table, so without one SMDA
+        recovers the probe's functions unnamed - and the glue filter matches on
+        symbol *and* PicHash, so an unnamed baseline matches nothing at all.
+        That is not a degraded filter, it is no filter: every MSVC artefact
+        came through with an empty removed_runtime_functions list and ~19% of
+        VX-API was MSVC startup glue and ATL wearing the VX-API family name.
+        """
         if self.kind == "msvc":
             # cl writes its output next to the source unless told otherwise,
             # and /LD selects a DLL.
-            command = [compiler, "/nologo", "/O2", source, "/Fe:" + target]
-            return command + (["/LD"] if shared else [])
+            command = [compiler, "/nologo", "/O2", "/Zi",
+                       "/Fd:" + target + ".pdb", source, "/Fe:" + target]
+            command += ["/LD"] if shared else []
+            return command + ["/link", "/DEBUG", "/PDB:" + target + ".pdb"]
         return [compiler, "-O2", "-o", target, source] + (["-shared"] if shared else [])
+
+    def probe_pdb(self, target):
+        """Where probe_command puts the PDB, or "" when there is not one."""
+        return target + ".pdb" if self.kind == "msvc" else ""
 
     def build_env(self):
         """Environment variables recipes can rely on for autotools/cmake."""
