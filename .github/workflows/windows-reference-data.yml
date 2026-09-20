@@ -18,12 +18,19 @@ on:
         description: Recipes to build (space separated, or "all-msvc")
         required: false
         default: all-msvc
-  pull_request:
+  # push rather than pull_request: a pull_request path filter is evaluated
+  # against everything the PR changes, not against the push, so once one of
+  # these files is in the branch every later commit re-triggers the job and
+  # cancels the run that was already building. On push the filter means what
+  # it says.
+  push:
     paths:
       - scripts/corpus/recipes/vxapi.py
       - scripts/corpus/recipes/blackbone.py
       - scripts/corpus/recipes/syswhispers.py
       - scripts/corpus/toolchain.py
+      - scripts/corpus/build.py
+      - scripts/corpus/pipeline.py
       - .github/workflows/windows-reference-data.yml
 
 permissions:
