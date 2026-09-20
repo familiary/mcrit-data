@@ -75,6 +75,8 @@ class Toolchain:
             "hostcc": "gcc" if self.bitness == 64 else "gcc -m32",
             # lz4's lib/Makefile keys its DLL rule off this spelling.
             "mingw_os": "MINGW64" if self.bitness == 64 else "MINGW32",
+            # OpenSSL's Configure target names.
+            "openssl_target": "mingw64" if self.bitness == 64 else "mingw",
         }
 
 
