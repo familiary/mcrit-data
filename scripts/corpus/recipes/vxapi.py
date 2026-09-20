@@ -33,7 +33,12 @@ _COMPILE = ('for %f in (VX-API\\*.cpp) do @cl /nologo /c /O2 /MD /Zi /std:c++20 
 # skipped, so anything referencing them is left unresolved and the link would
 # otherwise stop at LNK1120. What is wanted here is the compiled function
 # bodies, not a loadable DLL, and /OPT:NOREF keeps routines nothing calls.
-_LINK = ('link /nologo /DLL /DEBUG /OPT:NOREF /FORCE:UNRESOLVED '
+# /OPT:NOICF as well as /OPT:NOREF. Identical COMDAT folding is on by
+# default in a release link and merges functions with identical bodies,
+# so StringConcat and StringCopy came back as one entry. Folding is
+# right for a shipping binary and wrong here, where each routine is
+# supposed to be its own reference sample.
+_LINK = ('link /nologo /DLL /DEBUG /OPT:NOREF /OPT:NOICF /FORCE:UNRESOLVED '
          '/PDB:vxapi.pdb /OUT:vxapi.dll obj\\*.obj '
          'ws2_32.lib dnsapi.lib iphlpapi.lib crypt32.lib dbghelp.lib '
          'wtsapi32.lib urlmon.lib powrprof.lib imm32.lib comctl32.lib '
