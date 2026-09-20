@@ -33,6 +33,18 @@ MIN_USEFUL_FUNCTIONS = 8
 # Counting functions there would reject usable data.
 MIN_USEFUL_BLOB_INSTRUCTIONS = 100
 
+# Below this many instructions, two families sharing a PicHash says nothing.
+# A three-instruction thunk that loads an import and jumps has one shape, and
+# every library that calls that import compiles to it; a getter that returns a
+# member is "mov eax, [ecx+N]; ret" in every code base there is. Measured over
+# this corpus the floor is the difference between a check that cannot be used
+# and one that can: 754 raw hits across ~281,000 functions, of which only 84
+# survive at ten instructions - and those are mostly legitimate C++ template
+# instantiations of the same header in different projects. The real leaks the
+# filter is for (libgcc's division helpers, MSVC startup glue, ATL) all sit
+# well above the floor, so raising it costs no detection.
+MIN_CROSS_FAMILY_INSTRUCTIONS = 10
+
 
 def ensure_dirs():
     for path in (DOWNLOAD_DIR, SOURCE_DIR, ARTIFACT_DIR, REPORT_DIR):

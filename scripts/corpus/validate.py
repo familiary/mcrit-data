@@ -126,7 +126,7 @@ def find_duplicate_samples(root=None):
     return duplicates
 
 
-def find_cross_family_functions(root=None, threshold=3):
+def find_cross_family_functions(root=None, threshold=3, min_instructions=None):
     """Report PicHashes that appear under more than one family name.
 
     A handful of shared hashes is normal - libraries do vendor each other, and
@@ -134,10 +134,20 @@ def find_cross_family_functions(root=None, threshold=3):
     signature of compiler runtime or a statically linked dependency leaking in
     under the host project's name, which is what the glue filter exists to
     prevent and what commit 0108024 had to fix by hand.
-    """
-    from mcrit.libs.utility import decompress_decode
 
+    Functions shorter than ``min_instructions`` are not counted: see
+    config.MIN_CROSS_FAMILY_INSTRUCTIONS for why, and for what the floor was
+    measured to cost. Pass 0 to count every function, which is useful when
+    investigating a specific collision by hand and useless as a gate.
+
+    Returns {pichash: (families, num_instructions)}, the size being the one
+    thing that tells a reader whether a hit is worth opening.
+    """
+    if min_instructions is None:
+        min_instructions = config.MIN_CROSS_FAMILY_INSTRUCTIONS
     by_hash = {}
+    sizes = {}
+    decompress_decode = None
     for path in _iter_data_files(".mcrit", root):
         with open(path, encoding="utf-8") as handle:
             try:
@@ -150,12 +160,30 @@ def find_cross_family_functions(root=None, threshold=3):
             # here it only needs a name that sorts, so the report still renders.
             family = export.get("sample_entries", {}).get(sha256, {}).get(
                 "family") or "(unknown)"
-            entries = json.loads(decompress_decode(blob)) if compressed else blob
+            if compressed:
+                if decompress_decode is None:
+                    # Imported here rather than at the top of the function so
+                    # this module keeps the property the rest of it has: usable
+                    # without the analysis dependencies installed. Every export
+                    # this pipeline writes is compressed, so in practice the
+                    # import still happens on the first file - but a caller
+                    # working over uncompressed exports, which is what the
+                    # tests do, no longer needs mcrit to be present.
+                    from mcrit.libs.utility import decompress_decode
+                entries = json.loads(decompress_decode(blob))
+            else:
+                entries = blob
             for entry in entries.values():
                 pichash = entry.get("pichash")
-                if pichash:
-                    by_hash.setdefault(pichash, set()).add(family)
-    return {h: sorted(f) for h, f in by_hash.items() if len(f) >= threshold}
+                if not pichash:
+                    continue
+                instructions = entry.get("num_instructions") or 0
+                if instructions < min_instructions:
+                    continue
+                by_hash.setdefault(pichash, set()).add(family)
+                sizes[pichash] = instructions
+    return {h: (sorted(f), sizes[h])
+            for h, f in by_hash.items() if len(f) >= threshold}
 
 
 def _counterpart(path, from_kind, to_kind, from_suffix, to_suffix):
@@ -335,12 +363,13 @@ def find_undocumented_families():
                   and name not in linked)
 
 
-def validate_all(root=None, check_size=True, deep=False):
+def validate_all(root=None, check_size=True, deep=False, min_instructions=None):
     """Check everything under ``root`` (default data/).
 
     ``deep`` adds the cross-family PicHash check. It is opt-in because it
     loads and decompresses every .mcrit in the corpus, which is far too slow
     for the per-family check the Windows workflow runs after each build.
+    ``min_instructions`` is passed to it; None takes the default floor.
     """
     problems = []
     for path in _iter_data_files(".mcrit", root):
@@ -357,9 +386,12 @@ def validate_all(root=None, check_size=True, deep=False):
     problems.extend(find_stale_provenance(root))
     problems.extend(find_unrecorded_artifacts(root))
     if deep:
-        for pichash, families in sorted(find_cross_family_functions(root).items()):
-            problems.append("PicHash %s appears under %d families: %s"
-                            % (pichash, len(families), ", ".join(families)))
+        for pichash, (families, size) in sorted(
+                find_cross_family_functions(
+                    root, min_instructions=min_instructions).items()):
+            problems.append(
+                "PicHash %s (%d instructions) appears under %d families: %s"
+                % (pichash, size, len(families), ", ".join(families)))
     # Only when the whole corpus is being checked: a run scoped to one family
     # cannot say anything about the README as a whole.
     if root is None:

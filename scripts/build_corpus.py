@@ -14,7 +14,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from corpus import recipes, validate
+from corpus import config, recipes, validate
 from corpus.pipeline import run_recipe
 from corpus.toolchain import available_toolchains
 
@@ -39,6 +39,13 @@ def main():
                        help="also look for PicHashes shared across families, "
                             "which is how statically linked code leaks in "
                             "under the wrong name; loads every .mcrit")
+    check.add_argument("--min-instructions", type=int, default=None,
+                       metavar="N",
+                       help="with --deep, ignore shared functions shorter "
+                            "than N instructions (default %d). Short bodies "
+                            "collide across unrelated projects for reasons "
+                            "that are not leakage. 0 counts everything."
+                            % config.MIN_CROSS_FAMILY_INSTRUCTIONS)
 
     again = subparsers.add_parser(
         "reprocess",
@@ -90,7 +97,8 @@ def main():
         return 0
 
     if args.command == "validate":
-        problems = validate.validate_all(args.path, deep=args.deep)
+        problems = validate.validate_all(
+            args.path, deep=args.deep, min_instructions=args.min_instructions)
         for problem in problems:
             print("FAIL %s" % problem)
         print("%d problem(s)" % len(problems))
