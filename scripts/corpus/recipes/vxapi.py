@@ -19,8 +19,15 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 # /Zi plus a shared /Fd writes debug info for every translation unit into one
 # PDB, which is where MSVC keeps symbols; without it SMDA can only name
 # exported functions and this DLL exports none.
-_COMPILE = ('for %f in (VX-API\\*.cpp) do @cl /nologo /c /O2 /Zi /std:c++20 /EHsc '
-            '/DUNICODE /D_UNICODE /IVX-API /Fdvxapi.pdb /Fo:obj\\ "%f" 2>nul & rem')
+# /MD is load-bearing. cl defaults to /MT, which statically links the CRT:
+# the first build that way came back 46% MSVC C runtime by function count,
+# 924 of them the __crt_stdio_output printf machinery, all of it attributed
+# to VX-API and all of it overlapping data/MSVC, which is this corpus's
+# reference for exactly that code. With /MD the CRT stays in ucrtbase and
+# only import thunks appear. BlackBone's own project already builds this way.
+_COMPILE = ('for %f in (VX-API\\*.cpp) do @cl /nologo /c /O2 /MD /Zi /std:c++20 '
+            '/EHsc /DUNICODE /D_UNICODE /IVX-API /Fdvxapi.pdb /Fo:obj\\ "%f" '
+            '2>nul & rem')
 
 # /FORCE:UNRESOLVED is load-bearing. The sources needing ATL or SEH are
 # skipped, so anything referencing them is left unresolved and the link would
@@ -54,9 +61,11 @@ RECIPES = {
         artifacts=[Artifact(path="vxapi.dll", component="vxapi.dll",
                             pdb="vxapi.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
-        build_flags="/O2 /Zi /std:c++20",
+        build_flags="/O2 /MD /Zi /std:c++20",
         notes="A small number of sources need ATL or __try/__except and are "
-              "skipped; the rest of the collection is present. The link uses "
+              "skipped; the rest of the collection is present. Built against "
+              "the DLL runtime, so the MSVC C runtime is imported rather than "
+              "linked in and stays attributed to data/MSVC. The link uses "
               "/FORCE:UNRESOLVED because references into the skipped sources "
               "cannot resolve - the artefact is reference material, not a "
               "loadable DLL.",
