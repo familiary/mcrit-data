@@ -10,7 +10,7 @@
     "is_blob": false,
     "license": "MIT",
     "mcrit": "data/libxml2/x64/mcrit/libxml2_2.14.3_mingw13_x64_libxml2.dll.mcrit",
-    "num_functions": 2380,
+    "num_functions": 2379,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMainCRTStartup",
@@ -123,6 +123,7 @@
       "cleanup_return",
       "dtoa_lock",
       "dtoa_lock_cleanup",
+      "exit",
       "exp2l",
       "fclose",
       "fflush",
@@ -179,7 +180,7 @@
       "wcsrtombs",
       "write"
     ],
-    "sha256": "871092e294a786ac18d959a98d0b8c9dcaa1873a807b6776eaba80f003840980",
+    "sha256": "3e189b4eb57b89028f8c7537332878ac218e57140828de8aa0cda7248bcfa6e0",
     "smda": "data/libxml2/x64/smda/libxml2_2.14.3_mingw13_x64_libxml2.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -202,7 +203,7 @@
     "is_blob": false,
     "license": "MIT",
     "mcrit": "data/libxml2/x86/mcrit/libxml2_2.14.3_mingw13_x86_libxml2.dll.mcrit",
-    "num_functions": 2355,
+    "num_functions": 2354,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMainCRTStartup@12",
@@ -315,6 +316,7 @@
       "_cleanup_return",
       "_dtoa_lock",
       "_dtoa_lock_cleanup",
+      "_exit",
       "_exp2l",
       "_fclose",
       "_fflush",
@@ -375,7 +377,7 @@
       "_wcsrtombs",
       "_write"
     ],
-    "sha256": "236c42047648252ac48d5f511db1fe4c7cb75f7f49c64e0a2962a00081d02d3e",
+    "sha256": "7e9ed00a0e59667120e3e3d0277750731b400d89b04f9832b15e7f5c8bc3d0f0",
     "smda": "data/libxml2/x86/smda/libxml2_2.14.3_mingw13_x86_libxml2.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -398,7 +400,7 @@
     "is_blob": false,
     "license": "MIT",
     "mcrit": "data/libxml2/x64/mcrit/libxml2_2.9.14_mingw13_x64_libxml2.dll.mcrit",
-    "num_functions": 2584,
+    "num_functions": 2583,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -512,6 +514,7 @@
       "cleanup_return",
       "dtoa_lock",
       "dtoa_lock_cleanup",
+      "exit",
       "exp2l",
       "fclose",
       "fflush",
@@ -574,7 +577,7 @@
       "wcsrtombs",
       "write"
     ],
-    "sha256": "5dd77dbc4d7611df512ee7e5a6744a7ed0f6523c4bc6706e5cd8764c7469d750",
+    "sha256": "a9bb62447faac3f3287947fb474e0a8d375cab6f8072a69a8f451411a27d8c75",
     "smda": "data/libxml2/x64/smda/libxml2_2.9.14_mingw13_x64_libxml2.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -597,7 +600,7 @@
     "is_blob": false,
     "license": "MIT",
     "mcrit": "data/libxml2/x86/mcrit/libxml2_2.9.14_mingw13_x86_libxml2.dll.mcrit",
-    "num_functions": 2538,
+    "num_functions": 2537,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -711,6 +714,7 @@
       "_cleanup_return",
       "_dtoa_lock",
       "_dtoa_lock_cleanup",
+      "_exit",
       "_exp2l",
       "_fclose",
       "_fflush",
@@ -776,7 +780,7 @@
       "_wcsrtombs",
       "_write"
     ],
-    "sha256": "4c29c7694bbab5c76ae820b76bcc698ad8e1dc4804dac90ba77078d432ab37f7",
+    "sha256": "4a5b6328bb73e986ca5e36928ea300ee4c7a54152e31c064ccb7d25a049c6c72",
     "smda": "data/libxml2/x86/smda/libxml2_2.9.14_mingw13_x86_libxml2.dll.7z",
     "smda_version": "4.8.0",
     "source": {

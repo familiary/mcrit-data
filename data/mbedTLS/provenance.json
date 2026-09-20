@@ -1,7 +1,7 @@
 {
   "mbedTLS_2.16.12_mingw13_x64_libmbedcrypto.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x64/library/libmbedcrypto.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedcrypto.dll",
@@ -130,7 +130,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "ee3e77867787f222dbf8d2abe3f6bf039edef9c4d5ccef0e9510f9b5ebfe919e",
+    "sha256": "796f353876f630096aa3e70c6214231a336048e760b528c0bf5d71a7aed055f3",
     "smda": "data/mbedTLS/x64/smda/mbedTLS_2.16.12_mingw13_x64_libmbedcrypto.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -144,7 +144,7 @@
   },
   "mbedTLS_2.16.12_mingw13_x64_libmbedtls.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x64/library/libmbedtls.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedtls.dll",
@@ -210,7 +210,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "69b36d008841d30c11d68dbbd48729b79f4a205ad328cb648cc4c68bb21108e8",
+    "sha256": "97081c37bc0a55ee69cdd21518befa4a4876db45be9973c16417a9d24d7e7a60",
     "smda": "data/mbedTLS/x64/smda/mbedTLS_2.16.12_mingw13_x64_libmbedtls.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -224,7 +224,7 @@
   },
   "mbedTLS_2.16.12_mingw13_x64_libmbedx509.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x64/library/libmbedx509.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedx509.dll",
@@ -348,7 +348,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "466cc55b92c6b07d9864c6d0473676e0e91d46cee1e35815e309e1030c164bc5",
+    "sha256": "a6973681e45b1b7f5340f1237f7243432c6e46d0b77fb2dd06a150bde86c4864",
     "smda": "data/mbedTLS/x64/smda/mbedTLS_2.16.12_mingw13_x64_libmbedx509.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -362,7 +362,7 @@
   },
   "mbedTLS_2.16.12_mingw13_x86_libmbedcrypto.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x86/library/libmbedcrypto.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedcrypto.dll",
@@ -496,7 +496,7 @@
       "_wcsnlen",
       "_wcsrtombs"
     ],
-    "sha256": "49baf4c1af71f00ef45d2fb42ac2c7f06256b3ec3d9a807572f00103e8bb11f8",
+    "sha256": "32c0331f25fd297193f56dd58703c2250d36a9113aab8eb1bd21cec830bbf08c",
     "smda": "data/mbedTLS/x86/smda/mbedTLS_2.16.12_mingw13_x86_libmbedcrypto.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -510,7 +510,7 @@
   },
   "mbedTLS_2.16.12_mingw13_x86_libmbedtls.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x86/library/libmbedtls.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedtls.dll",
@@ -576,7 +576,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "f21cfee2adb72d6027ff67069da18220cf20fde093027afb36751db3b8452b74",
+    "sha256": "0ce26ea44b06de6ab0e4dd8dfee2580cea3825eb97e00e0b1c08cf83b2d68fc4",
     "smda": "data/mbedTLS/x86/smda/mbedTLS_2.16.12_mingw13_x86_libmbedtls.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -590,7 +590,7 @@
   },
   "mbedTLS_2.16.12_mingw13_x86_libmbedx509.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x86/library/libmbedx509.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedx509.dll",
@@ -719,7 +719,7 @@
       "_wcsnlen",
       "_wcsrtombs"
     ],
-    "sha256": "6b589d7f632334c8ce11dfa2dab37baa8a74e65640a35ba376f6dd082f407244",
+    "sha256": "ebab6092ca14dcf94064d6e63883925ddec33b4c11bbe525ead6d2115a47cd69",
     "smda": "data/mbedTLS/x86/smda/mbedTLS_2.16.12_mingw13_x86_libmbedx509.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -733,12 +733,13 @@
   },
   "mbedTLS_2.28.10_mingw13_x64_libmbedcrypto.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x64/library/libmbedcrypto.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedcrypto.dll",
     "family": "mbedTLS",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/mbedTLS/x64/mcrit/mbedTLS_2.28.10_mingw13_x64_libmbedcrypto.dll.mcrit",
     "num_functions": 1022,
@@ -861,7 +862,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "0c637fb6df5f84f37d536c97fd9938dcd941536f886c399e706c71e437d472bc",
+    "sha256": "103ce62c061ae3f4ee8d093ac91e0ac935d2832d2d438ca6f2408c24766944fc",
     "smda": "data/mbedTLS/x64/smda/mbedTLS_2.28.10_mingw13_x64_libmbedcrypto.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -875,12 +876,13 @@
   },
   "mbedTLS_2.28.10_mingw13_x64_libmbedtls.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x64/library/libmbedtls.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedtls.dll",
     "family": "mbedTLS",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/mbedTLS/x64/mcrit/mbedTLS_2.28.10_mingw13_x64_libmbedtls.dll.mcrit",
     "num_functions": 376,
@@ -941,7 +943,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "3beb962ca63f5e5624064bf5610eb2adcbfef93693754098f5a813aaabcdf1d0",
+    "sha256": "92e543221596f2d4649a4081e74650461bb66300babf2981737f5dfd07635636",
     "smda": "data/mbedTLS/x64/smda/mbedTLS_2.28.10_mingw13_x64_libmbedtls.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -955,12 +957,13 @@
   },
   "mbedTLS_2.28.10_mingw13_x64_libmbedx509.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x64/library/libmbedx509.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedx509.dll",
     "family": "mbedTLS",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/mbedTLS/x64/mcrit/mbedTLS_2.28.10_mingw13_x64_libmbedx509.dll.mcrit",
     "num_functions": 166,
@@ -1079,7 +1082,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "9c6f71e212b4e109b677b94245edff1640e972bc889bf4f09ec3ca8c0da73a93",
+    "sha256": "169d9278f890bc57ff952c434ced64cb8a07c1396a29a0ee25c40c7b6cead1f2",
     "smda": "data/mbedTLS/x64/smda/mbedTLS_2.28.10_mingw13_x64_libmbedx509.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1093,12 +1096,13 @@
   },
   "mbedTLS_2.28.10_mingw13_x86_libmbedcrypto.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x86/library/libmbedcrypto.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedcrypto.dll",
     "family": "mbedTLS",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/mbedTLS/x86/mcrit/mbedTLS_2.28.10_mingw13_x86_libmbedcrypto.dll.mcrit",
     "num_functions": 1003,
@@ -1226,7 +1230,7 @@
       "_wcsnlen",
       "_wcsrtombs"
     ],
-    "sha256": "c2fef5fab5009a827653bcc0b4ed0ee71fa1e6a71bdbb0cab51a0c83351d2f62",
+    "sha256": "6b214d62f2380c25613d6f300db240989ccaf13c54c3e23fc5225332055d4b82",
     "smda": "data/mbedTLS/x86/smda/mbedTLS_2.28.10_mingw13_x86_libmbedcrypto.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1240,12 +1244,13 @@
   },
   "mbedTLS_2.28.10_mingw13_x86_libmbedtls.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x86/library/libmbedtls.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedtls.dll",
     "family": "mbedTLS",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/mbedTLS/x86/mcrit/mbedTLS_2.28.10_mingw13_x86_libmbedtls.dll.mcrit",
     "num_functions": 349,
@@ -1305,7 +1310,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "0bf3f017f549ef0e32f4f2432d8611b73636820bf96776f7747faf93692472b0",
+    "sha256": "260a7e7ec2240aad6c6a3cd04382c30a021564d408dadc4abed06202ebb398c4",
     "smda": "data/mbedTLS/x86/smda/mbedTLS_2.28.10_mingw13_x86_libmbedtls.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1319,12 +1324,13 @@
   },
   "mbedTLS_2.28.10_mingw13_x86_libmbedx509.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x86/library/libmbedx509.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedx509.dll",
     "family": "mbedTLS",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/mbedTLS/x86/mcrit/mbedTLS_2.28.10_mingw13_x86_libmbedx509.dll.mcrit",
     "num_functions": 152,
@@ -1447,7 +1453,7 @@
       "_wcsnlen",
       "_wcsrtombs"
     ],
-    "sha256": "d346b144572a4293ce01c78f95b4149fbbd7e3d6db1cf88605647d3be072d7bf",
+    "sha256": "66c153a71360ff5ddce0f1b3a0f75244fcf9dbf9483f1ab18a8a6fd021eb7d4f",
     "smda": "data/mbedTLS/x86/smda/mbedTLS_2.28.10_mingw13_x86_libmbedx509.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1461,7 +1467,7 @@
   },
   "mbedTLS_3.0.0_mingw13_x64_libmbedcrypto.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x64/library/libmbedcrypto.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedcrypto.dll",
@@ -1590,7 +1596,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "4c8e441b586941804e62af1fba41bb16a1799da42d099356a56c5e4e7e03329b",
+    "sha256": "ffd0466d32f9a962b17696607e40260ccc25afc04d89345e80f65402dffa2995",
     "smda": "data/mbedTLS/x64/smda/mbedTLS_3.0.0_mingw13_x64_libmbedcrypto.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1604,7 +1610,7 @@
   },
   "mbedTLS_3.0.0_mingw13_x64_libmbedtls.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x64/library/libmbedtls.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedtls.dll",
@@ -1670,7 +1676,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "8e9e70ae322428cbf3de0a503d11ff89395f66969ea21c86848535d7bb6357d8",
+    "sha256": "21a7b51d9e5009e4937978f86f9cbd63d4ea056d7994e1f048d9e2b03f2265eb",
     "smda": "data/mbedTLS/x64/smda/mbedTLS_3.0.0_mingw13_x64_libmbedtls.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1684,7 +1690,7 @@
   },
   "mbedTLS_3.0.0_mingw13_x64_libmbedx509.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x64/library/libmbedx509.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedx509.dll",
@@ -1751,7 +1757,7 @@
       "strncpy",
       "vfprintf"
     ],
-    "sha256": "4d173da7a1ebd4ba94112acfc7f438852aa76931a0a9510a3c27153ae05232aa",
+    "sha256": "29617395be7b27d440a60d4e114b0dec5feea2b4f6ececbf247836a8d7fc74ea",
     "smda": "data/mbedTLS/x64/smda/mbedTLS_3.0.0_mingw13_x64_libmbedx509.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1765,7 +1771,7 @@
   },
   "mbedTLS_3.0.0_mingw13_x86_libmbedcrypto.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x86/library/libmbedcrypto.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedcrypto.dll",
@@ -1899,7 +1905,7 @@
       "_wcsnlen",
       "_wcsrtombs"
     ],
-    "sha256": "ae18f0a9e41d0d35ae13bcc1c6f8787072ede0d2314e8c7c915700caca322d0c",
+    "sha256": "1635d9d45c078f50c60eaeb3ea0d87ed6736c0a5e96174e109aa349c2aa7ef11",
     "smda": "data/mbedTLS/x86/smda/mbedTLS_3.0.0_mingw13_x86_libmbedcrypto.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1913,7 +1919,7 @@
   },
   "mbedTLS_3.0.0_mingw13_x86_libmbedtls.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x86/library/libmbedtls.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedtls.dll",
@@ -1979,7 +1985,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "46fcdbb27e960fab375c94ff492f41de5d3ff1de914506bc552d9d3e45546935",
+    "sha256": "e122fa664153d6c7c9dc9a5c0ead5c419b5e8c1d5129a7519ef32a9473848a9c",
     "smda": "data/mbedTLS/x86/smda/mbedTLS_3.0.0_mingw13_x86_libmbedtls.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1993,7 +1999,7 @@
   },
   "mbedTLS_3.0.0_mingw13_x86_libmbedx509.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x86/library/libmbedx509.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedx509.dll",
@@ -2059,7 +2065,7 @@
       "_strncpy",
       "_vfprintf"
     ],
-    "sha256": "53a5234789974da2b18c7f8a0a1929a1af8e09ba627071006a0bac8c1a35dde7",
+    "sha256": "c9895482cd954c81469ad51984fa7ebb92084b44eafde18557c2f3b8be0ce63f",
     "smda": "data/mbedTLS/x86/smda/mbedTLS_3.0.0_mingw13_x86_libmbedx509.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -2073,12 +2079,13 @@
   },
   "mbedTLS_3.6.7_mingw13_x64_libmbedcrypto.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x64/library/libmbedcrypto.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedcrypto.dll",
     "family": "mbedTLS",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/mbedTLS/x64/mcrit/mbedTLS_3.6.7_mingw13_x64_libmbedcrypto.dll.mcrit",
     "num_functions": 1177,
@@ -2200,7 +2207,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "fcacba9d20e85957f2261f75a7d42b819b1e847ac1b99bc99f7e7c414b27a35c",
+    "sha256": "18839b46f1cd5298676631ce182ba4a2993a3e50ba0a4a8b0a387f1dffa0ba7c",
     "smda": "data/mbedTLS/x64/smda/mbedTLS_3.6.7_mingw13_x64_libmbedcrypto.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -2214,12 +2221,13 @@
   },
   "mbedTLS_3.6.7_mingw13_x64_libmbedtls.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x64/library/libmbedtls.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedtls.dll",
     "family": "mbedTLS",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/mbedTLS/x64/mcrit/mbedTLS_3.6.7_mingw13_x64_libmbedtls.dll.mcrit",
     "num_functions": 485,
@@ -2336,7 +2344,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "f9a361875ebdf67790c38f0abdf661ae97280efeb5def87b805abf60de8fdb34",
+    "sha256": "de8f22ac3fc889a097e0b73de64b1417a76c2810418ffa39d0e84d263d2bab33",
     "smda": "data/mbedTLS/x64/smda/mbedTLS_3.6.7_mingw13_x64_libmbedtls.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -2350,12 +2358,13 @@
   },
   "mbedTLS_3.6.7_mingw13_x64_libmbedx509.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x64/library/libmbedx509.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedx509.dll",
     "family": "mbedTLS",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/mbedTLS/x64/mcrit/mbedTLS_3.6.7_mingw13_x64_libmbedx509.dll.mcrit",
     "num_functions": 189,
@@ -2417,7 +2426,7 @@
       "strncpy",
       "vfprintf"
     ],
-    "sha256": "3db0c6312f0d97c3d22352f47b77ee5e4744a565dd857d82eee867e956746735",
+    "sha256": "09cda605a60a4943ef67d27132a38c95825292997a190f3cca5291f4ba5a6ba9",
     "smda": "data/mbedTLS/x64/smda/mbedTLS_3.6.7_mingw13_x64_libmbedx509.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -2431,12 +2440,13 @@
   },
   "mbedTLS_3.6.7_mingw13_x86_libmbedcrypto.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x86/library/libmbedcrypto.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedcrypto.dll",
     "family": "mbedTLS",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/mbedTLS/x86/mcrit/mbedTLS_3.6.7_mingw13_x86_libmbedcrypto.dll.mcrit",
     "num_functions": 1168,
@@ -2563,7 +2573,7 @@
       "_wcsnlen",
       "_wcsrtombs"
     ],
-    "sha256": "520c7538ccaf699f7ca3989277d5036bb4358f690f3aa39f942908c8c612c6ca",
+    "sha256": "ef899d17316eeb9ee71b98e1852c1ed3db3321a5b20c907bf61bff1431ae84e3",
     "smda": "data/mbedTLS/x86/smda/mbedTLS_3.6.7_mingw13_x86_libmbedcrypto.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -2577,12 +2587,13 @@
   },
   "mbedTLS_3.6.7_mingw13_x86_libmbedtls.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x86/library/libmbedtls.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedtls.dll",
     "family": "mbedTLS",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/mbedTLS/x86/mcrit/mbedTLS_3.6.7_mingw13_x86_libmbedtls.dll.mcrit",
     "num_functions": 457,
@@ -2705,7 +2716,7 @@
       "_wcsnlen",
       "_wcsrtombs"
     ],
-    "sha256": "834e1a117fb653599645acf1206ea1949e3289d09b6f78dea06320d5c8d25c21",
+    "sha256": "35cece7b00ed203bd472baf9607653aaf12ca0b5dc0e99f8c99f04f6a18bd863",
     "smda": "data/mbedTLS/x86/smda/mbedTLS_3.6.7_mingw13_x86_libmbedtls.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -2719,12 +2730,13 @@
   },
   "mbedTLS_3.6.7_mingw13_x86_libmbedx509.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release)",
+    "build_flags": "-O2 (mbedTLS sets CMAKE_C_FLAGS_RELEASE itself)",
     "built_artifact": "build-x86/library/libmbedx509.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "libmbedx509.dll",
     "family": "mbedTLS",
     "generated": "2026-09-20",
+    "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/mbedTLS/x86/mcrit/mbedTLS_3.6.7_mingw13_x86_libmbedx509.dll.mcrit",
     "num_functions": 174,
@@ -2785,7 +2797,7 @@
       "_strncpy",
       "_vfprintf"
     ],
-    "sha256": "b226548a0131368ec4866377bc89a9c8830487c6255ac4bd7490e8b7d6e953dc",
+    "sha256": "8162013cb7585c426e6eab51d313c0c48e874866433e6292ccff040ca76644b5",
     "smda": "data/mbedTLS/x86/smda/mbedTLS_3.6.7_mingw13_x86_libmbedx509.dll.7z",
     "smda_version": "4.8.0",
     "source": {
