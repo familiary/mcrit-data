@@ -12,30 +12,47 @@ The data found in this repository has been processed with the following tool cha
 
 This repository contains both the final SMDA files and the ready-to-import MCRIT files, which can be imported using Data/Import in MCRITweb or [using the CLI](https://github.com/danielplohmann/mcrit/blob/main/docs/mcrit-cli.md).
 
+Entries marked *Generated with `scripts/build_corpus.py`* came a second way, which needs neither IDA Pro nor a prebuilt binary to start from: unmodified upstream source is fetched against a pinned tag or digest, built with mingw-w64 (or with MSVC on a Windows runner, for the projects that need ATL, the DIA SDK or MASM), and disassembled with SMDA directly. What it produces is byte-compatible with the rest of the corpus — the minhash and shingler configuration hashes are checked against the existing exports on every run — and every artefact records its source URL and digest, compiler, build flags and dependency versions in `data/<family>/provenance.json`. Compiler runtime that every binary links in is measured against a project-free probe and removed, so it stays attributed to the toolchain rather than to the library. See `scripts/corpus/README.md`.
+
 This repository is intended to grow over time, as we find time to process more of the scattered artefacts from several previous endeavors.
 
 If you feel that something especially relevant is missing, please open an issue and/or provide input data and we will see what we can do.
 
 Compilers
-* [Golang](#gloang)
+* [Golang](#golang)
 * [Microsoft Visual Studio](#msvc)
 * [MinGW](#mingw)
 * [Nim](#nim)
 * [Rust](#rust)
 
 Libraries
-* [aPLib](#aplibrust)
+* [aPLib](#aplib)
+* [libzlib](#libzlib)
 * [bzip2](#bzip2)
 * [cJSON](#cjson)
-* [libsodium](#libsodium)
+* [libcurl](#libcurl)
+* [libevent](#libevent)
 * [liblzma](#liblzma)
-* [libpng](#libpng)
-* [libtiff](#libtiff)
+* [libsodium](#libsodium)
+* [libtomcrypt](#libtomcrypt)
 * [libuv](#libuv)
-* [libzlib](#libzlib)
+* [libxml2](#libxml2)
 * [lz4](#lz4)
 * [mbedTLS](#mbedtls)
+* [pcre2](#pcre2)
+* [sqlite3](#sqlite3)
+* [libpng](#libpng)
+* [libtiff](#libtiff)
 * [wolfSSL](#wolfssl)
+* [OpenSSL](#openssl)
+* [Crypto++](#cryptopp)
+* [7-Zip](#7-zip)
+* [PCRE](#pcre)
+* [abseil](#abseil)
+* [re2](#re2)
+* [nlohmann/json](#nlohmann_json)
+* [jemalloc](#jemalloc)
+* [libstdc++](#libstdcxx)
 
 Runtimes
 * [Lua](#lua)
@@ -47,6 +64,11 @@ Loaders and shellcode
 * [MemoryModule](#memorymodule)
 * [pe_to_shellcode](#pe_to_shellcode)
 * [sRDI](#srdi)
+
+Offensive tooling
+* [VX-API](#vx-api)
+* [BlackBone](#blackbone)
+* [SysWhispers](#syswhispers)
 
 ## Compilers
 
@@ -425,6 +447,92 @@ Generated with `scripts/build_corpus.py`; see `data/wolfSSL/provenance.json` for
 | wolfSSL | 5.9.2 | MinGW-w64 GCC 13 | [x86 PE](data/wolfSSL/x86/mcrit/wolfSSL_5.9.2_mingw13_x86_libwolfssl.dll.mcrit) / [x64 PE](data/wolfSSL/x64/mcrit/wolfSSL_5.9.2_mingw13_x64_libwolfssl.dll.mcrit) | [x86 PE](data/wolfSSL/x86/smda/wolfSSL_5.9.2_mingw13_x86_libwolfssl.dll.7z) / [x64 PE](data/wolfSSL/x64/smda/wolfSSL_5.9.2_mingw13_x64_libwolfssl.dll.7z) |
 <!-- /generated -->
 
+### OpenSSL<a id='openssl'></a>
+
+OpenSSL is the largest body of crypto code in this corpus. The three versions are chosen for architecture rather than recency: 1.1.1 has no provider layer at all and is still by far the most encountered OpenSSL, 3.0 introduced the provider architecture, and 3.5 is the current LTS.  
+OpenSSL in the wild is overwhelmingly MSVC-built, so a MinGW reference matches those only weakly; its strength here is matching MinGW/GCC-built Windows binaries, and by proxy ELF builds.  
+
+Generated with `scripts/build_corpus.py`; see `data/OpenSSL/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: OpenSSL -->
+<!-- /generated -->
+
+### Crypto++<a id='cryptopp'></a>
+
+Crypto++ is a C++ crypto toolkit and a regular guest in malware. The three releases are picked where the library was restructured: 5.6.5 is the last of the 5.6 line and predates the C++11 move of 6.0, 7.0.0 follows the split of the SIMD implementations into their own translation units, and 8.9.0 is current. Any two of them overlap far less than their version numbers suggest.  
+The compilation is under the Boost Software License 1.0 while the individual files are in the public domain, which is the arrangement described in upstream's License.txt.  
+
+Generated with `scripts/build_corpus.py`; see `data/cryptopp/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: cryptopp -->
+<!-- /generated -->
+
+### 7-Zip<a id='7-zip'></a>
+
+7z.dll carries the archiver and every codec, including the LZMA implementation that is among the most copy-pasted compression code in Windows malware.  
+7-Zip publishes no checksums of its own; the digests recorded here were taken from the fetched archives over HTTPS.  
+
+Generated with `scripts/build_corpus.py`; see `data/7-Zip/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: 7-Zip -->
+<!-- /generated -->
+
+### PCRE<a id='pcre'></a>
+
+PCRE1 ended at 8.45 but is still linked into a great deal of legacy Windows software, and it shares almost no code with PCRE2. JIT and UTF are enabled explicitly, because PCRE1's CMake build defaults both off where a distribution or a vendored copy ships them on.  
+
+Generated with `scripts/build_corpus.py`; see `data/pcre/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: pcre -->
+<!-- /generated -->
+
+### abseil<a id='abseil'></a>
+
+Abseil also covers CCTZ, which is vendored inside it as absl/time/internal/cctz, so google/cctz is not processed separately. Abseil builds as a pile of static archives, which SMDA cannot read, so they are linked into one DLL with `--whole-archive` to force every object in rather than only what an anchor references.  
+
+Generated with `scripts/build_corpus.py`; see `data/abseil/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: abseil -->
+<!-- /generated -->
+
+### re2<a id='re2'></a>
+
+The two versions bracket the largest code-level split in this part of the corpus: 2022-06-01 is the last release before RE2 took a dependency on Abseil, and the current one is built on Abseil throughout. A matcher that knows only one of them recognises very little of the other.  
+For the Abseil-based version, Abseil supplies headers only and is left unlinked, so none of its object code is attributed to re2.  
+
+Generated with `scripts/build_corpus.py`; see `data/re2/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: re2 -->
+<!-- /generated -->
+
+### nlohmann/json<a id='nlohmann_json'></a>
+
+nlohmann/json is header-only, so none of it exists in a binary until a translation unit uses it and there is no upstream artefact to disassemble. The reference data comes from compiling a unit that instantiates the templates (`scripts/corpus/exercisers/nlohmann_json.cpp`); the functions in the binary are nlohmann's, the exerciser only selects which.  
+
+Generated with `scripts/build_corpus.py`; see `data/nlohmann_json/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: nlohmann_json -->
+<!-- /generated -->
+
+### jemalloc<a id='jemalloc'></a>
+
+jemalloc has a real, if niche, Windows presence: Firefox-derived code, and some game and anti-cheat stacks. The C++ wrapper is disabled, because it adds libstdc++ surface without adding allocator code.  
+
+Generated with `scripts/build_corpus.py`; see `data/jemalloc/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: jemalloc -->
+<!-- /generated -->
+
+### libstdc++<a id='libstdcxx'></a>
+
+`data/MinGW` carries libstdc++ and libsupc++ on x64 but not on x86: the r38 x86 report is mostly Win32 import thunks, with no `_ZN`/`_ZSt` symbols and no libgcc helpers at all, so 32-bit libstdc++ is covered nowhere else in the corpus. This recipe is x86 only for that reason - an x64 build would duplicate what r38 already has.  
+Reprocessing the MinGW x86 inputs is the real fix and is a question for the maintainer; this fills the gap in the meantime.  
+
+Generated with `scripts/build_corpus.py`; see `data/libstdc++/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: libstdc++ -->
+<!-- /generated -->
+
 ## Runtimes
 
 Interpreters and virtual machines that are commonly statically linked into tooling.
@@ -520,4 +628,35 @@ Generated with `scripts/build_corpus.py`; see `data/sRDI/provenance.json` for so
 | sRDI | 2018-05-27 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2018-05-27_mingw13_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2018-05-27_mingw13_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2018-05-27_mingw13_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2018-05-27_mingw13_x64_ShellcodeRDI_x64.7z) |
 | sRDI | 2020-04-15 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2020-04-15_mingw13_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2020-04-15_mingw13_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2020-04-15_mingw13_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2020-04-15_mingw13_x64_ShellcodeRDI_x64.7z) |
 | sRDI | 2022-06-17 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2022-06-17_mingw13_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2022-06-17_mingw13_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2022-06-17_mingw13_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2022-06-17_mingw13_x64_ShellcodeRDI_x64.7z) |
+<!-- /generated -->
+
+## Offensive tooling
+
+Public offensive-tooling code bases that are copied into implants more or less verbatim. All three need Visual Studio - ATL, the DIA SDK or MASM - and are built on a windows-2022 runner by `.github/workflows/windows-reference-data.yml` rather than approximated with GCC.
+### VX-API<a id='vx-api'></a>
+
+A collection of Win32 API-abuse routines. Upstream ships no static-library or DLL configuration, so the sources are compiled into one and linked with `/OPT:NOREF`, which keeps routines nothing calls - the point here is coverage, not a minimal binary. A small number of sources need ATL or `__try`/`__except` and are skipped.  
+
+Generated with `scripts/build_corpus.py`; see `data/VX-API/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: VX-API -->
+<!-- /generated -->
+
+### BlackBone<a id='blackbone'></a>
+
+A Windows memory-hacking library: process and module management, manual PE mapping, local and remote hooking, pattern search. Built in its `Release(DLL)` configuration, which statically compiles the vendored AsmJit and rewolf-wow64ext sources into the same image - so functions from those projects are present here under the BlackBone family, as they are in any real BlackBone DLL. BeaEngine is imported from its own DLL and is not. The kernel driver is not built.  
+
+Generated with `scripts/build_corpus.py`; see `data/BlackBone/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: BlackBone -->
+<!-- /generated -->
+
+### SysWhispers<a id='syswhispers'></a>
+
+The v1 generator, whose stubs resolve their own syscall number inline: each loads the PEB from `gs:[60h]` and walks major version, minor version and build number down a chain of comparisons before issuing the syscall. That ladder is the recognisable part, and it is what an implant carries when it copies this generator's output. SysWhispers2 and 3 emit 2- to 15-instruction stubs that differ only by one immediate and would form a large, low-value cluster, so they are not covered.  
+The DLL holds the generated stubs and nothing else - no C runtime, no entry point - and exports them so each carries its name.  
+
+Generated with `scripts/build_corpus.py`; see `data/SysWhispers/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: SysWhispers -->
 <!-- /generated -->
