@@ -1,11 +1,27 @@
 """SysWhispers (mcrit-data issue #9) - the v1 generator, MSVC only.
 
 The issue asks for "SysWhisper versions and derivates". Of the four, v1 is
-the one worth covering and the one that needs Windows: its generated stubs
-are around a hundred instructions each, carrying real PEB version dispatch,
-while SysWhispers2 and 3 emit 2- to 15-instruction stubs that differ only by
-one immediate and would form a large, low-value cluster. v1's output is MASM
-and is rejected by both nasm and GAS, so it needs ml/ml64.
+the one covered here, and it needs Windows: its output is MASM and is
+rejected by both nasm and GAS, so it needs ml/ml64.
+
+v1 is not picked because it avoids the redundancy the later versions have.
+It does not. Measured on this sample, all 29 stubs are 79 instructions and
+384 bytes, they share a single mnemonic sequence, and they differ in exactly
+16 instructions - the repeated "mov eax, <syscall number>" of the dispatch
+ladder. Pairwise they agree in 93.8% to 97.9% of their bytes. That is the
+same shape of cluster SysWhispers2 and 3 produce, where the per-function
+stub is a 2- to 15-instruction thunk (v2: "push <hash>; call WhisperMain")
+varying in one immediate.
+
+What differs is how much body each stub has to be recognised by. 79
+instructions of PEB major/minor/build comparison carry a usable MinHash and
+identify the generator on sight; a two-instruction thunk carries no signal
+and would collide with any other short syscall wrapper. The PicHashes bear
+that out at the other end too - all 29 are distinct, because the syscall
+numbers are ordinary immediates and are not escaped away - so the cluster is
+tight without being degenerate. In v2 and v3 the code worth matching is not
+the per-function stub at all but the single shared resolver they call, which
+is C and needs no MASM; covering it is a separate question from this recipe.
 
 SysWhispers2_x86 is deliberately absent: it is pre-generated MASM with no
 LICENSE file of any kind, which is a maintainer decision rather than a

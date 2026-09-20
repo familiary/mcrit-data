@@ -74,11 +74,44 @@ RECIPES = {
                      pdb="build\\{msbuild_platform}\\%s\\BlackBone.pdb" % _CONFIG),
         ],
         toolchains=["msvc_x86", "msvc_x64"],
-        build_flags="/O2, Release(DLL) configuration",
+        # One Artifact serves both architectures, and the project does not
+        # configure them the same way, so both are named. Release(DLL)|Win32
+        # asks for Optimization=Full (/Ox) with InlineFunctionExpansion
+        # AnySuitable (/Ob2), FavorSizeOrSpeed Speed (/Ot) and
+        # BufferSecurityCheck off (/GS-); Release(DLL)|x64 asks for MaxSpeed
+        # (/O2) with SDLCheck on (/sdl) and leaves the buffer checks in. The
+        # earlier "/O2 for both" was wrong for x86 and silent about the rest.
+        # LanguageStandard and the link-time settings matter as much as the
+        # /O level for what the artefact looks like: /std:c++latest decides
+        # which templates are instantiated, whole-program optimization
+        # inlines across translation units, and /OPT:ICF folds identical
+        # bodies together - see the notes.
+        build_flags="Release(DLL) configuration: x86 /Ox /Ob2 /Ot /GS-, "
+                    "x64 /O2 /sdl; both /GL /Gy /Oi /MD /std:c++latest and "
+                    "/LTCG /OPT:REF /OPT:ICF at link; /permissive and "
+                    "/Brepro appended by this recipe",
+        # The x86 named ratio is 0.523, which clears the default
+        # min_named_ratio of 0.5 by very little. It is not lowered here: the
+        # build does keep symbols, and what drags the ratio down is counted
+        # rather than missing, which is what the note explains.
         notes="Release(DLL) links the vendored AsmJit and rewolf-wow64ext "
               "sources into the same image, so functions from those projects "
               "are present here under the BlackBone family; BeaEngine is "
               "imported from its own DLL and is not. The kernel driver is "
-              "not built.",
+              "not built. The project links with EnableCOMDATFolding, i.e. "
+              "/OPT:ICF, so routines that compiled to identical bodies are "
+              "present once, under whichever name the linker kept; the "
+              "VX-API recipe in this repository passes /OPT:NOICF to prevent "
+              "exactly that, but here it is upstream's own Release(DLL) "
+              "setting and is left alone. Read the x86 function count with "
+              "that in mind as well: of its 1953 functions only 1021 carry a "
+              "name and only 808 reach ten instructions, because MSVC's "
+              "32-bit exception handling emits a small unwind funclet or "
+              "handler thunk per scope - 932 of them here, none as long as "
+              "ten instructions and 861 of two or three - which SMDA counts "
+              "and the PDB does not name. num_functions therefore overstates "
+              "usable x86 coverage by roughly a factor of two. The x64 "
+              "sample has no such funclets, its exception handling being "
+              "table-driven, and is 1759 of 1759 named.",
     ),
 }

@@ -14,6 +14,19 @@ and aPLib is already its own family in this repository, so those functions
 would be duplicated under the donut name. The generator is also built
 without any -O, which makes for poor reference code even setting the
 duplication aside.
+
+That reasoning does not clear the blobs, and the notes below say so. The
+loader carries aPLib code too: Makefile.msvc compiles loader/depack.c into
+loader.exe alongside loader.c, hash.c, encrypt.c and clib.c, and at the
+pinned commit that file is headed "aPLib compression library ... C depacker
+... Copyright (c) 1998-2014 Joergen Ibsen". The difference is that it cannot
+be left out. Declining to build the generator costs nothing, because the
+generator is not what turns up in samples; the depacker is part of the
+loader donut ships, so any honest reference for that loader contains it.
+What is attributed to donut here is therefore aPLib's own decompressor as
+well - though not code data/aPLib already holds, since that family carries
+the assembly depackers and packers from aplib.lib and aplib.a, which share
+no PicHash with either blob.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -51,7 +64,13 @@ def _donut(version, git_ref):
               "loader_exe_x64.h, which is the code donut embeds in its "
               "output. The generator is not built: it statically links the "
               "vendored lib/aplib64.lib, and aPLib is already a family in "
-              "this repository.",
+              "this repository. The blobs carry aPLib code as well - "
+              "Makefile.msvc compiles loader/depack.c, aPLib's C depacker by "
+              "Joergen Ibsen, into the loader - and that one is unavoidable, "
+              "because it is part of the loader donut ships rather than a "
+              "build-time choice. It is not a second copy of what data/aPLib "
+              "holds: that family carries the assembly depackers and the "
+              "packer, and shares no PicHash with either blob.",
     )
 
 

@@ -65,6 +65,15 @@ RECIPES = {
               "strictly, but they are the same GCC runtime and belong with "
               "it. The glue filter is off, because the probe it measures "
               "against is itself linked -static-libstdc++ and would delete "
-              "exactly the code this recipe exists to collect.",
+              "exactly the code this recipe exists to collect. The two "
+              "libstdc++ references in this corpus spell their function "
+              "names differently: this sample stores demangled names - "
+              "3358 of its 3708 named functions read std::basic_string<...> "
+              "and only 42 are left mangled - while data/MinGW r38 x64 "
+              "stores the raw Itanium mangling, 5350 of its 9806 names "
+              "beginning _Z and not one containing std::. Matching is "
+              "unaffected - PicHash and MinHash are derived from code, not "
+              "from names - but a name search across the corpus has to "
+              "allow for both spellings.",
     ),
 }

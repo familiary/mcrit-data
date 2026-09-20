@@ -40,12 +40,28 @@ _LIB2_LOWERCASE = ('LIB2="-loleaut32 -luuid -ladvapi32 -luser32 -lole32 '
                    '-lgdi32 -lcomctl32 -lcomdlg32 -lshell32"')
 
 
-def _sevenzip(version, code, sha256, extra=""):
+# DOC/License.txt is not the same document in the two versions, so neither is
+# this field. Both are LGPL-2.1-or-later with the unRAR restriction over the
+# Rar* files and both carry Apple's BSD-3-Clause LZFSE decoder, but 26.03
+# adds two more third-party bodies with their own terms: C/ZstdDec.c under
+# BSD-3-Clause and C/Xxh64.c under BSD-2-Clause. That code is in the
+# artefacts rather than merely in the tree - 26.03 x64 recovers 89 Zstd* and
+# 11 Xxh* function names where 23.01 x64 has none of either, and the LZFSE
+# decoder is named in all four - so recording one string for both versions
+# understated what a 26.03 artefact carries.
+_LICENSE_23 = ("LGPL-2.1-or-later, with unRAR restriction; "
+               "CPP/7zip/Compress/LzfseDecoder.cpp BSD-3-Clause")
+_LICENSE_26 = ("LGPL-2.1-or-later, with unRAR restriction; "
+               "CPP/7zip/Compress/LzfseDecoder.cpp and C/ZstdDec.c "
+               "BSD-3-Clause; C/Xxh64.c BSD-2-Clause")
+
+
+def _sevenzip(version, code, sha256, license, extra=""):
     return Recipe(
         family="7-Zip",
         version=version,
         upstream="https://www.7-zip.org/",
-        license="LGPL-2.1-or-later, with unRAR restriction",
+        license=license,
         source=Source(url="https://www.7-zip.org/a/7z%s-src.tar.xz" % code,
                       sha256=sha256),
         build=[
@@ -68,9 +84,10 @@ RECIPES = {
     "7-Zip_23.01": _sevenzip(
         "23.01", "2301",
         "356071007360e5a1824d9904993e8b2480b51b570e8c9faf7c0f58ebe4bf9f74",
-        extra=_LIB2_LOWERCASE),
+        _LICENSE_23, extra=_LIB2_LOWERCASE),
     # Current.
     "7-Zip_26.03": _sevenzip(
         "26.03", "2603",
-        "9cbde5099c6deb73691b0579063da5827522ccbbcba3f0020fd04e8c8c16c0d4"),
+        "9cbde5099c6deb73691b0579063da5827522ccbbcba3f0020fd04e8c8c16c0d4",
+        _LICENSE_26),
 }

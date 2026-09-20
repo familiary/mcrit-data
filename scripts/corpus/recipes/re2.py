@@ -10,9 +10,12 @@ of the other.
 2022-06-01 is not built through RE2's CMake. CMake produces a static archive,
 which SMDA cannot read, and compiling the library sources straight into a DLL
 is both shorter and exactly what is wanted, which is every function present
-rather than only those an anchor happens to reference. re2/testing and
-re2/fuzzing are outside the glob, and util/pcre.cc is a test helper that needs
-PCRE, so it is named out.
+rather than only those an anchor happens to reference. The source list is an
+allow-list, not a filter: re2/*.cc plus the two util files the library needs,
+util/rune.cc and util/strutil.cc. Nothing is excluded by name. re2/testing,
+re2/fuzzing and the rest of util/ - including util/pcre.cc, a test helper
+that would want PCRE - are simply never named, so they never reach the
+compiler.
 
 2025-11-05 cannot be built that way, because what it needs from Abseil is no
 longer only headers. Compiling it against Abseil's include path alone leaves
