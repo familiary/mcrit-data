@@ -77,6 +77,22 @@ largest sample here, peaked at 9.4 GB resident and was OOM-killed on a 15 GB
 machine that was running two other builds at the same time. The largest
 families are worth building on their own.
 
+## How reproducible this is, measured
+
+Two independent Windows CI runs of the same commit produce **byte-identical
+binaries**: same `sha256` for every VX-API, BlackBone and SysWhispers
+artefact. That needs `/Brepro` on the link, without which MSVC stamps the PE
+with the build time; the MinGW side gets the same property from `7z
+-mtm=off -mtc=off -mta=off`, since the stored file times were otherwise the
+only thing that changed when a report did not.
+
+The `.smda` reports still differ between runs, in exactly two fields:
+`timestamp` and `execution_time`, which SMDA writes about its own run. Every
+report already in this repository carries those too, so they are left alone.
+What this means in practice is that a regeneration which changes no
+disassembly produces a diff in those two fields and nowhere else - small
+enough to read, which is the point.
+
 ## A gap in the existing MinGW coverage
 
 Worth recording because it affects data that is already committed. The
