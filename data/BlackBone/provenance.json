@@ -12,7 +12,7 @@
     "mcrit": "data/BlackBone/x64/mcrit/BlackBone_2023-07-17_msvc143_x64_BlackBone.dll.mcrit",
     "notes": "Release(DLL) links the vendored AsmJit and rewolf-wow64ext sources into the same image, so functions from those projects are present here under the BlackBone family; BeaEngine is imported from its own DLL and is not. The kernel driver is not built.",
     "num_functions": 1840,
-    "sha256": "3f8d6f4038ff47eb63d9218cca3ac1f955b7286d4f83508bd3fe23c60c176706",
+    "sha256": "309d30ed4c2aeaa93d36bfb51728cd873b380f28ba30460ff6ba9a569a931d39",
     "smda": "data/BlackBone/x64/smda/BlackBone_2023-07-17_msvc143_x64_BlackBone.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -37,7 +37,7 @@
     "mcrit": "data/BlackBone/x86/mcrit/BlackBone_2023-07-17_msvc143_x86_BlackBone.dll.mcrit",
     "notes": "Release(DLL) links the vendored AsmJit and rewolf-wow64ext sources into the same image, so functions from those projects are present here under the BlackBone family; BeaEngine is imported from its own DLL and is not. The kernel driver is not built.",
     "num_functions": 2043,
-    "sha256": "069e8a05da8bb9a8597ab77abead0d8195294b125cbe26f02a1a9a076ee46119",
+    "sha256": "33e165708a6e8ee15b8f2f520eebfe45eb63f8636642bbd03a9868b093231736",
     "smda": "data/BlackBone/x86/smda/BlackBone_2023-07-17_msvc143_x86_BlackBone.dll.7z",
     "smda_version": "4.8.0",
     "source": {

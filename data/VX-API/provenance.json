@@ -12,7 +12,7 @@
     "mcrit": "data/VX-API/x64/mcrit/VX-API_2.01.015_msvc143_x64_vxapi.dll.mcrit",
     "notes": "A small number of sources need ATL or __try/__except and are skipped; the rest of the collection is present. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. The link uses /FORCE:UNRESOLVED because references into the skipped sources cannot resolve - the artefact is reference material, not a loadable DLL.",
     "num_functions": 986,
-    "sha256": "5231e52b2bbbb9f5a23e710b417fc4b03b24ba90d313650d0312c756ba59c688",
+    "sha256": "5351a7e67092e60bb7827cfdfc0316bea6346d8495c17099640772e6056ceb57",
     "smda": "data/VX-API/x64/smda/VX-API_2.01.015_msvc143_x64_vxapi.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -37,7 +37,7 @@
     "mcrit": "data/VX-API/x86/mcrit/VX-API_2.01.015_msvc143_x86_vxapi.dll.mcrit",
     "notes": "A small number of sources need ATL or __try/__except and are skipped; the rest of the collection is present. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. The link uses /FORCE:UNRESOLVED because references into the skipped sources cannot resolve - the artefact is reference material, not a loadable DLL.",
     "num_functions": 960,
-    "sha256": "457fd0b4c79c5440ab6cd8d0c7237c20476ff4c8a10ab0814da4d5179f497384",
+    "sha256": "93ec8cca94c3c08ff101c0f132062efdb2fa3a80e147a9a341ffa162603ac151",
     "smda": "data/VX-API/x86/smda/VX-API_2.01.015_msvc143_x86_vxapi.dll.7z",
     "smda_version": "4.8.0",
     "source": {

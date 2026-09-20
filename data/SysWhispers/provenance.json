@@ -12,7 +12,7 @@
     "mcrit": "data/SysWhispers/x64/mcrit/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.mcrit",
     "notes": "Built from the generator's own output. The DLL holds the 29 generated stubs and nothing else - no C runtime, no entry point - and exports them so each carries its name.",
     "num_functions": 29,
-    "sha256": "343e699a2849666771e279bb45991ea9ae901ada41f5fe65d3ec24b727529219",
+    "sha256": "efbdddc1510c9fd9e33fb4182020a8c086cba96dcf842c15a6a6f21fb27debe9",
     "smda": "data/SysWhispers/x64/smda/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.7z",
     "smda_version": "4.8.0",
     "source": {

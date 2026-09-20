@@ -116,15 +116,24 @@ jobs:
 
       # Also scoped: data/ holds the whole committed corpus, and uploading it
       # wholesale pushes gigabytes of unchanged files through every run.
+      #
+      # Scoped to this job's own architecture too. The checkout already carries
+      # the committed data for the other one, so an unscoped upload put x64
+      # files in the x86 artifact - and whichever artifact an importer unpacked
+      # last then overwrote the architecture it had no business touching with
+      # whatever happened to be committed at checkout time.
       - name: Upload reference data
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: reference-data-${{ matrix.arch }}
           path: |
-            data/VX-API/**
-            data/BlackBone/**
-            data/SysWhispers/**
+            data/VX-API/provenance.json
+            data/VX-API/${{ matrix.arch }}/**
+            data/BlackBone/provenance.json
+            data/BlackBone/${{ matrix.arch }}/**
+            data/SysWhispers/provenance.json
+            data/SysWhispers/${{ matrix.arch }}/**
           if-no-files-found: warn
 
       - name: Upload build logs
