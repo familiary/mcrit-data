@@ -523,7 +523,7 @@ Generated with `scripts/build_corpus.py`; see `data/abseil/provenance.json` for 
 ### re2<a id='re2'></a>
 
 The two versions bracket the largest code-level split in this part of the corpus: 2022-06-01 is the last release before RE2 took a dependency on Abseil, and the current one is built on Abseil throughout. A matcher that knows only one of them recognises very little of the other.  
-For the Abseil-based version, Abseil supplies headers only and is left unlinked, so none of its object code is attributed to re2.  
+For the Abseil-based version, Abseil is built alongside as DLLs and only imported, so none of its object code is attributed to re2 - the import table shows `libabsl_hash`, `libabsl_strings`, `libabsl_synchronization` and the rest. What is present is the Abseil inline and template code RE2 instantiates, which any RE2 binary carries.  
 
 Generated with `scripts/build_corpus.py`; see `data/re2/provenance.json` for source digests, compiler and flags.
 
@@ -637,7 +637,8 @@ Position-independent loaders and the projects that generate them. Entries marked
 
 ### donut<a id='donut'></a>
 
-donut generates position-independent loaders. Both the GCC-built generator and the MSVC-compiled loader blobs that upstream commits are covered; the latter are what ship in the release binaries.  
+donut generates position-independent loaders. What is covered here is the loader, not the generator: the loader is the code donut embeds in whatever it packages, so it is what turns up in samples, and upstream commits it MSVC-compiled in `loader_exe_x86.h` and `loader_exe_x64.h` - the same bytes that ship in the release binaries and the PyPI package.  
+The generator is deliberately not built. It statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here, so building it would duplicate aPLib under donut's name. Note that the loader blobs contain aPLib's *depacker* (`loader/depack.c`) for the same reason - that much is unavoidable, since it is part of the shipped loader.  
 Generated with `scripts/build_corpus.py`; see `data/donut/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: donut -->
