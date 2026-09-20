@@ -45,6 +45,13 @@ RECIPES = {
         build=[
             # The git tree ships no configure script.
             BuildStep("./autogen.sh -s"),
+            # autogen.sh fetches config.sub/config.guess from savannah over
+            # plain HTTP and does not check what came back; behind a proxy it
+            # writes an HTML error page, and configure then dies with "cannot
+            # run ./build-aux/config.sub". The host automake has both.
+            BuildStep("cp /usr/share/automake-*/config.sub "
+                      "/usr/share/automake-*/config.guess build-aux/ && "
+                      "chmod +x build-aux/config.sub build-aux/config.guess"),
             BuildStep(_CONFIGURE),
             BuildStep("make -j$(nproc)"),
         ],

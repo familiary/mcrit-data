@@ -83,6 +83,7 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                 "version": recipe.version,
                 "component": artifact.component,
                 "architecture": arch,
+                "is_blob": artifact.is_blob,
                 "toolchain": toolchain.id,
                 "compiler": _compiler_version(toolchain),
                 "build_flags": recipe.build_flags,

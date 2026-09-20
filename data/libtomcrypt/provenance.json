@@ -1,0 +1,52 @@
+{
+  "libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll": {
+    "architecture": "x64",
+    "build_flags": "-O2",
+    "built_artifact": "libtomcrypt.dll",
+    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "libtomcrypt.dll",
+    "family": "libtomcrypt",
+    "generated": "2026-09-20",
+    "is_blob": false,
+    "license": "public domain / Unlicense",
+    "mcrit": "data/libtomcrypt/x64/mcrit/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.mcrit",
+    "notes": "makefile.mingw hardcodes -s on the DLL link line, so this artefact is stripped; it exports everything, so names still come from the export table rather than the symbol table.",
+    "num_functions": 787,
+    "sha256": "2bc9b47c03f8f5f2891d79802e84bdc363219d0541bb54fddbf5b912336f0747",
+    "smda": "data/libtomcrypt/x64/smda/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "7e7eb695d581782f04b24dc444cbfde86af59853",
+      "git_ref": "v1.18.2",
+      "git_url": "https://github.com/libtom/libtomcrypt.git"
+    },
+    "toolchain": "mingw13_x64",
+    "upstream": "https://github.com/libtom/libtomcrypt",
+    "version": "1.18.2"
+  },
+  "libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll": {
+    "architecture": "x86",
+    "build_flags": "-O2",
+    "built_artifact": "libtomcrypt.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "libtomcrypt.dll",
+    "family": "libtomcrypt",
+    "generated": "2026-09-20",
+    "is_blob": false,
+    "license": "public domain / Unlicense",
+    "mcrit": "data/libtomcrypt/x86/mcrit/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.mcrit",
+    "notes": "makefile.mingw hardcodes -s on the DLL link line, so this artefact is stripped; it exports everything, so names still come from the export table rather than the symbol table.",
+    "num_functions": 893,
+    "sha256": "bd5528b43072110b25fd797b984e0630f3628660a49a9d5d351a078846cf4ae2",
+    "smda": "data/libtomcrypt/x86/smda/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "7e7eb695d581782f04b24dc444cbfde86af59853",
+      "git_ref": "v1.18.2",
+      "git_url": "https://github.com/libtom/libtomcrypt.git"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/libtom/libtomcrypt",
+    "version": "1.18.2"
+  }
+}
