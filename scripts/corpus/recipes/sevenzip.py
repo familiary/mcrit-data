@@ -11,14 +11,25 @@ from the fetched archives over HTTPS.
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
-# Three flags are all needed and none are obvious:
-#   IS_MINGW=1  - the makefile infers this from $SystemDrive, absent on Linux
-#   MSYSTEM=1   - otherwise it shells out to cmd.exe's del and mkdir
-#   USE_ASM=    - the x64 assembly needs asmc (MASM syntax); nasm is not a
-#                 drop-in substitute, so the hand-written LZMA/AES/CRC/SHA
-#                 fast paths are absent from this build. Recorded in notes.
+# Five settings are all needed and none are obvious:
+#   IS_MINGW=1        - the makefile infers this from $SystemDrive, absent here
+#   MSYSTEM=1         - otherwise it shells out to cmd.exe's del and mkdir
+#   USE_ASM=          - the x64 assembly needs asmc (MASM syntax); nasm is not
+#                       a drop-in substitute, so the hand-written
+#                       LZMA/AES/CRC/SHA fast paths are absent. See notes.
+#   LFLAGS_STRIP=     - 7zip_gcc.mak links with -s, which throws away the COFF
+#                       symbol table this corpus depends on. 26.03 built
+#                       cleanly that way and came back 16 of 5505 functions
+#                       named.
+#   CFLAGS_WARN_WALL= - the same file compiles with -Werror -Wall -Wextra, and
+#                       GCC 13 rejects 23.01 outright over a -Wconversion
+#                       warning in ComHandler.cpp that 26.03 later fixed.
+#                       Diagnostics do not change the emitted code, so turning
+#                       them off is a build setting; patching upstream to
+#                       satisfy a newer compiler would not be.
 _MAKE = ("make -j$(nproc) -f ../../cmpl_gcc_{asm_arch}.mak IS_MINGW=1 "
-         "MSYSTEM=1 USE_ASM= CROSS_COMPILE={prefix} RC={windres}")
+         "MSYSTEM=1 USE_ASM= CROSS_COMPILE={prefix} RC={windres} "
+         "LFLAGS_STRIP= CFLAGS_WARN_WALL=")
 
 
 def _sevenzip(version, code, sha256):
@@ -37,7 +48,10 @@ def _sevenzip(version, code, sha256):
         toolchains=["mingw_x86", "mingw_x64"],
         build_flags="-O2, hand-written assembly disabled (needs asmc)",
         notes="USE_ASM= omits the assembly LZMA/AES/CRC/SHA fast paths, which "
-              "need the MASM-syntax asmc assembler; nasm cannot substitute.",
+              "need the MASM-syntax asmc assembler; nasm cannot substitute. "
+              "Upstream's makefile strips the binary and compiles with "
+              "-Werror; both are turned off, neither changes the emitted "
+              "code.",
     )
 
 
