@@ -77,6 +77,8 @@ class Toolchain:
             "mingw_os": "MINGW64" if self.bitness == 64 else "MINGW32",
             # OpenSSL's Configure target names.
             "openssl_target": "mingw64" if self.bitness == 64 else "mingw",
+            # 7-Zip names its makefiles and output directories this way.
+            "asm_arch": "x64" if self.bitness == 64 else "x86",
         }
 
 
