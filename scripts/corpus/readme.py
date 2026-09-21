@@ -122,6 +122,24 @@ def _compiler_label(entry):
     if "mingw" in (entry.get("toolchain") or ""):
         version = compiler.split("(GCC)")[-1].strip().split("-")[0] if "(GCC)" in compiler else "?"
         return "MinGW-w64 GCC %s" % version
+    # cl.exe announces itself as "Microsoft (R) C/C++ Optimizing Compiler
+    # Version 19.44.35228 for x64". Printing that verbatim would be wrong as
+    # well as long: one row spans both architectures, and the entry this
+    # label is taken from is whichever of the two came first, so the x86
+    # links in the row would sit under a column saying "for x64". The
+    # architectures are already named in the links themselves.
+    #
+    # The toolset is named because that is what a reader matching a binary
+    # against this data wants, and it is derived rather than hardcoded: cl
+    # 19.3x and 19.4x are Visual Studio 2022, i.e. v143. A compiler outside
+    # that range - if this ever runs on a newer runner image - falls back to
+    # the bare version rather than claiming a toolset nobody checked.
+    match = re.search(r"Version (\d+)\.(\d+)", compiler)
+    if "Microsoft" in compiler and match:
+        major, minor = int(match.group(1)), int(match.group(2))
+        toolset = " (Visual Studio 2022, v143)" if (major, minor // 10) == (19, 3) \
+            or (major, minor // 10) == (19, 4) else ""
+        return "MSVC %d.%d%s" % (major, minor, toolset)
     return compiler or entry.get("toolchain", "")
 
 

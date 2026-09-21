@@ -257,6 +257,7 @@ Generated with `scripts/build_corpus.py`; see `data/bzip2/provenance.json` for s
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | bzip2 | 1.0.8 | MinGW-w64 GCC 13 | [x86 PE](data/bzip2/x86/mcrit/bzip2_1.0.8_mingw13_x86_bzip2.exe.mcrit) / [x64 PE](data/bzip2/x64/mcrit/bzip2_1.0.8_mingw13_x64_bzip2.exe.mcrit) | [x86 PE](data/bzip2/x86/smda/bzip2_1.0.8_mingw13_x86_bzip2.exe.7z) / [x64 PE](data/bzip2/x64/smda/bzip2_1.0.8_mingw13_x64_bzip2.exe.7z) |
+| bzip2 | 1.0.8 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/bzip2/x86/mcrit/bzip2_1.0.8_msvc143_x86_bzip2.exe.mcrit) / [x64 PE](data/bzip2/x64/mcrit/bzip2_1.0.8_msvc143_x64_bzip2.exe.mcrit) | [x86 PE](data/bzip2/x86/smda/bzip2_1.0.8_msvc143_x86_bzip2.exe.7z) / [x64 PE](data/bzip2/x64/smda/bzip2_1.0.8_msvc143_x64_bzip2.exe.7z) |
 <!-- /generated -->
 
 ### cJSON<a id='cjson'></a>
@@ -268,8 +269,10 @@ Generated with `scripts/build_corpus.py`; see `data/cJSON/provenance.json` for s
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | cJSON | 1.6.0 | MinGW-w64 GCC 13 | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.6.0_mingw13_x86_libcjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.6.0_mingw13_x64_libcjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.6.0_mingw13_x86_libcjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.6.0_mingw13_x64_libcjson.dll.7z) |
+| cJSON | 1.6.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.6.0_msvc143_x86_cjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.6.0_msvc143_x64_cjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.6.0_msvc143_x86_cjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.6.0_msvc143_x64_cjson.dll.7z) |
 | cJSON | 1.7.15 | MinGW-w64 GCC 13 | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.7.15_mingw13_x86_libcjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.7.15_mingw13_x64_libcjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.7.15_mingw13_x86_libcjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.7.15_mingw13_x64_libcjson.dll.7z) |
 | cJSON | 1.7.19 | MinGW-w64 GCC 13 | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.7.19_mingw13_x86_libcjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.7.19_mingw13_x64_libcjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.7.19_mingw13_x86_libcjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.7.19_mingw13_x64_libcjson.dll.7z) |
+| cJSON | 1.7.19 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.7.19_msvc143_x86_cjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.7.19_msvc143_x64_cjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.7.19_msvc143_x86_cjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.7.19_msvc143_x64_cjson.dll.7z) |
 <!-- /generated -->
 
 ### libcurl<a id='libcurl'></a>
@@ -281,7 +284,9 @@ Generated with `scripts/build_corpus.py`; see `data/libcurl/provenance.json` for
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libcurl | 8.4.0 | MinGW-w64 GCC 13 | [x86 PE](data/libcurl/x86/mcrit/libcurl_8.4.0_mingw13_x86_libcurl.dll.mcrit) / [x64 PE](data/libcurl/x64/mcrit/libcurl_8.4.0_mingw13_x64_libcurl.dll.mcrit) | [x86 PE](data/libcurl/x86/smda/libcurl_8.4.0_mingw13_x86_libcurl.dll.7z) / [x64 PE](data/libcurl/x64/smda/libcurl_8.4.0_mingw13_x64_libcurl.dll.7z) |
+| libcurl | 8.4.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libcurl/x86/mcrit/libcurl_8.4.0_msvc143_x86_libcurl.dll.mcrit) / [x64 PE](data/libcurl/x64/mcrit/libcurl_8.4.0_msvc143_x64_libcurl.dll.mcrit) | [x86 PE](data/libcurl/x86/smda/libcurl_8.4.0_msvc143_x86_libcurl.dll.7z) / [x64 PE](data/libcurl/x64/smda/libcurl_8.4.0_msvc143_x64_libcurl.dll.7z) |
 | libcurl | 8.15.0 | MinGW-w64 GCC 13 | [x86 PE](data/libcurl/x86/mcrit/libcurl_8.15.0_mingw13_x86_libcurl.dll.mcrit) / [x64 PE](data/libcurl/x64/mcrit/libcurl_8.15.0_mingw13_x64_libcurl.dll.mcrit) | [x86 PE](data/libcurl/x86/smda/libcurl_8.15.0_mingw13_x86_libcurl.dll.7z) / [x64 PE](data/libcurl/x64/smda/libcurl_8.15.0_mingw13_x64_libcurl.dll.7z) |
+| libcurl | 8.15.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libcurl/x86/mcrit/libcurl_8.15.0_msvc143_x86_libcurl.dll.mcrit) / [x64 PE](data/libcurl/x64/mcrit/libcurl_8.15.0_msvc143_x64_libcurl.dll.mcrit) | [x86 PE](data/libcurl/x86/smda/libcurl_8.15.0_msvc143_x86_libcurl.dll.7z) / [x64 PE](data/libcurl/x64/smda/libcurl_8.15.0_msvc143_x64_libcurl.dll.7z) |
 <!-- /generated -->
 
 ### libevent<a id='libevent'></a>
@@ -294,6 +299,8 @@ Generated with `scripts/build_corpus.py`; see `data/libevent/provenance.json` fo
 |----------|---------|----------|-------|------|
 | libevent | 2.1.12 | MinGW-w64 GCC 13 | [x86 PE](data/libevent/x86/mcrit/libevent_2.1.12_mingw13_x86_libevent_core.dll.mcrit) / [x64 PE](data/libevent/x64/mcrit/libevent_2.1.12_mingw13_x64_libevent_core.dll.mcrit) | [x86 PE](data/libevent/x86/smda/libevent_2.1.12_mingw13_x86_libevent_core.dll.7z) / [x64 PE](data/libevent/x64/smda/libevent_2.1.12_mingw13_x64_libevent_core.dll.7z) |
 | libevent | 2.1.12 | MinGW-w64 GCC 13 | [x86 PE](data/libevent/x86/mcrit/libevent_2.1.12_mingw13_x86_libevent_extra.dll.mcrit) / [x64 PE](data/libevent/x64/mcrit/libevent_2.1.12_mingw13_x64_libevent_extra.dll.mcrit) | [x86 PE](data/libevent/x86/smda/libevent_2.1.12_mingw13_x86_libevent_extra.dll.7z) / [x64 PE](data/libevent/x64/smda/libevent_2.1.12_mingw13_x64_libevent_extra.dll.7z) |
+| libevent | 2.1.12 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libevent/x86/mcrit/libevent_2.1.12_msvc143_x86_event_core.dll.mcrit) / [x64 PE](data/libevent/x64/mcrit/libevent_2.1.12_msvc143_x64_event_core.dll.mcrit) | [x86 PE](data/libevent/x86/smda/libevent_2.1.12_msvc143_x86_event_core.dll.7z) / [x64 PE](data/libevent/x64/smda/libevent_2.1.12_msvc143_x64_event_core.dll.7z) |
+| libevent | 2.1.12 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libevent/x86/mcrit/libevent_2.1.12_msvc143_x86_event_extra.dll.mcrit) / [x64 PE](data/libevent/x64/mcrit/libevent_2.1.12_msvc143_x64_event_extra.dll.mcrit) | [x86 PE](data/libevent/x86/smda/libevent_2.1.12_msvc143_x86_event_extra.dll.7z) / [x64 PE](data/libevent/x64/smda/libevent_2.1.12_msvc143_x64_event_extra.dll.7z) |
 <!-- /generated -->
 
 ### liblzma<a id='liblzma'></a>
@@ -305,7 +312,9 @@ Generated with `scripts/build_corpus.py`; see `data/liblzma/provenance.json` for
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | liblzma | 5.4.7 | MinGW-w64 GCC 13 | [x86 PE](data/liblzma/x86/mcrit/liblzma_5.4.7_mingw13_x86_liblzma.dll.mcrit) / [x64 PE](data/liblzma/x64/mcrit/liblzma_5.4.7_mingw13_x64_liblzma.dll.mcrit) | [x86 PE](data/liblzma/x86/smda/liblzma_5.4.7_mingw13_x86_liblzma.dll.7z) / [x64 PE](data/liblzma/x64/smda/liblzma_5.4.7_mingw13_x64_liblzma.dll.7z) |
+| liblzma | 5.4.7 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/liblzma/x86/mcrit/liblzma_5.4.7_msvc143_x86_liblzma.dll.mcrit) / [x64 PE](data/liblzma/x64/mcrit/liblzma_5.4.7_msvc143_x64_liblzma.dll.mcrit) | [x86 PE](data/liblzma/x86/smda/liblzma_5.4.7_msvc143_x86_liblzma.dll.7z) / [x64 PE](data/liblzma/x64/smda/liblzma_5.4.7_msvc143_x64_liblzma.dll.7z) |
 | liblzma | 5.8.1 | MinGW-w64 GCC 13 | [x86 PE](data/liblzma/x86/mcrit/liblzma_5.8.1_mingw13_x86_liblzma.dll.mcrit) / [x64 PE](data/liblzma/x64/mcrit/liblzma_5.8.1_mingw13_x64_liblzma.dll.mcrit) | [x86 PE](data/liblzma/x86/smda/liblzma_5.8.1_mingw13_x86_liblzma.dll.7z) / [x64 PE](data/liblzma/x64/smda/liblzma_5.8.1_mingw13_x64_liblzma.dll.7z) |
+| liblzma | 5.8.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/liblzma/x86/mcrit/liblzma_5.8.1_msvc143_x86_liblzma.dll.mcrit) / [x64 PE](data/liblzma/x64/mcrit/liblzma_5.8.1_msvc143_x64_liblzma.dll.mcrit) | [x86 PE](data/liblzma/x86/smda/liblzma_5.8.1_msvc143_x86_liblzma.dll.7z) / [x64 PE](data/liblzma/x64/smda/liblzma_5.8.1_msvc143_x64_liblzma.dll.7z) |
 <!-- /generated -->
 
 ### libsodium<a id='libsodium'></a>
@@ -317,7 +326,9 @@ Generated with `scripts/build_corpus.py`; see `data/libsodium/provenance.json` f
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libsodium | 1.0.18 | MinGW-w64 GCC 13 | [x86 PE](data/libsodium/x86/mcrit/libsodium_1.0.18_mingw13_x86_libsodium-23.dll.mcrit) / [x64 PE](data/libsodium/x64/mcrit/libsodium_1.0.18_mingw13_x64_libsodium-23.dll.mcrit) | [x86 PE](data/libsodium/x86/smda/libsodium_1.0.18_mingw13_x86_libsodium-23.dll.7z) / [x64 PE](data/libsodium/x64/smda/libsodium_1.0.18_mingw13_x64_libsodium-23.dll.7z) |
+| libsodium | 1.0.18 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libsodium/x86/mcrit/libsodium_1.0.18_msvc143_x86_libsodium.dll.mcrit) / [x64 PE](data/libsodium/x64/mcrit/libsodium_1.0.18_msvc143_x64_libsodium.dll.mcrit) | [x86 PE](data/libsodium/x86/smda/libsodium_1.0.18_msvc143_x86_libsodium.dll.7z) / [x64 PE](data/libsodium/x64/smda/libsodium_1.0.18_msvc143_x64_libsodium.dll.7z) |
 | libsodium | 1.0.20 | MinGW-w64 GCC 13 | [x86 PE](data/libsodium/x86/mcrit/libsodium_1.0.20_mingw13_x86_libsodium-26.dll.mcrit) / [x64 PE](data/libsodium/x64/mcrit/libsodium_1.0.20_mingw13_x64_libsodium-26.dll.mcrit) | [x86 PE](data/libsodium/x86/smda/libsodium_1.0.20_mingw13_x86_libsodium-26.dll.7z) / [x64 PE](data/libsodium/x64/smda/libsodium_1.0.20_mingw13_x64_libsodium-26.dll.7z) |
+| libsodium | 1.0.20 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libsodium/x86/mcrit/libsodium_1.0.20_msvc143_x86_libsodium.dll.mcrit) / [x64 PE](data/libsodium/x64/mcrit/libsodium_1.0.20_msvc143_x64_libsodium.dll.mcrit) | [x86 PE](data/libsodium/x86/smda/libsodium_1.0.20_msvc143_x86_libsodium.dll.7z) / [x64 PE](data/libsodium/x64/smda/libsodium_1.0.20_msvc143_x64_libsodium.dll.7z) |
 <!-- /generated -->
 
 ### libtomcrypt<a id='libtomcrypt'></a>
@@ -329,6 +340,7 @@ Generated with `scripts/build_corpus.py`; see `data/libtomcrypt/provenance.json`
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libtomcrypt | 1.18.2 | MinGW-w64 GCC 13 | [x86 PE](data/libtomcrypt/x86/mcrit/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.mcrit) / [x64 PE](data/libtomcrypt/x64/mcrit/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.mcrit) | [x86 PE](data/libtomcrypt/x86/smda/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.7z) / [x64 PE](data/libtomcrypt/x64/smda/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.7z) |
+| libtomcrypt | 1.18.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libtomcrypt/x86/mcrit/libtomcrypt_1.18.2_msvc143_x86_libtomcrypt.dll.mcrit) / [x64 PE](data/libtomcrypt/x64/mcrit/libtomcrypt_1.18.2_msvc143_x64_libtomcrypt.dll.mcrit) | [x86 PE](data/libtomcrypt/x86/smda/libtomcrypt_1.18.2_msvc143_x86_libtomcrypt.dll.7z) / [x64 PE](data/libtomcrypt/x64/smda/libtomcrypt_1.18.2_msvc143_x64_libtomcrypt.dll.7z) |
 <!-- /generated -->
 
 ### libuv<a id='libuv'></a>
@@ -340,7 +352,9 @@ Generated with `scripts/build_corpus.py`; see `data/libuv/provenance.json` for s
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libuv | 1.44.2 | MinGW-w64 GCC 13 | [x86 PE](data/libuv/x86/mcrit/libuv_1.44.2_mingw13_x86_libuv.dll.mcrit) / [x64 PE](data/libuv/x64/mcrit/libuv_1.44.2_mingw13_x64_libuv.dll.mcrit) | [x86 PE](data/libuv/x86/smda/libuv_1.44.2_mingw13_x86_libuv.dll.7z) / [x64 PE](data/libuv/x64/smda/libuv_1.44.2_mingw13_x64_libuv.dll.7z) |
+| libuv | 1.44.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libuv/x86/mcrit/libuv_1.44.2_msvc143_x86_uv.dll.mcrit) / [x64 PE](data/libuv/x64/mcrit/libuv_1.44.2_msvc143_x64_uv.dll.mcrit) | [x86 PE](data/libuv/x86/smda/libuv_1.44.2_msvc143_x86_uv.dll.7z) / [x64 PE](data/libuv/x64/smda/libuv_1.44.2_msvc143_x64_uv.dll.7z) |
 | libuv | 1.52.1 | MinGW-w64 GCC 13 | [x86 PE](data/libuv/x86/mcrit/libuv_1.52.1_mingw13_x86_libuv.dll.mcrit) / [x64 PE](data/libuv/x64/mcrit/libuv_1.52.1_mingw13_x64_libuv.dll.mcrit) | [x86 PE](data/libuv/x86/smda/libuv_1.52.1_mingw13_x86_libuv.dll.7z) / [x64 PE](data/libuv/x64/smda/libuv_1.52.1_mingw13_x64_libuv.dll.7z) |
+| libuv | 1.52.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libuv/x86/mcrit/libuv_1.52.1_msvc143_x86_uv.dll.mcrit) / [x64 PE](data/libuv/x64/mcrit/libuv_1.52.1_msvc143_x64_uv.dll.mcrit) | [x86 PE](data/libuv/x86/smda/libuv_1.52.1_msvc143_x86_uv.dll.7z) / [x64 PE](data/libuv/x64/smda/libuv_1.52.1_msvc143_x64_uv.dll.7z) |
 <!-- /generated -->
 
 ### libxml2<a id='libxml2'></a>
@@ -352,7 +366,9 @@ Generated with `scripts/build_corpus.py`; see `data/libxml2/provenance.json` for
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libxml2 | 2.9.14 | MinGW-w64 GCC 13 | [x86 PE](data/libxml2/x86/mcrit/libxml2_2.9.14_mingw13_x86_libxml2.dll.mcrit) / [x64 PE](data/libxml2/x64/mcrit/libxml2_2.9.14_mingw13_x64_libxml2.dll.mcrit) | [x86 PE](data/libxml2/x86/smda/libxml2_2.9.14_mingw13_x86_libxml2.dll.7z) / [x64 PE](data/libxml2/x64/smda/libxml2_2.9.14_mingw13_x64_libxml2.dll.7z) |
+| libxml2 | 2.9.14 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libxml2/x86/mcrit/libxml2_2.9.14_msvc143_x86_libxml2.dll.mcrit) / [x64 PE](data/libxml2/x64/mcrit/libxml2_2.9.14_msvc143_x64_libxml2.dll.mcrit) | [x86 PE](data/libxml2/x86/smda/libxml2_2.9.14_msvc143_x86_libxml2.dll.7z) / [x64 PE](data/libxml2/x64/smda/libxml2_2.9.14_msvc143_x64_libxml2.dll.7z) |
 | libxml2 | 2.14.3 | MinGW-w64 GCC 13 | [x86 PE](data/libxml2/x86/mcrit/libxml2_2.14.3_mingw13_x86_libxml2.dll.mcrit) / [x64 PE](data/libxml2/x64/mcrit/libxml2_2.14.3_mingw13_x64_libxml2.dll.mcrit) | [x86 PE](data/libxml2/x86/smda/libxml2_2.14.3_mingw13_x86_libxml2.dll.7z) / [x64 PE](data/libxml2/x64/smda/libxml2_2.14.3_mingw13_x64_libxml2.dll.7z) |
+| libxml2 | 2.14.3 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libxml2/x86/mcrit/libxml2_2.14.3_msvc143_x86_libxml2.dll.mcrit) / [x64 PE](data/libxml2/x64/mcrit/libxml2_2.14.3_msvc143_x64_libxml2.dll.mcrit) | [x86 PE](data/libxml2/x86/smda/libxml2_2.14.3_msvc143_x86_libxml2.dll.7z) / [x64 PE](data/libxml2/x64/smda/libxml2_2.14.3_msvc143_x64_libxml2.dll.7z) |
 <!-- /generated -->
 
 ### lz4<a id='lz4'></a>
@@ -365,6 +381,7 @@ Generated with `scripts/build_corpus.py`; see `data/lz4/provenance.json` for sou
 |----------|---------|----------|-------|------|
 | lz4 | 1.9.4 | MinGW-w64 GCC 13 | [x86 PE](data/lz4/x86/mcrit/lz4_1.9.4_mingw13_x86_liblz4.dll.mcrit) / [x64 PE](data/lz4/x64/mcrit/lz4_1.9.4_mingw13_x64_liblz4.dll.mcrit) | [x86 PE](data/lz4/x86/smda/lz4_1.9.4_mingw13_x86_liblz4.dll.7z) / [x64 PE](data/lz4/x64/smda/lz4_1.9.4_mingw13_x64_liblz4.dll.7z) |
 | lz4 | 1.10.0 | MinGW-w64 GCC 13 | [x86 PE](data/lz4/x86/mcrit/lz4_1.10.0_mingw13_x86_liblz4.dll.mcrit) / [x64 PE](data/lz4/x64/mcrit/lz4_1.10.0_mingw13_x64_liblz4.dll.mcrit) | [x86 PE](data/lz4/x86/smda/lz4_1.10.0_mingw13_x86_liblz4.dll.7z) / [x64 PE](data/lz4/x64/smda/lz4_1.10.0_mingw13_x64_liblz4.dll.7z) |
+| lz4 | 1.10.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/lz4/x86/mcrit/lz4_1.10.0_msvc143_x86_lz4.dll.mcrit) / [x64 PE](data/lz4/x64/mcrit/lz4_1.10.0_msvc143_x64_lz4.dll.mcrit) | [x86 PE](data/lz4/x86/smda/lz4_1.10.0_msvc143_x86_lz4.dll.7z) / [x64 PE](data/lz4/x64/smda/lz4_1.10.0_msvc143_x64_lz4.dll.7z) |
 <!-- /generated -->
 
 ### mbedTLS<a id='mbedtls'></a>
@@ -398,7 +415,9 @@ Generated with `scripts/build_corpus.py`; see `data/pcre2/provenance.json` for s
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | pcre2 | 10.39 | MinGW-w64 GCC 13 | [x86 PE](data/pcre2/x86/mcrit/pcre2_10.39_mingw13_x86_libpcre2-8.dll.mcrit) / [x64 PE](data/pcre2/x64/mcrit/pcre2_10.39_mingw13_x64_libpcre2-8.dll.mcrit) | [x86 PE](data/pcre2/x86/smda/pcre2_10.39_mingw13_x86_libpcre2-8.dll.7z) / [x64 PE](data/pcre2/x64/smda/pcre2_10.39_mingw13_x64_libpcre2-8.dll.7z) |
+| pcre2 | 10.39 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/pcre2/x86/mcrit/pcre2_10.39_msvc143_x86_pcre2-8.dll.mcrit) / [x64 PE](data/pcre2/x64/mcrit/pcre2_10.39_msvc143_x64_pcre2-8.dll.mcrit) | [x86 PE](data/pcre2/x86/smda/pcre2_10.39_msvc143_x86_pcre2-8.dll.7z) / [x64 PE](data/pcre2/x64/smda/pcre2_10.39_msvc143_x64_pcre2-8.dll.7z) |
 | pcre2 | 10.45 | MinGW-w64 GCC 13 | [x86 PE](data/pcre2/x86/mcrit/pcre2_10.45_mingw13_x86_libpcre2-8.dll.mcrit) / [x64 PE](data/pcre2/x64/mcrit/pcre2_10.45_mingw13_x64_libpcre2-8.dll.mcrit) | [x86 PE](data/pcre2/x86/smda/pcre2_10.45_mingw13_x86_libpcre2-8.dll.7z) / [x64 PE](data/pcre2/x64/smda/pcre2_10.45_mingw13_x64_libpcre2-8.dll.7z) |
+| pcre2 | 10.45 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/pcre2/x86/mcrit/pcre2_10.45_msvc143_x86_pcre2-8.dll.mcrit) / [x64 PE](data/pcre2/x64/mcrit/pcre2_10.45_msvc143_x64_pcre2-8.dll.mcrit) | [x86 PE](data/pcre2/x86/smda/pcre2_10.45_msvc143_x86_pcre2-8.dll.7z) / [x64 PE](data/pcre2/x64/smda/pcre2_10.45_msvc143_x64_pcre2-8.dll.7z) |
 <!-- /generated -->
 
 ### sqlite3<a id='sqlite3'></a>
@@ -411,7 +430,9 @@ Generated with `scripts/build_corpus.py`; see `data/sqlite3/provenance.json` for
 |----------|---------|----------|-------|------|
 | sqlite3 | 3.8.11.1 | MinGW-w64 GCC 13 | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.8.11.1_mingw13_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.8.11.1_mingw13_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.8.11.1_mingw13_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.8.11.1_mingw13_x64_sqlite3.dll.7z) |
 | sqlite3 | 3.31.1 | MinGW-w64 GCC 13 | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.31.1_mingw13_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.31.1_mingw13_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.31.1_mingw13_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.31.1_mingw13_x64_sqlite3.dll.7z) |
+| sqlite3 | 3.31.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.31.1_msvc143_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.31.1_msvc143_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.31.1_msvc143_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.31.1_msvc143_x64_sqlite3.dll.7z) |
 | sqlite3 | 3.50.4 | MinGW-w64 GCC 13 | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.50.4_mingw13_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.50.4_mingw13_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.50.4_mingw13_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.50.4_mingw13_x64_sqlite3.dll.7z) |
+| sqlite3 | 3.50.4 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.50.4_msvc143_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.50.4_msvc143_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.50.4_msvc143_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.50.4_msvc143_x64_sqlite3.dll.7z) |
 <!-- /generated -->
 
 ### libpng<a id='libpng'></a>
@@ -423,6 +444,7 @@ Generated with `scripts/build_corpus.py`; see `data/libpng/provenance.json` for 
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libpng | 1.6.50 | MinGW-w64 GCC 13 | [x86 PE](data/libpng/x86/mcrit/libpng_1.6.50_mingw13_x86_libpng16.dll.mcrit) / [x64 PE](data/libpng/x64/mcrit/libpng_1.6.50_mingw13_x64_libpng16.dll.mcrit) | [x86 PE](data/libpng/x86/smda/libpng_1.6.50_mingw13_x86_libpng16.dll.7z) / [x64 PE](data/libpng/x64/smda/libpng_1.6.50_mingw13_x64_libpng16.dll.7z) |
+| libpng | 1.6.50 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libpng/x86/mcrit/libpng_1.6.50_msvc143_x86_libpng16.dll.mcrit) / [x64 PE](data/libpng/x64/mcrit/libpng_1.6.50_msvc143_x64_libpng16.dll.mcrit) | [x86 PE](data/libpng/x86/smda/libpng_1.6.50_msvc143_x86_libpng16.dll.7z) / [x64 PE](data/libpng/x64/smda/libpng_1.6.50_msvc143_x64_libpng16.dll.7z) |
 <!-- /generated -->
 
 ### libtiff<a id='libtiff'></a>
@@ -435,6 +457,7 @@ Generated with `scripts/build_corpus.py`; see `data/libtiff/provenance.json` for
 |----------|---------|----------|-------|------|
 | libtiff | 4.0.10 | MinGW-w64 GCC 13 | [x86 PE](data/libtiff/x86/mcrit/libtiff_4.0.10_mingw13_x86_libtiff.dll.mcrit) / [x64 PE](data/libtiff/x64/mcrit/libtiff_4.0.10_mingw13_x64_libtiff.dll.mcrit) | [x86 PE](data/libtiff/x86/smda/libtiff_4.0.10_mingw13_x86_libtiff.dll.7z) / [x64 PE](data/libtiff/x64/smda/libtiff_4.0.10_mingw13_x64_libtiff.dll.7z) |
 | libtiff | 4.7.0 | MinGW-w64 GCC 13 | [x86 PE](data/libtiff/x86/mcrit/libtiff_4.7.0_mingw13_x86_libtiff.dll.mcrit) / [x64 PE](data/libtiff/x64/mcrit/libtiff_4.7.0_mingw13_x64_libtiff.dll.mcrit) | [x86 PE](data/libtiff/x86/smda/libtiff_4.7.0_mingw13_x86_libtiff.dll.7z) / [x64 PE](data/libtiff/x64/smda/libtiff_4.7.0_mingw13_x64_libtiff.dll.7z) |
+| libtiff | 4.7.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libtiff/x86/mcrit/libtiff_4.7.0_msvc143_x86_tiff.dll.mcrit) / [x64 PE](data/libtiff/x64/mcrit/libtiff_4.7.0_msvc143_x64_tiff.dll.mcrit) | [x86 PE](data/libtiff/x86/smda/libtiff_4.7.0_msvc143_x86_tiff.dll.7z) / [x64 PE](data/libtiff/x64/smda/libtiff_4.7.0_msvc143_x64_tiff.dll.7z) |
 <!-- /generated -->
 
 ### wolfSSL<a id='wolfssl'></a>
@@ -446,6 +469,7 @@ Generated with `scripts/build_corpus.py`; see `data/wolfSSL/provenance.json` for
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | wolfSSL | 5.9.2 | MinGW-w64 GCC 13 | [x86 PE](data/wolfSSL/x86/mcrit/wolfSSL_5.9.2_mingw13_x86_libwolfssl.dll.mcrit) / [x64 PE](data/wolfSSL/x64/mcrit/wolfSSL_5.9.2_mingw13_x64_libwolfssl.dll.mcrit) | [x86 PE](data/wolfSSL/x86/smda/wolfSSL_5.9.2_mingw13_x86_libwolfssl.dll.7z) / [x64 PE](data/wolfSSL/x64/smda/wolfSSL_5.9.2_mingw13_x64_libwolfssl.dll.7z) |
+| wolfSSL | 5.9.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/wolfSSL/x86/mcrit/wolfSSL_5.9.2_msvc143_x86_wolfssl.dll.mcrit) / [x64 PE](data/wolfSSL/x64/mcrit/wolfSSL_5.9.2_msvc143_x64_wolfssl.dll.mcrit) | [x86 PE](data/wolfSSL/x86/smda/wolfSSL_5.9.2_msvc143_x86_wolfssl.dll.7z) / [x64 PE](data/wolfSSL/x64/smda/wolfSSL_5.9.2_msvc143_x64_wolfssl.dll.7z) |
 <!-- /generated -->
 
 ### OpenSSL<a id='openssl'></a>
@@ -460,6 +484,8 @@ Generated with `scripts/build_corpus.py`; see `data/OpenSSL/provenance.json` for
 |----------|---------|----------|-------|------|
 | OpenSSL | 1.1.1w | MinGW-w64 GCC 13 | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_1.1.1w_mingw13_x86_libcrypto.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_1.1.1w_mingw13_x64_libcrypto.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_1.1.1w_mingw13_x86_libcrypto.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_1.1.1w_mingw13_x64_libcrypto.7z) |
 | OpenSSL | 1.1.1w | MinGW-w64 GCC 13 | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_1.1.1w_mingw13_x86_libssl.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_1.1.1w_mingw13_x64_libssl.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_1.1.1w_mingw13_x86_libssl.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_1.1.1w_mingw13_x64_libssl.7z) |
+| OpenSSL | 1.1.1w | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_1.1.1w_msvc143_x86_libcrypto.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_1.1.1w_msvc143_x64_libcrypto.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_1.1.1w_msvc143_x86_libcrypto.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_1.1.1w_msvc143_x64_libcrypto.7z) |
+| OpenSSL | 1.1.1w | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_1.1.1w_msvc143_x86_libssl.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_1.1.1w_msvc143_x64_libssl.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_1.1.1w_msvc143_x86_libssl.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_1.1.1w_msvc143_x64_libssl.7z) |
 | OpenSSL | 3.0.15 | MinGW-w64 GCC 13 | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_3.0.15_mingw13_x86_libcrypto.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_3.0.15_mingw13_x64_libcrypto.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_3.0.15_mingw13_x86_libcrypto.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_3.0.15_mingw13_x64_libcrypto.7z) |
 | OpenSSL | 3.0.15 | MinGW-w64 GCC 13 | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_3.0.15_mingw13_x86_libssl.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_3.0.15_mingw13_x64_libssl.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_3.0.15_mingw13_x86_libssl.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_3.0.15_mingw13_x64_libssl.7z) |
 | OpenSSL | 3.5.8 | MinGW-w64 GCC 13 | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_3.5.8_mingw13_x86_libcrypto.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_3.5.8_mingw13_x64_libcrypto.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_3.5.8_mingw13_x86_libcrypto.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_3.5.8_mingw13_x64_libcrypto.7z) |
@@ -479,6 +505,7 @@ Generated with `scripts/build_corpus.py`; see `data/cryptopp/provenance.json` fo
 | cryptopp | 5.6.5 | MinGW-w64 GCC 13 | [x86 PE](data/cryptopp/x86/mcrit/cryptopp_5.6.5_mingw13_x86_cryptopp.dll.mcrit) / [x64 PE](data/cryptopp/x64/mcrit/cryptopp_5.6.5_mingw13_x64_cryptopp.dll.mcrit) | [x86 PE](data/cryptopp/x86/smda/cryptopp_5.6.5_mingw13_x86_cryptopp.dll.7z) / [x64 PE](data/cryptopp/x64/smda/cryptopp_5.6.5_mingw13_x64_cryptopp.dll.7z) |
 | cryptopp | 7.0.0 | MinGW-w64 GCC 13 | [x86 PE](data/cryptopp/x86/mcrit/cryptopp_7.0.0_mingw13_x86_cryptopp.dll.mcrit) / [x64 PE](data/cryptopp/x64/mcrit/cryptopp_7.0.0_mingw13_x64_cryptopp.dll.mcrit) | [x86 PE](data/cryptopp/x86/smda/cryptopp_7.0.0_mingw13_x86_cryptopp.dll.7z) / [x64 PE](data/cryptopp/x64/smda/cryptopp_7.0.0_mingw13_x64_cryptopp.dll.7z) |
 | cryptopp | 8.9.0 | MinGW-w64 GCC 13 | [x86 PE](data/cryptopp/x86/mcrit/cryptopp_8.9.0_mingw13_x86_cryptopp.dll.mcrit) / [x64 PE](data/cryptopp/x64/mcrit/cryptopp_8.9.0_mingw13_x64_cryptopp.dll.mcrit) | [x86 PE](data/cryptopp/x86/smda/cryptopp_8.9.0_mingw13_x86_cryptopp.dll.7z) / [x64 PE](data/cryptopp/x64/smda/cryptopp_8.9.0_mingw13_x64_cryptopp.dll.7z) |
+| cryptopp | 8.9.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/cryptopp/x64/mcrit/cryptopp_8.9.0_msvc143_x64_cryptopp.dll.mcrit) | [x64 PE](data/cryptopp/x64/smda/cryptopp_8.9.0_msvc143_x64_cryptopp.dll.7z) |
 <!-- /generated -->
 
 ### 7-Zip<a id='7-zip'></a>
@@ -492,7 +519,9 @@ Generated with `scripts/build_corpus.py`; see `data/7-Zip/provenance.json` for s
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | 7-Zip | 23.01 | MinGW-w64 GCC 13 | [x86 PE](data/7-Zip/x86/mcrit/7-Zip_23.01_mingw13_x86_7z.dll.mcrit) / [x64 PE](data/7-Zip/x64/mcrit/7-Zip_23.01_mingw13_x64_7z.dll.mcrit) | [x86 PE](data/7-Zip/x86/smda/7-Zip_23.01_mingw13_x86_7z.dll.7z) / [x64 PE](data/7-Zip/x64/smda/7-Zip_23.01_mingw13_x64_7z.dll.7z) |
+| 7-Zip | 23.01 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/7-Zip/x86/mcrit/7-Zip_23.01_msvc143_x86_7z.dll.mcrit) / [x64 PE](data/7-Zip/x64/mcrit/7-Zip_23.01_msvc143_x64_7z.dll.mcrit) | [x86 PE](data/7-Zip/x86/smda/7-Zip_23.01_msvc143_x86_7z.dll.7z) / [x64 PE](data/7-Zip/x64/smda/7-Zip_23.01_msvc143_x64_7z.dll.7z) |
 | 7-Zip | 26.03 | MinGW-w64 GCC 13 | [x86 PE](data/7-Zip/x86/mcrit/7-Zip_26.03_mingw13_x86_7z.dll.mcrit) / [x64 PE](data/7-Zip/x64/mcrit/7-Zip_26.03_mingw13_x64_7z.dll.mcrit) | [x86 PE](data/7-Zip/x86/smda/7-Zip_26.03_mingw13_x86_7z.dll.7z) / [x64 PE](data/7-Zip/x64/smda/7-Zip_26.03_mingw13_x64_7z.dll.7z) |
+| 7-Zip | 26.03 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/7-Zip/x86/mcrit/7-Zip_26.03_msvc143_x86_7z.dll.mcrit) / [x64 PE](data/7-Zip/x64/mcrit/7-Zip_26.03_msvc143_x64_7z.dll.mcrit) | [x86 PE](data/7-Zip/x86/smda/7-Zip_26.03_msvc143_x86_7z.dll.7z) / [x64 PE](data/7-Zip/x64/smda/7-Zip_26.03_msvc143_x64_7z.dll.7z) |
 <!-- /generated -->
 
 ### PCRE<a id='pcre'></a>
@@ -505,6 +534,7 @@ Generated with `scripts/build_corpus.py`; see `data/pcre/provenance.json` for so
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | pcre | 8.45 | MinGW-w64 GCC 13 | [x86 PE](data/pcre/x86/mcrit/pcre_8.45_mingw13_x86_libpcre.dll.mcrit) / [x64 PE](data/pcre/x64/mcrit/pcre_8.45_mingw13_x64_libpcre.dll.mcrit) | [x86 PE](data/pcre/x86/smda/pcre_8.45_mingw13_x86_libpcre.dll.7z) / [x64 PE](data/pcre/x64/smda/pcre_8.45_mingw13_x64_libpcre.dll.7z) |
+| pcre | 8.45 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/pcre/x86/mcrit/pcre_8.45_msvc143_x86_pcre.dll.mcrit) / [x64 PE](data/pcre/x64/mcrit/pcre_8.45_msvc143_x64_pcre.dll.mcrit) | [x86 PE](data/pcre/x86/smda/pcre_8.45_msvc143_x86_pcre.dll.7z) / [x64 PE](data/pcre/x64/smda/pcre_8.45_msvc143_x64_pcre.dll.7z) |
 <!-- /generated -->
 
 ### abseil<a id='abseil'></a>
@@ -518,6 +548,7 @@ Generated with `scripts/build_corpus.py`; see `data/abseil/provenance.json` for 
 |----------|---------|----------|-------|------|
 | abseil | 20220623.1 | MinGW-w64 GCC 13 | [x86 PE](data/abseil/x86/mcrit/abseil_20220623.1_mingw13_x86_abseil.dll.mcrit) / [x64 PE](data/abseil/x64/mcrit/abseil_20220623.1_mingw13_x64_abseil.dll.mcrit) | [x86 PE](data/abseil/x86/smda/abseil_20220623.1_mingw13_x86_abseil.dll.7z) / [x64 PE](data/abseil/x64/smda/abseil_20220623.1_mingw13_x64_abseil.dll.7z) |
 | abseil | 20250127.1 | MinGW-w64 GCC 13 | [x86 PE](data/abseil/x86/mcrit/abseil_20250127.1_mingw13_x86_abseil.dll.mcrit) / [x64 PE](data/abseil/x64/mcrit/abseil_20250127.1_mingw13_x64_abseil.dll.mcrit) | [x86 PE](data/abseil/x86/smda/abseil_20250127.1_mingw13_x86_abseil.dll.7z) / [x64 PE](data/abseil/x64/smda/abseil_20250127.1_mingw13_x64_abseil.dll.7z) |
+| abseil | 20250127.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/abseil/x86/mcrit/abseil_20250127.1_msvc143_x86_abseil_dll.dll.mcrit) / [x64 PE](data/abseil/x64/mcrit/abseil_20250127.1_msvc143_x64_abseil_dll.dll.mcrit) | [x86 PE](data/abseil/x86/smda/abseil_20250127.1_msvc143_x86_abseil_dll.dll.7z) / [x64 PE](data/abseil/x64/smda/abseil_20250127.1_msvc143_x64_abseil_dll.dll.7z) |
 <!-- /generated -->
 
 ### re2<a id='re2'></a>
@@ -531,7 +562,9 @@ Generated with `scripts/build_corpus.py`; see `data/re2/provenance.json` for sou
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | re2 | 2022-06-01 | MinGW-w64 GCC 13 | [x86 PE](data/re2/x86/mcrit/re2_2022-06-01_mingw13_x86_re2.dll.mcrit) / [x64 PE](data/re2/x64/mcrit/re2_2022-06-01_mingw13_x64_re2.dll.mcrit) | [x86 PE](data/re2/x86/smda/re2_2022-06-01_mingw13_x86_re2.dll.7z) / [x64 PE](data/re2/x64/smda/re2_2022-06-01_mingw13_x64_re2.dll.7z) |
+| re2 | 2022-06-01 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/re2/x86/mcrit/re2_2022-06-01_msvc143_x86_re2.dll.mcrit) / [x64 PE](data/re2/x64/mcrit/re2_2022-06-01_msvc143_x64_re2.dll.mcrit) | [x86 PE](data/re2/x86/smda/re2_2022-06-01_msvc143_x86_re2.dll.7z) / [x64 PE](data/re2/x64/smda/re2_2022-06-01_msvc143_x64_re2.dll.7z) |
 | re2 | 2025-11-05 | MinGW-w64 GCC 13 | [x86 PE](data/re2/x86/mcrit/re2_2025-11-05_mingw13_x86_re2.dll.mcrit) / [x64 PE](data/re2/x64/mcrit/re2_2025-11-05_mingw13_x64_re2.dll.mcrit) | [x86 PE](data/re2/x86/smda/re2_2025-11-05_mingw13_x86_re2.dll.7z) / [x64 PE](data/re2/x64/smda/re2_2025-11-05_mingw13_x64_re2.dll.7z) |
+| re2 | 2025-11-05 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/re2/x86/mcrit/re2_2025-11-05_msvc143_x86_re2.dll.mcrit) / [x64 PE](data/re2/x64/mcrit/re2_2025-11-05_msvc143_x64_re2.dll.mcrit) | [x86 PE](data/re2/x86/smda/re2_2025-11-05_msvc143_x86_re2.dll.7z) / [x64 PE](data/re2/x64/smda/re2_2025-11-05_msvc143_x64_re2.dll.7z) |
 <!-- /generated -->
 
 ### nlohmann/json<a id='nlohmann_json'></a>
@@ -545,7 +578,9 @@ Generated with `scripts/build_corpus.py`; see `data/nlohmann_json/provenance.jso
 |----------|---------|----------|-------|------|
 | nlohmann_json | 3.10.5 | MinGW-w64 GCC 13 | [x86 PE](data/nlohmann_json/x86/mcrit/nlohmann_json_3.10.5_mingw13_x86_nlohmann_json.dll.mcrit) / [x64 PE](data/nlohmann_json/x64/mcrit/nlohmann_json_3.10.5_mingw13_x64_nlohmann_json.dll.mcrit) | [x86 PE](data/nlohmann_json/x86/smda/nlohmann_json_3.10.5_mingw13_x86_nlohmann_json.dll.7z) / [x64 PE](data/nlohmann_json/x64/smda/nlohmann_json_3.10.5_mingw13_x64_nlohmann_json.dll.7z) |
 | nlohmann_json | 3.11.3 | MinGW-w64 GCC 13 | [x86 PE](data/nlohmann_json/x86/mcrit/nlohmann_json_3.11.3_mingw13_x86_nlohmann_json.dll.mcrit) / [x64 PE](data/nlohmann_json/x64/mcrit/nlohmann_json_3.11.3_mingw13_x64_nlohmann_json.dll.mcrit) | [x86 PE](data/nlohmann_json/x86/smda/nlohmann_json_3.11.3_mingw13_x86_nlohmann_json.dll.7z) / [x64 PE](data/nlohmann_json/x64/smda/nlohmann_json_3.11.3_mingw13_x64_nlohmann_json.dll.7z) |
+| nlohmann_json | 3.11.3 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/nlohmann_json/x86/mcrit/nlohmann_json_3.11.3_msvc143_x86_nlohmann_json.dll.mcrit) / [x64 PE](data/nlohmann_json/x64/mcrit/nlohmann_json_3.11.3_msvc143_x64_nlohmann_json.dll.mcrit) | [x86 PE](data/nlohmann_json/x86/smda/nlohmann_json_3.11.3_msvc143_x86_nlohmann_json.dll.7z) / [x64 PE](data/nlohmann_json/x64/smda/nlohmann_json_3.11.3_msvc143_x64_nlohmann_json.dll.7z) |
 | nlohmann_json | 3.12.0 | MinGW-w64 GCC 13 | [x86 PE](data/nlohmann_json/x86/mcrit/nlohmann_json_3.12.0_mingw13_x86_nlohmann_json.dll.mcrit) / [x64 PE](data/nlohmann_json/x64/mcrit/nlohmann_json_3.12.0_mingw13_x64_nlohmann_json.dll.mcrit) | [x86 PE](data/nlohmann_json/x86/smda/nlohmann_json_3.12.0_mingw13_x86_nlohmann_json.dll.7z) / [x64 PE](data/nlohmann_json/x64/smda/nlohmann_json_3.12.0_mingw13_x64_nlohmann_json.dll.7z) |
+| nlohmann_json | 3.12.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/nlohmann_json/x86/mcrit/nlohmann_json_3.12.0_msvc143_x86_nlohmann_json.dll.mcrit) / [x64 PE](data/nlohmann_json/x64/mcrit/nlohmann_json_3.12.0_msvc143_x64_nlohmann_json.dll.mcrit) | [x86 PE](data/nlohmann_json/x86/smda/nlohmann_json_3.12.0_msvc143_x86_nlohmann_json.dll.7z) / [x64 PE](data/nlohmann_json/x64/smda/nlohmann_json_3.12.0_msvc143_x64_nlohmann_json.dll.7z) |
 <!-- /generated -->
 
 ### protobuf<a id='protobuf'></a>
@@ -559,7 +594,9 @@ Generated with `scripts/build_corpus.py`; see `data/protobuf/provenance.json` fo
 |----------|---------|----------|-------|------|
 | protobuf | 3.6.1 | MinGW-w64 GCC 13 | [x86 PE](data/protobuf/x86/mcrit/protobuf_3.6.1_mingw13_x86_protobuf.dll.mcrit) / [x64 PE](data/protobuf/x64/mcrit/protobuf_3.6.1_mingw13_x64_protobuf.dll.mcrit) | [x86 PE](data/protobuf/x86/smda/protobuf_3.6.1_mingw13_x86_protobuf.dll.7z) / [x64 PE](data/protobuf/x64/smda/protobuf_3.6.1_mingw13_x64_protobuf.dll.7z) |
 | protobuf | 21.12 | MinGW-w64 GCC 13 | [x86 PE](data/protobuf/x86/mcrit/protobuf_21.12_mingw13_x86_protobuf.dll.mcrit) / [x64 PE](data/protobuf/x64/mcrit/protobuf_21.12_mingw13_x64_protobuf.dll.mcrit) | [x86 PE](data/protobuf/x86/smda/protobuf_21.12_mingw13_x86_protobuf.dll.7z) / [x64 PE](data/protobuf/x64/smda/protobuf_21.12_mingw13_x64_protobuf.dll.7z) |
+| protobuf | 21.12 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/protobuf/x86/mcrit/protobuf_21.12_msvc143_x86_protobuf.dll.mcrit) / [x64 PE](data/protobuf/x64/mcrit/protobuf_21.12_msvc143_x64_protobuf.dll.mcrit) | [x86 PE](data/protobuf/x86/smda/protobuf_21.12_msvc143_x86_protobuf.dll.7z) / [x64 PE](data/protobuf/x64/smda/protobuf_21.12_msvc143_x64_protobuf.dll.7z) |
 | protobuf | 31.1 | MinGW-w64 GCC 13 | [x86 PE](data/protobuf/x86/mcrit/protobuf_31.1_mingw13_x86_protobuf.dll.mcrit) / [x64 PE](data/protobuf/x64/mcrit/protobuf_31.1_mingw13_x64_protobuf.dll.mcrit) | [x86 PE](data/protobuf/x86/smda/protobuf_31.1_mingw13_x86_protobuf.dll.7z) / [x64 PE](data/protobuf/x64/smda/protobuf_31.1_mingw13_x64_protobuf.dll.7z) |
+| protobuf | 31.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/protobuf/x86/mcrit/protobuf_31.1_msvc143_x86_protobuf.dll.mcrit) / [x64 PE](data/protobuf/x64/mcrit/protobuf_31.1_msvc143_x64_protobuf.dll.mcrit) | [x86 PE](data/protobuf/x86/smda/protobuf_31.1_msvc143_x86_protobuf.dll.7z) / [x64 PE](data/protobuf/x64/smda/protobuf_31.1_msvc143_x64_protobuf.dll.7z) |
 <!-- /generated -->
 
 ### jemalloc<a id='jemalloc'></a>
@@ -601,8 +638,10 @@ Generated with `scripts/build_corpus.py`; see `data/Lua/provenance.json` for sou
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Lua | 5.1.5 | MinGW-w64 GCC 13 | [x86 PE](data/Lua/x86/mcrit/Lua_5.1.5_mingw13_x86_lua.exe.mcrit) / [x64 PE](data/Lua/x64/mcrit/Lua_5.1.5_mingw13_x64_lua.exe.mcrit) | [x86 PE](data/Lua/x86/smda/Lua_5.1.5_mingw13_x86_lua.exe.7z) / [x64 PE](data/Lua/x64/smda/Lua_5.1.5_mingw13_x64_lua.exe.7z) |
+| Lua | 5.1.5 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Lua/x86/mcrit/Lua_5.1.5_msvc143_x86_lua.exe.mcrit) / [x64 PE](data/Lua/x64/mcrit/Lua_5.1.5_msvc143_x64_lua.exe.mcrit) | [x86 PE](data/Lua/x86/smda/Lua_5.1.5_msvc143_x86_lua.exe.7z) / [x64 PE](data/Lua/x64/smda/Lua_5.1.5_msvc143_x64_lua.exe.7z) |
 | Lua | 5.3.6 | MinGW-w64 GCC 13 | [x86 PE](data/Lua/x86/mcrit/Lua_5.3.6_mingw13_x86_lua.exe.mcrit) / [x64 PE](data/Lua/x64/mcrit/Lua_5.3.6_mingw13_x64_lua.exe.mcrit) | [x86 PE](data/Lua/x86/smda/Lua_5.3.6_mingw13_x86_lua.exe.7z) / [x64 PE](data/Lua/x64/smda/Lua_5.3.6_mingw13_x64_lua.exe.7z) |
 | Lua | 5.4.8 | MinGW-w64 GCC 13 | [x86 PE](data/Lua/x86/mcrit/Lua_5.4.8_mingw13_x86_lua.exe.mcrit) / [x64 PE](data/Lua/x64/mcrit/Lua_5.4.8_mingw13_x64_lua.exe.mcrit) | [x86 PE](data/Lua/x86/smda/Lua_5.4.8_mingw13_x86_lua.exe.7z) / [x64 PE](data/Lua/x64/smda/Lua_5.4.8_mingw13_x64_lua.exe.7z) |
+| Lua | 5.4.8 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Lua/x86/mcrit/Lua_5.4.8_msvc143_x86_lua.exe.mcrit) / [x64 PE](data/Lua/x64/mcrit/Lua_5.4.8_msvc143_x64_lua.exe.mcrit) | [x86 PE](data/Lua/x86/smda/Lua_5.4.8_msvc143_x86_lua.exe.7z) / [x64 PE](data/Lua/x64/smda/Lua_5.4.8_msvc143_x64_lua.exe.7z) |
 <!-- /generated -->
 
 ### LuaJIT<a id='luajit'></a>
@@ -614,7 +653,9 @@ Generated with `scripts/build_corpus.py`; see `data/LuaJIT/provenance.json` for 
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | LuaJIT | 2.0.5 | MinGW-w64 GCC 13 | [x86 PE](data/LuaJIT/x86/mcrit/LuaJIT_2.0.5_mingw13_x86_lua51.dll.mcrit) / [x64 PE](data/LuaJIT/x64/mcrit/LuaJIT_2.0.5_mingw13_x64_lua51.dll.mcrit) | [x86 PE](data/LuaJIT/x86/smda/LuaJIT_2.0.5_mingw13_x86_lua51.dll.7z) / [x64 PE](data/LuaJIT/x64/smda/LuaJIT_2.0.5_mingw13_x64_lua51.dll.7z) |
+| LuaJIT | 2.0.5 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/LuaJIT/x86/mcrit/LuaJIT_2.0.5_msvc143_x86_lua51.dll.mcrit) / [x64 PE](data/LuaJIT/x64/mcrit/LuaJIT_2.0.5_msvc143_x64_lua51.dll.mcrit) | [x86 PE](data/LuaJIT/x86/smda/LuaJIT_2.0.5_msvc143_x86_lua51.dll.7z) / [x64 PE](data/LuaJIT/x64/smda/LuaJIT_2.0.5_msvc143_x64_lua51.dll.7z) |
 | LuaJIT | 2.1.0-beta3 | MinGW-w64 GCC 13 | [x86 PE](data/LuaJIT/x86/mcrit/LuaJIT_2.1.0-beta3_mingw13_x86_lua51.dll.mcrit) / [x64 PE](data/LuaJIT/x64/mcrit/LuaJIT_2.1.0-beta3_mingw13_x64_lua51.dll.mcrit) | [x86 PE](data/LuaJIT/x86/smda/LuaJIT_2.1.0-beta3_mingw13_x86_lua51.dll.7z) / [x64 PE](data/LuaJIT/x64/smda/LuaJIT_2.1.0-beta3_mingw13_x64_lua51.dll.7z) |
+| LuaJIT | 2.1.0-beta3 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/LuaJIT/x86/mcrit/LuaJIT_2.1.0-beta3_msvc143_x86_lua51.dll.mcrit) / [x64 PE](data/LuaJIT/x64/mcrit/LuaJIT_2.1.0-beta3_msvc143_x64_lua51.dll.mcrit) | [x86 PE](data/LuaJIT/x86/smda/LuaJIT_2.1.0-beta3_msvc143_x86_lua51.dll.7z) / [x64 PE](data/LuaJIT/x64/smda/LuaJIT_2.1.0-beta3_msvc143_x64_lua51.dll.7z) |
 | LuaJIT | 2.1-rolling-2026-09-08 | MinGW-w64 GCC 13 | [x86 PE](data/LuaJIT/x86/mcrit/LuaJIT_2.1-rolling-2026-09-08_mingw13_x86_lua51.dll.mcrit) / [x64 PE](data/LuaJIT/x64/mcrit/LuaJIT_2.1-rolling-2026-09-08_mingw13_x64_lua51.dll.mcrit) | [x86 PE](data/LuaJIT/x86/smda/LuaJIT_2.1-rolling-2026-09-08_mingw13_x86_lua51.dll.7z) / [x64 PE](data/LuaJIT/x64/smda/LuaJIT_2.1-rolling-2026-09-08_mingw13_x64_lua51.dll.7z) |
 <!-- /generated -->
 
@@ -627,7 +668,9 @@ Generated with `scripts/build_corpus.py`; see `data/q3vm/provenance.json` for so
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | q3vm | 1.3.1 | MinGW-w64 GCC 13 | [x86 PE](data/q3vm/x86/mcrit/q3vm_1.3.1_mingw13_x86_q3vm.exe.mcrit) / [x64 PE](data/q3vm/x64/mcrit/q3vm_1.3.1_mingw13_x64_q3vm.exe.mcrit) | [x86 PE](data/q3vm/x86/smda/q3vm_1.3.1_mingw13_x86_q3vm.exe.7z) / [x64 PE](data/q3vm/x64/smda/q3vm_1.3.1_mingw13_x64_q3vm.exe.7z) |
+| q3vm | 1.3.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/q3vm/x86/mcrit/q3vm_1.3.1_msvc143_x86_q3vm.exe.mcrit) / [x64 PE](data/q3vm/x64/mcrit/q3vm_1.3.1_msvc143_x64_q3vm.exe.mcrit) | [x86 PE](data/q3vm/x86/smda/q3vm_1.3.1_msvc143_x86_q3vm.exe.7z) / [x64 PE](data/q3vm/x64/smda/q3vm_1.3.1_msvc143_x64_q3vm.exe.7z) |
 | q3vm | 2026-03-06 | MinGW-w64 GCC 13 | [x86 PE](data/q3vm/x86/mcrit/q3vm_2026-03-06_mingw13_x86_q3vm.exe.mcrit) / [x64 PE](data/q3vm/x64/mcrit/q3vm_2026-03-06_mingw13_x64_q3vm.exe.mcrit) | [x86 PE](data/q3vm/x86/smda/q3vm_2026-03-06_mingw13_x86_q3vm.exe.7z) / [x64 PE](data/q3vm/x64/smda/q3vm_2026-03-06_mingw13_x64_q3vm.exe.7z) |
+| q3vm | 2026-03-06 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/q3vm/x86/mcrit/q3vm_2026-03-06_msvc143_x86_q3vm.exe.mcrit) / [x64 PE](data/q3vm/x64/mcrit/q3vm_2026-03-06_msvc143_x64_q3vm.exe.mcrit) | [x86 PE](data/q3vm/x86/smda/q3vm_2026-03-06_msvc143_x86_q3vm.exe.7z) / [x64 PE](data/q3vm/x64/smda/q3vm_2026-03-06_msvc143_x64_q3vm.exe.7z) |
 <!-- /generated -->
 
 ## Loaders and shellcode
@@ -657,6 +700,7 @@ Generated with `scripts/build_corpus.py`; see `data/MemoryModule/provenance.json
 |----------|---------|----------|-------|------|
 | MemoryModule | 0.0.4 | MinGW-w64 GCC 13 | [x86 PE](data/MemoryModule/x86/mcrit/MemoryModule_0.0.4_mingw13_x86_DllLoader.exe.mcrit) / [x64 PE](data/MemoryModule/x64/mcrit/MemoryModule_0.0.4_mingw13_x64_DllLoader.exe.mcrit) | [x86 PE](data/MemoryModule/x86/smda/MemoryModule_0.0.4_mingw13_x86_DllLoader.exe.7z) / [x64 PE](data/MemoryModule/x64/smda/MemoryModule_0.0.4_mingw13_x64_DllLoader.exe.7z) |
 | MemoryModule | 2019-02-24 | MinGW-w64 GCC 13 | [x86 PE](data/MemoryModule/x86/mcrit/MemoryModule_2019-02-24_mingw13_x86_DllLoader.exe.mcrit) / [x64 PE](data/MemoryModule/x64/mcrit/MemoryModule_2019-02-24_mingw13_x64_DllLoader.exe.mcrit) | [x86 PE](data/MemoryModule/x86/smda/MemoryModule_2019-02-24_mingw13_x86_DllLoader.exe.7z) / [x64 PE](data/MemoryModule/x64/smda/MemoryModule_2019-02-24_mingw13_x64_DllLoader.exe.7z) |
+| MemoryModule | 2019-02-24 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/MemoryModule/x86/mcrit/MemoryModule_2019-02-24_msvc143_x86_DllLoader.exe.mcrit) / [x64 PE](data/MemoryModule/x64/mcrit/MemoryModule_2019-02-24_msvc143_x64_DllLoader.exe.mcrit) | [x86 PE](data/MemoryModule/x86/smda/MemoryModule_2019-02-24_msvc143_x86_DllLoader.exe.7z) / [x64 PE](data/MemoryModule/x64/smda/MemoryModule_2019-02-24_msvc143_x64_DllLoader.exe.7z) |
 <!-- /generated -->
 
 ### pe_to_shellcode<a id='pe_to_shellcode'></a>
@@ -696,7 +740,7 @@ Generated with `scripts/build_corpus.py`; see `data/VX-API/provenance.json` for 
 <!-- generated: VX-API -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
-| VX-API | 2.01.015 | Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64 | [x86 PE](data/VX-API/x86/mcrit/VX-API_2.01.015_msvc143_x86_vxapi.dll.mcrit) / [x64 PE](data/VX-API/x64/mcrit/VX-API_2.01.015_msvc143_x64_vxapi.dll.mcrit) | [x86 PE](data/VX-API/x86/smda/VX-API_2.01.015_msvc143_x86_vxapi.dll.7z) / [x64 PE](data/VX-API/x64/smda/VX-API_2.01.015_msvc143_x64_vxapi.dll.7z) |
+| VX-API | 2.01.015 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/VX-API/x86/mcrit/VX-API_2.01.015_msvc143_x86_vxapi.dll.mcrit) / [x64 PE](data/VX-API/x64/mcrit/VX-API_2.01.015_msvc143_x64_vxapi.dll.mcrit) | [x86 PE](data/VX-API/x86/smda/VX-API_2.01.015_msvc143_x86_vxapi.dll.7z) / [x64 PE](data/VX-API/x64/smda/VX-API_2.01.015_msvc143_x64_vxapi.dll.7z) |
 <!-- /generated -->
 
 ### BlackBone<a id='blackbone'></a>
@@ -708,7 +752,7 @@ Generated with `scripts/build_corpus.py`; see `data/BlackBone/provenance.json` f
 <!-- generated: BlackBone -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
-| BlackBone | 2023-07-17 | Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64 | [x86 PE](data/BlackBone/x86/mcrit/BlackBone_2023-07-17_msvc143_x86_BlackBone.dll.mcrit) / [x64 PE](data/BlackBone/x64/mcrit/BlackBone_2023-07-17_msvc143_x64_BlackBone.dll.mcrit) | [x86 PE](data/BlackBone/x86/smda/BlackBone_2023-07-17_msvc143_x86_BlackBone.dll.7z) / [x64 PE](data/BlackBone/x64/smda/BlackBone_2023-07-17_msvc143_x64_BlackBone.dll.7z) |
+| BlackBone | 2023-07-17 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/BlackBone/x86/mcrit/BlackBone_2023-07-17_msvc143_x86_BlackBone.dll.mcrit) / [x64 PE](data/BlackBone/x64/mcrit/BlackBone_2023-07-17_msvc143_x64_BlackBone.dll.mcrit) | [x86 PE](data/BlackBone/x86/smda/BlackBone_2023-07-17_msvc143_x86_BlackBone.dll.7z) / [x64 PE](data/BlackBone/x64/smda/BlackBone_2023-07-17_msvc143_x64_BlackBone.dll.7z) |
 <!-- /generated -->
 
 ### SysWhispers<a id='syswhispers'></a>
@@ -721,5 +765,5 @@ Generated with `scripts/build_corpus.py`; see `data/SysWhispers/provenance.json`
 <!-- generated: SysWhispers -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
-| SysWhispers | 2021-07-06 | Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64 | [x64 PE](data/SysWhispers/x64/mcrit/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.mcrit) | [x64 PE](data/SysWhispers/x64/smda/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.7z) |
+| SysWhispers | 2021-07-06 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers/x64/mcrit/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.mcrit) | [x64 PE](data/SysWhispers/x64/smda/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.7z) |
 <!-- /generated -->
