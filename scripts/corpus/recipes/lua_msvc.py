@@ -78,13 +78,13 @@ _DROP_LUAC = "del luac.obj"
 # StringConcat/StringCopy pair. link /DEBUG is documented to imply both, but
 # the corpus says what it wants rather than relying on that.
 #
-# /INCREMENTAL:NO because /DEBUG implies /INCREMENTAL and the /OPT:NO* forms
-# do not suppress it - only /OPT:REF, /OPT:ICF and /OPT:ORDER are documented
-# to. An incrementally linked image reaches each function through a jump
-# table, and SMDA recovers every one of those one-instruction thunks as a
-# function of its own, unnamed. That was measured on the artefacts this
-# omission produced: 458 of Lua 5.4.8 x86's 1652 functions and 349 of Lua 5.1.5 x64's 1123. It is not what a
-# released binary looks like, and it inflates the function count of the
+# /INCREMENTAL:NO because /DEBUG implies /INCREMENTAL and the /OPT:NO* forms do
+# not suppress it - only /OPT:REF, /OPT:ICF and /OPT:ORDER are documented to.
+# An incrementally linked image reaches each function through a jump table, and
+# SMDA recovers every one of those one-instruction thunks as a function of its
+# own, unnamed. That was measured on the artefacts this omission produced: 458
+# of Lua 5.4.8 x86's 1652 functions and 349 of Lua 5.1.5 x64's 1123. It is not
+# what a released binary looks like, and it inflates the function count of the
 # family it is filed under.
 #
 # The link's PDB is named the same as the compile's /Fd, which is what
@@ -94,7 +94,8 @@ _LINK = ('link /nologo /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF '
          '/PDB:lua.pdb /OUT:lua.exe l*.obj')
 
 _FLAGS = ("/O2 /MD /W3 /Zi (etc/luavs.bat's flags plus /Zi); "
-          "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link; statically linked "
+          "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at "
+          "link; statically linked "
           "interpreter, not linked against lua51.dll")
 
 

@@ -73,14 +73,14 @@ _COMPILE = ('cl /nologo /c /O2 /MD /Zi /Fdbzip2.pdb '
 # wildcard expansion, is left out: it is CRT code, it is not needed for
 # reference data, and the MinGW artefact does not carry it either.
 #
-# /INCREMENTAL:NO because /DEBUG implies /INCREMENTAL and the /OPT:NO* forms
-# do not suppress it - only /OPT:REF, /OPT:ICF and /OPT:ORDER are documented
-# to. An incrementally linked image reaches each function through a jump
-# table, and SMDA recovers every one of those one-instruction thunks as a
-# function of its own, unnamed. That was measured on the artefacts this
-# omission produced: 135 of bzip2 x86's 262 functions and 134 of x64's 263. It is not what a
-# released binary looks like, and it inflates the function count of the
-# family it is filed under.
+# /INCREMENTAL:NO because /DEBUG implies /INCREMENTAL and the /OPT:NO* forms do
+# not suppress it - only /OPT:REF, /OPT:ICF and /OPT:ORDER are documented to.
+# An incrementally linked image reaches each function through a jump table, and
+# SMDA recovers every one of those one-instruction thunks as a function of its
+# own, unnamed. That was measured on the artefacts this omission produced: 135
+# of bzip2 x86's 262 functions and 134 of x64's 263. It is not what a released
+# binary looks like, and it inflates the function count of the family it is
+# filed under.
 _LINK = ('link /nologo /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF '
          '/PDB:bzip2.pdb /OUT:bzip2.exe ' + _OBJECTS)
 
@@ -108,7 +108,8 @@ RECIPES = {
                             pdb="bzip2.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags="/O2 /MD /Zi, -DWIN32 -D_FILE_OFFSET_BITS=64; "
-                    "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
+                    "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF "
+                    "/OPT:NOICF at link",
         notes="The same seven library objects plus bzip2.c that the MinGW "
               "recipe links, so this artefact and its MinGW sibling differ "
               "only in the compiler. No dependencies: bzip2 links the CRT and "

@@ -122,19 +122,20 @@ _ANCHOR = "cl /nologo /c /O2 /MD /Z7 /Foanchor.obj anchor.c"
 # bodies. link /DEBUG is documented to imply both, but the corpus says what
 # it wants rather than relying on that.
 #
-# /INCREMENTAL:NO because /DEBUG implies /INCREMENTAL and the /OPT:NO* forms
-# do not suppress it - only /OPT:REF, /OPT:ICF and /OPT:ORDER are documented
-# to. An incrementally linked image reaches each function through a jump
-# table, and SMDA recovers every one of those one-instruction thunks as a
-# function of its own, unnamed. That was measured on the artefacts this
-# omission produced: 5815 of cryptopp 8.9.0 x64's 17,244 functions. It is not what a
-# released binary looks like, and it inflates the function count of the
-# family it is filed under.
+# /INCREMENTAL:NO because /DEBUG implies /INCREMENTAL and the /OPT:NO* forms do
+# not suppress it - only /OPT:REF, /OPT:ICF and /OPT:ORDER are documented to.
+# An incrementally linked image reaches each function through a jump table, and
+# SMDA recovers every one of those one-instruction thunks as a function of its
+# own, unnamed. That was measured on the artefacts this omission produced: 5815
+# of cryptopp 8.9.0 x64's 17,244 functions. It is not what a released binary
+# looks like, and it inflates the function count of the family it is filed
+# under.
 #
 # The DLL exports nothing. That is fine and is not the MinGW build's
 # situation reversed: nothing here needs an import library, and the PDB - not
 # the export table - is what names the functions for SMDA.
-_LINK = ('link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF '
+_LINK = ('link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO '
+         '/OPT:NOREF /OPT:NOICF '
          '/WHOLEARCHIVE:%s /PDB:cryptopp.pdb /OUT:cryptopp.dll '
          'anchor.obj ws2_32.lib advapi32.lib bcrypt.lib' % _LIB)
 

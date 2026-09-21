@@ -57,14 +57,14 @@ _COMPILE = ('cl /nologo /c /O2 /MD /Zi /Fdsqlite3.pdb '
 # they also keep this build comparable with the MinGW one, which has no
 # --gc-sections and folds nothing.
 #
-# /INCREMENTAL:NO because /DEBUG implies /INCREMENTAL and the /OPT:NO* forms
-# do not suppress it - only /OPT:REF, /OPT:ICF and /OPT:ORDER are documented
-# to. An incrementally linked image reaches each function through a jump
-# table, and SMDA recovers every one of those one-instruction thunks as a
-# function of its own, unnamed. That was measured on the artefacts this
-# omission produced: 388 of sqlite3 3.50.4 x86's 3730 functions. It is not
-# what a released binary looks like, and it inflates the function count of
-# the family it is filed under.
+# /INCREMENTAL:NO because /DEBUG implies /INCREMENTAL and the /OPT:NO* forms do
+# not suppress it - only /OPT:REF, /OPT:ICF and /OPT:ORDER are documented to.
+# An incrementally linked image reaches each function through a jump table, and
+# SMDA recovers every one of those one-instruction thunks as a function of its
+# own, unnamed. That was measured on the artefacts this omission produced: 388
+# of sqlite3 3.50.4 x86's 3730 functions. It is not what a released binary
+# looks like, and it inflates the function count of the family it is filed
+# under.
 _LINK = ('link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO '
          '/OPT:NOREF /OPT:NOICF '
          '/PDB:sqlite3.pdb /OUT:sqlite3.dll sqlite3.obj')
