@@ -870,6 +870,764 @@ __declspec(dllexport) std::size_t probe_stl_optional(const wchar_t *text)
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 """
 
+# MSVC only, and the second round of STL probes. Everything below answers a
+# measurement of what the *first* round left behind, so it is worth recording
+# what that measurement said, because it is not what it looked like.
+#
+# Reading the committed exports back (scripts/corpus/baseline.py cannot do
+# this itself - it was done by decompressing function_entries out of the four
+# .mcrit files) and splitting the surviving runtime functions by whether the
+# instantiating type is the project's own:
+#
+#     BlackBone x64   1677 functions   274 runtime   124 over standard types
+#     BlackBone x86   1875 functions   254 runtime   125 over standard types
+#     VX-API    x64    699 functions    17 runtime    17 over standard types
+#     VX-API    x86    686 functions    20 runtime    20 over standard types
+#
+# The 124 and 125 are the reachable part. The surprise is in how they missed:
+# of BlackBone x64's 124, exactly *three* carry a name that also appears in
+# that artefact's removed_runtime_functions list. The other 121 have names
+# the round-one probe never produced at all - not names it produced with a
+# different body.
+#
+# The reason is that MSVC instantiates a member template on its argument
+# category and width, not just on the container type. The round-one probe has
+# std::unordered_map<std::wstring, unsigned int> and so does BlackBone, but
+# the probe writes `byName.emplace(wstring, 2u)` and BlackBone writes the
+# equivalent of `byName.emplace(wstring, someUnsignedLong)`, which is
+# `emplace<wstring, unsigned long &>` - a different function with a different
+# name, and name is half of what is_glue matches on. The same split explains
+# vector (`push_back(x)` is `_Emplace_one_at_back<T &>`, `push_back(x + 1)`
+# is `_Emplace_one_at_back<T>`), map (`emplace(a, b)` on lvalues versus
+# prvalues) and unordered_map's operator[] (`_Try_emplace<K const &>` versus
+# `_Try_emplace<K>`).
+#
+# Two smaller causes were measured alongside it and are fixed here too:
+#
+#   * The round-one hash probe assigned the *same* key in each iteration of
+#     its loop - `byName[std::wstring(name)] = index` - so those maps never
+#     held more than one element and _Forced_rehash, _Hash_vec::_Assign_grow
+#     and the _List_node helpers they call were never instantiated at all.
+#     Every loop below builds distinct keys and inserts enough of them to
+#     force several rehashes.
+#
+#   * The mapped type of BlackBone's forwarder map is `unsigned __int64` on
+#     x64 and `unsigned int` on x86; it is std::size_t on each. The round-one
+#     probe spelled it `unsigned long long`, which is the x64 instantiation
+#     on both architectures, so the x86 one was never in the baseline. Same
+#     for its ptr_t-keyed unordered_map.
+#
+# Split four ways for the usual reason: a probe that will not build is not
+# fatal, but it silently shrinks the baseline, so one bad line should cost
+# one container family rather than all of them.
+_PROBE_STL_GROW = """\
+#include <windows.h>
+#include <stdlib.h>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+static void *__stdcall probe_stl_grow_release(void *block)
+{
+    free(block);
+    return NULL;
+}
+
+__declspec(dllexport) std::size_t probe_stl_grow_bytes(unsigned char *data,
+                                                       const char *text,
+                                                       std::size_t size)
+{
+    /* _Construct_n<char const *,char const *> and the
+       _Copy_memmove<char const *,unsigned char *> it calls both need a
+       *narrow* char range built into a vector of unsigned char, which is how
+       BlackBone fills a buffer it has just read out of a process.
+       _Assign_counted_range<unsigned char *> needs a non-const source. */
+    std::vector<unsigned char> raw(text, text + size);
+    std::vector<unsigned char> copy;
+    std::vector<unsigned char> assigned;
+    std::vector<unsigned char> bytes;
+    std::size_t index;
+
+    assigned.assign(data, data + size);
+    copy = assigned;
+    copy.reserve(size + 512);
+    bytes.resize(size + 64);
+    for (index = 0; index < 256; ++index) {
+        bytes.push_back((unsigned char)index);
+        raw.push_back((unsigned char)index);
+    }
+    bytes.resize(size + 4096);
+    return raw.size() + copy.size() + assigned.size() + bytes.size();
+}
+
+__declspec(dllexport) std::size_t probe_stl_grow_words(std::size_t count)
+{
+    /* Every push_back here takes an *lvalue*. MSVC instantiates
+       _Emplace_one_at_back and _Emplace_reallocate on the argument category,
+       so push_back(x) and push_back(x + 1) are two different template
+       instantiations with two different names; the committed artefacts carry
+       the lvalue ones and the round-one probe only had the prvalue ones. */
+    std::vector<unsigned long> words;
+    std::vector<unsigned long long> quads;
+    std::vector<std::size_t> sizes;
+    std::vector<std::pair<unsigned long long, unsigned long long> > ranges;
+    std::vector<std::pair<unsigned int, unsigned int> > pairs;
+    std::size_t index;
+    unsigned long word;
+    unsigned long long quad;
+    unsigned long long other;
+    unsigned int low;
+    unsigned int high;
+
+    for (index = 0; index < 256; ++index) {
+        word = (unsigned long)index;
+        quad = (unsigned long long)index;
+        other = quad + 1;
+        low = (unsigned int)index;
+        high = low + 1;
+        words.push_back(word);
+        quads.push_back(quad);
+        sizes.push_back(index);
+        ranges.emplace_back(quad, other);
+        /* _Emplace_reallocate<int,unsigned __int64 &>, which is what an
+           integer literal first element produces on x86. */
+        ranges.emplace_back(0, other);
+        pairs.emplace_back(low, high);
+    }
+    ranges.reserve(ranges.size() * 2 + count);
+    quads.reserve(quads.size() * 2);
+    return words.size() + quads.size() + sizes.size() + ranges.size()
+           + pairs.size();
+}
+
+__declspec(dllexport) std::size_t probe_stl_grow_records(std::size_t count,
+                                                         const wchar_t *name)
+{
+    /* push_back of a non-const lvalue record reaches
+       _Emplace_reallocate<T &>, push_back of a const reference reaches
+       _Emplace_reallocate<T const &>, and emplace_back of a temporary
+       wstring reaches _Emplace_reallocate<wstring> and the
+       _Uninitialized_move the reallocation runs. BlackBone carries all
+       four. */
+    std::vector<MEMORY_BASIC_INFORMATION64> regions;
+    std::vector<IMAGE_SECTION_HEADER> sections;
+    std::vector<std::wstring> names;
+    MEMORY_BASIC_INFORMATION64 region;
+    IMAGE_SECTION_HEADER section;
+    const IMAGE_SECTION_HEADER &constSection = section;
+    std::size_t index;
+
+    ZeroMemory(&region, sizeof(region));
+    ZeroMemory(&section, sizeof(section));
+    for (index = 0; index < 64; ++index) {
+        region.BaseAddress = (ULONGLONG)index;
+        section.VirtualAddress = (DWORD)index;
+        regions.push_back(region);
+        sections.push_back(constSection);
+        names.emplace_back(std::wstring(name));
+    }
+    regions.resize(count + 128);
+    names.reserve(names.size() * 2);
+    return regions.size() + sections.size() + names.size();
+}
+
+__declspec(dllexport) std::size_t probe_stl_grow_owned(std::size_t size)
+{
+    /* unique_ptr is instantiated on its deleter as well as its pointee, and
+       BlackBone's are function pointers rather than default_delete:
+       unique_ptr<_IMAGE_EXPORT_DIRECTORY,void (__cdecl*)(void *)> on both
+       architectures and unique_ptr<void,void *(__stdcall*)(void *)> on x86,
+       which is what holding a VirtualFree-style releaser looks like. The
+       round-one probe only had the default_delete instantiations. */
+    std::unique_ptr<IMAGE_EXPORT_DIRECTORY, void (__cdecl *)(void *)>
+        directory((IMAGE_EXPORT_DIRECTORY *)malloc(sizeof(IMAGE_EXPORT_DIRECTORY)),
+                  &free);
+    std::unique_ptr<void, void *(__stdcall *)(void *)>
+        region(NULL, &probe_stl_grow_release);
+    std::unique_ptr<unsigned char[], void (__cdecl *)(void *)>
+        buffer((unsigned char *)malloc(size + 1), &free);
+
+    if (directory) {
+        directory->NumberOfNames = 0;
+    }
+    if (buffer) {
+        buffer[0] = 0;
+    }
+    return (std::size_t)(directory ? 1 : 0) + (region ? 2 : 0)
+           + (buffer ? 4 : 0);
+}
+
+__declspec(dllexport) std::size_t probe_stl_grow_strings(const char *text,
+                                                         const wchar_t *wide)
+{
+    /* push_back on a string is its own _Reallocate_grow_by instantiation,
+       named after the lambda inside push_back rather than the one inside
+       append, and BlackBone carries both. The loop count is what makes the
+       reallocating path run often enough to stay out of line. */
+    std::string narrow;
+    std::wstring wideText;
+    std::wstring built;
+    std::string assigned;
+    std::size_t index;
+
+    narrow.assign(text);
+    assigned = narrow;
+    assigned.assign(text);
+    wideText.assign(wide);
+    wideText.reserve(4096);
+    for (index = 0; index < 1024; ++index) {
+        narrow.push_back((char)('a' + (index & 15)));
+        built.push_back((wchar_t)(L'a' + (index & 15)));
+        wideText.append(wide);
+        narrow.append(text);
+    }
+    built = wideText;
+    return narrow.size() + wideText.size() + built.size() + assigned.size()
+           + std::to_wstring((unsigned long)narrow.size()).size()
+           + std::to_wstring((int)built.size()).size()
+           + std::to_wstring(built.size()).size();
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+_PROBE_STL_HASH = """\
+#include <windows.h>
+#include <cstddef>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+__declspec(dllexport) std::size_t probe_stl_hash_exports(const char *symbol)
+{
+    /* unordered_map<string, FARPROC> is BlackBone's export cache. FARPROC is
+       spelled __int64 (__cdecl*)(void) on x64 and int (__stdcall*)(void) on
+       x86, so naming the typedef covers both without spelling either. */
+    std::unordered_map<std::string, FARPROC> byExport;
+    std::string key;
+    std::size_t index;
+    std::size_t found = 0;
+
+    for (index = 0; index < 96; ++index) {
+        key = symbol;
+        key.push_back((char)('a' + (index & 15)));
+        key.push_back((char)('a' + ((index >> 4) & 15)));
+        byExport.emplace(std::make_pair(key, (FARPROC)0));
+        byExport[key] = (FARPROC)0;
+    }
+    for (index = 0; index < 96; ++index) {
+        key = symbol;
+        key.push_back((char)('a' + (index & 15)));
+        key.push_back((char)('a' + ((index >> 4) & 15)));
+        if (byExport.find(key) != byExport.end()) {
+            ++found;
+        }
+        found += byExport.count(key);
+    }
+    byExport.erase(key);
+    byExport.clear();
+    return found + byExport.size();
+}
+
+__declspec(dllexport) std::size_t probe_stl_hash_modules(const wchar_t *name)
+{
+    /* emplace<wchar_t (&)[260],vector<wstring> > is the instantiation a
+       WCHAR path[MAX_PATH] lvalue produces, and it is what BlackBone's
+       module enumeration leaves behind on both architectures. */
+    std::unordered_map<std::wstring, std::vector<std::wstring> > byDirectory;
+    std::unordered_map<std::wstring, unsigned int> byName;
+    wchar_t path[260];
+    std::wstring key;
+    std::size_t index;
+    unsigned long tag = 0;
+
+    for (index = 0; index < 96; ++index) {
+        path[0] = (wchar_t)(L'a' + (index & 15));
+        path[1] = (wchar_t)(L'a' + ((index >> 4) & 15));
+        path[2] = L'\\0';
+        byDirectory.emplace(path, std::vector<std::wstring>());
+        byDirectory[path].push_back(std::wstring(name));
+
+        key.assign(path);
+        tag = (unsigned long)index;
+        /* emplace<wstring,unsigned long &>: the mapped argument is an lvalue
+           of a wider type than the mapped_type. */
+        byName.emplace(key, tag);
+        byName[key] = (unsigned int)index;
+    }
+    byName.erase(key);
+    byDirectory.erase(key);
+    byName.clear();
+    byDirectory.clear();
+    return byName.size() + byDirectory.size() + (std::size_t)tag;
+}
+
+__declspec(dllexport) std::size_t probe_stl_hash_offsets(std::size_t key,
+                                                         unsigned long id)
+{
+    /* Two key widths on purpose. BlackBone's ptr_t-keyed map is
+       unordered_map<unsigned __int64, ...> on x64 and
+       unordered_map<unsigned int, ...> on x86 - std::size_t on each - while
+       the round-one probe spelled it unsigned long long and so only ever
+       produced the x64 instantiation. Both are kept: the wide one is a real
+       instantiation in the x64 artefact. */
+    std::unordered_map<std::size_t, std::pair<std::size_t, bool> > bySize;
+    std::unordered_map<unsigned long long,
+                       std::pair<unsigned long long, bool> > byOffset;
+    std::unordered_map<unsigned long, int> byId;
+    std::size_t index;
+    std::size_t found = 0;
+
+    for (index = 0; index < 96; ++index) {
+        const std::size_t &constKey = key;
+        unsigned long long wide = (unsigned long long)(key + index);
+
+        /* _Try_emplace<size_t const &> from an lvalue subscript and
+           _Try_emplace<size_t> from a prvalue one: two functions, two
+           names, and the artefacts carry one of each. */
+        bySize[constKey] = std::make_pair(key, true);
+        bySize[key + index] = std::make_pair(key, false);
+        bySize.emplace(key + index, std::make_pair(key, true));
+        byOffset.emplace(wide, std::make_pair(wide, true));
+        byOffset[wide] = std::make_pair(wide, false);
+        byId[id + (unsigned long)index] = (int)index;
+        found += bySize.count(key + index);
+        found += byOffset.count(wide);
+        if (byId.find(id + (unsigned long)index) != byId.end()) {
+            ++found;
+        }
+    }
+    byId.erase(id);
+    bySize.erase(key);
+    byOffset.erase((unsigned long long)key);
+    bySize.clear();
+    byOffset.clear();
+    byId.clear();
+    return found + bySize.size() + byOffset.size() + byId.size();
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+_PROBE_STL_TREE = """\
+#include <windows.h>
+#include <cstddef>
+#include <map>
+#include <set>
+#include <string>
+#include <utility>
+
+__declspec(dllexport) std::size_t probe_stl_tree_names(wchar_t *first,
+                                                       wchar_t *second,
+                                                       unsigned long tag)
+{
+    /* map<pair<wstring,wstring>, size_t> is BlackBone's forwarder table. The
+       mapped type is unsigned __int64 on x64 and unsigned int on x86, which
+       is std::size_t on each.
+
+       _Emplace<pair<wchar_t *,wchar_t *>,unsigned long &> needs exactly
+       this: a pair of *non-const* wchar_t pointers and an unsigned long
+       lvalue. Copying the map is what reaches _Copy, _Copy_nodes,
+       _Tree_temp_node and _Tree_head_scoped_ptr, all four of which survive
+       on both architectures today. */
+    std::map<std::pair<std::wstring, std::wstring>, std::size_t> byName;
+    std::size_t index;
+    std::size_t total;
+
+    for (index = 0; index < 64; ++index) {
+        first[0] = (wchar_t)(L'a' + (index & 15));
+        second[0] = (wchar_t)(L'a' + ((index >> 4) & 15));
+        tag = (unsigned long)index;
+        byName.emplace(std::make_pair(first, second), tag);
+        byName[std::make_pair(std::wstring(first), std::wstring(second))] =
+            (std::size_t)index;
+    }
+
+    std::map<std::pair<std::wstring, std::wstring>, std::size_t> copy(byName);
+    std::map<std::pair<std::wstring, std::wstring>, std::size_t> assigned;
+
+    assigned = copy;
+    total = byName.size() + copy.size() + assigned.size();
+    byName.erase(byName.begin());
+    copy.clear();
+    assigned.clear();
+    return total;
+}
+
+__declspec(dllexport) std::size_t probe_stl_tree_regions(unsigned long long key,
+                                                         unsigned long tag)
+{
+    /* map<unsigned __int64,bool>, and the lvalue-argument emplace on
+       map<unsigned __int64,unsigned __int64>, are both in the residue on
+       both architectures; the round-one probe only had the prvalue one. */
+    std::map<unsigned long long, unsigned long long> byAddress;
+    std::map<unsigned long long, bool> byFlag;
+    std::map<std::pair<unsigned long long, unsigned int>,
+             unsigned long long> byRegion;
+    std::size_t index;
+    std::size_t total = 0;
+
+    for (index = 0; index < 64; ++index) {
+        unsigned long long lo = key + (unsigned long long)index;
+        unsigned long long hi = lo + 1;
+
+        byAddress.emplace(lo, hi);
+        byAddress[lo] = hi;
+        byFlag[lo] = true;
+        byRegion.emplace(std::make_pair(std::make_pair(lo, tag), hi));
+        byRegion[std::make_pair(lo, (unsigned int)tag)] = hi;
+        if (byAddress.lower_bound(lo) != byAddress.end()) {
+            ++total;
+        }
+    }
+    byAddress.erase(key);
+    byAddress.erase(byAddress.begin());
+    byFlag.erase(key);
+    byRegion.clear();
+    total += byAddress.size() + byFlag.size() + byRegion.size();
+    byAddress.clear();
+    byFlag.clear();
+    return total;
+}
+
+__declspec(dllexport) std::size_t probe_stl_tree_identifiers(int seed)
+{
+    /* set<int>::emplace<int &> and _Find_lower_bound<int> are separate
+       instantiations from the insert(int) the round-one probe called. */
+    std::set<int> identifiers;
+    std::set<unsigned long long> addresses;
+    int index;
+    std::size_t total = 0;
+
+    for (index = 0; index < 64; ++index) {
+        int value = seed + index;
+        unsigned long long wide = (unsigned long long)value;
+
+        identifiers.emplace(value);
+        identifiers.insert(value + 1);
+        addresses.emplace(wide);
+        if (identifiers.lower_bound(value) != identifiers.end()) {
+            ++total;
+        }
+    }
+    identifiers.erase(seed);
+    addresses.erase((unsigned long long)seed);
+    total += identifiers.size() + addresses.size();
+    identifiers.clear();
+    addresses.clear();
+    return total;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# MSVC only. The standard exception objects and the compiler-generated array
+# helpers, which are the one group that survives in *all four* committed
+# artefacts - VX-API included, and VX-API is built with exactly the flags
+# this probe uses (/O2 /MD /Zi /std:c++20), so nothing about optimisation
+# settings explains its residue. It is pure coverage.
+#
+# Round one did reach the default constructors of bad_alloc,
+# bad_array_new_length and bad_optional_access - all three are in BlackBone
+# x64's removed_runtime_functions - and all three are still present as a
+# *second* body of the same name. Those are the copy constructors, which is
+# why every object below is both constructed and copied.
+_PROBE_STL_THROW = """\
+#include <windows.h>
+#include <string.h>
+#include <exception>
+#include <new>
+#include <optional>
+#include <stdexcept>
+#include <string>
+
+/* A class with a non-trivial constructor *and* a non-trivial destructor is
+   the only thing that makes the compiler emit `eh vector constructor
+   iterator', `eh vector destructor iterator' and __ArrayUnwind, and all
+   three survive in all four committed MSVC artefacts. The member has to be
+   something the compiler cannot elide, hence a wstring rather than an int. */
+struct ProbeArrayElement
+{
+    ProbeArrayElement() : text(L"probe"), value(0) {}
+    ~ProbeArrayElement() { value = 0; }
+
+    std::wstring text;
+    int value;
+};
+
+__declspec(dllexport) std::size_t probe_stl_throw_arrays(std::size_t count)
+{
+    ProbeArrayElement onStack[8];
+    ProbeArrayElement *onHeap = new ProbeArrayElement[count + 4];
+    std::size_t total = 0;
+    std::size_t index;
+
+    for (index = 0; index < 8; ++index) {
+        onStack[index].value = (int)index;
+        total += onStack[index].text.size();
+    }
+    for (index = 0; index < count + 4; ++index) {
+        onHeap[index].value = (int)index;
+        total += onHeap[index].text.size();
+    }
+    delete[] onHeap;
+    return total;
+}
+
+__declspec(dllexport) std::size_t probe_stl_throw_objects(int selector)
+{
+    std::bad_alloc allocation;
+    std::bad_alloc allocationCopy(allocation);
+    std::bad_array_new_length length;
+    std::bad_array_new_length lengthCopy(length);
+    std::bad_optional_access absent;
+    std::bad_optional_access absentCopy(absent);
+    std::exception plain;
+    std::exception plainCopy(plain);
+    /* Deleting through a base pointer is what emits the scalar deleting
+       destructors, which are residue on the x86 side of both families. */
+    std::exception *owned = new std::bad_alloc();
+    std::exception *ownedLength = new std::bad_array_new_length();
+    std::size_t total = 0;
+
+    total += strlen(allocationCopy.what());
+    total += strlen(lengthCopy.what());
+    total += strlen(absentCopy.what());
+    total += strlen(plainCopy.what());
+    total += strlen(owned->what());
+    total += strlen(ownedLength->what());
+    delete owned;
+    delete ownedLength;
+    if (selector) {
+        throw allocationCopy;
+    }
+    return total;
+}
+
+__declspec(dllexport) std::size_t probe_stl_throw_helpers(const wchar_t *text,
+                                                          std::size_t where)
+{
+    /* _Xlen_string, _String_val::_Xran, _Throw_tree_length_error,
+       _Throw_bad_array_new_length and _Throw_bad_optional_access are
+       out-of-line throwers the headers call, and they only exist in an image
+       that can reach them. */
+    std::wstring wide(text);
+    std::optional<std::wstring> maybe;
+    std::size_t total = 0;
+
+    try {
+        total += wide.substr(where, 4).size();
+        total += (std::size_t)wide.at(where);
+        total += maybe.value().size();
+    } catch (const std::out_of_range &) {
+        total += 1;
+    } catch (const std::bad_optional_access &) {
+        total += 2;
+    } catch (const std::length_error &) {
+        total += 3;
+    } catch (const std::bad_alloc &) {
+        total += 4;
+    }
+    return total;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# MSVC only. ATL's module objects, again - but with several call sites this
+# time.
+#
+# _PROBE_ATL_COM's probe_atl_modules already builds a CAtlWinModule and a
+# CAtlComModule, and on x86 that was enough: AtlWinModuleTerm and
+# CAtlWinModule::Term are both in VX-API x86's removed list. On x64 they are
+# not, and ~CAtlWinModule is in neither. One local object is one call site,
+# and /O2 inlines a destructor it can only reach once; VX-API reaches these
+# from many places and therefore keeps an out-of-line copy. This is the same
+# problem, and the same fix, as the MinGW builtin trap: give the compiler no
+# single obvious place to put the body.
+#
+# Separate from _PROBE_ATL_COM because that probe works and removed 287
+# functions from VX-API x64; nothing here is worth risking it for.
+_PROBE_ATL_MODULES = """\
+#include <windows.h>
+#include <atlbase.h>
+
+__declspec(dllexport) HINSTANCE probe_atl_modules_first(void)
+{
+    ATL::CAtlWinModule window;
+    ATL::CAtlComModule com;
+
+    (void)window;
+    (void)com;
+    return ATL::_AtlBaseModule.GetModuleInstance();
+}
+
+__declspec(dllexport) HINSTANCE probe_atl_modules_second(int which)
+{
+    ATL::CAtlWinModule window;
+    ATL::CAtlComModule com;
+
+    (void)com;
+    (void)window;
+    return ATL::_AtlBaseModule.GetHInstanceAt(which);
+}
+
+__declspec(dllexport) int probe_atl_modules_third(HINSTANCE instance)
+{
+    ATL::CAtlWinModule window;
+
+    (void)window;
+    return ATL::_AtlBaseModule.AddResourceInstance(instance) ? 1 : 0;
+}
+
+__declspec(dllexport) int probe_atl_modules_fourth(HINSTANCE instance)
+{
+    ATL::CAtlWinModule window;
+    ATL::CAtlComModule com;
+
+    com.Term();
+    (void)window;
+    return ATL::_AtlBaseModule.RemoveResourceInstance(instance) ? 1 : 0;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# MSVC only, and the riskiest thing in this file, which is why it is four
+# lines in a translation unit of its own.
+#
+# ATL::CComTypeInfoHolder::stringdispid's destructor and its vector deleting
+# destructor are in both VX-API artefacts and nothing else in this file can
+# reach them: stringdispid holds a CComBSTR, CComTypeInfoHolder deletes an
+# array of them, and that array delete is also a second source of
+# `eh vector destructor iterator' and __ArrayUnwind.
+#
+# CComTypeInfoHolder is a public-data helper with no user-declared
+# constructor, so `= {}` initialises it whether ATL's headers make it an
+# aggregate or not. If Cleanup() turns out not to be reachable in some
+# toolset this unit fails to build, crt_glue warns, and the cost is these two
+# functions rather than the rest of ATL.
+_PROBE_ATL_TYPEINFO = """\
+#include <windows.h>
+#include <atlbase.h>
+#include <atlcom.h>
+
+__declspec(dllexport) int probe_atl_type_info(int twice)
+{
+    ATL::CComTypeInfoHolder holder = {};
+    ATL::CComTypeInfoHolder other = {};
+
+    holder.Cleanup();
+    if (twice) {
+        other.Cleanup();
+    }
+    return twice;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# MSVC only. One function, because CComPtr is instantiated per interface and
+# BlackBone's surviving instantiation is over ICLRMetaHost, which lives in
+# the Windows SDK's metahost.h rather than in ATL.
+_PROBE_ATL_METAHOST = """\
+#include <windows.h>
+#include <atlbase.h>
+#include <metahost.h>
+
+__declspec(dllexport) int probe_atl_metahost(int held)
+{
+    ATL::CComPtr<ICLRMetaHost> host;
+    ATL::CComPtr<ICLRRuntimeInfo> runtime;
+
+    (void)held;
+    return !host && !runtime ? 0 : 1;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# MSVC only. The wide half of the C runtime, which the narrow probe never
+# referenced.
+#
+# swprintf_s and wmemcmp are not library exports: the UCRT headers define
+# them inline, so a copy is emitted into whatever object calls them, and
+# VX-API and BlackBone both carry such a copy. _vfwprintf_l and
+# __stdio_common_vfwprintf arrive with any wide formatted output.
+#
+# Taking the address is the same trick the narrow probe uses, and for the
+# same reason: /O2 implies /Oi, and an inline the compiler can see through is
+# an inline the baseline never gets a body for.
+_PROBE_MSVCRT_WIDE = """\
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <windows.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <wchar.h>
+
+typedef void (*probe_symbol)(void);
+
+__declspec(dllexport) probe_symbol probe_msvcrt_wide_symbols[] = {
+    (probe_symbol)wmemcmp,
+    (probe_symbol)wmemcpy,
+    (probe_symbol)wmemmove,
+    (probe_symbol)wmemset,
+    (probe_symbol)wmemchr,
+    (probe_symbol)wcsncpy,
+    (probe_symbol)wcsrchr,
+    (probe_symbol)wcstoul,
+    (probe_symbol)_wcsicmp,
+    (probe_symbol)_wcsnicmp,
+};
+
+__declspec(dllexport) int probe_msvcrt_wide_format(const wchar_t *text,
+                                                   int value, ...)
+{
+    wchar_t wide[260];
+    char narrow[260];
+    va_list arguments;
+    int result;
+
+    va_start(arguments, value);
+    result = vfwprintf(stderr, text, arguments);
+    va_end(arguments);
+    result += swprintf_s(wide, 260, L"%s %d", text, value);
+    result += _snwprintf_s(wide, 260, 259, L"%s", text);
+    result += fwprintf(stderr, L"%s %d", wide, value);
+    result += sprintf_s(narrow, 260, "%d", value);
+    result += (int)wcsnlen(wide, 260);
+    return result;
+}
+
+__declspec(dllexport) int probe_msvcrt_wide_frames(const wchar_t *text)
+{
+    /* A second /GS frame shape, in its own translation unit. The narrow
+       probe's __security_check_cookie never matched the artefacts' copy and
+       nothing measurable from the committed data says why - VX-API is built
+       with the probe's own flags and still carries it - so this is a second
+       attempt rather than a change to a probe that does work. */
+    wchar_t buffer[1024];
+    int counts[64];
+    int index;
+    int total = 0;
+
+    for (index = 0; index < 64; ++index) {
+        counts[index] = index;
+    }
+    wcsncpy(buffer, text, 1023);
+    buffer[1023] = L'\\0';
+    for (index = 0; index < 64; ++index) {
+        total += counts[index] + (int)buffer[index];
+    }
+    return total;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
 
 def _msvc_probes(toolchain):
     """The MSVC-only half of the baseline.
@@ -902,18 +1660,48 @@ def _msvc_probes(toolchain):
          ["-shared", "/MD", "/EHsc", "ole32.lib", "oleaut32.lib"]),
         (toolchain.cxx, "probe_atl_throw.cpp", _PROBE_ATL_THROW,
          ["-shared", "/MD", "/EHsc"]),
+        (toolchain.cxx, "probe_atl_modules.cpp", _PROBE_ATL_MODULES,
+         ["-shared", "/MD", "/EHsc"]),
+        (toolchain.cxx, "probe_atl_typeinfo.cpp", _PROBE_ATL_TYPEINFO,
+         ["-shared", "/MD", "/EHsc", "ole32.lib", "oleaut32.lib"]),
+        (toolchain.cxx, "probe_atl_metahost.cpp", _PROBE_ATL_METAHOST,
+         ["-shared", "/MD", "/EHsc"]),
+        (toolchain.cc, "probe_msvcrt_wide.c", _PROBE_MSVCRT_WIDE,
+         ["-shared", "/MD"]),
     ]
     # Which templates the STL headers instantiate depends on the language
     # version, and the two recipes disagree: vxapi.py builds /std:c++20 and
     # BlackBone's own Release(DLL) project asks for /std:c++latest. Both are
     # measured and unioned rather than one being guessed at.
+    parts = (("seq", _PROBE_STL_SEQ),
+             ("assoc", _PROBE_STL_ASSOC),
+             ("func", _PROBE_STL_FUNC),
+             ("grow", _PROBE_STL_GROW),
+             ("hash", _PROBE_STL_HASH),
+             ("tree", _PROBE_STL_TREE),
+             ("throw", _PROBE_STL_THROW))
     for standard, suffix in (("/std:c++20", "20"), ("/std:c++latest", "latest")):
-        for part, code in (("seq", _PROBE_STL_SEQ),
-                           ("assoc", _PROBE_STL_ASSOC),
-                           ("func", _PROBE_STL_FUNC)):
+        for part, code in parts:
             probes.append((toolchain.cxx,
                            "probe_stl_%s_%s.cpp" % (part, suffix), code,
                            ["-shared", "/MD", "/EHsc", standard]))
+    # And once more under /GL, which BlackBone's Release(DLL) uses and this
+    # probe otherwise does not. Whether it matters is an open question: 163
+    # functions were filtered out of BlackBone x64 with a probe built without
+    # it, so /GL plainly does not make matching impossible, but the bodies
+    # still in the residue are the *large* ones, which are exactly where a
+    # different inlining decision would show. Measuring costs seven more
+    # compilations and cannot lose anything - crt_glue maps a name to a set
+    # of PicHashes, so a second flavour only ever adds members to that set.
+    #
+    # /std:c++latest only, because /GL is BlackBone's setting and BlackBone
+    # is the /std:c++latest recipe; VX-API is /std:c++20 and has no /GL.
+    # /LTCG is not passed: cl hands it to the linker itself for /GL objects,
+    # and it is a linker flag that would be spliced in front of /link here.
+    for part, code in parts:
+        probes.append((toolchain.cxx,
+                       "probe_stl_%s_gl.cpp" % part, code,
+                       ["-shared", "/MD", "/EHsc", "/std:c++latest", "/GL"]))
     return probes
 
 
@@ -1005,7 +1793,8 @@ def crt_glue(toolchain_id):
                  if name.startswith(("probe_atl_", "_probe_atl_",
                                      "probe_msvcrt_", "_probe_msvcrt_",
                                      "probe_stl_", "_probe_stl_",
-                                     "ProbeInterface", "ProbeImplementation"))]:
+                                     "ProbeInterface", "ProbeImplementation",
+                                     "ProbeArrayElement"))]:
         glue.pop(name, None)
     return glue
 
