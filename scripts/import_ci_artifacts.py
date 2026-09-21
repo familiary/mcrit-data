@@ -196,11 +196,12 @@ def resolve_run(repo, token, run_id=None, branch=None, commit=None):
                 raise ImportProblem(
                     "run %s has not finished (status %r); its artefacts are "
                     "incomplete" % (run_id, run.get("status")))
-            LOGGER.warning(
-                "run %s concluded %r, not success. Importing it anyway "
-                "because it was named explicitly - but it built less than it "
-                "was asked to, so expect fewer artefacts than recipes.",
-                run_id, conclusion)
+            # This module prints rather than logs - it has no logger, and
+            # its output is a report a person reads, not a log stream.
+            print("WARNING: run %s concluded %r, not success. Importing it "
+                  "anyway because it was named explicitly - but it built less "
+                  "than it was asked to, so expect fewer artefacts than "
+                  "recipes." % (run_id, conclusion), file=sys.stderr)
         return run
 
     query = "?status=success&per_page=100"
