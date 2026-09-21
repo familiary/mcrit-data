@@ -448,37 +448,51 @@ _PROBE_MSVCRT = """\
 
 typedef void (*probe_symbol)(void);
 
-/* Exported so nothing here can be dropped as unreferenced. */
-__declspec(dllexport) probe_symbol probe_msvcrt_symbols[] = {
-    (probe_symbol)memcpy,
-    (probe_symbol)memmove,
-    (probe_symbol)memset,
-    (probe_symbol)memcmp,
-    (probe_symbol)memchr,
-    (probe_symbol)strlen,
-    (probe_symbol)strcpy,
-    (probe_symbol)strcat,
-    (probe_symbol)strcmp,
-    (probe_symbol)strncmp,
-    (probe_symbol)strncpy,
-    (probe_symbol)strchr,
-    (probe_symbol)strrchr,
-    (probe_symbol)strstr,
-    (probe_symbol)wcslen,
-    (probe_symbol)wcscpy,
-    (probe_symbol)wcscat,
-    (probe_symbol)wcscmp,
-    (probe_symbol)wcsncmp,
-    (probe_symbol)wcschr,
-    (probe_symbol)wcsstr,
-    (probe_symbol)malloc,
-    (probe_symbol)calloc,
-    (probe_symbol)realloc,
-    (probe_symbol)free,
-    (probe_symbol)qsort,
-    (probe_symbol)bsearch,
-    (probe_symbol)abort,
-};
+/* Exported so nothing here can be dropped as unreferenced.
+
+   Filled by a function rather than initialised where it is declared, which
+   is not a style choice: cl's C frontend rejects a cast function pointer as
+   a file-scope initializer with "error C2099: initializer is not a
+   constant", so the whole translation unit failed to compile - on every run
+   this probe has ever been part of. Taking the addresses in a function is
+   C-legal, and it defeats the builtin fold for the same reason the
+   file-scope version was meant to: the address of the real memcpy is what
+   ends up in the array, so the linker has to bring its body in. */
+__declspec(dllexport) probe_symbol probe_msvcrt_symbols[64];
+
+__declspec(dllexport) void probe_msvcrt_take_addresses(void)
+{
+    probe_symbol *out = probe_msvcrt_symbols;
+
+    *out++ = (probe_symbol)memcpy;
+    *out++ = (probe_symbol)memmove;
+    *out++ = (probe_symbol)memset;
+    *out++ = (probe_symbol)memcmp;
+    *out++ = (probe_symbol)memchr;
+    *out++ = (probe_symbol)strlen;
+    *out++ = (probe_symbol)strcpy;
+    *out++ = (probe_symbol)strcat;
+    *out++ = (probe_symbol)strcmp;
+    *out++ = (probe_symbol)strncmp;
+    *out++ = (probe_symbol)strncpy;
+    *out++ = (probe_symbol)strchr;
+    *out++ = (probe_symbol)strrchr;
+    *out++ = (probe_symbol)strstr;
+    *out++ = (probe_symbol)wcslen;
+    *out++ = (probe_symbol)wcscpy;
+    *out++ = (probe_symbol)wcscat;
+    *out++ = (probe_symbol)wcscmp;
+    *out++ = (probe_symbol)wcsncmp;
+    *out++ = (probe_symbol)wcschr;
+    *out++ = (probe_symbol)wcsstr;
+    *out++ = (probe_symbol)malloc;
+    *out++ = (probe_symbol)calloc;
+    *out++ = (probe_symbol)realloc;
+    *out++ = (probe_symbol)free;
+    *out++ = (probe_symbol)qsort;
+    *out++ = (probe_symbol)bsearch;
+    *out++ = (probe_symbol)abort;
+}
 
 __declspec(dllexport) int probe_msvcrt_frames(const char *text, int value)
 {
@@ -1751,14 +1765,29 @@ _PROBE_ATL_TYPEINFO = """\
 #include <atlbase.h>
 #include <atlcom.h>
 
+/* Cleanup() is deliberately not called any more, and this probe is weaker
+   for it. v143's ATL declares CComTypeInfoHolder::Cleanup with at least one
+   parameter - atlcom.h:4720 - so the two calls that used to be here failed
+   with "error C2660: function does not take 0 arguments" and took the whole
+   translation unit with them, on every run this probe has ever been part
+   of. The signature could not be checked from the Linux container these
+   probes are written on, and guessing one costs a CI round per guess, so
+   what is left anchors the type without calling into it.
+
+   That means the CComTypeInfoHolder bodies are still unmeasured and still
+   land under whichever family links ATL. Restoring a real call is a job for
+   whoever next has atlcom.h in front of them; GetTI(LCID) is the obvious
+   candidate. Kept rather than deleted so the intent, and the gap, stay
+   recorded. */
 __declspec(dllexport) int probe_atl_type_info(int twice)
 {
     ATL::CComTypeInfoHolder holder = {};
     ATL::CComTypeInfoHolder other = {};
+    static volatile void *sink;
 
-    holder.Cleanup();
+    sink = &holder;
     if (twice) {
-        other.Cleanup();
+        sink = &other;
     }
     return twice;
 }
