@@ -111,6 +111,33 @@ def _lambda_of(name):
     return match.group(0) if match and name.endswith("::operator()") else None
 
 
+# Standard library functions whose lambda argument can only have come from
+# standard library source, which is the only thing that makes a host name
+# evidence about a lambda at all.
+#
+# The distinction is not "the host is a std:: name" - that was the first
+# version of this rule and it was wrong. MSVC emits an instantiation of
+# std::invoke, std::move, std::forward, std::_Pass_fn, std::remove_if,
+# std::find_if, std::unique_ptr's deleter and std::function's wrapper for
+# *whatever callable it is handed*, so those names say who instantiated the
+# lambda, not who wrote it. Keyed on them, this rule marked 707 lambda ids
+# standard library across this corpus, 589 of which also carry a project
+# host name - among them abseil's own lambda over its own VModuleInfo type,
+# hosted by std::remove_if, and six abseil call_once lambdas that
+# absl::base_internal::CallOnceImpl names and std::forward launders. That is
+# exactly the misattribution the whole deep check exists to report.
+#
+# What is left is the narrow case that is real evidence: an *internal*
+# member that a caller cannot hand a lambda to. _Reallocate_grow_by is a
+# private basic_string member, called only from append, insert, replace,
+# resize and push_back with lambdas written in <xstring>, so a lambda
+# appearing in its name is standard library source by construction.
+#
+# Add to this list only with the same argument, and only with a measurement:
+# a host that any user callable can reach belongs nowhere near it.
+_STDLIB_LAMBDA_HOSTS = ("::_Reallocate_grow_by<",)
+
+
 def stdlib_lambda_ids(names):
     """Lambda ids that some standard library symbol carries in its own name.
 
@@ -127,9 +154,12 @@ def stdlib_lambda_ids(names):
 
         std::basic_string<char,...>::_Reallocate_grow_by<<lambda_319d5e08...>,char>
 
-    and that name is a ``std::`` one by the same test every other symbol is
-    judged by. A lambda whose only appearance is the bare ``operator()``
-    stays unexplained and stays a leakage candidate.
+    But only because of *which* ``std::`` function that is, not because it is
+    a ``std::`` one - see ``_STDLIB_LAMBDA_HOSTS`` for why keying on the
+    namespace alone launders a project's own lambdas wholesale. A lambda
+    whose only appearance is the bare ``operator()``, or which only ever
+    turns up inside a template any caller could have instantiated, stays
+    unexplained and stays a leakage candidate.
 
     Measured over this corpus: every one of the six lambdas that appears bare
     in three or more families has exactly one such host name, and all six are
@@ -139,6 +169,8 @@ def stdlib_lambda_ids(names):
     hosts = set()
     for name in names:
         if _lambda_of(name) or not _is_stdlib_symbol(name):
+            continue
+        if not any(host in name for host in _STDLIB_LAMBDA_HOSTS):
             continue
         hosts.update(_LAMBDA.findall(name))
     return hosts

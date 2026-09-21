@@ -492,11 +492,43 @@ class ClassifyCollisionTest(unittest.TestCase):
                          validate.LEAKAGE)
 
     def test_a_lambda_only_a_project_symbol_names_is_not_excused(self):
+        """And the std:: adapters MSVC emits beside it must not excuse it.
+
+        The first version of this test passed a project host alone, which
+        pinned nothing: MSVC emits std::forward and std::invoke next to
+        absl::base_internal::CallOnceImpl every time, and keyed on the
+        namespace alone those laundered the lambda. Six real abseil
+        call_once lambdas were excused that way.
+        """
         from corpus import validate
 
-        host = ("google::protobuf::internal::CallOnceInitialize"
-                "<<lambda_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa> >")
+        names = [
+            "google::protobuf::internal::CallOnceInitialize"
+            "<<lambda_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa> >",
+            "std::forward<<lambda_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa> >",
+            "std::invoke<<lambda_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa> >",
+        ]
         bare = "<lambda_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa>::operator()"
+        self.assertEqual(validate.stdlib_lambda_ids(names), set())
+        self.assertEqual(
+            validate.classify_collision([bare],
+                                        validate.stdlib_lambda_ids(names)),
+            validate.LEAKAGE)
+
+    def test_a_project_lambda_passed_to_a_std_algorithm_is_not_excused(self):
+        """abseil's own lambda over its own type, hosted by std::remove_if.
+
+        Taken from data/abseil: a public algorithm template takes whatever
+        callable it is handed, so its instantiation says who *used* the
+        lambda and nothing about who wrote it.
+        """
+        from corpus import validate
+
+        host = ("std::remove_if<std::_Vector_iterator<std::_Vector_val<"
+                "std::_Simple_types<absl::lts_20250127::log_internal::"
+                "`anonymous namespace'::VModuleInfo> > >,"
+                "<lambda_05587629fa8d10fb5f42977c40063bb4> >")
+        bare = "<lambda_05587629fa8d10fb5f42977c40063bb4>::operator()"
         self.assertEqual(validate.stdlib_lambda_ids([host]), set())
         self.assertEqual(
             validate.classify_collision([bare],
