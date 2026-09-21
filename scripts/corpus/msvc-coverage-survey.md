@@ -11,6 +11,40 @@ existing recipe or from general knowledge that I did not verify against a file.
 
 ---
 
+## 0a. Corrections made to this survey after it was written
+
+Two entries below were checked again while the recipes were being written,
+and one of them was wrong.
+
+**jemalloc is not feasible on the runner, and this survey said it was.**
+Section 2 claims three overrides in a props file are all that is needed.
+That is not the blocker. `msvc/ReadMe.txt` step 5 requires
+`sh -c "CC=cl ./autogen.sh"` *before* the solution can be opened: at tag
+5.3.0 the tree ships `configure.ac` and no `configure`, and
+`include/jemalloc/` holds only `.h.in` templates and `.sh` generators. The
+vcxproj includes `..\..\..\..\include`, i.e. headers that do not exist
+until autoconf and configure have run. Upstream's own `.appveyor.yml`
+confirms the shape - MSYS2, `autoconf`, `./configure`, `mingw32-make`, with
+MSVC only selecting vcvarsall. So an MSVC jemalloc needs autoconf on
+windows-2022: the same class of problem as OpenSSL needing NASM, in a
+family this survey rates low-medium value. **Dropped.**
+
+Two smaller corrections to the same entry: the Release (DynamicLibrary)
+configurations do not set `RuntimeLibrary` at all - `MultiThreaded` appears
+only in `Release-static`, and MSBuild's Release default is already
+`MultiThreadedDLL` - and `GenerateDebugInformation` is already `true` in
+every Release config. Two of the three claimed overrides are unnecessary.
+
+**mbedTLS's open question is settled, and the answer was no.** Section 2
+records that it was not verified whether mbedTLS's CMake produces usable
+DLLs under MSVC. It does not on its own: there is no `__declspec(dllexport)`
+anywhere in the tree and nothing sets `WINDOWS_EXPORT_ALL_SYMBOLS`. Under
+MinGW `ld` auto-exports and hides this; under MSVC `mbedcrypto.dll` would
+export nothing, produce no import library, and the `mbedx509` link would
+fail. `-DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON` is what makes the build exist.
+
+---
+
 ## 0. Corrections to the premise
 
 Two numbers in the brief are slightly off, and the difference matters for planning.
