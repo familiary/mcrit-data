@@ -18,6 +18,15 @@ feature flag moves, the artefact itself is different and the reports have to
 be rebuilt - this script would then only paper a new description over old
 disassembly. Use it for corrections to how a build is described, never for
 corrections to how it is performed.
+
+That distinction is easy to lose because ``--check`` cannot tell the two
+apart; it reports a ``build_flags`` string that no longer matches the recipe
+either way. A live example: adding ``/INCREMENTAL:NO`` to seven MSVC link
+lines made ``--check`` report 17 ``build_flags`` fields as out of date, and
+running it would have stamped the new flag onto reports of binaries linked
+without it - the artefacts had to be rebuilt instead. If a recipe edit
+changed what the compiler or linker does, rebuild the family and do not run
+this.
 """
 
 import argparse
@@ -73,12 +82,12 @@ def _toolchain_of(slug, family, version):
     """The toolchain alias a slug names, e.g. "mingw_x64"; None if unreadable.
 
     Recipe.slug builds the stem as
-    ``<family>_<version>_<producer><version>_<arch>_<component>``, and family
-    and component both legitimately contain underscores (nlohmann_json,
-    event_core.dll), so the segment is taken by removing the known prefix
-    rather than by counting underscores from either end. The producer's
-    version digits are dropped because that is how recipes spell a toolchain:
-    the slug says mingw13, the recipe declares mingw_x86.
+    ``<family>_<version>_<producer><producer-version>_<arch>_<component>``,
+    and family and component both legitimately contain underscores
+    (nlohmann_json, event_core.dll), so the segment is taken by removing the
+    known prefix rather than by counting underscores from either end. The
+    producer's version digits are dropped because that is how recipes spell
+    a toolchain: the slug says mingw13, the recipe declares mingw_x86.
     """
     prefix = "%s_%s_" % (family, version)
     if not version or not slug.startswith(prefix):
@@ -101,12 +110,21 @@ def _resolve(index, family, slug, entry):
         # script could no longer refresh any of them. The toolchain in the
         # slug is what separates them.
         #
-        # This only ever narrows. If the slug cannot be read, or names a
-        # toolchain none of the candidates declares - a blob, whose slug is
-        # labelled after the compiler that produced it upstream rather than
-        # the toolchain that extracted it - the ambiguity is reported as
-        # before rather than resolved by guessing.
+        # This only ever narrows: a slug that cannot be read, or that names a
+        # toolchain none of the candidates declares, is reported as ambiguous
+        # exactly as before rather than resolved by guessing.
+        #
+        # A blob is excluded from narrowing outright, which is not the same
+        # thing and was got wrong once. Recipe.slug labels a blob after the
+        # compiler that produced it upstream, forcing producer="msvc" - and
+        # "msvc" is a real toolchain alias, so such a slug parses to
+        # msvc_x64 and would narrow happily onto whichever recipe declares
+        # MSVC. It reads as a successful match and would attach that
+        # recipe's build_flags. Nothing breaks today only because each blob
+        # family has exactly one recipe; that is not a property to rely on.
         wanted = _toolchain_of(slug, family, version)
+        if any(a.is_blob for _, recipe in candidates for a in recipe.artifacts):
+            wanted = None
         narrowed = [(name, recipe) for name, recipe in candidates
                     if wanted in {re.sub(r"^([a-z]+)\d+_", r"\1_", t)
                                   for t in recipe.toolchains}]

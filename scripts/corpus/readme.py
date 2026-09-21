@@ -130,16 +130,23 @@ def _compiler_label(entry):
     # architectures are already named in the links themselves.
     #
     # The toolset is named because that is what a reader matching a binary
-    # against this data wants, and it is derived rather than hardcoded: cl
-    # 19.3x and 19.4x are Visual Studio 2022, i.e. v143. A compiler outside
-    # that range - if this ever runs on a newer runner image - falls back to
-    # the bare version rather than claiming a toolset nobody checked.
+    # against this data wants, and it is derived rather than hardcoded. The
+    # rule is toolchain._detect_msvc's, deliberately and not coincidentally:
+    # that function turns the same banner into the "msvc143" in every one of
+    # these filenames, so a second rule here could put a v142 label on a row
+    # of msvc143 files. A version it does not recognise falls back to the
+    # bare number rather than claiming a toolset nobody checked.
     match = re.search(r"Version (\d+)\.(\d+)", compiler)
     if "Microsoft" in compiler and match:
         major, minor = int(match.group(1)), int(match.group(2))
-        toolset = " (Visual Studio 2022, v143)" if (major, minor // 10) == (19, 3) \
-            or (major, minor // 10) == (19, 4) else ""
-        return "MSVC %d.%d%s" % (major, minor, toolset)
+        toolset = {"143": " (Visual Studio 2022, v143)",
+                   "142": " (Visual Studio 2019, v142)",
+                   "141": " (Visual Studio 2017, v141)"}
+        year = ""
+        if major == 19:
+            year = toolset["143" if minor >= 30
+                           else "142" if minor >= 20 else "141"]
+        return "MSVC %d.%d%s" % (major, minor, year)
     return compiler or entry.get("toolchain", "")
 
 

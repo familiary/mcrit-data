@@ -51,40 +51,75 @@ MIN_CROSS_FAMILY_INSTRUCTIONS = 10
 #
 # The symbol check asks "did this build strip its symbols". Counting every
 # function answered a different question, and cryptopp 8.9.0 x86 was refused
-# outright over it at 38% named - a build that had stripped nothing, and
-# whose 7844 named functions are within 3% of what the MinGW build of the
-# same tag names.
+# outright over it at 38% named, with 7844 named functions - within 3% of
+# what the MinGW build of the same tag names.
 #
-# Two kinds of function with no symbol to keep were being counted.
+# Two kinds of function with no symbol to keep were being counted, and it is
+# worth being precise about which of them was a false alarm, because only one
+# was.
 #
-# The first was a defect in the recipes rather than in the check, and is
-# fixed there: seven MSVC links omitted /INCREMENTAL:NO, and an
+# The first was a genuine defect, in the recipes rather than in the check,
+# and is fixed there: seven MSVC links omitted /INCREMENTAL:NO, and an
 # incrementally linked image reaches each function through a table of
 # one-instruction jump thunks. That table is unmistakable once looked at -
 # in nlohmann_json 3.12.0 x64 it is 2866 entries, exactly five bytes apart,
 # running unbroken from base+0x1005, with no other function inside its
-# span. Those artefacts are being rebuilt without it.
+# span. So this ratio was right to be unhappy; it simply could not say why,
+# and it was the only thing in the pipeline that was unhappy at all.
+# assert_not_incrementally_linked now says why, which is what lets this
+# ratio stop trying to.
 #
 # The second is real and stays: x86 C++ exception handling emits an
 # __ehhandler$ or __unwindfunclet$ fragment per function - "mov eax,
 # <scopetable>; jmp <handler>" or "lea ...; jmp ..." - and the PDB records
 # no symbol at those addresses. BlackBone x86 has 795 of them, carrying
-# 2280 of that artefact's 93,948 instructions; BlackBone x64 has none at
-# all and names 1628 of 1628 functions, because x64 unwinding is
-# table-driven. Counting them measures how much C++ a project contains, on
-# which architecture, rather than whether this build was stripped.
+# 1590 instructions between them; BlackBone x64 has no unnamed function at
+# all and names 1628 of 1628, because x64 unwinding is table-driven. The
+# same split shows everywhere the corpus has both architectures of a C++
+# project: 7-Zip 26.03 has 2759 of them on x86 and none on x64, protobuf
+# 21.12 has 3111 and none, abseil 482 and none. Counting them measures how
+# much C++ a project contains, and on which architecture, rather than
+# whether this build was stripped.
 #
-# Three instructions is above both kinds and below anything else: measured
-# over the committed reports, every artefact in the corpus names 100% of
-# the functions at or above it, except BlackBone x86 at 86%. That is a
-# sharper instrument than the raw ratio was, not a weaker one - a build
-# that really did strip its symbols names nothing at any floor.
+# Three instructions is above both kinds and below almost everything else.
+# It is not a clean separator and should not be described as one: measured
+# over the committed reports, the lowest a generated family reaches at that
+# floor is nlohmann_json's MinGW x86 build at 78% (245 of 315) and the
+# lowest MSVC artefact is protobuf 21.12 x86 at 81% (17,479 of 21,466),
+# with BlackBone x86 at 86% only the fourth-worst of the MSVC set. So the
+# margin above a 0.5 gate is about thirty points rather than fifty, which
+# is ample but is not the uniform picture a "100% everywhere" claim would
+# suggest. What the floor buys is that the gate stops varying with how much
+# C++ a project contains; a build that really did strip its symbols names
+# nothing at any floor.
+#
+# It buys that at a cost, and the cost is why the incremental link table
+# above gets a check of its own rather than being left to this ratio: the
+# floor hides any defect whose signature is many short unnamed functions,
+# which is exactly what that defect was. bzip2 and libtomcrypt had been
+# sitting within one point of failing this gate for that reason, and the
+# gate was the only thing in the pipeline that had noticed.
 #
 # Those figures come from the committed reports, i.e. after compiler
-# runtime has been dropped. The check runs before that pass, and glue is
-# almost entirely named, so the ratio it sees is the higher one - the
+# runtime has been dropped. The check runs before that pass, and is_glue
+# can only match a function that has a name, so every function the drop
+# removes is named and the ratio the check sees is the higher one - the
 # numbers above are a lower bound.
 MIN_NAMED_SAMPLE_INSTRUCTIONS = 3
+
+# How long a run of one-instruction jump thunks at a uniform five-byte stride
+# has to be before smdaify calls it an incremental link table and refuses the
+# build. See assert_not_incrementally_linked for what that is and why it gets
+# a check of its own.
+#
+# 32 has margin in both directions and neither is close. The smallest real
+# table measured in this corpus is bzip2's, at 134 entries on x86 and 135 on
+# x64; the largest is cryptopp x64's at 5815. The unaffected artefacts have
+# no unnamed direct-jump functions at all, let alone a consecutive run of
+# them - the one-instruction jumps they do carry are ordinary tail calls,
+# named, and scattered through the image rather than packed at five-byte
+# intervals from its first function.
+MAX_INCREMENTAL_THUNK_RUN = 32
 
 
 def ensure_dirs():

@@ -236,13 +236,15 @@ byte-stable, and a regeneration of unchanged data still shows up as a diff.
 
 ## The MSVC half
 
-Every library family that can be built with MSVC now carries an MSVC
-artefact beside its MinGW one, from the same upstream tag. That is 31
-families and 96 artefacts, built by
+31 families and 96 artefacts are built by
 `.github/workflows/windows-reference-data.yml` on `windows-2022` runners,
-one job per architecture.
+one job per architecture. 28 of those families now carry an MSVC artefact
+beside their MinGW one, from the same upstream tag; the other three -
+VX-API, BlackBone and SysWhispers - are MSVC-only and always were, because
+ATL, the DIA SDK and MASM have no GCC equivalent. SysWhispers is x64 only,
+by its own declaration.
 
-The reason is the one the section below on prebuilts opens with: a MinGW
+The reason is the one the section below on prebuilts turns on: a MinGW
 reference matches a MinGW-built binary well and an MSVC-built one only
 weakly, and most Windows software an analyst meets is MSVC-built. For C
 that gap is narrow - the same source, two code generators - but for C++ it
@@ -251,7 +253,7 @@ thunk shapes and template instantiation all differ. cryptopp, protobuf,
 abseil, re2, nlohmann_json and 7-Zip were the families this mattered most
 for, and they were MinGW-only until now.
 
-**Nothing in the workflow names a recipe or a family.** Each job asks
+**No step of the workflow names a recipe or a family.** Each job asks
 `build_corpus.py list --toolchain msvc_<arch> --names-only` which recipes
 declare the toolchain it has, and `--families-only` which corpus
 directories those recipes file into, so adding a recipe under
@@ -263,30 +265,37 @@ Artefacts are uploaded rather than committed by CI, and come back in with:
 
     python scripts/import_ci_artifacts.py --run <id>
 
-which verifies each one three ways before it touches `data/` - the
-downloaded zip against the sha256 GitHub records for it, each `.smda`
-report against the sha256 it states for its own binary, and each `.mcrit`
-export against the report it was made from - and merges the two jobs'
-provenance per architecture. Nothing about an artefact is taken on trust
-because it arrived from CI.
+which checks each one before it touches `data/` and merges the two jobs'
+provenance per architecture. What it can check end to end is the download:
+the zip is verified against the sha256 GitHub records for it. The binary
+itself is not in the artefact, so its digest cannot be recomputed; what is
+checked instead is that the provenance record, the report inside the `.7z`
+and the sample entry inside the `.mcrit` all name the same digest, the same
+`num_functions` and the same family, version and component - which is what
+a mixed-up or truncated upload breaks - and that the export carries the
+corpus minhash and shingler config hashes. The module's own docstring lists
+all of it. Nothing about an artefact is taken on trust because it arrived
+from CI.
 
 **The glue baseline is measured for MSVC too**, by `corpus/baseline.py`,
 and it has to be: under `/MD` the CRT is imported rather than linked, but
 the C++ half of the runtime - STL template instantiations, ATL, the EH
 machinery - is compiled into every artefact that uses it and would
-otherwise be filed under a library's name. The probe set grew from 15
-translation units to 34 over two rounds for exactly that, and both rounds
+otherwise be filed under a library's name. The MSVC probe set grew from 5
+compilations to 34 over two rounds for exactly that - 19 distinct
+translation units, seven of which are built three ways - and both rounds
 were found the same way the MinGW ones were: by asking `validate --deep`
 what the surviving cross-family hashes were called. What made the MSVC
 rounds harder than the MinGW ones is that MSVC instantiates a member
 template on the *argument's* category and width, so a probe calling
 `emplace(wstring, 2u)` emits a different symbol than a library calling
 `emplace(wstring, someUnsignedLong)`, and `is_glue` matches on the symbol
-name as well as the PicHash. 121 of BlackBone's 124 residual names turned
-out never to have been emitted by the first probe at all.
+name as well as the PicHash. Of the 124 names in BlackBone x64's residue
+that a probe could reach at all, 121 turned out never to have been emitted
+by the first probe.
 
-**`/INCREMENTAL:NO` on every MSVC link**, which the first round of these
-recipes did not have and needed. `link /DEBUG` implies `/INCREMENTAL`, and
+**`/INCREMENTAL:NO` on every MSVC link that does not already inherit
+it**, which the first round of these recipes did not have and needed. `link /DEBUG` implies `/INCREMENTAL`, and
 the `/OPT:NO*` forms these recipes pass do not suppress it - only
 `/OPT:REF`, `/OPT:ICF` and `/OPT:ORDER` are documented to. An incrementally
 linked image reaches each function through a table of one-instruction jump
@@ -302,9 +311,14 @@ the corpus was calling a function was a thunk: 4882 of libcrypto x86's
 Nothing else was: the CMake recipes inherit `/INCREMENTAL:NO` from CMake's
 own Release default, the MSBuild ones get it from their project files,
 VX-API's `/FORCE:UNRESOLVED` makes link.exe ignore `/INCREMENTAL`
-altogether, and SysWhispers passes no `/DEBUG` so nothing is implied. The
-one-instruction jumps that remain in the unaffected artefacts are ordinary
-tail calls and are named - 185 in VX-API, 211 in abseil, 149 in libcurl.
+altogether, SysWhispers passes no `/DEBUG` so nothing is implied, and
+7-Zip's nmake build already carries `-INCREMENTAL:NO` on the `LFLAGS` line
+its recipe deliberately does not touch (`CPP/Build.mak:133`). Not one of
+the unaffected artefacts contains a single unnamed direct-jump function.
+The one-instruction jumps they do carry are named, and are import thunks
+jumping through the IAT or ordinary tail calls - 185 in VX-API x64, 211 in
+abseil x64, 149 in libcurl 8.15.0 x64, of which 1, 68 and 14 respectively
+are direct.
 
 mbedTLS is the one family whose MSVC shape differs from its MinGW one. It
 cannot be linked as three DLLs by MSVC out of unmodified 3.6.7 source -

@@ -1399,12 +1399,24 @@ class HiddenDirectoriesTest(TempCase):
                          [good])
 
 
+class _Instruction(object):
+    def __init__(self, mnemonic="ret", operands=""):
+        self.mnemonic = mnemonic
+        self.operands = operands
+
+
 class _Function(object):
     """Enough of an SmdaFunction for the symbol-coverage check."""
 
-    def __init__(self, num_instructions, function_name=""):
+    def __init__(self, num_instructions, function_name="", offset=0,
+                 instructions=None):
         self.num_instructions = num_instructions
         self.function_name = function_name
+        self.offset = offset
+        self._instructions = instructions or [_Instruction()]
+
+    def getInstructions(self):
+        return self._instructions
 
 
 class _Report(object):
@@ -1414,6 +1426,11 @@ class _Report(object):
 
     def getFunctions(self):
         return self._functions
+
+
+def _thunk(offset):
+    """One unnamed function that is a single direct jump, as an ILT entry is."""
+    return _Function(1, "", offset, [_Instruction("jmp", "0x401000")])
 
 
 class SymbolCoverageTest(unittest.TestCase):
@@ -1465,8 +1482,105 @@ class SymbolCoverageTest(unittest.TestCase):
         # libtomcrypt sets this: its names come from the export table.
         self._check([_Function(40) for _ in range(10)], ratio=0)
 
-    def test_a_report_with_nothing_above_the_floor_is_not_divided_by_zero(self):
-        self._check([_Function(1) for _ in range(10)])
+    def test_a_report_with_nothing_above_the_floor_is_refused(self):
+        """Not a division guard: a stub build has to fail, not pass.
+
+        MIN_USEFUL_FUNCTIONS admits eight functions, so a truncated build
+        whose every function is one instruction reaches here, and returning
+        would turn the gate off in the case it exists for.
+        """
+        with self.assertRaises(Exception) as caught:
+            self._check([_Function(1) for _ in range(10)])
+        self.assertIn("nothing for the symbol check to measure",
+                      str(caught.exception))
+
+    def test_a_ratio_exactly_at_the_threshold_passes(self):
+        """The comparison is >=, so half named is enough. Pins the boundary."""
+        self._check([_Function(40, "named_%d" % i) for i in range(5)]
+                    + [_Function(40) for _ in range(5)])
+
+    def test_one_function_below_the_threshold_fails(self):
+        self.assertRaises(
+            Exception, self._check,
+            [_Function(40, "named_%d" % i) for i in range(4)]
+            + [_Function(40) for _ in range(5)])
+
+    def test_the_check_runs_before_the_glue_is_dropped(self):
+        """Dropping glue lowers the ratio, so the order is load-bearing.
+
+        Glue is almost entirely named, so measuring after the drop would
+        judge a build by how much compiler runtime it linked. Only the call
+        order in smdaify enforces that, and nothing else here would notice
+        if it moved.
+        """
+        import inspect
+        from corpus import smdaify
+
+        body = inspect.getsource(smdaify.smdaify)
+        self.assertLess(body.index("assert_symbols_survived"),
+                        body.index("_drop_crt_glue"))
+
+
+class IncrementalLinkTableTest(unittest.TestCase):
+    """The check that refuses a PE linked with /INCREMENTAL.
+
+    Seven recipes shipped an incremental link table before anyone looked:
+    nlohmann_json x86 carried 2936 one-instruction jump thunks among 5205
+    functions. Nothing in the pipeline reported it - the symbol-coverage
+    ratio merely went quiet, and the instruction floor that ratio now uses
+    would hide it completely - so it needs a check that names it.
+    """
+
+    def _check(self, functions):
+        from corpus import smdaify
+
+        smdaify.assert_not_incrementally_linked(_Report(functions), "x.dll")
+
+    def _table(self, count, start=0x401005, stride=5):
+        return [_thunk(start + i * stride) for i in range(count)]
+
+    def test_a_table_is_refused(self):
+        with self.assertRaises(Exception) as caught:
+            self._check(self._table(200) + [_Function(40, "real")])
+        self.assertIn("incremental link table", str(caught.exception))
+        self.assertIn("/INCREMENTAL:NO", str(caught.exception))
+
+    def test_a_run_one_short_of_the_limit_passes(self):
+        from corpus import config
+
+        self._check(self._table(config.MAX_INCREMENTAL_THUNK_RUN - 1))
+
+    def test_a_run_exactly_at_the_limit_is_refused(self):
+        from corpus import config
+
+        self.assertRaises(Exception, self._check,
+                          self._table(config.MAX_INCREMENTAL_THUNK_RUN))
+
+    def test_scattered_thunks_are_not_a_table(self):
+        """Many thunks, no run: what a tail-call-heavy image looks like."""
+        self._check([_thunk(0x401000 + i * 0x40) for i in range(500)])
+
+    def test_named_jumps_are_not_counted(self):
+        """abseil's 1-instruction jumps are tail calls and carry names."""
+        self._check([_Function(1, "tail_%d" % i, 0x401005 + i * 5,
+                               [_Instruction("jmp", "0x401000")])
+                     for i in range(200)])
+
+    def test_import_thunks_are_not_counted(self):
+        """A jump through the IAT is ordinary and is written as a memory ref."""
+        self._check([_Function(1, "", 0x401005 + i * 5,
+                               [_Instruction("jmp", "dword ptr [0x402000]")])
+                     for i in range(200)])
+
+    def test_a_run_broken_by_a_gap_does_not_accumulate(self):
+        from corpus import config
+
+        half = config.MAX_INCREMENTAL_THUNK_RUN - 1
+        self._check(self._table(half)
+                    + self._table(half, start=0x500000))
+
+    def test_an_empty_report_is_not_a_table(self):
+        self._check([])
 
 
 class _Recipe(object):
@@ -1476,9 +1590,10 @@ class _Recipe(object):
 
 
 class _Artifact(object):
-    def __init__(self, component):
+    def __init__(self, component, is_blob=False):
         self.component = component
         self.build_flags = None
+        self.is_blob = is_blob
 
 
 class ProvenanceToolchainTest(unittest.TestCase):
@@ -1518,17 +1633,31 @@ class ProvenanceToolchainTest(unittest.TestCase):
         self.assertEqual(recipe.toolchains, ["mingw_x86", "mingw_x64"])
 
     def test_a_slug_naming_no_candidate_toolchain_stays_ambiguous(self):
-        """A blob is labelled after its upstream compiler, not the toolchain.
-
-        Narrowing must only ever narrow: guessing here would attach the wrong
-        build_flags to a record that looks refreshed afterwards.
-        """
+        """Narrowing must only ever narrow, never guess."""
         from refresh_provenance import Unmatched
 
         with self.assertRaises(Unmatched):
-            self._resolve("Fam_1.0_clang_x64_f.dll",
+            self._resolve("Fam_1.0_gcc13_x64_f.dll",
                           {"version": "1.0", "component": "f.dll"},
                           self._pair())
+
+    def test_a_blob_is_never_narrowed_by_its_slug(self):
+        """Recipe.slug labels a blob "msvc" whatever toolchain extracted it.
+
+        "msvc" is a real toolchain alias, so such a slug parses to msvc_x64
+        and would narrow onto whichever candidate declares MSVC - reading as
+        a successful match while attaching that recipe's build_flags to a
+        blob it never produced. It has to stay ambiguous instead.
+        """
+        from refresh_provenance import Unmatched
+
+        candidates = [
+            ("Fam_1.0", _Recipe(["mingw_x64"], [_Artifact("b", is_blob=True)])),
+            ("Fam_1.0_msvc", _Recipe(["msvc_x64"], [_Artifact("b")])),
+        ]
+        with self.assertRaises(Unmatched):
+            self._resolve("Fam_1.0_msvc_x64_b",
+                          {"version": "1.0", "component": "b"}, candidates)
 
     def test_an_unreadable_slug_stays_ambiguous(self):
         from refresh_provenance import Unmatched

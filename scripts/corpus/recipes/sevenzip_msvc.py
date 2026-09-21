@@ -64,6 +64,15 @@ The other things read in Build.mak, all of which shape the command below:
     shell32.lib`` are restated here; nothing else in the Format7zF chain adds
     to LIBS.
 
+The same line of Build.mak - ``LFLAGS = $(LFLAGS) -nologo -OPT:REF -OPT:ICF
+-INCREMENTAL:NO`` at :133 - is also why this recipe needs no
+``-INCREMENTAL:NO`` of its own where seven others did. Upstream already
+passes it, LFLAGS is the one macro this recipe deliberately does not touch,
+and the artefacts confirm it: 7-Zip's reports carry no unnamed
+one-instruction jump table, where an incrementally linked image of that size
+would carry thousands. If LFLAGS ever has to be set here, that flag has to
+come with it.
+
 Upstream's LFLAGS carry ``-OPT:REF -OPT:ICF``. The ``-OPT:NOREF -OPT:NOICF``
 at the end of LIBS are there to override them - link.exe takes the last
 occurrence of an option, which is documented behaviour that could not be
