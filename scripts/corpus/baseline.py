@@ -2213,6 +2213,29 @@ def _msvc_probes(toolchain):
         (toolchain.cxx, "probe_msvcrt_eh_gs.cpp", _PROBE_MSVCRT_EH,
          ["-shared", "/MD", "/EHsc", "/O1"]),
     ]
+    # Fourth round, and the same source as probe_msvcrt_helpers.c compiled a
+    # second way, because the third round's conversions measured the wrong
+    # half of the family.
+    #
+    # There are two sets of these helpers. The *3 set takes its argument in
+    # XMM and the *2 set takes it on the x87 stack, and cl chooses by
+    # /arch: at the default /arch:SSE2 a double-to-integer conversion goes
+    # through _ftol3 and friends, which the baseline has had since round two
+    # and which is why round three changed nothing. The leaked names are the
+    # *2 set, which cl emits only with no SSE to fall back on.
+    #
+    # So the conversions are right and only the flag was wrong. The body
+    # that ends up in the image is the CRT's either way - these are library
+    # functions, not generated code - so compiling one probe /arch:IA32 to
+    # make the linker pull them in costs nothing and changes nothing else.
+    #
+    # x86 only: /arch:IA32 is not a valid x64 option, the x64 CRT has no *2
+    # set at all, and none of the seven leaked names appears in an x64
+    # artefact. On x64 this would now fail the run rather than warn.
+    if toolchain.arch == "x86":
+        probes.append(
+            (toolchain.cc, "probe_msvcrt_helpers_x87.c", _PROBE_MSVCRT_HELPERS,
+             ["-shared", "/MD", "/arch:IA32"]))
     # Which templates the STL headers instantiate depends on the language
     # version, and the two recipes disagree: vxapi.py builds /std:c++20 and
     # BlackBone's own Release(DLL) project asks for /std:c++latest. Both are
