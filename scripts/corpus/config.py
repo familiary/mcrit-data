@@ -112,13 +112,24 @@ MIN_NAMED_SAMPLE_INSTRUCTIONS = 3
 # build. See assert_not_incrementally_linked for what that is and why it gets
 # a check of its own.
 #
-# 32 has margin in both directions and neither is close. The smallest real
-# table measured in this corpus is bzip2's, at 134 entries on x86 and 135 on
-# x64; the largest is cryptopp x64's at 5815. The unaffected artefacts have
-# no unnamed direct-jump functions at all, let alone a consecutive run of
-# them - the one-instruction jumps they do carry are ordinary tail calls,
-# named, and scattered through the image rather than packed at five-byte
-# intervals from its first function.
+# 32 sits between two measured populations, and the gap between them is what
+# makes the check safe rather than the threshold itself. Applied to all 392
+# committed reports this tooling generated, it separates them cleanly:
+#
+#   * 21 artefacts carry a table, and they are exactly the ones the seven
+#     recipes without /INCREMENTAL:NO produced - OpenSSL and nlohmann_json
+#     and sqlite3 and Lua four each, bzip2 and libtomcrypt two, cryptopp
+#     x64 one. Their shortest run is 70 (cryptopp x64) and their longest
+#     459 (nlohmann_json 3.11.3 x86).
+#   * the other 371 have a longest run of 18, in protobuf 3.6.1 and 21.12
+#     built with MinGW.
+#
+# So the boundary is 18 against 70 and 32 is in the middle of it. Note what
+# that second line corrects: unaffected artefacts are *not* free of unnamed
+# direct-jump functions - 7-Zip's MinGW x86 reports carry 265 of them,
+# cryptopp's MinGW x64 241, protobuf 3.6.1 x86 107. They are scattered
+# rather than packed, which is the whole point of measuring the run and not
+# the count.
 MAX_INCREMENTAL_THUNK_RUN = 32
 
 

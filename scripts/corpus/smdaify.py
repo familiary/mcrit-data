@@ -224,14 +224,18 @@ def assert_not_incrementally_linked(report, binary_path):
     bzip2 and libtomcrypt had been sitting within one percentage point of
     failing that gate for this reason and nobody had looked.
 
-    The signature is unambiguous and is what was measured on the artefacts
-    the omission produced: a long unbroken run of unnamed single-instruction
-    direct jumps, each exactly five bytes after the last, because that is
-    what a table of ``E9 rel32`` is. In nlohmann_json 3.12.0 x64 the run is
-    2866 entries from base+0x1005 with no other function inside its span.
-    Nothing else in this corpus produces such a run: the unaffected artefacts
-    have no unnamed direct-jump functions at all, and the one-instruction
-    jumps they do have are ordinary tail calls, named, and scattered.
+    The signature is what was measured on the artefacts the omission
+    produced: a long unbroken run of unnamed single-instruction direct
+    jumps, each exactly five bytes after the last, because that is what a
+    table of ``E9 rel32`` is. In nlohmann_json 3.12.0 x64 the run is 2866
+    entries from base+0x1005 with no other function inside its span.
+
+    The run, not the count, is what separates it. Plenty of artefacts carry
+    unnamed direct-jump functions without having a table - 7-Zip's MinGW x86
+    reports carry 265 - but scattered through the image rather than packed.
+    Over all 392 generated reports the longest such run outside an
+    incrementally linked image is 18 and the shortest inside one is 70; see
+    ``MAX_INCREMENTAL_THUNK_RUN`` for the full split.
     """
     thunks = []
     for function in report.getFunctions():
