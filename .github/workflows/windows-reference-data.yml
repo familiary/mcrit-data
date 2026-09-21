@@ -66,6 +66,13 @@ on:
       - scripts/corpus/baseline.py
       - scripts/corpus/smdaify.py
       - scripts/corpus/recipe.py
+      # config.py is in this list for the same reason rather than as a
+      # catch-all: MIN_NAMED_SAMPLE_INSTRUCTIONS decides which functions the
+      # symbol-coverage gate counts, and MIN_USEFUL_FUNCTIONS and
+      # MIN_USEFUL_BLOB_INSTRUCTIONS decide whether an artefact is accepted
+      # at all. Moving one of those without rebuilding would leave the MSVC
+      # families admitted under a rule this branch no longer applies.
+      - scripts/corpus/config.py
       # The recipe and family enumeration the job below depends on lives here.
       - scripts/build_corpus.py
       - .github/workflows/windows-reference-data.yml

@@ -147,6 +147,47 @@ def _drop_crt_glue(report, toolchain_id):
     return removed
 
 
+def assert_symbols_survived(report, binary_path, min_named_ratio):
+    """Refuse a report whose build stripped its symbols.
+
+    MinGW writes a COFF symbol table unless the build strips it, and those
+    symbols are what makes this data comparable to the IDA-with-symbols
+    reports already in the corpus. A build system that strips by default
+    (zlib's win32/Makefile.gcc does) would otherwise quietly yield anonymous
+    reference data, so a symbol-poor report is treated as a build failure.
+
+    Called before runtime glue is dropped: glue is almost entirely named, so
+    removing it lowers the ratio without the build having changed. The
+    question here is whether this build kept its symbols.
+
+    The ratio is taken over functions of at least
+    ``MIN_NAMED_SAMPLE_INSTRUCTIONS`` instructions, for the reason recorded
+    at that constant: the one- and two-instruction fragments MSVC emits for
+    x86 C++ exception handling carry no symbol in any build, so counting them
+    measures how much C++ a project contains rather than whether this build
+    was stripped.
+    """
+    functions = [f for f in report.getFunctions()
+                 if f.num_instructions >= config.MIN_NAMED_SAMPLE_INSTRUCTIONS]
+    if not min_named_ratio or not functions:
+        return
+    named = len([f for f in functions if f.function_name])
+    ratio = named / len(functions)
+    if ratio >= min_named_ratio:
+        return
+    # The counts over every function are reported too. Without them a reader
+    # cannot tell a stripped build from one where the floor was set wrong,
+    # and that is the one distinction this message has to support.
+    raise DisassemblyError(
+        "%s: only %d of %d functions of at least %d instructions carry "
+        "symbols (%.0f%%); the build most likely stripped them - pass "
+        "STRIP=true to the build system. Over every function it is %d of %d."
+        % (binary_path, named, len(functions),
+           config.MIN_NAMED_SAMPLE_INSTRUCTIONS, 100 * ratio,
+           len([f for f in report.getFunctions() if f.function_name]),
+           report.num_functions))
+
+
 def smdaify(binary_path, family, version, component, is_library=True,
             toolchain_id=None, drop_crt_glue=True, filename=None,
             min_named_ratio=0.5, is_blob=False, bitness=None,
@@ -168,23 +209,7 @@ def smdaify(binary_path, family, version, component, is_library=True,
         raise DisassemblyError("SMDA did not finish cleanly for %s: %s"
                                % (binary_path, report.message))
 
-    # MinGW writes a COFF symbol table unless the build strips it, and those
-    # symbols are what makes this data comparable to the IDA-with-symbols
-    # reports already in the corpus. A build system that strips by default
-    # (zlib's win32/Makefile.gcc does) would otherwise quietly yield anonymous
-    # reference data, so treat a symbol-poor report as a build failure.
-    #
-    # Measured before runtime glue is dropped: glue is almost entirely named,
-    # so removing it lowers the ratio without the build having changed. The
-    # question here is whether this build kept its symbols.
-    named = len([f for f in report.getFunctions() if f.function_name])
-    if min_named_ratio and report.num_functions:
-        ratio = named / report.num_functions
-        if ratio < min_named_ratio:
-            raise DisassemblyError(
-                "%s: only %d of %d functions carry symbols (%.0f%%); the build "
-                "most likely stripped them - pass STRIP=true to the build system"
-                % (binary_path, named, report.num_functions, 100 * ratio))
+    assert_symbols_survived(report, binary_path, min_named_ratio)
 
     removed = []
     if drop_crt_glue and toolchain_id:

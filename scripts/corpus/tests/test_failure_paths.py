@@ -1399,5 +1399,171 @@ class HiddenDirectoriesTest(TempCase):
                          [good])
 
 
+class _Function(object):
+    """Enough of an SmdaFunction for the symbol-coverage check."""
+
+    def __init__(self, num_instructions, function_name=""):
+        self.num_instructions = num_instructions
+        self.function_name = function_name
+
+
+class _Report(object):
+    def __init__(self, functions):
+        self._functions = functions
+        self.num_functions = len(functions)
+
+    def getFunctions(self):
+        return self._functions
+
+
+class SymbolCoverageTest(unittest.TestCase):
+    """The gate that refuses a build which stripped its symbols.
+
+    Counting every function made this gate reject MSVC x86 C++ builds that
+    had stripped nothing: cryptopp 8.9.0 named 7844 of 20650 functions and
+    was refused at 38%, while the same source built for x64 named 66%. The
+    difference was one- and two-instruction exception-handling fragments,
+    which carry no symbol in any build. The tests below pin both halves of
+    that: the fragments must not be able to fail a build, and a build that
+    really was stripped still must.
+    """
+
+    def _check(self, functions, ratio=0.5):
+        from corpus import smdaify
+
+        smdaify.assert_symbols_survived(_Report(functions), "x.dll", ratio)
+
+    def test_unnamed_fragments_cannot_fail_a_build_that_kept_its_symbols(self):
+        # The shape nlohmann_json x86 has: every real function named, and
+        # more single-instruction fragments than there are real functions.
+        functions = ([_Function(40, "real_%d" % i) for i in range(10)]
+                     + [_Function(1) for _ in range(30)])
+        self._check(functions)
+
+    def test_a_stripped_build_still_fails(self):
+        functions = [_Function(40) for _ in range(10)]
+        with self.assertRaises(Exception) as caught:
+            self._check(functions)
+        self.assertIn("0 of 10 functions of at least 3 instructions",
+                      str(caught.exception))
+
+    def test_the_message_reports_the_raw_counts_as_well(self):
+        """So a reader can tell a stripped build from a mis-set floor."""
+        functions = [_Function(40) for _ in range(10)] + [_Function(1)]
+        with self.assertRaises(Exception) as caught:
+            self._check(functions)
+        self.assertIn("Over every function it is 0 of 11",
+                      str(caught.exception))
+
+    def test_functions_at_the_floor_are_counted(self):
+        # Three instructions is the floor, so these are real functions and
+        # their missing names are a stripped build.
+        with self.assertRaises(Exception):
+            self._check([_Function(3) for _ in range(10)])
+
+    def test_a_ratio_of_zero_turns_the_check_off(self):
+        # libtomcrypt sets this: its names come from the export table.
+        self._check([_Function(40) for _ in range(10)], ratio=0)
+
+    def test_a_report_with_nothing_above_the_floor_is_not_divided_by_zero(self):
+        self._check([_Function(1) for _ in range(10)])
+
+
+class _Recipe(object):
+    def __init__(self, toolchains, artifacts):
+        self.toolchains = toolchains
+        self.artifacts = artifacts
+
+
+class _Artifact(object):
+    def __init__(self, component):
+        self.component = component
+        self.build_flags = None
+
+
+class ProvenanceToolchainTest(unittest.TestCase):
+    """Resolving an entry to its recipe when two recipes share a version.
+
+    Adding an MSVC recipe beside each MinGW one made (family, version)
+    ambiguous for 189 of this corpus's entries, and refresh_provenance could
+    then refresh none of them - it reported every one as unmatched rather
+    than picking a recipe at random, which was the right refusal but left the
+    script unusable. The toolchain in the slug is what separates them.
+    """
+
+    def _resolve(self, slug, entry, candidates):
+        sys.path.insert(0, os.path.dirname(os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__)))))
+        import refresh_provenance
+
+        index = {("Fam", entry["version"]): candidates}
+        return refresh_provenance._resolve(index, "Fam", slug, entry)
+
+    def _pair(self):
+        return [("Fam_1.0", _Recipe(["mingw_x86", "mingw_x64"],
+                                    [_Artifact("f.dll")])),
+                ("Fam_1.0_msvc", _Recipe(["msvc_x86", "msvc_x64"],
+                                         [_Artifact("f.dll")]))]
+
+    def test_the_slug_picks_the_msvc_recipe(self):
+        recipe, _ = self._resolve("Fam_1.0_msvc143_x64_f.dll",
+                                  {"version": "1.0", "component": "f.dll"},
+                                  self._pair())
+        self.assertEqual(recipe.toolchains, ["msvc_x86", "msvc_x64"])
+
+    def test_the_slug_picks_the_mingw_recipe(self):
+        recipe, _ = self._resolve("Fam_1.0_mingw13_x86_f.dll",
+                                  {"version": "1.0", "component": "f.dll"},
+                                  self._pair())
+        self.assertEqual(recipe.toolchains, ["mingw_x86", "mingw_x64"])
+
+    def test_a_slug_naming_no_candidate_toolchain_stays_ambiguous(self):
+        """A blob is labelled after its upstream compiler, not the toolchain.
+
+        Narrowing must only ever narrow: guessing here would attach the wrong
+        build_flags to a record that looks refreshed afterwards.
+        """
+        from refresh_provenance import Unmatched
+
+        with self.assertRaises(Unmatched):
+            self._resolve("Fam_1.0_clang_x64_f.dll",
+                          {"version": "1.0", "component": "f.dll"},
+                          self._pair())
+
+    def test_an_unreadable_slug_stays_ambiguous(self):
+        from refresh_provenance import Unmatched
+
+        with self.assertRaises(Unmatched) as caught:
+            self._resolve("something-else-entirely",
+                          {"version": "1.0", "component": "f.dll"},
+                          self._pair())
+        self.assertIn("unreadable toolchain", str(caught.exception))
+
+    def test_an_underscore_in_the_family_does_not_shift_the_segment(self):
+        import refresh_provenance
+
+        self.assertEqual(
+            refresh_provenance._toolchain_of(
+                "nlohmann_json_3.12.0_msvc143_x86_nlohmann_json.dll",
+                "nlohmann_json", "3.12.0"),
+            "msvc_x86")
+
+    def test_an_underscore_in_the_component_does_not_either(self):
+        import refresh_provenance
+
+        self.assertEqual(
+            refresh_provenance._toolchain_of(
+                "libevent_2.1.12_mingw13_x64_event_core.dll",
+                "libevent", "2.1.12"),
+            "mingw_x64")
+
+    def test_a_single_candidate_is_still_resolved_without_a_toolchain(self):
+        """The unambiguous case must not start depending on the slug."""
+        recipe, _ = self._resolve(
+            "anything", {"version": "1.0", "component": "f.dll"},
+            [("Fam_1.0", _Recipe(["mingw_x86"], [_Artifact("f.dll")]))])
+        self.assertEqual(recipe.toolchains, ["mingw_x86"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

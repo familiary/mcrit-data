@@ -45,6 +45,38 @@ MIN_USEFUL_BLOB_INSTRUCTIONS = 100
 # well above the floor, so raising it costs no detection.
 MIN_CROSS_FAMILY_INSTRUCTIONS = 10
 
+# Functions shorter than this are left out when judging whether a build kept
+# its symbols. They are not left out of the corpus - only out of that one
+# ratio.
+#
+# The symbol check asks "did this build strip its symbols". Counting every
+# function answered a different question on MSVC x86 C++ builds, and answered
+# it wrongly: nlohmann_json sat at 43% named, BlackBone at 49%, and
+# cryptopp 8.9.0 was refused outright at 38% - while the same source built
+# for x64 names 53%, 100% and 66% of its functions. Nothing was stripped.
+#
+# What separates the two architectures is one- and two-instruction compiler
+# fragments. Of nlohmann_json x86's 2937 unnamed functions, every single one
+# is a single instruction; of BlackBone x86's 932, 795 are two instructions
+# and carry 2280 of that artefact's 93,948 instructions between them. x86
+# C++ exception handling emits these per-function and the PDB records no
+# symbol at their addresses; x64's table-driven unwinding emits none, which
+# is why every C++ family in this corpus shows the gap (7-Zip -23 points,
+# protobuf -24, abseil -14, re2 -13, nlohmann_json -9, BlackBone -51) and
+# every C family shows none at all - libcurl, libxml2, libuv, liblzma,
+# pcre2, libsodium and wolfSSL all name 100% on both architectures.
+#
+# Measured at three instructions, every artefact in this corpus names 100%
+# of its functions except BlackBone x86 at 86%. That is a far sharper
+# instrument than the raw ratio was: a build that really did strip its
+# symbols names nothing at any floor.
+#
+# Those figures are measured on the committed reports, i.e. after compiler
+# runtime has been dropped. The check runs before that pass, and glue is
+# almost entirely named, so the ratio it sees is the higher one - the
+# numbers above are a lower bound.
+MIN_NAMED_SAMPLE_INSTRUCTIONS = 3
+
 
 def ensure_dirs():
     for path in (DOWNLOAD_DIR, SOURCE_DIR, ARTIFACT_DIR, REPORT_DIR):

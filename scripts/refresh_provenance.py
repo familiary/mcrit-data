@@ -23,6 +23,7 @@ corrections to how it is performed.
 import argparse
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -68,14 +69,54 @@ def _pick_artifact(recipe, entry):
                     % (component, len(matching)))
 
 
-def _resolve(index, family, entry):
+def _toolchain_of(slug, family, version):
+    """The toolchain alias a slug names, e.g. "mingw_x64"; None if unreadable.
+
+    Recipe.slug builds the stem as
+    ``<family>_<version>_<producer><version>_<arch>_<component>``, and family
+    and component both legitimately contain underscores (nlohmann_json,
+    event_core.dll), so the segment is taken by removing the known prefix
+    rather than by counting underscores from either end. The producer's
+    version digits are dropped because that is how recipes spell a toolchain:
+    the slug says mingw13, the recipe declares mingw_x86.
+    """
+    prefix = "%s_%s_" % (family, version)
+    if not version or not slug.startswith(prefix):
+        return None
+    rest = slug[len(prefix):].split("_")
+    if len(rest) < 2 or rest[1] not in ("x86", "x64"):
+        return None
+    return "%s_%s" % (re.sub(r"\d+$", "", rest[0]), rest[1])
+
+
+def _resolve(index, family, slug, entry):
     version = entry.get("version")
     candidates = index.get((family, version), [])
     if not candidates:
         raise Unmatched("no recipe produces %s %s" % (family, version))
     if len(candidates) > 1:
-        raise Unmatched("ambiguous: %s %s is produced by %s"
-                        % (family, version, ", ".join(n for n, _ in candidates)))
+        # Every family that gained an MSVC recipe beside its MinGW one has
+        # two recipes for each of its versions, which is 189 of this corpus's
+        # entries - so (family, version) stopped identifying a recipe and the
+        # script could no longer refresh any of them. The toolchain in the
+        # slug is what separates them.
+        #
+        # This only ever narrows. If the slug cannot be read, or names a
+        # toolchain none of the candidates declares - a blob, whose slug is
+        # labelled after the compiler that produced it upstream rather than
+        # the toolchain that extracted it - the ambiguity is reported as
+        # before rather than resolved by guessing.
+        wanted = _toolchain_of(slug, family, version)
+        narrowed = [(name, recipe) for name, recipe in candidates
+                    if wanted in {re.sub(r"^([a-z]+)\d+_", r"\1_", t)
+                                  for t in recipe.toolchains}]
+        if len(narrowed) == 1:
+            candidates = narrowed
+        else:
+            raise Unmatched(
+                "ambiguous: %s %s built by %s is produced by %s"
+                % (family, version, wanted or "an unreadable toolchain",
+                   ", ".join(n for n, _ in candidates)))
     _, recipe = candidates[0]
     return recipe, _pick_artifact(recipe, entry)
 
@@ -102,7 +143,7 @@ def refresh_family(family, path, check=False):
     for slug in sorted(entries):
         entry = entries[slug]
         try:
-            recipe, artifact = _resolve(index, family, entry)
+            recipe, artifact = _resolve(index, family, slug, entry)
         except Unmatched as error:
             problems.append("%s: %s" % (slug, error))
             continue
