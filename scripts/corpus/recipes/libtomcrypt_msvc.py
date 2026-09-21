@@ -108,7 +108,16 @@ _COMPILE_ANCHOR = 'cl /nologo /c /O2 /MD /Zi /Fdtomcrypt.pdb anchor.c'
 # was given. Naming a library in /WHOLEARCHIVE that the command line does
 # not otherwise mention relies on the linker's library search to find it,
 # which is one more thing that can quietly not happen.
-_LINK = ('link /nologo /DLL /DEBUG /Brepro /OPT:NOREF /OPT:NOICF '
+#
+# /INCREMENTAL:NO because /DEBUG implies /INCREMENTAL and the /OPT:NO* forms
+# do not suppress it - only /OPT:REF, /OPT:ICF and /OPT:ORDER are documented
+# to. An incrementally linked image reaches each function through a jump
+# table, and SMDA recovers every one of those one-instruction thunks as a
+# function of its own, unnamed. That was measured on the artefacts this
+# omission produced: 978 of libtomcrypt x86's 2030 functions and 966 of x64's 2017. It is not what a
+# released binary looks like, and it inflates the function count of the
+# family it is filed under.
+_LINK = ('link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF '
          '/WHOLEARCHIVE:tomcrypt.lib /WHOLEARCHIVE:ltm\\tommath.lib '
          '/PDB:libtomcrypt.pdb /OUT:libtomcrypt.dll anchor.obj '
          'tomcrypt.lib ltm\\tommath.lib advapi32.lib')
@@ -151,7 +160,7 @@ RECIPES = {
         build_flags="/O2 /MD /Zi (both libtomcrypt and the bundled "
                     "libtommath), LTC_SOURCE /DUSE_LTM /DLTM_DESC, /W3 for "
                     "libtomcrypt and /Wall /WX- for libtommath (upstream's "
-                    "own levels); /DLL /DEBUG /Brepro /OPT:NOREF /OPT:NOICF "
+                    "own levels); /DLL /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF "
                     "/WHOLEARCHIVE at link",
         # Deliberately left at the default 0.5, unlike the MinGW recipe: the
         # whole argument for this artefact is that a PDB makes it nameable,

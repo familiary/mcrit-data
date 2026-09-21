@@ -76,11 +76,20 @@ _COMPILE = ('cl /nologo /c /O2 /MD /Zi /EHsc /bigobj /std:c++17 /Iinclude '
 # many such pairs, and folding them cost VX-API its StringConcat/StringCopy
 # pair. link /DEBUG is documented to imply both, but the corpus says what it
 # wants rather than relying on that.
-_LINK = ('link /nologo /DLL /DEBUG /Brepro /OPT:NOREF /OPT:NOICF '
+#
+# /INCREMENTAL:NO because /DEBUG implies /INCREMENTAL and the /OPT:NO* forms
+# above do not suppress it - only /OPT:REF, /OPT:ICF and /OPT:ORDER are
+# documented to. An incrementally linked image reaches each function through
+# a jump table, and SMDA recovers every one of those one-instruction thunks
+# as a function of its own, unnamed. That was measured on the artefacts this
+# omission produced: 2936 of nlohmann_json 3.12.0 x86's 5205 functions. It is not
+# what a released binary looks like, and it inflates the function count of
+# the family it is filed under.
+_LINK = ('link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF '
          '/PDB:nlohmann_json.pdb /OUT:nlohmann_json.dll nlohmann_json.obj')
 
 _FLAGS = ("/O2 /MD /Zi /EHsc /bigobj /std:c++17; "
-          "/DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link")
+          "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link")
 
 
 def _nlohmann_msvc(version, git_ref):

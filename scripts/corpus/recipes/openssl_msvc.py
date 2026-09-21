@@ -113,7 +113,22 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 # StringConcat/StringCopy pair, and a crypto library is full of near-twin
 # bodies. link /debug is documented to imply both, but the corpus says what
 # it wants rather than relying on that.
-_LDFLAGS = '"LDFLAGS=/nologo /debug /Brepro /OPT:NOREF /OPT:NOICF"'
+#
+# /INCREMENTAL:NO because /debug implies /INCREMENTAL and the /OPT:NO* forms
+# do not suppress it - only /OPT:REF, /OPT:ICF and /OPT:ORDER are documented
+# to. An incrementally linked image reaches each function through a jump
+# table, and SMDA recovers every one of those one-instruction thunks as a
+# function of its own, unnamed. That was measured on the artefacts this
+# omission produced: 4882 of libcrypto x86's 12,861 functions and 1097 of
+# libssl x86's 3252, the worst of any family here. It is not what a released
+# binary looks like, and it inflates the function count of the family it is
+# filed under.
+#
+# It goes in LDFLAGS rather than anywhere else for the reason the block
+# above gives: LDFLAGS replaces the target's value outright, so every flag
+# this link needs has to be in this one string.
+_LDFLAGS = ('"LDFLAGS=/nologo /debug /Brepro /INCREMENTAL:NO '
+            '/OPT:NOREF /OPT:NOICF"')
 
 # no-asm is the NASM-free configuration described at length above.
 # no-tests matches the MinGW recipe. no-makedepend is upstream's own

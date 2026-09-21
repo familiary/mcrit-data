@@ -50,28 +50,37 @@ MIN_CROSS_FAMILY_INSTRUCTIONS = 10
 # ratio.
 #
 # The symbol check asks "did this build strip its symbols". Counting every
-# function answered a different question on MSVC x86 C++ builds, and answered
-# it wrongly: nlohmann_json sat at 43% named, BlackBone at 49%, and
-# cryptopp 8.9.0 was refused outright at 38% - while the same source built
-# for x64 names 53%, 100% and 66% of its functions. Nothing was stripped.
+# function answered a different question, and cryptopp 8.9.0 x86 was refused
+# outright over it at 38% named - a build that had stripped nothing, and
+# whose 7844 named functions are within 3% of what the MinGW build of the
+# same tag names.
 #
-# What separates the two architectures is one- and two-instruction compiler
-# fragments. Of nlohmann_json x86's 2937 unnamed functions, every single one
-# is a single instruction; of BlackBone x86's 932, 795 are two instructions
-# and carry 2280 of that artefact's 93,948 instructions between them. x86
-# C++ exception handling emits these per-function and the PDB records no
-# symbol at their addresses; x64's table-driven unwinding emits none, which
-# is why every C++ family in this corpus shows the gap (7-Zip -23 points,
-# protobuf -24, abseil -14, re2 -13, nlohmann_json -9, BlackBone -51) and
-# every C family shows none at all - libcurl, libxml2, libuv, liblzma,
-# pcre2, libsodium and wolfSSL all name 100% on both architectures.
+# Two kinds of function with no symbol to keep were being counted.
 #
-# Measured at three instructions, every artefact in this corpus names 100%
-# of its functions except BlackBone x86 at 86%. That is a far sharper
-# instrument than the raw ratio was: a build that really did strip its
-# symbols names nothing at any floor.
+# The first was a defect in the recipes rather than in the check, and is
+# fixed there: seven MSVC links omitted /INCREMENTAL:NO, and an
+# incrementally linked image reaches each function through a table of
+# one-instruction jump thunks. That table is unmistakable once looked at -
+# in nlohmann_json 3.12.0 x64 it is 2866 entries, exactly five bytes apart,
+# running unbroken from base+0x1005, with no other function inside its
+# span. Those artefacts are being rebuilt without it.
 #
-# Those figures are measured on the committed reports, i.e. after compiler
+# The second is real and stays: x86 C++ exception handling emits an
+# __ehhandler$ or __unwindfunclet$ fragment per function - "mov eax,
+# <scopetable>; jmp <handler>" or "lea ...; jmp ..." - and the PDB records
+# no symbol at those addresses. BlackBone x86 has 795 of them, carrying
+# 2280 of that artefact's 93,948 instructions; BlackBone x64 has none at
+# all and names 1628 of 1628 functions, because x64 unwinding is
+# table-driven. Counting them measures how much C++ a project contains, on
+# which architecture, rather than whether this build was stripped.
+#
+# Three instructions is above both kinds and below anything else: measured
+# over the committed reports, every artefact in the corpus names 100% of
+# the functions at or above it, except BlackBone x86 at 86%. That is a
+# sharper instrument than the raw ratio was, not a weaker one - a build
+# that really did strip its symbols names nothing at any floor.
+#
+# Those figures come from the committed reports, i.e. after compiler
 # runtime has been dropped. The check runs before that pass, and glue is
 # almost entirely named, so the ratio it sees is the higher one - the
 # numbers above are a lower bound.

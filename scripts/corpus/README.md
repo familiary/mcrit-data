@@ -234,6 +234,89 @@ So: the *binaries* are reproducible and their recorded digests are stable,
 which is what provenance rests on. The files around them are not
 byte-stable, and a regeneration of unchanged data still shows up as a diff.
 
+## The MSVC half
+
+Every library family that can be built with MSVC now carries an MSVC
+artefact beside its MinGW one, from the same upstream tag. That is 31
+families and 96 artefacts, built by
+`.github/workflows/windows-reference-data.yml` on `windows-2022` runners,
+one job per architecture.
+
+The reason is the one the section below on prebuilts opens with: a MinGW
+reference matches a MinGW-built binary well and an MSVC-built one only
+weakly, and most Windows software an analyst meets is MSVC-built. For C
+that gap is narrow - the same source, two code generators - but for C++ it
+is most of the signal, because name mangling, exception tables, vtable and
+thunk shapes and template instantiation all differ. cryptopp, protobuf,
+abseil, re2, nlohmann_json and 7-Zip were the families this mattered most
+for, and they were MinGW-only until now.
+
+**Nothing in the workflow names a recipe or a family.** Each job asks
+`build_corpus.py list --toolchain msvc_<arch> --names-only` which recipes
+declare the toolchain it has, and `--families-only` which corpus
+directories those recipes file into, so adding a recipe under
+`corpus/recipes/` is the whole change. A recipe that fails costs itself and
+not the wave: the build step records its exit code and lets the rest run,
+and a final step re-prints every failure and fails the job.
+
+Artefacts are uploaded rather than committed by CI, and come back in with:
+
+    python scripts/import_ci_artifacts.py --run <id>
+
+which verifies each one three ways before it touches `data/` - the
+downloaded zip against the sha256 GitHub records for it, each `.smda`
+report against the sha256 it states for its own binary, and each `.mcrit`
+export against the report it was made from - and merges the two jobs'
+provenance per architecture. Nothing about an artefact is taken on trust
+because it arrived from CI.
+
+**The glue baseline is measured for MSVC too**, by `corpus/baseline.py`,
+and it has to be: under `/MD` the CRT is imported rather than linked, but
+the C++ half of the runtime - STL template instantiations, ATL, the EH
+machinery - is compiled into every artefact that uses it and would
+otherwise be filed under a library's name. The probe set grew from 15
+translation units to 34 over two rounds for exactly that, and both rounds
+were found the same way the MinGW ones were: by asking `validate --deep`
+what the surviving cross-family hashes were called. What made the MSVC
+rounds harder than the MinGW ones is that MSVC instantiates a member
+template on the *argument's* category and width, so a probe calling
+`emplace(wstring, 2u)` emits a different symbol than a library calling
+`emplace(wstring, someUnsignedLong)`, and `is_glue` matches on the symbol
+name as well as the PicHash. 121 of BlackBone's 124 residual names turned
+out never to have been emitted by the first probe at all.
+
+**`/INCREMENTAL:NO` on every MSVC link**, which the first round of these
+recipes did not have and needed. `link /DEBUG` implies `/INCREMENTAL`, and
+the `/OPT:NO*` forms these recipes pass do not suppress it - only
+`/OPT:REF`, `/OPT:ICF` and `/OPT:ORDER` are documented to. An incrementally
+linked image reaches each function through a table of one-instruction jump
+thunks, and SMDA recovers every one of those as a function of its own,
+unnamed. The table is unmistakable once looked at: in nlohmann_json 3.12.0
+x64 it is 2866 entries exactly five bytes apart, running unbroken from
+`base+0x1005`, with no other function inside its span.
+
+Seven recipes were affected - nlohmann_json, bzip2, libtomcrypt, OpenSSL,
+cryptopp, Lua and sqlite3 - and at the worst of them roughly half of what
+the corpus was calling a function was a thunk: 4882 of libcrypto x86's
+12,861, 2936 of nlohmann_json x86's 5205, 978 of libtomcrypt x86's 2030.
+Nothing else was: the CMake recipes inherit `/INCREMENTAL:NO` from CMake's
+own Release default, the MSBuild ones get it from their project files,
+VX-API's `/FORCE:UNRESOLVED` makes link.exe ignore `/INCREMENTAL`
+altogether, and SysWhispers passes no `/DEBUG` so nothing is implied. The
+one-instruction jumps that remain in the unaffected artefacts are ordinary
+tail calls and are named - 185 in VX-API, 211 in abseil, 149 in libcurl.
+
+mbedTLS is the one family whose MSVC shape differs from its MinGW one. It
+cannot be linked as three DLLs by MSVC out of unmodified 3.6.7 source -
+four cross-library references are to *data*, and a CMake-generated export
+table supplies only `__imp_` for those, which needs a `__declspec(dllimport)`
+mbedTLS does not have anywhere in its tree. Upstream has had the issue open
+since 2016 and its own MSVC build is a static library. So this recipe builds
+the three static archives and links them whole into one DLL, the way
+cryptopp is built here: component separation is lost, the whole TLS layer is
+kept, and the recipe's docstring records what was read to establish all of
+it.
+
 ## A gap in the existing MinGW coverage
 
 Worth recording because it affects data that is already committed. The
@@ -292,12 +375,13 @@ actually ships.
 
 ## Prefer a prebuilt where upstream publishes one
 
-Everything this tooling builds is one flavour - GCC 13.2, msvcrt, mingw-w64
-headers - while most Windows software analysts meet is MSVC-compiled. A
-MinGW reference matches MinGW-built binaries well and MSVC-built ones only
-weakly, so it is additional coverage, not a substitute. Where upstream or a
-trusted rebuilder ships Windows binaries, harvesting those is both cheaper
-and closer to what is encountered:
+This tooling builds two flavours - GCC 13.2 with msvcrt and mingw-w64
+headers, and MSVC v143 with the DLL runtime - but still only two, each at
+one version, and only for the release configuration a recipe pins. A
+reference matches a binary built the same way well and one built another
+way weakly, so what is here is coverage rather than a substitute for the
+real thing. Where upstream or a trusted rebuilder ships Windows binaries,
+harvesting those is both cheaper and closer to what is encountered:
 
 * **sqlite.org** retains `sqlite-dll-win-{x86,x64}-*.zip` back about fifteen
   years and publishes a SHA3-256 for every file. These are MinGW-built (no

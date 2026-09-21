@@ -41,6 +41,16 @@ _COMPILE = ('for %f in (VX-API\\*.cpp) do @cl /nologo /c /O2 /MD /Zi /std:c++20 
 # /Brepro makes the link reproducible: without it MSVC stamps the PE with
 # the build time, so two runs over identical source produce artefacts
 # with different digests and provenance records that cannot be compared.
+#
+# There is no /INCREMENTAL:NO here, and there does not need to be, which is
+# worth writing down because seven other recipes did need one: /DEBUG implies
+# /INCREMENTAL, and an incrementally linked image reaches each function
+# through a table of one-instruction jump thunks that SMDA recovers as
+# functions in their own right. /FORCE makes link.exe ignore /INCREMENTAL,
+# so this artefact never had one - measured, not assumed: vxapi.dll's only
+# one-instruction jumps are 185 ordinary tail calls, every one of them named.
+# If /FORCE ever stops being load-bearing here, /INCREMENTAL:NO has to
+# arrive in the same edit.
 _LINK = ('link /nologo /DLL /DEBUG /Brepro /OPT:NOREF /OPT:NOICF '
          '/FORCE:UNRESOLVED '
          '/PDB:vxapi.pdb /OUT:vxapi.dll obj\\*.obj '
