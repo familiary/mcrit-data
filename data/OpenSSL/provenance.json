@@ -869,7 +869,7 @@
       "terminate",
       "wcsstr"
     ],
-    "sha256": "f11e475781c78f0c6a573cf1198f53463f586f796a9708d3a251c2904f6ad525",
+    "sha256": "bb74fe38496ed74240607081ef4835adcfb75ca9465ca90c9c542c89a0862787",
     "smda": "data/OpenSSL/x64/smda/OpenSSL_1.1.1w_msvc143_x64_libcrypto.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1281,7 +1281,7 @@
       "time",
       "time"
     ],
-    "sha256": "270470cca1cae49e0a2be2ac5778e89939b7d2bcd1ea5591131cf78aa09a11eb",
+    "sha256": "e89b70fce7f59ef5e3dd059bb8ea80d0c7e3e5d23a04ff83ed1e6b337c5e4ce7",
     "smda": "data/OpenSSL/x86/smda/OpenSSL_1.1.1w_msvc143_x86_libcrypto.7z",
     "smda_version": "4.8.0",
     "source": {
