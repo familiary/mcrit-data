@@ -1436,6 +1436,243 @@ __declspec(dllexport) std::size_t probe_stl_throw_helpers(const wchar_t *text,
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 """
 
+# MSVC only, and the third round. `vector constructor iterator' - the one
+# without the "eh" - is the array helper the probes above never emitted, and
+# it sits in 7-Zip, abseil, cryptopp, protobuf and re2 at once (22
+# instructions on x64) and in abseil, protobuf and re2 on x86 (20).
+#
+# The distinction is measured rather than assumed. _PROBE_STL_THROW's
+# ProbeArrayElement holds a std::wstring, so its constructor can throw and
+# the compiler has to be able to destroy the elements already built: that is
+# `eh vector constructor iterator', and the provenance of all four round-two
+# families shows it (and `eh vector destructor iterator', __ArrayUnwind and
+# the $+0x fragment labels of both) being removed. `vector constructor
+# iterator' is what the compiler emits instead when there is nothing to
+# unwind - either because the element type has no destructor at all, or
+# because its constructor is noexcept - and no probe here had an array of
+# such a type.
+#
+# Both shapes are built because either one alone is an assumption about
+# which rule MSVC applies. The constructors call an out-of-line function so
+# that the array initialisation cannot be folded into a memset, which would
+# leave no helper to emit; that is the same trap as GCC's builtin floor.
+_PROBE_STL_ARRAY = """\
+#include <windows.h>
+#include <cstddef>
+
+__declspec(noinline) unsigned long long probe_stl_array_seed(void)
+{
+    return 1;
+}
+
+__declspec(noinline) unsigned long long probe_stl_array_tag(void) noexcept
+{
+    return 2;
+}
+
+/* No destructor: if the constructor throws there is nothing to unwind, so
+   the plain iterator is used. */
+struct ProbeArrayPlain
+{
+    ProbeArrayPlain() : value(probe_stl_array_seed()), link(0) {}
+
+    unsigned long long value;
+    void *link;
+};
+
+/* A destructor, but a constructor that cannot throw, which is the other way
+   of reaching the same helper. */
+struct ProbeArrayGuarded
+{
+    ProbeArrayGuarded() noexcept : value(probe_stl_array_tag()) {}
+    ~ProbeArrayGuarded() { value = 0; }
+
+    unsigned long long value;
+};
+
+/* A member array is a third emission site, and the one a class with a fixed
+   pool of sub-objects has. */
+struct ProbeArrayHolder
+{
+    ProbeArrayHolder() : count(0) {}
+
+    ProbeArrayPlain members[8];
+    unsigned long long count;
+};
+
+__declspec(dllexport) unsigned long long probe_stl_array_plain(std::size_t count)
+{
+    ProbeArrayPlain onStack[8];
+    ProbeArrayPlain *onHeap = new ProbeArrayPlain[count + 4];
+    ProbeArrayHolder holder;
+    unsigned long long total = 0;
+    std::size_t index;
+
+    for (index = 0; index < 8; ++index) {
+        onStack[index].value += index;
+        total += onStack[index].value;
+    }
+    for (index = 0; index < count + 4; ++index) {
+        onHeap[index].value += index;
+        total += onHeap[index].value;
+    }
+    delete[] onHeap;
+    return total + holder.members[0].value + holder.count;
+}
+
+__declspec(dllexport) unsigned long long probe_stl_array_guarded(std::size_t count)
+{
+    ProbeArrayGuarded onStack[8];
+    ProbeArrayGuarded *onHeap = new ProbeArrayGuarded[count + 4];
+    unsigned long long total = 0;
+    std::size_t index;
+
+    for (index = 0; index < 8; ++index) {
+        onStack[index].value += index;
+        total += onStack[index].value;
+    }
+    for (index = 0; index < count + 4; ++index) {
+        onHeap[index].value += index;
+        total += onHeap[index].value;
+    }
+    /* delete[] of a type with a destructor is what emits
+       `vector destructor iterator', which is already in the baseline from
+       VX-API's side and is kept here so the two helpers stay together. */
+    delete[] onHeap;
+    return total;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# MSVC only, third round. The <xstring> growth lambdas.
+#
+# MSVC gives an unnamed lambda a name derived from its source, so the same
+# `<lambda_HEX>` appearing in nlohmann_json, protobuf, re2 and abseil - which
+# share no code - means a lambda out of a header all four include. Reading
+# the committed reports back identifies it exactly, because the function that
+# takes the lambda carries it in its own name:
+#
+#     std::basic_string<char,...>::_Reallocate_grow_by<
+#         <lambda_65e615be2a453ca0576c979606f46740>,char const *,unsigned __int64>
+#
+# The types after the lambda are the arguments the member forwards, so each
+# one names a std::string member exactly:
+#
+#     <char>                              push_back(char)
+#     <char const *,size_t>               append(const char *, size_t)
+#     <size_t,char>                       append(size_t, char) / resize
+#     <size_t,size_t,char>                insert(off, count, char)
+#     <size_t,char const *,size_t>        insert(off, ptr, count)
+#     <size_t,size_t,char const *,size_t> replace(off, count, ptr, count)
+#
+# and the bodies agree: the replace lambda is three memcpy calls (prefix,
+# replacement, tail), the push_back one is a memcpy followed by storing one
+# character and a NUL.
+#
+# Three of these are already in the baseline - the provenance of all four
+# families shows the append, resize and insert(off,count,char) lambdas being
+# removed - and they come from _PROBE_STL_SEQ's probe_stl_string, which calls
+# append, resize and insert(begin(), ch) once each. So the mechanism works:
+# a probe that calls the member emits the lambda, name and body both.
+#
+# replace and insert(off, ptr, count) are simply not called anywhere in this
+# file, which accounts for the two residual replace lambdas outright.
+#
+# push_back is the one this cannot explain. _PROBE_STL_GROW does call
+# std::string::push_back, in a loop, and that probe demonstrably builds - its
+# unique_ptr<_IMAGE_EXPORT_DIRECTORY,void (__cdecl*)(void *)> destructor is
+# in BlackBone x64's removed list and exists nowhere else here - yet no
+# push_back lambda is in the glue set on either architecture. Nothing in the
+# committed data says why. This is therefore a second attempt rather than a
+# change to a probe that works: a small translation unit whose only subject
+# is <xstring> growth, calling push_back from three separate exported
+# functions so the compiler has no single obvious place to put the body.
+# That is the same reasoning _PROBE_ATL_MODULES and _PROBE_ATL_THROW are
+# written on.
+#
+# Every offset is 0 so no call can be out of range: replace and insert throw
+# std::out_of_range past size(), and a probe whose behaviour is undefined is
+# not a measurement.
+_PROBE_STL_STRING = """\
+#include <windows.h>
+#include <cstddef>
+#include <string>
+
+__declspec(dllexport) std::size_t probe_stl_string_push(const char *text,
+                                                        char letter)
+{
+    std::string narrow(text);
+    std::size_t index;
+
+    for (index = 0; index < 512; ++index) {
+        narrow.push_back(letter);
+    }
+    return narrow.size();
+}
+
+__declspec(dllexport) std::size_t probe_stl_string_push_again(const char *text,
+                                                              std::size_t count)
+{
+    std::string narrow(text);
+    std::size_t index;
+
+    for (index = 0; index < count + 512; ++index) {
+        narrow.push_back((char)('a' + (index & 15)));
+    }
+    return narrow.size();
+}
+
+__declspec(dllexport) std::size_t probe_stl_string_push_wide(const wchar_t *text,
+                                                             wchar_t letter)
+{
+    std::wstring wide(text);
+    std::string narrow;
+    std::size_t index;
+
+    for (index = 0; index < 512; ++index) {
+        wide.push_back(letter);
+        narrow.push_back((char)letter);
+        narrow += (char)letter;
+    }
+    return wide.size() + narrow.size();
+}
+
+__declspec(dllexport) std::size_t probe_stl_string_replace(const char *text,
+                                                           std::size_t count)
+{
+    std::string narrow(text);
+    std::size_t index;
+
+    for (index = 0; index < 256; ++index) {
+        narrow.replace(0, 1, text, count + 1);
+        narrow.insert(0, text, count + 1);
+        narrow.insert(0, count + 1, 'x');
+        narrow.append(text, count + 1);
+        narrow.append(count + 1, 'y');
+    }
+    return narrow.size();
+}
+
+__declspec(dllexport) std::size_t probe_stl_string_replace_wide(const wchar_t *text,
+                                                                std::size_t count)
+{
+    std::wstring wide(text);
+    std::size_t index;
+
+    for (index = 0; index < 256; ++index) {
+        wide.replace(0, 1, text, count + 1);
+        wide.insert(0, text, count + 1);
+        wide.insert(0, count + 1, L'x');
+        wide.append(text, count + 1);
+        wide.append(count + 1, L'y');
+    }
+    return wide.size();
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
 # MSVC only. ATL's module objects, again - but with several call sites this
 # time.
 #
@@ -1628,6 +1865,265 @@ __declspec(dllexport) int probe_msvcrt_wide_frames(const wchar_t *text)
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 """
 
+# MSVC only, and x86 only in effect. The helper routines cl calls for things
+# the 32-bit instruction set cannot do in one instruction: converting a
+# floating-point value to a 64-bit integer, and shifting a 64-bit integer by
+# a variable amount. They are the exact MSVC analogue of libgcc's
+# __udivmoddi4, which round one of the MinGW work caught. On x64 every one of
+# these is an instruction, so this unit compiles there and measures nothing.
+#
+# Which of them the probes already reach was measured from the committed
+# provenance rather than guessed. _PROBE_DLL's 64-bit division block is
+# compiled by cl as probe_md.c, and its removed_runtime_functions show that
+# it already contributes _alldiv, _aulldiv, _allrem, _aullrem, _aulldvrm,
+# _allmul, _allshl and _aullshr. The one missing member of that family is
+# _allshr - the arithmetic right shift, which needs a *signed* 64-bit value
+# and a variable count - and it is sitting in 7-Zip, LuaJIT and sqlite3.
+#
+# The conversion helpers need more care, because there are two sets of them
+# and the probes only ever produced the wrong one. sqlite3, LuaJIT and libpng
+# all have _ftol3, _dtol3, _ftoui3, _ftoul3 and _dtoul3_legacy removed by the
+# existing baseline, while _ftol2, _ftoi2, _ftoui2 and _ftoul2 survive in
+# Lua, LuaJIT, abseil, libpng and libtiff. The "3" set takes its argument in
+# an XMM register, which is what /arch:SSE2 code has; the "2" set takes it on
+# the x87 stack, which is where a __cdecl function that *returns* a double or
+# a float leaves it on x86. That is what the surviving callers are:
+# png_build_16bit_table converting the result of pow(), lj_cf_os_date and
+# lj_cf_os_difftime converting the result of a function returning double.
+# Hence the conversions below all run on the return value of an out-of-line
+# function rather than on a variable.
+#
+# One reference is enough for all of them: libpng calls only _ftol2 and
+# carries _ftoi2, _ftoui2, _ftoul2, _ftol2_sse, _ftol2_sse_excpt and
+# _ftoul2_legacy beside it, so they arrive as one object. All four
+# conversions are written out anyway, because a single line deciding the
+# whole group is exactly the line that turns out not to be emitted.
+_PROBE_MSVCRT_HELPERS = """\
+#include <windows.h>
+
+/* Out of line so the conversions below start from a value on the x87 stack,
+   and so that nothing here can be constant-folded. */
+__declspec(noinline) double probe_msvcrt_helper_double(double value)
+{
+    return value * 2.0 + 1.0;
+}
+
+__declspec(noinline) float probe_msvcrt_helper_float(float value)
+{
+    return value * 2.0f + 1.0f;
+}
+
+__declspec(dllexport) unsigned __int64 probe_msvcrt_helper_convert(double value,
+                                                                   int count)
+{
+    volatile unsigned __int64 sink = 0;
+
+    sink += (unsigned __int64)probe_msvcrt_helper_double(value);
+    sink += (unsigned __int64)(__int64)probe_msvcrt_helper_double(value + 1.0);
+    sink += (unsigned __int64)(unsigned int)probe_msvcrt_helper_double(value + 2.0);
+    sink += (unsigned __int64)(int)probe_msvcrt_helper_double(value + 3.0);
+    sink += (unsigned __int64)probe_msvcrt_helper_float((float)value);
+    sink += (unsigned __int64)(__int64)probe_msvcrt_helper_float((float)value + 1.0f);
+    sink += (unsigned __int64)(unsigned int)probe_msvcrt_helper_float((float)value + 2.0f);
+    sink += (unsigned __int64)(int)probe_msvcrt_helper_float((float)value + 3.0f);
+    return sink + (unsigned __int64)count;
+}
+
+__declspec(dllexport) __int64 probe_msvcrt_helper_shift(__int64 value,
+                                                        unsigned __int64 wide,
+                                                        int count)
+{
+    volatile __int64 sink = 0;
+
+    /* _allshr is the only one of these not already in the baseline; the
+       other three are kept so the group is measured together rather than
+       depending on which one _PROBE_DLL happens to still emit. */
+    sink += value >> count;
+    sink += value << count;
+    sink += (__int64)(wide >> count);
+    sink += (__int64)(wide << count);
+    return sink;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# MSVC only. The formatted-output functions the UCRT headers define inline.
+#
+# sprintf and _vsprintf_l are not imports under /MD: <stdio.h> defines them
+# as _CRT_STDIO_INLINE functions, so a body is compiled into every object
+# that uses them. The committed reports show what that means precisely. In
+# cJSON x64, sprintf has three callers and calls __local_stdio_printf_options
+# and the __stdio_common_vsprintf import directly - the _vsprintf_l inside it
+# was inlined - while _vsprintf_l and _vsnprintf_l are *also* in the image as
+# full bodies with no callers at all. MSVC emits an out-of-line copy of every
+# inline function it instantiated whether or not a call site survived, and
+# these links pass /DEBUG, which turns /OPT:REF off, so nothing removes them.
+# The probes link the same way, so the same copies will be kept there.
+#
+# So the rule is: calling the top of a chain emits the whole chain. _PROBE_DLL
+# and _PROBE_MSVCRT already call snprintf, _snprintf and swprintf, which is
+# why _vsnprintf_l is not among the leaked names - and why sprintf and
+# _vsprintf_l are, in Lua, LuaJIT, OpenSSL, cJSON, libcurl, libuv and
+# protobuf: nothing here has ever called sprintf or vsprintf. Adding more
+# calls to _snprintf would have changed nothing.
+#
+# The varargs wrappers are real varargs functions rather than a va_list
+# conjured from nothing, for the reason the MinGW _vscprintf probe records:
+# handing a callee a va_list that was never started is undefined behaviour.
+#
+# Narrow only. Every name below is already called somewhere in this file or
+# is plain C89/C99; the wide half is a separate translation unit because
+# vswprintf has two declarations in the UCRT - the conforming four-argument
+# one and a three-argument legacy form behind _CRT_NON_CONFORMING_SWPRINTFS -
+# and every leaked name here is narrow. A wrong guess there must not cost
+# sprintf.
+_PROBE_MSVCRT_PRINTF = """\
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <windows.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+__declspec(dllexport) int probe_msvcrt_printf_narrow(char *buffer,
+                                                     size_t size,
+                                                     const char *format, ...)
+{
+    va_list arguments;
+    int total = 0;
+
+    va_start(arguments, format);
+    total += vsprintf(buffer, format, arguments);
+    va_end(arguments);
+    va_start(arguments, format);
+    total += vsnprintf(buffer, size, format, arguments);
+    va_end(arguments);
+    va_start(arguments, format);
+    total += _vsnprintf(buffer, size, format, arguments);
+    va_end(arguments);
+    total += sprintf(buffer, "%s %d", format, total);
+    total += snprintf(buffer, size, "%s %d", format, total);
+    total += _snprintf(buffer, size, "%s %d", format, total);
+    return total;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# The wide half of the same chain. None of these names is in the twenty
+# leaked hashes - libuv's _snwprintf and _vsnwprintf_l are carried by two
+# families rather than three - so this is coverage rather than a fix, and it
+# is separate from the narrow probe so that it can fail on its own.
+_PROBE_MSVCRT_PRINTF_WIDE = """\
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <windows.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <wchar.h>
+
+__declspec(dllexport) int probe_msvcrt_printf_wide(wchar_t *buffer,
+                                                   size_t size,
+                                                   const wchar_t *format, ...)
+{
+    va_list arguments;
+    int total = 0;
+
+    va_start(arguments, format);
+    total += vswprintf(buffer, size, format, arguments);
+    va_end(arguments);
+    va_start(arguments, format);
+    total += _vsnwprintf(buffer, size, format, arguments);
+    va_end(arguments);
+    total += swprintf(buffer, size, L"%s %d", format, total);
+    total += _snwprintf(buffer, size, L"%s %d", format, total);
+    return total;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# MSVC only, and x86 only in effect: __EH_prolog and _EH_prolog2 are the
+# 32-bit C++ exception-handling frame helpers, and x64 has no such thing.
+#
+# They are in 7-Zip and in data/MSVC itself, which is as direct a statement
+# that they are Microsoft's code as this corpus can make. 7-Zip is also the
+# only family here that has them, and that is the measurement this probe is
+# built on: every other MSVC C++ family here - abseil, protobuf, re2,
+# cryptopp, nlohmann_json, BlackBone, VX-API - uses exceptions heavily and
+# carries neither. What 7-Zip does differently is its flags, which its own
+# CPP/Build.mak sets: -O1 and -GS-. Both are passed below, because the
+# outlined prolog is a size optimisation and because /GS- is what selects the
+# __except_handler3 frame these two helpers build, rather than the
+# __except_handler4 one that the __EH_prolog3* family in data/MSVC builds.
+#
+# _EH_prolog2 is __EH_prolog plus a stack realignment - `neg ecx; and esp,
+# ecx` - so it needs an over-aligned local as well as a frame to unwind; its
+# single caller in 7-Zip x86 is NArchive::NApfs::CDatabase::ReadMap.
+#
+# It is registered twice, once with /GS- and once without, so that if the
+# handler model is not what selects between the two families the /GS run
+# still measures whichever __EH_prolog3* bodies cl emits. Neither run can
+# lose anything: crt_glue maps a name to a set of hashes.
+_PROBE_MSVCRT_EH = """\
+#include <windows.h>
+
+struct ProbeEhGuard
+{
+    ProbeEhGuard(int *counter) : counter(counter) { *counter += 1; }
+    ~ProbeEhGuard() { *counter -= 1; }
+
+    int *counter;
+};
+
+/* Over-aligned, which is what makes the frame need realigning. */
+struct __declspec(align(16)) ProbeEhAligned
+{
+    unsigned __int64 lanes[4];
+};
+
+__declspec(noinline) void probe_msvcrt_eh_raise(int selector)
+{
+    if (selector) {
+        throw selector;
+    }
+}
+
+__declspec(dllexport) int probe_msvcrt_eh_frames(int selector)
+{
+    int counter = 0;
+    ProbeEhGuard outer(&counter);
+
+    try {
+        ProbeEhGuard inner(&counter);
+        probe_msvcrt_eh_raise(selector);
+    } catch (int caught) {
+        counter += caught;
+    }
+    return counter;
+}
+
+__declspec(dllexport) int probe_msvcrt_eh_aligned(int selector,
+                                                  unsigned __int64 seed)
+{
+    int counter = 0;
+    ProbeEhAligned aligned;
+    ProbeEhGuard outer(&counter);
+    int index;
+
+    for (index = 0; index < 4; ++index) {
+        aligned.lanes[index] = seed + (unsigned __int64)index;
+    }
+    try {
+        ProbeEhGuard inner(&counter);
+        probe_msvcrt_eh_raise(selector);
+    } catch (int caught) {
+        counter += caught;
+    }
+    return counter + (int)aligned.lanes[0];
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
 
 def _msvc_probes(toolchain):
     """The MSVC-only half of the baseline.
@@ -1668,6 +2164,25 @@ def _msvc_probes(toolchain):
          ["-shared", "/MD", "/EHsc"]),
         (toolchain.cc, "probe_msvcrt_wide.c", _PROBE_MSVCRT_WIDE,
          ["-shared", "/MD"]),
+        # Third round. All three are /MD because every family the leaked
+        # names turned up in is /MD, and because sprintf's body only exists
+        # at all in a /MD image - under /MT the UCRT's inline definitions
+        # sit beside a statically linked copy rather than an import.
+        (toolchain.cc, "probe_msvcrt_helpers.c", _PROBE_MSVCRT_HELPERS,
+         ["-shared", "/MD"]),
+        (toolchain.cc, "probe_msvcrt_printf.c", _PROBE_MSVCRT_PRINTF,
+         ["-shared", "/MD"]),
+        (toolchain.cc, "probe_msvcrt_printf_wide.c", _PROBE_MSVCRT_PRINTF_WIDE,
+         ["-shared", "/MD"]),
+        # /O1 and /GS- are 7-Zip's own settings, and 7-Zip is the only family
+        # here that carries __EH_prolog. The second registration drops /GS-
+        # so that whichever of the two frame models cl picks, one of the runs
+        # measures it; /O1 overrides the /O2 in probe_command, which cl warns
+        # about (D9025) and accepts.
+        (toolchain.cxx, "probe_msvcrt_eh.cpp", _PROBE_MSVCRT_EH,
+         ["-shared", "/MD", "/EHsc", "/O1", "/GS-"]),
+        (toolchain.cxx, "probe_msvcrt_eh_gs.cpp", _PROBE_MSVCRT_EH,
+         ["-shared", "/MD", "/EHsc", "/O1"]),
     ]
     # Which templates the STL headers instantiate depends on the language
     # version, and the two recipes disagree: vxapi.py builds /std:c++20 and
@@ -1679,7 +2194,9 @@ def _msvc_probes(toolchain):
              ("grow", _PROBE_STL_GROW),
              ("hash", _PROBE_STL_HASH),
              ("tree", _PROBE_STL_TREE),
-             ("throw", _PROBE_STL_THROW))
+             ("throw", _PROBE_STL_THROW),
+             ("array", _PROBE_STL_ARRAY),
+             ("string", _PROBE_STL_STRING))
     for standard, suffix in (("/std:c++20", "20"), ("/std:c++latest", "latest")):
         for part, code in parts:
             probes.append((toolchain.cxx,
@@ -1705,6 +2222,35 @@ def _msvc_probes(toolchain):
     return probes
 
 
+# {toolchain_id: [probe filename, ...]} for probes that did not build, filled
+# in by crt_glue and read by probe_failures below. A dict rather than a return
+# value because crt_glue is lru_cached: the second caller gets the memoised
+# glue set and would otherwise see no failures at all.
+_PROBE_FAILURES = {}
+
+
+def probe_failures():
+    """Probes that did not build, per toolchain, for baselines measured here.
+
+    Empty until something has asked for a baseline, and empty afterwards if
+    every probe built. build_corpus.py reports this at the end of a run and
+    fails on it.
+
+    That it fails the run is the point. A probe that will not build is not
+    fatal to the family being built - it costs precision in the glue filter
+    and nothing else, so it must not take a recipe down with it - but the
+    artefacts it produces are then filtered against a smaller baseline than
+    the one the corpus is supposed to have, and are indistinguishable from
+    correct ones afterwards. That has happened twice on this branch: the MSVC
+    side once ran with no filter at all, and adding an _mktime32 call to a
+    probe that then failed to build took the x64 baseline from 2893 symbols
+    to 2812 with nothing but a warning in a fifty-thousand-line log to say
+    so. A warning is what a person misses; a non-zero exit is not.
+    """
+    return {toolchain: list(names)
+            for toolchain, names in sorted(_PROBE_FAILURES.items()) if names}
+
+
 @functools.lru_cache(maxsize=None)
 def crt_glue(toolchain_id):
     """Map symbol name -> set of PicHashes, measured from a project-free DLL."""
@@ -1726,6 +2272,9 @@ def crt_glue(toolchain_id):
     if toolchain.kind == "msvc":
         probes += _msvc_probes(toolchain)
     glue = {}
+    # Set before the loop, so that a toolchain whose probes all built is
+    # recorded as measured-and-clean rather than as never measured.
+    _PROBE_FAILURES.setdefault(toolchain_id, [])
     with tempfile.TemporaryDirectory() as tmp:
         for compiler, filename, code, extra in probes:
             source = os.path.join(tmp, filename)
@@ -1761,6 +2310,7 @@ def crt_glue(toolchain_id):
                     "would have measured stays in this toolchain's artefacts."
                     "\n%s", toolchain_id, filename,
                     (built.stderr or built.stdout or "").strip()[-2000:])
+                _PROBE_FAILURES.setdefault(toolchain_id, []).append(filename)
                 continue
             probe = disassemble(target, pdb_path=toolchain.probe_pdb(target))
             for function in probe.getFunctions():
@@ -1794,7 +2344,7 @@ def crt_glue(toolchain_id):
                                      "probe_msvcrt_", "_probe_msvcrt_",
                                      "probe_stl_", "_probe_stl_",
                                      "ProbeInterface", "ProbeImplementation",
-                                     "ProbeArrayElement"))]:
+                                     "ProbeArray", "ProbeEh"))]:
         glue.pop(name, None)
     return glue
 

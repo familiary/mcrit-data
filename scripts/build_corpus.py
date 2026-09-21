@@ -282,17 +282,36 @@ def main():
             if status == "failed":
                 failed.append(result)
             produced += status in ("ok", "fetched")
-    if failed:
+    # A baseline probe that would not compile is not a failure of any one
+    # recipe - it costs precision in the compiler-runtime filter and nothing
+    # else - so it does not appear above and never stopped a build. But every
+    # artefact this run produced was then filtered against a smaller baseline
+    # than the corpus is supposed to have, and nothing about the files says
+    # so afterwards. Reported here, and fatal, for the reasons recorded at
+    # baseline.probe_failures.
+    from corpus.baseline import probe_failures
+
+    broken_probes = probe_failures()
+    if broken_probes:
+        print("")
+        print("baseline probe(s) did not build, so this run's artefacts were "
+              "filtered against an incomplete compiler-runtime set:")
+        for toolchain_id, names in broken_probes.items():
+            print("  %s: %s" % (toolchain_id, ", ".join(names)))
+        print("the compiler's own error is in the log above, at WARNING")
+
+    if failed or broken_probes:
         # Repeated here because the per-artefact line above scrolls past
         # thousands of lines of compiler output. The last screen of the run is
         # the only place a reader reliably looks, so that is where the list of
         # what broke, and why, has to be.
-        print("")
-        print("%d artefact(s) failed:" % len(failed))
-        for result in failed:
-            print("  %s (%s): %s" % (result["name"],
-                                     result.get("reason", "unknown"),
-                                     _one_line(result.get("error", ""))))
+        if failed:
+            print("")
+            print("%d artefact(s) failed:" % len(failed))
+            for result in failed:
+                print("  %s (%s): %s" % (result["name"],
+                                         result.get("reason", "unknown"),
+                                         _one_line(result.get("error", ""))))
         if produced:
             print("%d artefact(s) did build; they are still usable, but this "
                   "run is a failure." % produced)
