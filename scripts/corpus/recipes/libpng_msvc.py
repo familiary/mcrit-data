@@ -47,6 +47,17 @@ What was read rather than assumed:
     this recipe adds to CMAKE_C_FLAGS_RELEASE is a duplicate under that
     policy and the only source of it under an OLD one; either way the build
     is /MD.
+  * ``PNG_TARGET_ARCHITECTURE`` is ``CMAKE_SYSTEM_PROCESSOR`` lower-cased,
+    and on x86/amd64 ``PNG_INTEL_SSE`` defaults to **on**, which compiles
+    ``intel/intel_init.c`` and ``intel/filter_sse2_intrinsics.c`` with
+    ``-DPNG_INTEL_SSE_OPT=1``. Under the MinGW cross build
+    CMAKE_SYSTEM_PROCESSOR is empty - a configure of this tree with the cross
+    compiler prints "Building for target architecture:" and nothing - so the
+    committed MinGW artefacts carry **no** SSE2 filter code and this one
+    will. The default is kept rather than forced off: a libpng16.dll shipped
+    on Windows has those optimisations, so this is the more representative
+    build, and the difference is recorded here and in the notes rather than
+    papered over.
   * ``find_program(AWK …)`` decides whether ``pnglibconf.h`` is generated
     from the DFA files or copied from ``scripts/pnglibconf.h.prebuilt``; both
     branches configure successfully, so an awk-less runner is not a failure.
@@ -129,7 +140,8 @@ RECIPES = {
                             component="libpng16.dll",
                             pdb="build-{arch}/libpng16.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
-        build_flags="/MD /O2 /Ob2 /Zi (CMake Release, /Zi added); "
+        build_flags="/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), "
+                    "PNG_INTEL_SSE on (upstream's default on x86/amd64); "
                     "/DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
         notes="Imports zlib %s from an MSVC-built zdll.lib rather than "
               "linking it statically, so this sample contains libpng code "
@@ -140,7 +152,12 @@ RECIPES = {
               "zlib1.dll is a build input and is not itself recorded as an "
               "artefact. Built against the DLL runtime, so the MSVC C "
               "runtime is imported rather than linked in and stays "
-              "attributed to data/MSVC. The MinGW recipe builds -O3, this "
-              "one /O2 /Ob2 from CMake's MSVC Release." % _ZLIB_VERSION,
+              "attributed to data/MSVC. Two differences from the MinGW "
+              "sibling beyond the compiler: this build has libpng's Intel "
+              "SSE2 filters, which upstream enables by default on x86 and "
+              "amd64 and which the cross build never reached because "
+              "CMAKE_SYSTEM_PROCESSOR is empty there; and it is /O2 /Ob2 "
+              "from CMake's MSVC Release where the MinGW one is -O3."
+              % _ZLIB_VERSION,
     ),
 }

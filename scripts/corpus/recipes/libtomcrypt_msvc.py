@@ -101,9 +101,17 @@ _COMPILE_ANCHOR = 'cl /nologo /c /O2 /MD /Zi /Fdtomcrypt.pdb anchor.c'
 # unreferenced and identically-compiled routines both survive as separate
 # reference samples - which matters more here than anywhere else, since
 # nothing in this DLL is referenced at all.
+#
+# Both archives are named twice on purpose: once as an ordinary input file,
+# so the linker certainly loads them from this directory, and once in
+# /WHOLEARCHIVE, which selects an already-named library by the spelling it
+# was given. Naming a library in /WHOLEARCHIVE that the command line does
+# not otherwise mention relies on the linker's library search to find it,
+# which is one more thing that can quietly not happen.
 _LINK = ('link /nologo /DLL /DEBUG /Brepro /OPT:NOREF /OPT:NOICF '
          '/WHOLEARCHIVE:tomcrypt.lib /WHOLEARCHIVE:ltm\\tommath.lib '
-         '/PDB:libtomcrypt.pdb /OUT:libtomcrypt.dll anchor.obj advapi32.lib')
+         '/PDB:libtomcrypt.pdb /OUT:libtomcrypt.dll anchor.obj '
+         'tomcrypt.lib ltm\\tommath.lib advapi32.lib')
 
 
 RECIPES = {

@@ -86,10 +86,14 @@ def _libcurl_msvc(version, git_ref):
                       git_ref=git_ref),
         build=[
             BuildStep(_CMAKE),
-            # BUILD_CURL_EXE and BUILD_TESTING are both off, so the default
-            # target is the library and the two documentation targets; naming
-            # a target here would only risk naming it wrongly.
-            BuildStep("cmake --build build-{arch}"),
+            # The library alone. The default target is not it: even with
+            # BUILD_CURL_EXE and BUILD_TESTING off, 8.15.0's generated build
+            # system carries curl-man, curl-opts-man and a curl-example-*
+            # target per example. "libcurl_shared" is
+            # set(LIB_SHARED "libcurl_shared") in the top-level CMakeLists at
+            # both tags, and it is what a target listing of the generated
+            # build systems prints.
+            BuildStep("cmake --build build-{arch} --target libcurl_shared"),
             # Cheap insurance, as in xz_msvc.py: build.py reports a missing
             # artefact by the path it expected and nothing else, and this
             # puts the names the build actually wrote into the log the
