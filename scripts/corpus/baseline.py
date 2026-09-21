@@ -455,9 +455,21 @@ typedef void (*probe_symbol)(void);
    a file-scope initializer with "error C2099: initializer is not a
    constant", so the whole translation unit failed to compile - on every run
    this probe has ever been part of. Taking the addresses in a function is
-   C-legal, and it defeats the builtin fold for the same reason the
-   file-scope version was meant to: the address of the real memcpy is what
-   ends up in the array, so the linker has to bring its body in. */
+   C-legal and has the effect the file-scope version was meant to have: the
+   address is referenced, so the linker has to bring in whatever stands for
+   the function - under /MD a one-instruction "jmp [__imp_memcpy]" thunk,
+   not a body, which is exactly the shape these names have in the artefacts
+   and is what is matched there.
+
+   What this recovers is narrower than the missing translation unit makes it
+   sound, because probe_md.c calls most of the same functions and the
+   baseline already removes memcpy from 95 artefacts, memset from 95, free
+   from 83, malloc from 79, memmove 69, strchr 60, memchr 53, strlen 43,
+   realloc 40, memcmp 32, strstr 30, strncpy 24, qsort 18, wcslen 11,
+   bsearch 8 and wcscpy 3. The twelve this adds are strcpy, strcat, strcmp,
+   strncmp, strrchr, wcscat, wcscmp, wcsncmp, wcschr, wcsstr, calloc and
+   abort - and ten of those do currently leak, strncmp into 41 MSVC
+   artefacts, calloc 39, strcmp 30, abort 26, strrchr 24, strcpy 12. */
 __declspec(dllexport) probe_symbol probe_msvcrt_symbols[64];
 
 __declspec(dllexport) void probe_msvcrt_take_addresses(void)
@@ -1746,54 +1758,28 @@ __declspec(dllexport) int probe_atl_modules_fourth(HINSTANCE instance)
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 """
 
-# MSVC only, and the riskiest thing in this file, which is why it is four
-# lines in a translation unit of its own.
+# ATL::CComTypeInfoHolder is NOT measured, and this is the record of why
+# rather than a probe that pretends to.
 #
-# ATL::CComTypeInfoHolder::stringdispid's destructor and its vector deleting
-# destructor are in both VX-API artefacts and nothing else in this file can
-# reach them: stringdispid holds a CComBSTR, CComTypeInfoHolder deletes an
-# array of them, and that array delete is also a second source of
-# `eh vector destructor iterator' and __ArrayUnwind.
+# Its stringdispid destructor and vector deleting destructor are in both
+# VX-API artefacts and nothing else in this file can reach them. A probe
+# existed for it and never once compiled: v143's ATL declares
+# CComTypeInfoHolder::Cleanup with at least one parameter (atlcom.h:4720),
+# so the calls failed with "error C2660: function does not take 0
+# arguments" and took the translation unit with them on every run.
 #
-# CComTypeInfoHolder is a public-data helper with no user-declared
-# constructor, so `= {}` initialises it whether ATL's headers make it an
-# aggregate or not. If Cleanup() turns out not to be reachable in some
-# toolset this unit fails to build, crt_glue warns, and the cost is these two
-# functions rather than the rest of ATL.
-_PROBE_ATL_TYPEINFO = """\
-#include <windows.h>
-#include <atlbase.h>
-#include <atlcom.h>
-
-/* Cleanup() is deliberately not called any more, and this probe is weaker
-   for it. v143's ATL declares CComTypeInfoHolder::Cleanup with at least one
-   parameter - atlcom.h:4720 - so the two calls that used to be here failed
-   with "error C2660: function does not take 0 arguments" and took the whole
-   translation unit with them, on every run this probe has ever been part
-   of. The signature could not be checked from the Linux container these
-   probes are written on, and guessing one costs a CI round per guess, so
-   what is left anchors the type without calling into it.
-
-   That means the CComTypeInfoHolder bodies are still unmeasured and still
-   land under whichever family links ATL. Restoring a real call is a job for
-   whoever next has atlcom.h in front of them; GetTI(LCID) is the obvious
-   candidate. Kept rather than deleted so the intent, and the gap, stay
-   recorded. */
-__declspec(dllexport) int probe_atl_type_info(int twice)
-{
-    ATL::CComTypeInfoHolder holder = {};
-    ATL::CComTypeInfoHolder other = {};
-    static volatile void *sink;
-
-    sink = &holder;
-    if (twice) {
-        sink = &other;
-    }
-    return twice;
-}
-
-BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
-"""
+# Removing the calls made it compile and measure nothing. The two locals
+# were kept alive by "static volatile void *sink" - which is a pointer to
+# volatile void, not a volatile pointer, so sink is an unread static, both
+# stores are dead, and cl is free to emit the function as "mov eax,
+# [esp+4]; ret" with the holders gone. Registering that costs two
+# compilations and, since a probe that will not build now fails the run,
+# carries the risk of failing every MSVC build for nothing.
+#
+# So it is unregistered. What it would have measured stays attributed to
+# whichever family links ATL, and restoring it is a job for whoever next
+# has atlcom.h in front of them: find Cleanup's real signature, or call
+# GetTI(LCID), and keep the holders alive with "void * volatile sink".
 
 # MSVC only. One function, because CComPtr is instantiated per interface and
 # BlackBone's surviving instantiation is over ICLRMetaHost, which lives in
@@ -2187,8 +2173,6 @@ def _msvc_probes(toolchain):
          ["-shared", "/MD", "/EHsc"]),
         (toolchain.cxx, "probe_atl_modules.cpp", _PROBE_ATL_MODULES,
          ["-shared", "/MD", "/EHsc"]),
-        (toolchain.cxx, "probe_atl_typeinfo.cpp", _PROBE_ATL_TYPEINFO,
-         ["-shared", "/MD", "/EHsc", "ole32.lib", "oleaut32.lib"]),
         (toolchain.cxx, "probe_atl_metahost.cpp", _PROBE_ATL_METAHOST,
          ["-shared", "/MD", "/EHsc"]),
         (toolchain.cc, "probe_msvcrt_wide.c", _PROBE_MSVCRT_WIDE,
@@ -2214,24 +2198,28 @@ def _msvc_probes(toolchain):
          ["-shared", "/MD", "/EHsc", "/O1"]),
     ]
     # Fourth round, and the same source as probe_msvcrt_helpers.c compiled a
-    # second way, because the third round's conversions measured the wrong
-    # half of the family.
+    # second way, because round three's conversions still reached the *3 set.
     #
-    # There are two sets of these helpers. The *3 set takes its argument in
-    # XMM and the *2 set takes it on the x87 stack, and cl chooses by
-    # /arch: at the default /arch:SSE2 a double-to-integer conversion goes
-    # through _ftol3 and friends, which the baseline has had since round two
-    # and which is why round three changed nothing. The leaked names are the
-    # *2 set, which cl emits only with no SSE to fall back on.
+    # The analysis above this probe is right and stands: the *2 set takes its
+    # argument on the x87 stack, which is where a __cdecl function returning
+    # a double leaves it, and that is what the surviving callers do. What it
+    # did not account for is that cl is free to get the value off the x87
+    # stack again before converting - at /O2 with the default /arch:SSE2 it
+    # spills the return value to memory and reloads it into XMM, so the
+    # conversion reaches _ftoul3 after all. /arch:IA32 removes that escape
+    # route: with no XMM to reload into, the conversion has to go through the
+    # x87 helpers.
     #
-    # So the conversions are right and only the flag was wrong. The body
-    # that ends up in the image is the CRT's either way - these are library
-    # functions, not generated code - so compiling one probe /arch:IA32 to
-    # make the linker pull them in costs nothing and changes nothing else.
+    # So the source is right and only the flag was missing. The body that
+    # ends up in the image is the CRT's either way - these are library
+    # functions, not generated code - so this costs nothing and changes
+    # nothing else. It is a second registration rather than a rewrite for
+    # that reason.
     #
     # x86 only: /arch:IA32 is not a valid x64 option, the x64 CRT has no *2
-    # set at all, and none of the seven leaked names appears in an x64
-    # artefact. On x64 this would now fail the run rather than warn.
+    # set at all, and no _fto* name of any kind appears in any x64 MSVC
+    # report. Since a probe that will not build now fails the run,
+    # registering this on x64 would fail every x64 run.
     if toolchain.arch == "x86":
         probes.append(
             (toolchain.cc, "probe_msvcrt_helpers_x87.c", _PROBE_MSVCRT_HELPERS,

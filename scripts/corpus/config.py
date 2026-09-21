@@ -33,6 +33,24 @@ MIN_USEFUL_FUNCTIONS = 8
 # Counting functions there would reject usable data.
 MIN_USEFUL_BLOB_INSTRUCTIONS = 100
 
+# How long SMDA may spend on one binary. Its own default is 300 seconds,
+# which is a sensible number for a tool being run interactively on a sample
+# and the wrong one here.
+#
+# This pipeline disassembles deliberately large libraries with SCC and
+# nesting analysis turned on, and it is not waiting for anybody: a build that
+# takes an extra ten minutes costs nothing, where an artefact missing from
+# the corpus costs a whole CI round. re2 2022-06-01 x86 is the one that found
+# this - 3765 functions, comfortably inside 300 seconds on two runs and over
+# it on a third, so the default was not a limit anyone had chosen but the
+# speed of whichever runner the job landed on.
+#
+# The failure is at least loud: SMDA marks the report not-ok and smdaify
+# raises rather than filing a half-disassembled binary, so nothing silently
+# truncated. Raising the ceiling only stops a slow runner from costing an
+# artefact. The job's own timeout remains the real bound.
+DISASSEMBLY_TIMEOUT = 1800
+
 # Below this many instructions, two families sharing a PicHash says nothing.
 # A three-instruction thunk that loads an import and jumps has one shape, and
 # every library that calls that import compiles to it; a getter that returns a

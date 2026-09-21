@@ -28,6 +28,7 @@ def disassemble(path, pdb_path=""):
     smda_config = SmdaConfig()
     smda_config.CALCULATE_SCC = True
     smda_config.CALCULATE_NESTING = True
+    smda_config.TIMEOUT = config.DISASSEMBLY_TIMEOUT
     return Disassembler(smda_config).disassembleFile(path, pdb_path=pdb_path)
 
 
@@ -47,6 +48,7 @@ def disassemble_blob(path, bitness, base_addr):
     smda_config = SmdaConfig()
     smda_config.CALCULATE_SCC = True
     smda_config.CALCULATE_NESTING = True
+    smda_config.TIMEOUT = config.DISASSEMBLY_TIMEOUT
     # oep=0 tells SMDA the blob is entered at its first byte, which is how
     # shellcode is invoked. Without it the recursive pass starts elsewhere and
     # recovers a fraction of the code (79 of ~750 instructions on sRDI x64).
