@@ -65,7 +65,7 @@
   },
   "libtomcrypt_1.18.2_msvc143_x64_libtomcrypt.dll": {
     "architecture": "x64",
-    "build_flags": "/O2 /MD /Zi (both libtomcrypt and the bundled libtommath), LTC_SOURCE /DUSE_LTM /DLTM_DESC, /W3 for libtomcrypt and /Wall /WX- for libtommath (upstream's own levels); /DLL /DEBUG /Brepro /OPT:NOREF /OPT:NOICF /WHOLEARCHIVE at link",
+    "build_flags": "/O2 /MD /Zi (both libtomcrypt and the bundled libtommath), LTC_SOURCE /DUSE_LTM /DLTM_DESC, /W3 for libtomcrypt and /Wall /WX- for libtommath (upstream's own levels); /DLL /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /WHOLEARCHIVE at link",
     "built_artifact": "libtomcrypt.dll",
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "libtomcrypt.dll",
@@ -82,7 +82,7 @@
     "license": "public domain / WTFPL-2.0 (dual, licensee's choice)",
     "mcrit": "data/libtomcrypt/x64/mcrit/libtomcrypt_1.18.2_msvc143_x64_libtomcrypt.dll.mcrit",
     "notes": "Statically links LibTomMath 1.3.0, as the MinGW artefact does, so roughly 175 of this sample's functions are mp_*/s_mp_*/fast_mp_* and belong to that project; there is no LibTomMath family here for them to collide with, and upstream ships no configuration that leaves them out. The two static libraries are upstream's own makefile.msvc targets, pulled into a DLL with /WHOLEARCHIVE against a one-function anchor because SMDA cannot read a .lib; the DLL exports nothing and its names come from the PDB. Unlike the MinGW artefact, which upstream's makefile.mingw strips, this one keeps symbols - so it is the first properly named libtomcrypt in the corpus and the CRT-glue filter can act on it. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC.",
-    "num_functions": 2017,
+    "num_functions": 1047,
     "removed_runtime_functions": [
       "DisableThreadLibraryCalls",
       "DllMain",
@@ -204,8 +204,10 @@
       "`dllmain_crt_process_detach'::`1'::fin$0",
       "`dllmain_crt_process_detach'::`1'::fin$1",
       "`dllmain_dispatch'::`1'::filt$0",
+      "abort",
       "at_quick_exit",
       "atexit",
+      "calloc",
       "capture_current_context",
       "capture_previous_context",
       "dllmain_crt_dispatch",
@@ -227,11 +229,12 @@
       "qsort",
       "realloc",
       "snprintf",
+      "strcmp",
       "strlen",
       "terminate",
       "vsnprintf"
     ],
-    "sha256": "c4c153794d7f86e67dda05e86a6d429ffd3ff527161ec95937dc4f7f24b3a569",
+    "sha256": "4965c9729c81e19f36859712a088e5f04f318faf2845e4e1f0c023950a2efabe",
     "smda": "data/libtomcrypt/x64/smda/libtomcrypt_1.18.2_msvc143_x64_libtomcrypt.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -245,7 +248,7 @@
   },
   "libtomcrypt_1.18.2_msvc143_x86_libtomcrypt.dll": {
     "architecture": "x86",
-    "build_flags": "/O2 /MD /Zi (both libtomcrypt and the bundled libtommath), LTC_SOURCE /DUSE_LTM /DLTM_DESC, /W3 for libtomcrypt and /Wall /WX- for libtommath (upstream's own levels); /DLL /DEBUG /Brepro /OPT:NOREF /OPT:NOICF /WHOLEARCHIVE at link",
+    "build_flags": "/O2 /MD /Zi (both libtomcrypt and the bundled libtommath), LTC_SOURCE /DUSE_LTM /DLTM_DESC, /W3 for libtomcrypt and /Wall /WX- for libtommath (upstream's own levels); /DLL /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /WHOLEARCHIVE at link",
     "built_artifact": "libtomcrypt.dll",
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "libtomcrypt.dll",
@@ -262,7 +265,7 @@
     "license": "public domain / WTFPL-2.0 (dual, licensee's choice)",
     "mcrit": "data/libtomcrypt/x86/mcrit/libtomcrypt_1.18.2_msvc143_x86_libtomcrypt.dll.mcrit",
     "notes": "Statically links LibTomMath 1.3.0, as the MinGW artefact does, so roughly 175 of this sample's functions are mp_*/s_mp_*/fast_mp_* and belong to that project; there is no LibTomMath family here for them to collide with, and upstream ships no configuration that leaves them out. The two static libraries are upstream's own makefile.msvc targets, pulled into a DLL with /WHOLEARCHIVE against a one-function anchor because SMDA cannot read a .lib; the DLL exports nothing and its names come from the PDB. Unlike the MinGW artefact, which upstream's makefile.mingw strips, this one keeps symbols - so it is the first properly named libtomcrypt in the corpus and the CRT-glue filter can act on it. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC.",
-    "num_functions": 2030,
+    "num_functions": 1048,
     "removed_runtime_functions": [
       "DllMain",
       "NtCurrentTeb",
@@ -368,10 +371,12 @@
       "__security_check_cookie",
       "__security_init_cookie",
       "__seh_filter_dll",
+      "_abort",
       "_allmul",
       "_allshl",
       "_aulldiv",
       "_aullshr",
+      "_calloc",
       "_chkstk",
       "_crt_debugger_hook",
       "_except_handler4",
@@ -408,7 +413,7 @@
       "snprintf",
       "vsnprintf"
     ],
-    "sha256": "cf2e1ce2b3e5778dc63fe806a9c47866a34993887143fc1694b2bde1f9dcf708",
+    "sha256": "1097aeb23624c89b8c19fd9fee11527bf0402545a864c586f08605ad3f72a5bf",
     "smda": "data/libtomcrypt/x86/smda/libtomcrypt_1.18.2_msvc143_x86_libtomcrypt.dll.7z",
     "smda_version": "4.8.0",
     "source": {

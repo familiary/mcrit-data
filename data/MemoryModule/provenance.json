@@ -649,7 +649,7 @@
     "license": "MPL-2.0",
     "mcrit": "data/MemoryModule/x64/mcrit/MemoryModule_2019-02-24_msvc143_x64_DllLoader.exe.mcrit",
     "notes": "DllLoader.exe with MemoryModule.c linked in, the same component the MinGW recipe files. Two differences from that artefact beyond the compiler, both upstream's own doing: this build comes from upstream's CMakeLists, which compiles MemoryModule.c as C, where the GNU makefiles the MinGW recipe drives compile it with g++; and the MinGW build links the GCC runtime statically while this one imports the MSVC C runtime, which therefore stays attributed to data/MSVC. The MinGW recipe's -O2 is its own override of an upstream -O0 default; CMake's MSVC Release is /O2 /Ob2 with no such default to override. No dependencies.",
-    "num_functions": 66,
+    "num_functions": 65,
     "removed_runtime_functions": [
       "FreeLibrary",
       "GetCurrentProcess",
@@ -821,6 +821,7 @@
       "pre_cpp_initialization",
       "qsort",
       "realloc",
+      "strcmp",
       "strlen",
       "strtol",
       "terminate"

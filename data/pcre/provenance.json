@@ -176,7 +176,7 @@
     "license": "BSD-3-Clause",
     "mcrit": "data/pcre/x64/mcrit/pcre_8.45_msvc143_x64_pcre.dll.mcrit",
     "notes": "The same CMake options as the MinGW recipe, with JIT, UTF and Unicode properties on, so the two artefacts differ in the compiler rather than in the feature set. Named pcre.dll rather than the MinGW build's libpcre.dll because upstream applies the empty library prefix only under MINGW and MSVC has none of its own. Only the 8-bit engine is built - pcreposix is a separate DLL and the C++ wrapper is deliberately off. No dependencies: PCRE links only the CRT, and is built against the DLL runtime so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. CMAKE_POLICY_VERSION_MINIMUM is passed because upstream's cmake_minimum_required is 2.8.5, which CMake 4 rejects; it is reported as unused, harmlessly, by older CMake.",
-    "num_functions": 294,
+    "num_functions": 292,
     "removed_runtime_functions": [
       "DisableThreadLibraryCalls",
       "DllMain",
@@ -312,7 +312,9 @@
       "memmove",
       "memset",
       "strchr",
+      "strcmp",
       "strlen",
+      "strncmp",
       "terminate"
     ],
     "sha256": "81caddae4aeef5924181dedfc403ae78726a51fb15ccca07ff9c843b677bc047",
@@ -339,7 +341,7 @@
     "license": "BSD-3-Clause",
     "mcrit": "data/pcre/x86/mcrit/pcre_8.45_msvc143_x86_pcre.dll.mcrit",
     "notes": "The same CMake options as the MinGW recipe, with JIT, UTF and Unicode properties on, so the two artefacts differ in the compiler rather than in the feature set. Named pcre.dll rather than the MinGW build's libpcre.dll because upstream applies the empty library prefix only under MINGW and MSVC has none of its own. Only the 8-bit engine is built - pcreposix is a separate DLL and the C++ wrapper is deliberately off. No dependencies: PCRE links only the CRT, and is built against the DLL runtime so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. CMAKE_POLICY_VERSION_MINIMUM is passed because upstream's cmake_minimum_required is 2.8.5, which CMake 4 rejects; it is reported as unused, harmlessly, by older CMake.",
-    "num_functions": 305,
+    "num_functions": 304,
     "removed_runtime_functions": [
       "DllMain",
       "NtCurrentTeb",
@@ -456,6 +458,7 @@
       "_memset",
       "_onexit",
       "_strchr",
+      "_strncmp",
       "_terminate",
       "at_quick_exit",
       "atexit",

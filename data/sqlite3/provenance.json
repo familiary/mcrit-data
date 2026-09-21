@@ -181,7 +181,7 @@
   },
   "sqlite3_3.31.1_msvc143_x64_sqlite3.dll": {
     "architecture": "x64",
-    "build_flags": "/O2 /MD /Zi, FTS5/RTREE/JSON1 enabled; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
+    "build_flags": "/O2 /MD /Zi, FTS5/RTREE/JSON1 enabled; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "sqlite3.dll",
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "sqlite3.dll",
@@ -191,7 +191,7 @@
     "license": "public domain",
     "mcrit": "data/sqlite3/x64/mcrit/sqlite3_3.31.1_msvc143_x64_sqlite3.dll.mcrit",
     "notes": "The same amalgamation and the same feature defines as the MinGW recipe for this version, so the two artefacts differ only in the compiler. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. No dependencies: the amalgamation is one translation unit and links only the CRT and Win32.",
-    "num_functions": 3246,
+    "num_functions": 2894,
     "removed_runtime_functions": [
       "CloseHandle",
       "CreateFileW",
@@ -353,10 +353,13 @@
       "memmove",
       "memset",
       "realloc",
+      "strcmp",
       "strlen",
+      "strncmp",
+      "strrchr",
       "terminate"
     ],
-    "sha256": "7470f1a3aa03dcdf81d85ef757d11abb0d0e3ae95c843d63e4b848c366c66d3d",
+    "sha256": "69075db843a4bfe4693298794b628dc4781d64e7819f4456d3bc8ad21fc16f99",
     "smda": "data/sqlite3/x64/smda/sqlite3_3.31.1_msvc143_x64_sqlite3.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -370,7 +373,7 @@
   },
   "sqlite3_3.31.1_msvc143_x86_sqlite3.dll": {
     "architecture": "x86",
-    "build_flags": "/O2 /MD /Zi, FTS5/RTREE/JSON1 enabled; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
+    "build_flags": "/O2 /MD /Zi, FTS5/RTREE/JSON1 enabled; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "sqlite3.dll",
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "sqlite3.dll",
@@ -380,7 +383,7 @@
     "license": "public domain",
     "mcrit": "data/sqlite3/x86/mcrit/sqlite3_3.31.1_msvc143_x86_sqlite3.dll.mcrit",
     "notes": "The same amalgamation and the same feature defines as the MinGW recipe for this version, so the two artefacts differ only in the compiler. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. No dependencies: the amalgamation is one translation unit and links only the CRT and Win32.",
-    "num_functions": 3285,
+    "num_functions": 2912,
     "removed_runtime_functions": [
       "DllMain",
       "NtCurrentTeb",
@@ -513,6 +516,7 @@
       "_allmul",
       "_allrem",
       "_allshl",
+      "_allshr",
       "_aulldiv",
       "_aullrem",
       "_aullshr",
@@ -541,6 +545,8 @@
       "_memset",
       "_onexit",
       "_realloc",
+      "_strncmp",
+      "_strrchr",
       "_terminate",
       "_ultod3",
       "_ultof3",
@@ -560,7 +566,7 @@
       "is_potentially_valid_image_base",
       "localtime_s"
     ],
-    "sha256": "976e1d7c5e81adceca866b0234994426c1fccf76cb2fccc22119c79c9e77cf5e",
+    "sha256": "e1fdfd78034b556493b3c0041d37e93116facf4dbef3cfe8d3a144a4ac384544",
     "smda": "data/sqlite3/x86/smda/sqlite3_3.31.1_msvc143_x86_sqlite3.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -759,7 +765,7 @@
   },
   "sqlite3_3.50.4_msvc143_x64_sqlite3.dll": {
     "architecture": "x64",
-    "build_flags": "/O2 /MD /Zi, FTS5/RTREE/JSON1 enabled; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
+    "build_flags": "/O2 /MD /Zi, FTS5/RTREE/JSON1 enabled; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "sqlite3.dll",
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "sqlite3.dll",
@@ -769,7 +775,7 @@
     "license": "public domain",
     "mcrit": "data/sqlite3/x64/mcrit/sqlite3_3.50.4_msvc143_x64_sqlite3.dll.mcrit",
     "notes": "The same amalgamation and the same feature defines as the MinGW recipe for this version, so the two artefacts differ only in the compiler. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. No dependencies: the amalgamation is one translation unit and links only the CRT and Win32.",
-    "num_functions": 3677,
+    "num_functions": 3302,
     "removed_runtime_functions": [
       "CloseHandle",
       "CreateFileW",
@@ -934,10 +940,13 @@
       "memset",
       "realloc",
       "strchr",
+      "strcmp",
       "strlen",
+      "strncmp",
+      "strrchr",
       "terminate"
     ],
-    "sha256": "4834416dca255cc4da088d18ecbb11df757be3c33bc8c0c216e41a06bfb0a7b7",
+    "sha256": "f5e7313761db5d2a653fd5e8d3ec56a8c365081e299bf568ecfd82e151710170",
     "smda": "data/sqlite3/x64/smda/sqlite3_3.50.4_msvc143_x64_sqlite3.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -951,7 +960,7 @@
   },
   "sqlite3_3.50.4_msvc143_x86_sqlite3.dll": {
     "architecture": "x86",
-    "build_flags": "/O2 /MD /Zi, FTS5/RTREE/JSON1 enabled; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
+    "build_flags": "/O2 /MD /Zi, FTS5/RTREE/JSON1 enabled; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "sqlite3.dll",
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "sqlite3.dll",
@@ -961,7 +970,7 @@
     "license": "public domain",
     "mcrit": "data/sqlite3/x86/mcrit/sqlite3_3.50.4_msvc143_x86_sqlite3.dll.mcrit",
     "notes": "The same amalgamation and the same feature defines as the MinGW recipe for this version, so the two artefacts differ only in the compiler. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. No dependencies: the amalgamation is one translation unit and links only the CRT and Win32.",
-    "num_functions": 3730,
+    "num_functions": 3328,
     "removed_runtime_functions": [
       "DllMain",
       "NtCurrentTeb",
@@ -1053,6 +1062,7 @@
       "__report_rangecheckfailure",
       "__report_securityfailure",
       "__report_securityfailureEx",
+      "__scrt_acquire_startup_lock",
       "__scrt_dllmain_after_initialize_c",
       "__scrt_dllmain_before_initialize_c",
       "__scrt_dllmain_crt_thread_attach",
@@ -1094,6 +1104,7 @@
       "_allmul",
       "_allrem",
       "_allshl",
+      "_allshr",
       "_aulldiv",
       "_aullrem",
       "_aullshr",
@@ -1124,6 +1135,8 @@
       "_onexit",
       "_realloc",
       "_strchr",
+      "_strncmp",
+      "_strrchr",
       "_terminate",
       "_ultod3",
       "_ultof3",
@@ -1143,7 +1156,7 @@
       "is_potentially_valid_image_base",
       "localtime_s"
     ],
-    "sha256": "d3b16c3950862c674289d652ef2911657fab2754e7767dbdb6b8ff2052086ee5",
+    "sha256": "cb06dfeccc5c5d88eb9dfc570f437ca50166e4669490aecddd7f86402acfb306",
     "smda": "data/sqlite3/x86/smda/sqlite3_3.50.4_msvc143_x86_sqlite3.dll.7z",
     "smda_version": "4.8.0",
     "source": {

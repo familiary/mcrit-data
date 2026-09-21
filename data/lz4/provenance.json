@@ -173,7 +173,7 @@
     "license": "BSD-2-Clause (library), GPL-2.0 (programs)",
     "mcrit": "data/lz4/x64/mcrit/lz4_1.10.0_msvc143_x64_lz4.dll.mcrit",
     "notes": "The DLL carries lz4.c, lz4hc.c, lz4frame.c, lz4file.c and xxhash.c, as the MinGW artefact does - upstream compiles xxHash into liblz4 and there is no xxHash family here to attribute it to. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in. Named lz4.dll rather than the MinGW build's liblz4.dll because MSVC has no library prefix; it is the same library and the same tag. The MinGW recipe builds -O3 from lib/Makefile, this one /O2 /Ob2 from CMake's MSVC Release, so the difference between the two artefacts is the compiler and its optimiser settings both.",
-    "num_functions": 292,
+    "num_functions": 291,
     "removed_runtime_functions": [
       "DisableThreadLibraryCalls",
       "DllMain",
@@ -293,6 +293,7 @@
       "`dllmain_dispatch'::`1'::filt$0",
       "at_quick_exit",
       "atexit",
+      "calloc",
       "capture_current_context",
       "capture_previous_context",
       "dllmain_crt_dispatch",
@@ -334,7 +335,7 @@
     "license": "BSD-2-Clause (library), GPL-2.0 (programs)",
     "mcrit": "data/lz4/x86/mcrit/lz4_1.10.0_msvc143_x86_lz4.dll.mcrit",
     "notes": "The DLL carries lz4.c, lz4hc.c, lz4frame.c, lz4file.c and xxhash.c, as the MinGW artefact does - upstream compiles xxHash into liblz4 and there is no xxHash family here to attribute it to. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in. Named lz4.dll rather than the MinGW build's liblz4.dll because MSVC has no library prefix; it is the same library and the same tag. The MinGW recipe builds -O3 from lib/Makefile, this one /O2 /Ob2 from CMake's MSVC Release, so the difference between the two artefacts is the compiler and its optimiser settings both.",
-    "num_functions": 288,
+    "num_functions": 287,
     "removed_runtime_functions": [
       "DllMain",
       "NtCurrentTeb",
@@ -439,6 +440,7 @@
       "__seh_filter_dll",
       "_allmul",
       "_aullshr",
+      "_calloc",
       "_chkstk",
       "_crt_debugger_hook",
       "_except_handler4",

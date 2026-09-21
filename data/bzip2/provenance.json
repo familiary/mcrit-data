@@ -325,7 +325,7 @@
   },
   "bzip2_1.0.8_msvc143_x64_bzip2.exe": {
     "architecture": "x64",
-    "build_flags": "/O2 /MD /Zi, -DWIN32 -D_FILE_OFFSET_BITS=64; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
+    "build_flags": "/O2 /MD /Zi, -DWIN32 -D_FILE_OFFSET_BITS=64; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "bzip2.exe",
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "bzip2.exe",
@@ -335,7 +335,7 @@
     "license": "bzip2-1.0.6 (BSD-like)",
     "mcrit": "data/bzip2/x64/mcrit/bzip2_1.0.8_msvc143_x64_bzip2.exe.mcrit",
     "notes": "The same seven library objects plus bzip2.c that the MinGW recipe links, so this artefact and its MinGW sibling differ only in the compiler. No dependencies: bzip2 links the CRT and nothing else, and this is built against the DLL runtime so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. Upstream's makefile.msc is not used - its inference rule spells the output as 'cl -o', which current cl only accepts under a deprecation warning - but its flags are, with /Ox replaced by /O2 to match the MinGW sibling.",
-    "num_functions": 263,
+    "num_functions": 127,
     "removed_runtime_functions": [
       "GetCurrentProcess",
       "GetCurrentProcessId",
@@ -395,7 +395,6 @@
       "__report_securityfailureEx",
       "__scrt_acquire_startup_lock",
       "__scrt_common_main",
-      "__scrt_common_main_seh",
       "__scrt_dllmain_after_initialize_c",
       "__scrt_dllmain_before_initialize_c",
       "__scrt_dllmain_crt_thread_attach",
@@ -421,7 +420,6 @@
       "__scrt_is_ucrt_dll_in_use",
       "__scrt_is_user_matherr_present",
       "__scrt_main_policy::set_app_type",
-      "__scrt_narrow_argv_policy::configure_argv",
       "__scrt_narrow_environment_policy::initialize_environment",
       "__scrt_release_startup_lock",
       "__scrt_set_unhandled_exception_filter",
@@ -498,12 +496,15 @@
       "post_pgo_initialization",
       "pre_c_initialization",
       "pre_cpp_initialization",
+      "strcmp",
+      "strcpy",
       "strlen",
+      "strncmp",
       "strncpy",
       "strstr",
       "terminate"
     ],
-    "sha256": "9641f81c27cb05849c347f41f9143958de6e3ff855fd554c0ce86c7e8b5b4014",
+    "sha256": "61672902cbc982d01769797fe6e4e6f71467775eaeef918c37b297fb68febe93",
     "smda": "data/bzip2/x64/smda/bzip2_1.0.8_msvc143_x64_bzip2.exe.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -517,7 +518,7 @@
   },
   "bzip2_1.0.8_msvc143_x86_bzip2.exe": {
     "architecture": "x86",
-    "build_flags": "/O2 /MD /Zi, -DWIN32 -D_FILE_OFFSET_BITS=64; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
+    "build_flags": "/O2 /MD /Zi, -DWIN32 -D_FILE_OFFSET_BITS=64; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "bzip2.exe",
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "bzip2.exe",
@@ -527,7 +528,7 @@
     "license": "bzip2-1.0.6 (BSD-like)",
     "mcrit": "data/bzip2/x86/mcrit/bzip2_1.0.8_msvc143_x86_bzip2.exe.mcrit",
     "notes": "The same seven library objects plus bzip2.c that the MinGW recipe links, so this artefact and its MinGW sibling differ only in the compiler. No dependencies: bzip2 links the CRT and nothing else, and this is built against the DLL runtime so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. Upstream's makefile.msc is not used - its inference rule spells the output as 'cl -o', which current cl only accepts under a deprecation warning - but its flags are, with /Ox replaced by /O2 to match the MinGW sibling.",
-    "num_functions": 262,
+    "num_functions": 125,
     "removed_runtime_functions": [
       "NtCurrentTeb",
       "ReadNoFence",
@@ -676,6 +677,7 @@
       "_memset",
       "_onexit",
       "_should_initialize_environment",
+      "_strncmp",
       "_strncpy",
       "_strstr",
       "_terminate",
@@ -691,7 +693,7 @@
       "pre_c_initialization",
       "pre_cpp_initialization"
     ],
-    "sha256": "b4cbf40bacf8b8d0fef8c7669a95f0ca61cab221ed3f0fb4e628d32f783595b2",
+    "sha256": "3a47bb2867a9a4b2f6242ddf5b7e78450459fe735b8d7a4d687b82359c8271ac",
     "smda": "data/bzip2/x86/smda/bzip2_1.0.8_msvc143_x86_bzip2.exe.7z",
     "smda_version": "4.8.0",
     "source": {
