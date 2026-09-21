@@ -1,11 +1,16 @@
 name: Windows reference data
 
-# Generates reference data for the projects that cannot be built with GCC.
+# Generates reference data that needs MSVC.
 #
-# VX-API needs ATL, BlackBone needs ATL and the DIA SDK, and SysWhispers v1
-# emits MASM that neither nasm nor GAS will assemble. The windows-2022 runner
-# image carries Visual Studio 2022 with ATL and MFC, four Windows SDKs,
-# ml/ml64 and the WDK, which covers all of them.
+# Two kinds of recipe run here. VX-API needs ATL, BlackBone needs ATL and the
+# DIA SDK, and SysWhispers v1 emits MASM that neither nasm nor GAS will
+# assemble: those cannot be built with GCC at all. The library recipes whose
+# names end in _msvc can be built with GCC - data/ carries the MinGW artefacts
+# already - but the corpus wants the MSVC build of the same version beside it,
+# because that is the compiler behind most Windows sightings of sqlite3,
+# liblzma and lz4. The windows-2022 runner image carries Visual Studio 2022
+# with ATL and MFC, four Windows SDKs, ml/ml64, nmake, CMake and the WDK,
+# which covers all of them.
 #
 # The same scripts/build_corpus.py drives this as the Linux side; only the
 # toolchain differs. Results are uploaded as artifacts rather than committed,
@@ -28,6 +33,12 @@ on:
       - scripts/corpus/recipes/vxapi.py
       - scripts/corpus/recipes/blackbone.py
       - scripts/corpus/recipes/syswhispers.py
+      # The MinGW recipes for these three families live in sqlite3.py, xz.py
+      # and lz4.py and are deliberately not listed: editing a Linux-side
+      # recipe must not spend runner minutes rebuilding the MSVC side.
+      - scripts/corpus/recipes/sqlite3_msvc.py
+      - scripts/corpus/recipes/xz_msvc.py
+      - scripts/corpus/recipes/lz4_msvc.py
       - scripts/corpus/toolchain.py
       - scripts/corpus/build.py
       - scripts/corpus/pipeline.py
@@ -84,12 +95,21 @@ jobs:
         run: |
           $requested = "${{ github.event.inputs.recipes }}"
           if (-not $requested -or $requested -eq "all-msvc") {
+            # The library recipes are the MSVC twins of families data/ already
+            # carries under MinGW; both architectures build all of them.
+            $recipes = @(
+              "VX-API_2.01.015",
+              "BlackBone_2023-07-17",
+              "sqlite3_3.31.1_msvc",
+              "sqlite3_3.50.4_msvc",
+              "liblzma_5.4.7_msvc",
+              "liblzma_5.8.1_msvc",
+              "lz4_1.10.0_msvc")
             # SysWhispers v1 is x64-only: its generator emits MASM for x64.
-            $requested = if ("${{ matrix.arch }}" -eq "x64") {
-              "VX-API_2.01.015 BlackBone_2023-07-17 SysWhispers_2021-07-06"
-            } else {
-              "VX-API_2.01.015 BlackBone_2023-07-17"
+            if ("${{ matrix.arch }}" -eq "x64") {
+              $recipes += "SysWhispers_2021-07-06"
             }
+            $requested = $recipes -join " "
           }
           New-Item -ItemType Directory -Force -Path build | Out-Null
           python scripts/build_corpus.py build $requested.Split(" ") 2>&1 |
@@ -118,7 +138,16 @@ jobs:
           print("produced this run: %s" % ", ".join(sorted(produced)))
 
           arch = sys.argv[1]
-          for family in ("VX-API", "BlackBone", "SysWhispers"):
+          # sqlite3, liblzma and lz4 also hold MinGW artefacts, which this
+          # loop prunes out of the working copy along with the other
+          # architecture's: what is uploaded has to be what this job built.
+          # The consequence for whoever imports the result is that
+          # provenance.<arch>.json for those families carries the MSVC
+          # records ONLY, so it must be merged into the committed
+          # provenance.json key by key - copying it over would delete the
+          # MinGW records this job never rebuilt.
+          for family in ("VX-API", "BlackBone", "SysWhispers",
+                         "sqlite3", "liblzma", "lz4"):
               root = os.path.join("data", family)
               path = os.path.join(root, "provenance.json")
               if not os.path.exists(path):
@@ -166,7 +195,7 @@ jobs:
         if: success()
         shell: pwsh
         run: |
-          $families = "VX-API", "BlackBone", "SysWhispers"
+          $families = "VX-API", "BlackBone", "SysWhispers", "sqlite3", "liblzma", "lz4"
           $present = $families | Where-Object { Test-Path "data/$_" }
           if (-not $present) { throw "no reference data was produced" }
           foreach ($family in $present) {
@@ -188,6 +217,9 @@ jobs:
             data/VX-API/**
             data/BlackBone/**
             data/SysWhispers/**
+            data/sqlite3/**
+            data/liblzma/**
+            data/lz4/**
             !data/*/provenance.json
           if-no-files-found: error
 
