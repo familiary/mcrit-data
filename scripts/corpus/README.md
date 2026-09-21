@@ -33,9 +33,14 @@ actually changes:
 
 `refilter` exists because the glue baseline is measured rather than
 hardcoded, which keeps it from rotting with the next compiler but also lets
-it improve after a family has been committed. It has twice, and both rounds
-were found the same way: by running `validate --deep` over the whole corpus
+it improve after a family has been committed. It has four times - twice
+for MinGW and twice more when the MSVC artefacts arrived - and every round
+was found the same way: by running `validate --deep` over the whole corpus
 and asking what the surviving cross-family PicHashes actually were.
+
+`refilter` can only re-apply a baseline this host can measure, so the two
+MSVC rounds were applied by rebuilding on the Windows runner rather than in
+place.
 
 **Round one, libgcc's division helpers.** The x86 probe gained 64-bit
 division, and with it `__divdi3`, `__moddi3`, `__udivdi3`, `__umoddi3`,
@@ -61,16 +66,45 @@ by name - and `_vscprintf`, behind which sit `_emu_vscprintf` and
 `_init_vscprintf`. That round removed 277 functions from 37 artefacts and
 took the baselines from 3054 to 3101 symbols on x86, 2857 to 2900 on x64.
 
-Together: **425 functions** of compiler runtime, and the cross-family
-PicHashes `validate --deep` reports fell from **76 to 58**. Run
-`refilter --dry-run` first to see the scale of any future round.
+Those two rounds together returned **425 functions** of compiler runtime,
+and took the cross-family PicHashes `validate --deep` reported from **76 to
+58**. Run `refilter --dry-run` first to see the scale of any future round.
 
-The 58 that remain are the measured floor rather than an outstanding defect,
-and `validate --deep` no longer fails on them. It fails on one kind of
-collision only - the kind both rounds above were found by, one symbol name
-repeated across every family sharing the hash - and reports the rest as
-`NOTE` lines with their counts. The two commands agree because they share
-one classifier, `corpus.validate.classify_collision`.
+**Rounds three and four, the MSVC C runtime.** Importing 99 MSVC artefacts
+put 20 leakage findings into the deep check at once, all of them Microsoft's
+code under a library's name, and two of them sharing a hash with `data/MSVC`
+itself. Round three added six probe translation units covering `_allshr`,
+`` `vector constructor iterator' ``, `__EH_prolog`/`_EH_prolog2`, `sprintf`
+and `_vsprintf_l`, and the `std::string` reallocation lambdas. Round four
+was one line: the same conversion probe compiled a second time with
+`/arch:IA32`, because at the default `/arch:SSE2` cl spills a double return
+value to memory and reloads it into XMM, so every conversion reached the
+`_ftol3` family the baseline already had rather than the `_ftol2` family
+that was leaking. 34 MSVC probe compilations became 45.
+
+Two more probes were found by the gate that reports a probe which will not
+compile, added at the same time: `probe_msvcrt.c` had never built at all
+(cl rejects a cast function pointer as a file-scope initializer) and neither
+had `probe_atl_typeinfo.cpp`. Both had been failing silently on every run
+since they were written.
+
+**What remains is one finding.** `__scrt_common_main_seh`, the MSVC CRT's
+x64 entry-point wrapper, at 99 instructions in Lua, MemoryModule and bzip2.
+It is unambiguously Microsoft's code and the baseline ought to catch it; it
+does catch every one of its neighbours - `__scrt_initialize_crt`,
+`__scrt_acquire_startup_lock`, `__scrt_fastfail` and eleven more are removed
+from 98 artefacts each. What is known: it is x64 only, absent from every x86
+EXE; it has two bodies in this corpus, 99 instructions in those three and 98
+in q3vm, which builds with whole-program optimisation; and the EXE probe
+emits neither, though it links and runs like every other. The cause needs
+MSVC in front of it, so it is recorded here rather than guessed at, and
+`validate --deep` fails on it as it should.
+
+The deep check fails on one kind of collision only - the kind every round
+above was found by, one symbol name repeated across every family sharing the
+hash - and reports the rest as `NOTE` lines with their counts. `validate`,
+`validate --deep` and `explain_collisions.py` agree because they share one
+classifier, `corpus.validate.classify_collision`.
 
 For the same reason, the 21 pre-existing problems in `data/MSVC` and
 `data/Golang` described below are reported without failing the run: they are
@@ -108,15 +142,29 @@ minutes: it extracts every `.7z` and decompresses every `.mcrit`.
   small bodies that happen to hash alike, which is what the instruction floor
   bounds rather than eliminates.
 
-Today that split is 21 standard-library instantiations, 32 short-body
-coincidences and 5 hashes that carry no symbol in any family, with nothing
-in the leakage bucket. (It was recorded here as 26 / 27; that count came
-from a rule which called a hash standard-library code as soon as *one* of
-the names sharing it was a `std::` one, so seven short-body coincidences
-that happened to include a libstdc++ symbol were filed under the wrong
-heading. A hash is standard-library code now only when every name sharing
-it is - which changes no verdict, since the leakage test needs all the
-names to be equal anyway.)
+Today the corpus has **546** cross-family PicHashes at the ten-instruction
+floor, split **345** standard-library instantiations, **157** whose names
+differ between the families sharing them, **43** carrying no symbol in any
+family, and the **one** leakage finding described above. The totals grew
+with the corpus - they were 58 when it was MinGW-only - so they are a
+measure of how much C++ it now contains rather than of anything getting
+worse.
+
+A hash counts as standard-library code only when every name sharing it is
+one; an earlier rule accepted a hash as soon as *one* of the names was, and
+filed seven short-body coincidences under the wrong heading.
+
+MSVC needs one more rule than libstdc++ did. It names an unnamed lambda
+`<lambda_HEX>` from the lambda's source, so the same id in two projects
+means the same source - but says nothing about *whose*. The id is resolved
+by what else names it: a lambda is standard-library code when an internal
+`std::` member that no caller can hand a lambda to carries it in its own
+name, which today means `std::basic_string::_Reallocate_grow_by`. Keying it
+on the namespace alone was tried and is wrong - `std::invoke`, `std::move`,
+`std::forward` and `std::remove_if` are instantiated over whatever they are
+handed, and keyed on those the rule excused 707 ids, 589 of which also
+carry a project host name, among them abseil's own lambda over its own
+type.
 
 Measured four ways, that bucket is empty on merit rather than by
 construction: with the standard-library exemption keyed on any name or on
