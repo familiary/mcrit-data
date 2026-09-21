@@ -102,7 +102,49 @@ def _same_symbol(names):
     return len({name.lstrip("_") for name in names}) == 1
 
 
-def classify_collision(names):
+_LAMBDA = re.compile(r"<lambda_[0-9a-f]{32}>")
+
+
+def _lambda_of(name):
+    """The lambda id a bare ``<lambda_HEX>::operator()`` names, else None."""
+    match = _LAMBDA.fullmatch(name.split("::")[0])
+    return match.group(0) if match and name.endswith("::operator()") else None
+
+
+def stdlib_lambda_ids(names):
+    """Lambda ids that some standard library symbol carries in its own name.
+
+    MSVC names an unnamed lambda ``<lambda_HEX>``, where the hex is derived
+    from its source, so the same id in two projects means the same source -
+    but the id alone says nothing about *whose* source. A lambda out of a
+    vendored third-party header would look exactly like one out of
+    ``<xstring>``, and the first of those is leakage worth reporting.
+
+    What separates them is already in the corpus. The function that takes the
+    lambda carries it inside its own name, so ``<lambda_319d5e08...>`` is
+    standard library code because something, somewhere in this data, is
+    called::
+
+        std::basic_string<char,...>::_Reallocate_grow_by<<lambda_319d5e08...>,char>
+
+    and that name is a ``std::`` one by the same test every other symbol is
+    judged by. A lambda whose only appearance is the bare ``operator()``
+    stays unexplained and stays a leakage candidate.
+
+    Measured over this corpus: every one of the six lambdas that appears bare
+    in three or more families has exactly one such host name, and all six are
+    ``std::basic_string::_Reallocate_grow_by`` - the reallocating half of
+    ``append``, ``insert``, ``replace``, ``resize`` and ``push_back``.
+    """
+    hosts = set()
+    for name in names:
+        if _lambda_of(name) or not _is_stdlib_symbol(name):
+            continue
+        hosts.update(_LAMBDA.findall(name))
+    return hosts
+
+
+def classify_collision(names, stdlib_lambdas=()):
     """Which kind of cross-family PicHash a set of symbol names describes.
 
     * Every family calls it the same thing, and it is not standard library
@@ -124,7 +166,8 @@ def classify_collision(names):
     """
     if not names:
         return UNNAMED
-    if all(_is_stdlib_symbol(name) for name in names):
+    if all(_is_stdlib_symbol(name)
+           or _lambda_of(name) in stdlib_lambdas for name in names):
         return STDLIB
     if _same_symbol(names):
         return LEAKAGE
@@ -246,7 +289,8 @@ def find_duplicate_samples(root=None):
     return duplicates
 
 
-def find_cross_family_functions(root=None, threshold=3, min_instructions=None):
+def find_cross_family_functions(root=None, threshold=3, min_instructions=None,
+                                stdlib_lambdas=None):
     """Report PicHashes that appear under more than one family name.
 
     A handful of shared hashes is normal - libraries do vendor each other, and
@@ -264,6 +308,12 @@ def find_cross_family_functions(root=None, threshold=3, min_instructions=None):
     is the one thing that tells a reader whether a hit is worth opening; the
     symbol names are what classify_collision needs to tell leakage from the
     two kinds of sharing that are correct.
+
+    ``stdlib_lambdas``, if a set is passed, is filled with the lambda ids
+    that some standard library symbol names - see stdlib_lambda_ids. It is an
+    out-parameter because that evidence lives in names this function walks
+    past anyway, in functions that share no hash with anything; collecting it
+    here costs one pass rather than a second one over every export.
     """
     if min_instructions is None:
         min_instructions = config.MIN_CROSS_FAMILY_INSTRUCTIONS
@@ -297,6 +347,13 @@ def find_cross_family_functions(root=None, threshold=3, min_instructions=None):
             else:
                 entries = blob
             for entry in entries.values():
+                # Before the floor and before the hash check, because the
+                # name that explains a lambda belongs to a different function
+                # than the one sharing the hash - usually a large one that
+                # collides with nothing - and would be filtered out by both.
+                if stdlib_lambdas is not None and entry.get("function_name"):
+                    stdlib_lambdas.update(
+                        stdlib_lambda_ids([entry["function_name"]]))
                 pichash = entry.get("pichash")
                 if not pichash:
                     continue
@@ -319,10 +376,13 @@ def group_cross_family_functions(root=None, min_instructions=None):
     first - come out at the top.
     """
     grouped = {kind: [] for kind in (LEAKAGE, STDLIB, DIFFERENT_NAMES, UNNAMED)}
-    found = find_cross_family_functions(root, min_instructions=min_instructions)
+    stdlib_lambdas = set()
+    found = find_cross_family_functions(root, min_instructions=min_instructions,
+                                        stdlib_lambdas=stdlib_lambdas)
     for pichash, collision in sorted(
             found.items(), key=lambda item: (-item[1].num_instructions, item[0])):
-        grouped[classify_collision(collision.names)].append((pichash, collision))
+        grouped[classify_collision(collision.names,
+                                   stdlib_lambdas)].append((pichash, collision))
     return grouped
 
 

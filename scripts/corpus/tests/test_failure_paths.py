@@ -465,6 +465,59 @@ class ClassifyCollisionTest(unittest.TestCase):
         self.assertEqual(validate.classify_collision(["__udivmoddi4"]),
                          validate.LEAKAGE)
 
+    # MSVC names an unnamed lambda <lambda_HEX> from its source, so the same
+    # id in two projects means the same source - but not whose source. These
+    # four pin that the exemption keys on evidence from the corpus and not on
+    # the shape of the name, because a lambda out of a vendored third-party
+    # header looks identical and is leakage worth reporting.
+    _HOST = ("std::basic_string<char,std::char_traits<char>,"
+             "std::allocator<char> >::_Reallocate_grow_by"
+             "<<lambda_319d5e083f45f90dcdce5dce53cbb275>,char>")
+    _BARE = "<lambda_319d5e083f45f90dcdce5dce53cbb275>::operator()"
+
+    def test_a_lambda_a_std_symbol_names_is_standard_library(self):
+        from corpus import validate
+
+        known = validate.stdlib_lambda_ids([self._HOST])
+        self.assertEqual(validate.classify_collision([self._BARE], known),
+                         validate.STDLIB)
+
+    def test_a_lambda_nothing_explains_is_still_leakage(self):
+        """The whole point: an unexplained lambda is not excused."""
+        from corpus import validate
+
+        known = validate.stdlib_lambda_ids([self._HOST])
+        other = "<lambda_ffffffffffffffffffffffffffffffff>::operator()"
+        self.assertEqual(validate.classify_collision([other], known),
+                         validate.LEAKAGE)
+
+    def test_a_lambda_only_a_project_symbol_names_is_not_excused(self):
+        from corpus import validate
+
+        host = ("google::protobuf::internal::CallOnceInitialize"
+                "<<lambda_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa> >")
+        bare = "<lambda_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa>::operator()"
+        self.assertEqual(validate.stdlib_lambda_ids([host]), set())
+        self.assertEqual(
+            validate.classify_collision([bare],
+                                        validate.stdlib_lambda_ids([host])),
+            validate.LEAKAGE)
+
+    def test_the_exemption_does_not_launder_a_project_name_beside_it(self):
+        from corpus import validate
+
+        known = validate.stdlib_lambda_ids([self._HOST])
+        self.assertEqual(
+            validate.classify_collision([self._BARE, "re2::RE2::Match"], known),
+            validate.DIFFERENT_NAMES)
+
+    def test_without_the_evidence_set_a_lambda_is_leakage(self):
+        """Callers that pass no evidence get the old, stricter answer."""
+        from corpus import validate
+
+        self.assertEqual(validate.classify_collision([self._BARE]),
+                         validate.LEAKAGE)
+
     def test_the_32_bit_decoration_is_not_a_different_name(self):
         """_floor and floor are one function: 32-bit MinGW decorates cdecl."""
         from corpus import validate
