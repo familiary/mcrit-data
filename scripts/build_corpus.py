@@ -2,6 +2,7 @@
 """Generate MCRIT reference data from unmodified upstream source.
 
   python scripts/build_corpus.py list
+  python scripts/build_corpus.py list --toolchain msvc_x64 --names-only
   python scripts/build_corpus.py build libzlib_1.3.1 [--toolchain mingw_x86]
   python scripts/build_corpus.py validate [data/libzlib]
   python scripts/build_corpus.py readme libzlib
@@ -10,7 +11,9 @@
 import argparse
 import logging
 import os
+import re
 import sys
+import traceback
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -19,12 +22,78 @@ from corpus.pipeline import run_recipe
 from corpus.toolchain import available_toolchains
 
 
+def _normalise_toolchain(toolchain_id):
+    """Fold a versioned toolchain id onto its version-less alias.
+
+    corpus.toolchain registers each compiler twice: under the concrete id it
+    detected (``msvc143_x64``, ``mingw13_x86``) and under a stable alias that
+    does not name the version (``msvc_x64``). Recipes use the alias, but the
+    concrete id is a legal thing for one to declare, and a selector that
+    matched only one spelling would silently drop such a recipe out of a CI
+    leg rather than say so.
+    """
+    return re.sub(r"^([a-z]+)\d+_", r"\1_", toolchain_id)
+
+
+def _select_recipes(toolchain_ids):
+    """Recipes declaring any of ``toolchain_ids``; all of them when empty.
+
+    Matching is on what a recipe *declares*, deliberately not on what this
+    host can run: an MSVC developer environment targets one architecture at a
+    time, so the x86 runner never registers msvc_x64 and asking it which
+    recipes the x64 leg should build has to still give the right answer.
+    """
+    registry = recipes.all_recipes()
+    if not toolchain_ids:
+        return registry
+    wanted = {_normalise_toolchain(t) for t in toolchain_ids}
+    return {name: recipe for name, recipe in registry.items()
+            if wanted & {_normalise_toolchain(t) for t in recipe.toolchains}}
+
+
+def _one_line(text, limit=300):
+    """Flatten an error for the end-of-run summary.
+
+    The summary is meant to be read at a glance; a multi-line or multi-hundred
+    character message there pushes the other failures off the screen, which is
+    the opposite of what it is for. The full text is still on the per-artefact
+    line above and in build/<name>.log.
+    """
+    text = " ".join(str(text).split())
+    return text if len(text) <= limit else text[:limit - 3] + "..."
+
+
+def _families_of(recipe):
+    """Corpus families a recipe files artefacts under.
+
+    Artifact.family overrides the recipe's for a vendored project, and
+    corpus.pipeline files each artefact - and writes its provenance - under
+    the artefact's family, so that is what names a data/ directory.
+    """
+    families = {artifact.family or recipe.family for artifact in recipe.artifacts}
+    return families or {recipe.family}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    subparsers.add_parser("list", help="show known recipes and toolchains")
+    listing = subparsers.add_parser("list", help="show known recipes and toolchains")
+    listing.add_argument("--toolchain", action="append", dest="toolchains",
+                         metavar="ID",
+                         help="restrict the listing to recipes that declare "
+                              "this toolchain (repeatable). Matched against "
+                              "what the recipe declares, not against what "
+                              "this host has, so CI can ask one runner what "
+                              "the other architecture's leg should build")
+    listing.add_argument("--names-only", action="store_true",
+                         help="print one recipe name per line and nothing "
+                              "else, for feeding straight back into `build`")
+    listing.add_argument("--families-only", action="store_true",
+                         help="print one corpus family per line and nothing "
+                              "else; a family appears once however many "
+                              "recipes or artefacts file into it")
 
     build = subparsers.add_parser("build", help="run one or more recipes")
     build.add_argument("recipe", nargs="+", help="recipe name, or 'all'")
@@ -79,10 +148,32 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
     if args.command == "list":
+        if args.names_only and args.families_only:
+            parser.error("--names-only and --families-only are mutually exclusive")
+        selected = _select_recipes(args.toolchains)
+        # An empty selection from an explicit filter is a mistyped toolchain id
+        # or a recipe set that lost its last MSVC entry. Printing nothing and
+        # exiting 0 would let a caller build nothing and call it success, which
+        # is the failure mode this whole selector exists to remove.
+        if args.toolchains and not selected:
+            print("no recipe declares any of: %s" % ", ".join(args.toolchains),
+                  file=sys.stderr)
+            return 1
+        if args.names_only:
+            for name in sorted(selected):
+                print(name)
+            return 0
+        if args.families_only:
+            families = set()
+            for recipe in selected.values():
+                families |= _families_of(recipe)
+            for family in sorted(families):
+                print(family)
+            return 0
         print("toolchains: %s" % ", ".join(available_toolchains()))
         print("recipes:")
-        for name in sorted(recipes.all_recipes()):
-            recipe = recipes.get(name)
+        for name in sorted(selected):
+            recipe = selected[name]
             print("  %-28s %s %s -> %s" % (name, recipe.family, recipe.version,
                                            ", ".join(recipe.toolchains)))
         return 0
@@ -158,17 +249,53 @@ def main():
         return 1 if problems else 0
 
     names = sorted(recipes.all_recipes()) if args.recipe == ["all"] else args.recipe
-    failures = 0
+    failed = []
     produced = 0
     for name in names:
-        results = run_recipe(recipes.get(name), args.toolchains, dry_run=args.dry_run)
+        try:
+            recipe = recipes.get(name)
+        except KeyError:
+            # KeyError's body lists every recipe there is, which is a
+            # screenful once thirty families are registered; the useful part
+            # is the name that was wrong. `list` still has the full set.
+            error = "unknown recipe %r, see `build_corpus.py list`" % name
+            failed.append({"name": name, "reason": "recipe", "error": error})
+            print("%-7s %s: %s" % ("FAILED", name, error))
+            continue
+        try:
+            results = run_recipe(recipe, args.toolchains, dry_run=args.dry_run)
+        except Exception as error:  # noqa: BLE001 - see below
+            # A bug reached through a path run_recipe does not itself guard
+            # used to abort every recipe still queued behind it. With thirty
+            # recipes in a run that costs a whole CI cycle for everyone, so it
+            # is recorded as this recipe's failure and the rest still run.
+            # Nothing is swallowed: the traceback goes to stderr and the run
+            # still exits non-zero.
+            traceback.print_exc()
+            failed.append({"name": name, "reason": "recipe", "error": str(error)})
+            print("%-7s %s: %s" % ("FAILED", name, error))
+            continue
         for result in results:
             status = result["status"]
             print("%-7s %s%s" % (status.upper(), result["name"],
                                  "" if status != "failed" else ": %s" % result["error"]))
-            failures += status == "failed"
+            if status == "failed":
+                failed.append(result)
             produced += status in ("ok", "fetched")
-    if failures:
+    if failed:
+        # Repeated here because the per-artefact line above scrolls past
+        # thousands of lines of compiler output. The last screen of the run is
+        # the only place a reader reliably looks, so that is where the list of
+        # what broke, and why, has to be.
+        print("")
+        print("%d artefact(s) failed:" % len(failed))
+        for result in failed:
+            print("  %s (%s): %s" % (result["name"],
+                                     result.get("reason", "unknown"),
+                                     _one_line(result.get("error", ""))))
+        if produced:
+            print("%d artefact(s) did build; they are still usable, but this "
+                  "run is a failure." % produced)
         return 1
     # A run where every recipe was skipped exits non-zero too. Otherwise a host
     # whose cross compilers are missing prints a screen of SKIPPED and reports

@@ -178,11 +178,29 @@ def resolve_run(repo, token, run_id=None, branch=None, commit=None):
     """
     if run_id:
         run = _api("/repos/%s/actions/runs/%s" % (repo, run_id), token)
-        if run.get("conclusion") != "success":
-            # Only a successful run uploads reference data at all; anything
-            # else means the artifacts are build logs, or stale.
-            raise ImportProblem("run %s concluded %r, not success"
-                               % (run_id, run.get("conclusion")))
+        conclusion = run.get("conclusion")
+        if conclusion != "success":
+            # A named run is imported anyway, with a warning. The workflow
+            # deliberately uploads the artefacts that built even when another
+            # recipe failed - one broken recipe used to discard a whole leg's
+            # output - so refusing a red run here would throw away exactly the
+            # data that arrangement exists to save. Every artefact is verified
+            # individually further down regardless of how the run concluded,
+            # which is what actually makes this safe; the run's conclusion is
+            # a hint about completeness, not about correctness.
+            #
+            # Only for an explicitly named run. The branch and commit searches
+            # below still take successful runs only, because there "newest" is
+            # a guess and a red run is the wrong guess.
+            if conclusion is None:
+                raise ImportProblem(
+                    "run %s has not finished (status %r); its artefacts are "
+                    "incomplete" % (run_id, run.get("status")))
+            LOGGER.warning(
+                "run %s concluded %r, not success. Importing it anyway "
+                "because it was named explicitly - but it built less than it "
+                "was asked to, so expect fewer artefacts than recipes.",
+                run_id, conclusion)
         return run
 
     query = "?status=success&per_page=100"
@@ -677,11 +695,15 @@ def main():
         print("REFUSED %s" % problem)
 
     if not artefacts:
-        # An empty provenance.<arch>.json is normal on its own - SysWhispers
-        # builds nothing on x86 and ships one - but a run whose artifacts
-        # together yield nothing means the wrong run was named or the workflow
-        # has changed, so the caller is told by the exit code and not only by
-        # a line of output it may not be reading.
+        # An empty provenance.<arch>.json is normal on its own, and so is a
+        # family being absent from a leg entirely: SysWhispers builds nothing
+        # on x86, and the workflow's scoping step now leaves such a family out
+        # of the upload rather than shipping an empty record for it. Either
+        # shape is fine because the other families supply the records this
+        # needs. But a run whose artifacts together yield nothing means the
+        # wrong run was named or the workflow has changed, so the caller is
+        # told by the exit code and not only by a line of output it may not be
+        # reading.
         print("\nnothing to import")
         return 1
 
