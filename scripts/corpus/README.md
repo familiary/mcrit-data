@@ -300,9 +300,13 @@ the `/OPT:NO*` forms these recipes pass do not suppress it - only
 `/OPT:REF`, `/OPT:ICF` and `/OPT:ORDER` are documented to. An incrementally
 linked image reaches each function through a table of one-instruction jump
 thunks, and SMDA recovers every one of those as a function of its own,
-unnamed. The table is unmistakable once looked at: in nlohmann_json 3.12.0
-x64 it is 2866 entries exactly five bytes apart, running unbroken from
-`base+0x1005`, with no other function inside its span.
+unnamed. The table is unmistakable once looked at: nlohmann_json 3.12.0
+x64 carries 2866 of them, starting at `base+0x1005` and spaced five bytes
+apart - `E9 rel32` - with nothing but thunks inside its span. What the
+check keys on is the *run*, not the count: those 2866 fall into 68
+consecutive runs, the longest 212 entries and the first only 14, and a
+threshold on the count would have to be a different number for every
+artefact.
 
 Seven recipes were affected - nlohmann_json, bzip2, libtomcrypt, OpenSSL,
 cryptopp, Lua and sqlite3 - and at the worst of them roughly half of what
@@ -313,11 +317,15 @@ own Release default, the MSBuild ones get it from their project files,
 VX-API's `/FORCE:UNRESOLVED` makes link.exe ignore `/INCREMENTAL`
 altogether, SysWhispers passes no `/DEBUG` so nothing is implied, and
 7-Zip's nmake build already carries `-INCREMENTAL:NO` on the `LFLAGS` line
-its recipe deliberately does not touch (`CPP/Build.mak:133`). Not one of
-the unaffected artefacts contains a single unnamed direct-jump function.
-The one-instruction jumps they do carry are named, and are import thunks
-jumping through the IAT or ordinary tail calls - 185 in VX-API x64, 211 in
-abseil x64, 149 in libcurl 8.15.0 x64, of which 1, 68 and 14 respectively
+its recipe deliberately does not touch (`CPP/Build.mak:133`). The
+unaffected artefacts are not free of unnamed direct-jump functions - 7-Zip's
+MinGW x86 reports carry 265, cryptopp's MinGW x64 241 - but they are
+scattered rather than packed, and the longest consecutive five-byte run
+anywhere outside an incrementally linked image is 18, against a threshold
+of 32. The one-instruction jumps those artefacts carry are mostly named,
+and are import thunks jumping through the IAT or ordinary tail calls - 185
+in VX-API x64, 211 in abseil x64, 149 in libcurl 8.15.0 x64, of which 1, 68
+and 14 respectively
 are direct.
 
 mbedTLS is the one family whose MSVC shape differs from its MinGW one. It
