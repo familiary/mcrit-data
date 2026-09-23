@@ -729,6 +729,22 @@ Generated with `scripts/build_corpus.py`; see `data/sRDI/provenance.json` for so
 | sRDI | 2022-06-17 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2022-06-17_msvc_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2022-06-17_msvc_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2022-06-17_msvc_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2022-06-17_msvc_x64_ShellcodeRDI_x64.7z) |
 <!-- /generated -->
 
+## Heaven's Gate and WOW64 transitions
+
+Implementations of the WOW64 transition: reaching 64-bit code, and the 64-bit ntdll, from a 32-bit process. Every one of them is x86 by construction rather than by choice - they truncate pointers to `uint32_t`, read `CONTEXT.Ebx`, or use inline assembly that x64 MSVC does not implement - so each is built for x86 only.
+
+### wow64pp<a id='wow64pp'></a>
+
+A header-only Heaven's Gate implementation whose gate is a `constexpr` byte array copied into RWX memory rather than assembly, which is what lets it build with GCC as well as MSVC. Nothing of it exists in a binary until a translation unit uses it, so the reference data comes from an exerciser that instantiates the public surface and the `detail::` layer behind it, including both `call_function` arities - the four-argument-or-fewer and the more-than-four paths are different code. Every function in the header is `inline`, so the exerciser takes each one's address as well as calling it.  
+
+Generated with `scripts/build_corpus.py`; see `data/wow64pp/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: wow64pp -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| wow64pp | 2020-09-19 | MinGW-w64 GCC 13 | [x86 PE](data/wow64pp/x86/mcrit/wow64pp_2020-09-19_mingw13_x86_wow64pp.dll.mcrit) | [x86 PE](data/wow64pp/x86/smda/wow64pp_2020-09-19_mingw13_x86_wow64pp.dll.7z) |
+<!-- /generated -->
+
 ## Offensive tooling
 
 Public offensive-tooling code bases that are copied into implants more or less verbatim. All three need Visual Studio - ATL, the DIA SDK or MASM - and are built on a windows-2022 runner by `.github/workflows/windows-reference-data.yml` rather than approximated with GCC.
