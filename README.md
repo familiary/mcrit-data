@@ -791,6 +791,8 @@ Compile-time string obfuscators, which hide literals by encrypting them during c
 
 These are the one group here where the optimization level is not a free choice, and it differs per project - the level each was built at is recorded in `build_flags` and argued in `notes`, because it decides what survives into the binary at all. Reference data built at one level will not match a consumer built at another.
 
+All four are portable, and all four are also built for Linux: these are the corpus's only ELF artefacts, and every one of them is an ELF row beside the PE row in the same table. Same pinned commit, same exerciser or driver, same optimization level - only the container differs, so the two are directly comparable. They are shared objects rather than executables on purpose: a `-shared` ELF links glibc, libstdc++ and libm dynamically, so none of their code enters the sample under a library's name, and they are built `-fvisibility=hidden` so that only the exerciser's entry point is exported and the library's own calls stay direct, which is what the PE builds get for free from `__declspec(dllexport)`.
+
 ### Obfuscate<a id='obfuscate'></a>
 
 adamyaxley/Obfuscate encrypts each literal with a key derived from its source line and decrypts it on first use. It instantiates per (length, line), so a binary carries one small cluster of functions per obfuscated string rather than one shared routine. Built at `-O0`: at `-O2` every instantiation collapses to a five-byte `endbr64; ret` stub, because the destructor's zeroing loop is dead-store eliminated and the function survives only because `thread_local` takes its address.  
@@ -800,6 +802,7 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscate/provenance.json` f
 <!-- generated: Obfuscate -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| Obfuscate | 2026-06-03 | GCC 13 (Linux, glibc) | [x86 ELF](data/Obfuscate/x86/mcrit/Obfuscate_2026-06-03_gcc13_x86_ay_obfuscate.so.mcrit) / [x64 ELF](data/Obfuscate/x64/mcrit/Obfuscate_2026-06-03_gcc13_x64_ay_obfuscate.so.mcrit) | [x86 ELF](data/Obfuscate/x86/smda/Obfuscate_2026-06-03_gcc13_x86_ay_obfuscate.so.7z) / [x64 ELF](data/Obfuscate/x64/smda/Obfuscate_2026-06-03_gcc13_x64_ay_obfuscate.so.7z) |
 | Obfuscate | 2026-06-03 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscate/x86/mcrit/Obfuscate_2026-06-03_mingw13_x86_ay_obfuscate.dll.mcrit) / [x64 PE](data/Obfuscate/x64/mcrit/Obfuscate_2026-06-03_mingw13_x64_ay_obfuscate.dll.mcrit) | [x86 PE](data/Obfuscate/x86/smda/Obfuscate_2026-06-03_mingw13_x86_ay_obfuscate.dll.7z) / [x64 PE](data/Obfuscate/x64/smda/Obfuscate_2026-06-03_mingw13_x64_ay_obfuscate.dll.7z) |
 <!-- /generated -->
 
@@ -813,6 +816,7 @@ Generated with `scripts/build_corpus.py`; see `data/StringObfuscatorCT/provenanc
 <!-- generated: StringObfuscatorCT -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| StringObfuscatorCT | 2019-12-11 | GCC 13 (Linux, glibc) | [x86 ELF](data/StringObfuscatorCT/x86/mcrit/StringObfuscatorCT_2019-12-11_gcc13_x86_snowapril_obfuscator.so.mcrit) / [x64 ELF](data/StringObfuscatorCT/x64/mcrit/StringObfuscatorCT_2019-12-11_gcc13_x64_snowapril_obfuscator.so.mcrit) | [x86 ELF](data/StringObfuscatorCT/x86/smda/StringObfuscatorCT_2019-12-11_gcc13_x86_snowapril_obfuscator.so.7z) / [x64 ELF](data/StringObfuscatorCT/x64/smda/StringObfuscatorCT_2019-12-11_gcc13_x64_snowapril_obfuscator.so.7z) |
 | StringObfuscatorCT | 2019-12-11 | MinGW-w64 GCC 13 | [x86 PE](data/StringObfuscatorCT/x86/mcrit/StringObfuscatorCT_2019-12-11_mingw13_x86_snowapril_obfuscator.dll.mcrit) / [x64 PE](data/StringObfuscatorCT/x64/mcrit/StringObfuscatorCT_2019-12-11_mingw13_x64_snowapril_obfuscator.dll.mcrit) | [x86 PE](data/StringObfuscatorCT/x86/smda/StringObfuscatorCT_2019-12-11_mingw13_x86_snowapril_obfuscator.dll.7z) / [x64 PE](data/StringObfuscatorCT/x64/smda/StringObfuscatorCT_2019-12-11_mingw13_x64_snowapril_obfuscator.dll.7z) |
 <!-- /generated -->
 
@@ -825,6 +829,7 @@ Generated with `scripts/build_corpus.py`; see `data/StringObfuscator/provenance.
 <!-- generated: StringObfuscator -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| StringObfuscator | 2021-08-07 | GCC 13 (Linux, glibc) | [x86 ELF](data/StringObfuscator/x86/mcrit/StringObfuscator_2021-08-07_gcc13_x86_katursis_str_obfuscator.so.mcrit) / [x64 ELF](data/StringObfuscator/x64/mcrit/StringObfuscator_2021-08-07_gcc13_x64_katursis_str_obfuscator.so.mcrit) | [x86 ELF](data/StringObfuscator/x86/smda/StringObfuscator_2021-08-07_gcc13_x86_katursis_str_obfuscator.so.7z) / [x64 ELF](data/StringObfuscator/x64/smda/StringObfuscator_2021-08-07_gcc13_x64_katursis_str_obfuscator.so.7z) |
 | StringObfuscator | 2021-08-07 | MinGW-w64 GCC 13 | [x86 PE](data/StringObfuscator/x86/mcrit/StringObfuscator_2021-08-07_mingw13_x86_katursis_str_obfuscator.dll.mcrit) / [x64 PE](data/StringObfuscator/x64/mcrit/StringObfuscator_2021-08-07_mingw13_x64_katursis_str_obfuscator.dll.mcrit) | [x86 PE](data/StringObfuscator/x86/smda/StringObfuscator_2021-08-07_mingw13_x86_katursis_str_obfuscator.dll.7z) / [x64 PE](data/StringObfuscator/x64/smda/StringObfuscator_2021-08-07_mingw13_x64_katursis_str_obfuscator.dll.7z) |
 <!-- /generated -->
 
@@ -838,6 +843,7 @@ Generated with `scripts/build_corpus.py`; see `data/obfstr/provenance.json` for 
 <!-- generated: obfstr -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| obfstr | 0.4.6 | GCC 13 (Linux, glibc) | [x86 ELF](data/obfstr/x86/mcrit/obfstr_0.4.6_gcc13_x86_obfstr_driver.so.mcrit) / [x64 ELF](data/obfstr/x64/mcrit/obfstr_0.4.6_gcc13_x64_obfstr_driver.so.mcrit) | [x86 ELF](data/obfstr/x86/smda/obfstr_0.4.6_gcc13_x86_obfstr_driver.so.7z) / [x64 ELF](data/obfstr/x64/smda/obfstr_0.4.6_gcc13_x64_obfstr_driver.so.7z) |
 | obfstr | 0.4.6 | MinGW-w64 GCC 13 | [x86 PE](data/obfstr/x86/mcrit/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.mcrit) / [x64 PE](data/obfstr/x64/mcrit/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.mcrit) | [x86 PE](data/obfstr/x86/smda/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.7z) / [x64 PE](data/obfstr/x64/smda/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.7z) |
 <!-- /generated -->
 
@@ -851,5 +857,6 @@ Generated with `scripts/build_corpus.py`; see `data/obfstr/provenance.json` for 
 <!-- generated: obfstr -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| obfstr | 0.4.6 | GCC 13 (Linux, glibc) | [x86 ELF](data/obfstr/x86/mcrit/obfstr_0.4.6_gcc13_x86_obfstr_driver.so.mcrit) / [x64 ELF](data/obfstr/x64/mcrit/obfstr_0.4.6_gcc13_x64_obfstr_driver.so.mcrit) | [x86 ELF](data/obfstr/x86/smda/obfstr_0.4.6_gcc13_x86_obfstr_driver.so.7z) / [x64 ELF](data/obfstr/x64/smda/obfstr_0.4.6_gcc13_x64_obfstr_driver.so.7z) |
 | obfstr | 0.4.6 | MinGW-w64 GCC 13 | [x86 PE](data/obfstr/x86/mcrit/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.mcrit) / [x64 PE](data/obfstr/x64/mcrit/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.mcrit) | [x86 PE](data/obfstr/x86/smda/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.7z) / [x64 PE](data/obfstr/x64/smda/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.7z) |
 <!-- /generated -->

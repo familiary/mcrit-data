@@ -28,6 +28,8 @@
 // str_obfuscator.hpp is not self-contained: it names std::size_t and includes
 // nothing at all, so <cstddef> has to come first.
 
+#include "corpus_export.h"
+
 #include <cstddef>
 
 #include "str_obfuscator.hpp"
@@ -48,7 +50,7 @@ int narrow_sum(const char *text)
 // cryptor::create() returns the string_encryptor by value and decrypt()
 // hands back a pointer into it, so the object has to be alive when the
 // pointer is read: every use is a single full expression.
-extern "C" __declspec(dllexport) int exercise(void)
+extern "C" CORPUS_EXPORT int exercise(void)
 {
     int sink = 0;
 

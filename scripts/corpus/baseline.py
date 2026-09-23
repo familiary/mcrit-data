@@ -25,6 +25,31 @@ build ``/MD``, so the probes are built both ways and unioned.
 
 What each MSVC probe is for was read off the committed reports rather than
 guessed; the comment above each one says which measurement it answers.
+
+The Linux side is by far the smallest of the three, and measurably so: 28
+symbols on x64 and 37 on x86, against 2893 for MinGW x64. A ``-shared`` ELF
+object links glibc, libstdc++ and libm dynamically, so none of their bodies
+are in the image at all - every call to them is a ``.plt`` stub, which
+carries no symbol and is not what this filter is for. What is left is of two
+kinds, and the measured split is the argument for building ``.so`` artefacts
+on this side rather than static executables:
+
+* The objects ld links in regardless, 7 of them on x64 and 18 on x86:
+  crti/crtn's _init and _fini, Scrt1.o's _start, crtbeginS's
+  register_tm_clones, deregister_tm_clones, __do_global_dtors_aux and
+  frame_dummy, and on x86 __stack_chk_fail_local, the four
+  __x86.get_pc_thunk.* PIC helpers, and libgcc.a's 64-bit division set -
+  __divdi3, __moddi3, __divmoddi4, __udivdi3, __umoddi3, __udivmoddi4. That
+  last one is why the division block from _PROBE_DLL is carried over into
+  _PROBE_LINUX_C: libgcc is the one static archive still in play here, and
+  those six were found leaking across four families on the Windows side.
+* libstdc++ templates the headers instantiate into whatever uses them, 21 on
+  x64 and 19 on x86. Those are in the image because they are compiled from
+  the probe's own translation unit, exactly as they are on the MinGW side.
+
+Nothing of glibc itself is in either list, which answers the question a
+glibc probe set would have been for: there is no glibc body in a dynamically
+linked .so to measure or to remove.
 """
 
 import functools
@@ -267,6 +292,236 @@ __declspec(dllexport) void probe_cxx_runtime(const char *text)
 # C++ EXE probe: libstdc++ plus the EXE startup path together.
 _PROBE_CXX_EXE = _PROBE_CXX + """
 int main(int argc, char **argv) { probe_cxx_runtime(argv[0]); return argc - argc; }
+"""
+
+
+# Linux only, and a separate source rather than an #ifdef over _PROBE_DLL.
+# That probe is half MSVCRT: _vscprintf, _strtoi64, gmtime_s, _gmtime32_s,
+# _localtime64_s, _get_errno, __time32_t and DllMain have no glibc spelling,
+# and windows.h has no glibc header. Threading an #ifdef through it would put
+# the two baselines that matter most - MinGW's, which this branch may not
+# move, and MSVC's - one editing mistake away from changing.
+#
+# What it has to cover is narrower than the Windows probes, because the C
+# runtime is not in the image: glibc, libm and libstdc++ are all shared
+# objects here, so every call to them is a .plt stub with no body to match.
+# The calls below are still made, for the same reason the MinGW probe makes
+# them - a helper the compiler emits inline, or pulls out of a static
+# archive, only appears if something asks for it - and there is exactly one
+# static archive on this side.
+#
+# That archive is libgcc.a. The 64-bit division block is therefore carried
+# over from _PROBE_DLL unchanged in substance: __divdi3, __moddi3,
+# __udivmoddi4 and __umoddi3 are library calls rather than instructions on a
+# 32-bit target, they are linked into whatever needs them, and on the Windows
+# side they were found sitting in 7-Zip, Lua, OpenSSL and libstdc++ at once
+# before the block was added. Nothing about that changes with the container.
+_PROBE_LINUX_C = """\
+#include <errno.h>
+#include <locale.h>
+#include <math.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <wchar.h>
+
+#define PROBE_EXPORT __attribute__((visibility("default")))
+
+static int probe_linux_compare(const void *a, const void *b)
+{
+    return *(const int *)a - *(const int *)b;
+}
+
+static int probe_linux_vprintf(const char *format, ...)
+{
+    char buffer[256];
+    va_list arguments;
+    int written;
+    va_start(arguments, format);
+    written = vsnprintf(buffer, sizeof(buffer), format, arguments);
+    va_end(arguments);
+    return written;
+}
+
+PROBE_EXPORT void probe_linux_runtime(const char *text, double value)
+{
+    char buffer[256];
+    wchar_t wide[64];
+    int numbers[4] = {4, 2, 3, 1};
+    FILE *stream;
+    void *block;
+    time_t now;
+
+    snprintf(buffer, sizeof(buffer), "%s %f %e %g %d %x %p", text, value,
+             value, value, 1, 2, (const void *)text);
+    sscanf(buffer, "%255s", buffer);
+    swprintf(wide, 64, L"%s %f", L"w", value);
+    strtod(buffer, NULL);
+    strtol(buffer, NULL, 10);
+    strtoll(buffer, NULL, 16);
+    qsort(numbers, 4, sizeof(int), probe_linux_compare);
+    bsearch(numbers, numbers, 4, sizeof(int), probe_linux_compare);
+    block = malloc(64);
+    block = realloc(block, 128);
+    memset(block, 0, 128);
+    memcpy(buffer, block, 16);
+    memmove(buffer, block, 16);
+    free(block);
+    strncpy(buffer, text, 8);
+    strcat(buffer, text);
+    strchr(buffer, 'x');
+    strstr(buffer, text);
+    strcmp(buffer, text);
+    wcslen(wide);
+    wcscpy(wide, wide);
+    setlocale(LC_ALL, "C");
+    time(&now);
+    localtime(&now);
+    strftime(buffer, sizeof(buffer), "%Y", localtime(&now));
+    stream = fopen("/dev/null", "rb");
+    if (stream) {
+        fread(buffer, 1, 1, stream);
+        fseek(stream, 0, SEEK_SET);
+        ftell(stream);
+        fclose(stream);
+    }
+    fprintf(stderr, "%s", buffer);
+    abs((int)value);
+    labs((long)value);
+    ldiv((long)value, 2);
+    /* libgcc.a, statically linked even here: 64-bit division on a 32-bit
+       target is a call rather than an instruction. Both shapes are needed -
+       a quotient and a remainder over one divisor fold into a single
+       __divmoddi4/__udivmoddi4, over different divisors they stay as
+       __divdi3, __moddi3, __udivdi3 and __umoddi3 - which is exactly the
+       reasoning recorded on the MinGW probe, and the reason this block is
+       the same block. */
+    {
+        long long signed_wide = (long long)value * 1000003LL + 7;
+        unsigned long long unsigned_wide = (unsigned long long)signed_wide | 1ULL;
+        long long sdiv = (long long)(unsigned_wide | 3);
+        unsigned long long udiv = (unsigned long long)(signed_wide | 9);
+        volatile long long sink64;
+
+        sink64 = signed_wide / sdiv;
+        sink64 += signed_wide % sdiv;
+        sink64 += (long long)(unsigned_wide / udiv);
+        sink64 += (long long)(unsigned_wide % udiv);
+        sink64 += signed_wide / (long long)(unsigned_wide | 5);
+        sink64 += signed_wide % (long long)(unsigned_wide | 7);
+        sink64 += (long long)(unsigned_wide / (unsigned long long)(signed_wide | 11));
+        sink64 += (long long)(unsigned_wide % (unsigned long long)(signed_wide | 13));
+        (void)sink64;
+    }
+    /* Taking the address defeats the builtin, for the reason recorded on the
+       MinGW probe: GCC folds sin() on a known value or emits an SSE
+       instruction, and the library body is never referenced. Here the body
+       lives in libm.so.6 and cannot be in the image either way, so what this
+       costs is one PLT stub each - kept so the two C probes stay the same
+       measurement asked of two runtimes rather than two different ones. */
+    {
+        volatile double (*const dd[])(double) = {
+            sin, cos, tan, asin, acos, atan, sinh, cosh, tanh,
+            floor, ceil, sqrt, log, log10, exp, fabs, round, trunc,
+        };
+        volatile double (*const dd2[])(double, double) = {pow, fmod, atan2, hypot};
+        volatile long double (*const ld[])(long double) = {sinl, cosl, tanl, logl, expl};
+        double accumulated = 0.0;
+        size_t index;
+
+        for (index = 0; index < sizeof(dd) / sizeof(dd[0]); index++)
+            accumulated += dd[index](value);
+        for (index = 0; index < sizeof(dd2) / sizeof(dd2[0]); index++)
+            accumulated += dd2[index](value, 2.0);
+        for (index = 0; index < sizeof(ld) / sizeof(ld[0]); index++)
+            accumulated += (double)ld[index]((long double)value);
+        {
+            int exponent = 0;
+            double integral = 0.0;
+            accumulated += frexp(value, &exponent);
+            accumulated += modf(value, &integral);
+            accumulated += ldexp(value, 2);
+            accumulated += integral + exponent;
+        }
+        snprintf(buffer, sizeof(buffer), "%f", accumulated);
+    }
+    {
+        struct tm parts;
+        gmtime_r(&now, &parts);
+        localtime_r(&now, &parts);
+        gmtime(&now);
+        mktime(&parts);
+        difftime(now, now);
+    }
+    probe_linux_vprintf("%s %f %d", text, value, 1);
+    errno = 0;
+}
+"""
+
+# The executable variant. On Linux the split is smaller than MinGW's
+# crt1.o/dllcrt1.o one - crtbeginS.o and crtbegin.o carry the same four
+# functions - but _start comes from Scrt1.o and only an executable has it,
+# so both are measured and unioned exactly as on the Windows side.
+_PROBE_LINUX_C_EXE = _PROBE_LINUX_C + """
+int main(int argc, char **argv)
+{
+    probe_linux_runtime(argv[0], (double)argc);
+    return 0;
+}
+"""
+
+# Anything linked with g++ brings in the unwinder's registration glue. The
+# libstdc++ bodies themselves are in libstdc++.so.6 and cannot reach an
+# artefact here, which is the whole reason the C++ recipes on this side do
+# not need -static-libstdc++ and its thirteen thousand functions.
+_PROBE_LINUX_CXX = """\
+#include <algorithm>
+#include <exception>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#define PROBE_EXPORT __attribute__((visibility("default")))
+
+PROBE_EXPORT void probe_linux_cxx_runtime(const char *text)
+{
+    std::string value(text);
+    std::vector<std::string> items;
+    std::map<std::string, int> counts;
+    std::ostringstream out;
+
+    items.push_back(value);
+    items.push_back(value + "2");
+    std::sort(items.begin(), items.end());
+    for (const std::string &item : items) {
+        counts[item] += 1;
+        out << item << " " << counts[item] << "\\n";
+    }
+    std::unique_ptr<std::string> owned(new std::string(out.str()));
+    std::shared_ptr<std::string> shared(new std::string(*owned));
+    try {
+        if (value.size() > 1000000) {
+            throw std::runtime_error(value);
+        }
+        std::cerr << shared->substr(0, 1) << std::endl;
+    } catch (const std::exception &error) {
+        std::cerr << error.what() << std::endl;
+    }
+}
+"""
+
+_PROBE_LINUX_CXX_EXE = _PROBE_LINUX_CXX + """
+int main(int argc, char **argv)
+{
+    probe_linux_cxx_runtime(argv[0]);
+    return argc - argc;
+}
 """
 
 
@@ -2297,20 +2552,48 @@ def crt_glue(toolchain_id):
     from .smdaify import disassemble
 
     toolchain = get_toolchain(toolchain_id)
-    # EXE and DLL startup are entirely different object sets in MinGW
-    # (crt1.o/crtexe.c versus dllcrt1.o/crtdll.c), so a DLL-only baseline
-    # misses every mainCRTStartup-side function and leaves ~21 runtime
-    # functions in each EXE artefact. All four are measured and unioned.
-    probes = [
-        (toolchain.cc, "probe.c", _PROBE_DLL, ["-shared"]),
-        (toolchain.cxx, "probe.cpp", _PROBE_CXX,
-         ["-shared", "-static-libstdc++", "-static-libgcc"]),
-        (toolchain.cc, "probe_exe.c", _PROBE_EXE, []),
-        (toolchain.cxx, "probe_exe.cpp", _PROBE_CXX_EXE,
-         ["-static-libstdc++", "-static-libgcc"]),
-    ]
-    if toolchain.kind == "msvc":
-        probes += _msvc_probes(toolchain)
+    if toolchain.kind == "linux":
+        # A separate list rather than the four below plus extras: every one
+        # of those four is #include <windows.h> with a __declspec entry point
+        # and MSVCRT-only calls, so under this toolchain all four would fail
+        # to build - which does not fail the family being built but does fail
+        # the run and leaves the artefacts filtered against nothing.
+        #
+        # No -static-libstdc++ here, unlike the MinGW C++ probes. There it
+        # puts the libstdc++ bodies into the baseline because the artefacts
+        # can contain them; here libstdc++.so.6 is a shared object that no
+        # artefact links statically, so a static probe would measure bodies
+        # that are not in anything and miss the shared-libgcc registration
+        # glue that is.
+        #
+        # -lm is on both C probes and is load-bearing on the executable one.
+        # A shared object may leave a symbol undefined and resolve it at load
+        # time, so the .so probe links without it; an executable may not, and
+        # the probe takes the address of sin, cos and twenty more for the
+        # reason recorded in its math block - so without -lm it failed to
+        # link with 27 undefined references, which is precisely the silent
+        # baseline shrink probe_failures exists to catch.
+        probes = [
+            (toolchain.cc, "probe_linux.c", _PROBE_LINUX_C, ["-shared", "-lm"]),
+            (toolchain.cxx, "probe_linux.cpp", _PROBE_LINUX_CXX, ["-shared"]),
+            (toolchain.cc, "probe_linux_exe.c", _PROBE_LINUX_C_EXE, ["-lm"]),
+            (toolchain.cxx, "probe_linux_exe.cpp", _PROBE_LINUX_CXX_EXE, []),
+        ]
+    else:
+        # EXE and DLL startup are entirely different object sets in MinGW
+        # (crt1.o/crtexe.c versus dllcrt1.o/crtdll.c), so a DLL-only baseline
+        # misses every mainCRTStartup-side function and leaves ~21 runtime
+        # functions in each EXE artefact. All four are measured and unioned.
+        probes = [
+            (toolchain.cc, "probe.c", _PROBE_DLL, ["-shared"]),
+            (toolchain.cxx, "probe.cpp", _PROBE_CXX,
+             ["-shared", "-static-libstdc++", "-static-libgcc"]),
+            (toolchain.cc, "probe_exe.c", _PROBE_EXE, []),
+            (toolchain.cxx, "probe_exe.cpp", _PROBE_CXX_EXE,
+             ["-static-libstdc++", "-static-libgcc"]),
+        ]
+        if toolchain.kind == "msvc":
+            probes += _msvc_probes(toolchain)
     glue = {}
     # Set before the loop, so that a toolchain whose probes all built is
     # recorded as measured-and-clean rather than as never measured.
@@ -2379,10 +2662,17 @@ def crt_glue(toolchain_id):
     # function this repository starts deleting out of somebody's library.
     # None of these prefixes can reach a MinGW baseline: the sources that
     # define them are only ever compiled by cl.
+    #
+    # The Linux probes are matched by prefix for the same reason, and can be:
+    # every function they define is named probe_linux_*, including the
+    # helpers, and GCC's .constprop/.cold/.isra partitions keep the prefix.
+    # None of these can reach a MinGW or MSVC baseline either - the source
+    # that defines them is only ever compiled by the native gcc.
     for name in [name for name in glue
                  if name.startswith(("probe_atl_", "_probe_atl_",
                                      "probe_msvcrt_", "_probe_msvcrt_",
                                      "probe_stl_", "_probe_stl_",
+                                     "probe_linux_", "_probe_linux_",
                                      "ProbeInterface", "ProbeImplementation",
                                      "ProbeArray", "ProbeEh"))]:
         glue.pop(name, None)

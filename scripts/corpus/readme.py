@@ -12,6 +12,7 @@ import os
 import re
 
 from . import config
+from .toolchain import image_format
 
 
 HEADER = ("| Name     | Version | Compiler | MCRIT | SMDA |\n"
@@ -97,17 +98,25 @@ def render_family(family):
 
     rows = []
     for key in sorted(grouped, key=lambda k: (_version_key(k[0]), k[1], k[2])):
-        version, toolchain, _ = key
+        version, _, _ = key
         by_arch = grouped[key]
-        # Raw shellcode is not a PE, so it must not be labelled as one.
-        label = "code" if any(e.get("is_blob") for e in by_arch.values()) else "PE"
+        first = next(iter(by_arch.values()))
+        # Raw shellcode is not a PE, so it must not be labelled as one - and
+        # neither is an ELF shared object. The container is read off the
+        # record's own toolchain id, not off the grouping key, which has had
+        # its architecture suffix removed and so no longer parses as one; and
+        # off the id rather than off a field of its own, so the ~200 records
+        # written before this corpus had a Linux side answer too. See
+        # toolchain.image_format.
+        label = ("code" if any(e.get("is_blob") for e in by_arch.values())
+                 else image_format(first.get("toolchain")))
         mcrit_links = " / ".join(
             _link("%s %s" % (arch, label), by_arch[arch]["mcrit"])
             for arch in ("x86", "x64") if arch in by_arch)
         smda_links = " / ".join(
             _link("%s %s" % (arch, label), by_arch[arch]["smda"])
             for arch in ("x86", "x64") if arch in by_arch)
-        compiler = _compiler_label(next(iter(by_arch.values())))
+        compiler = _compiler_label(first)
         rows.append("| %s | %s | %s | %s | %s |" % (family, version, compiler, mcrit_links, smda_links))
     return "\n".join([HEADER] + rows)
 
@@ -122,6 +131,16 @@ def _compiler_label(entry):
     if "mingw" in (entry.get("toolchain") or ""):
         version = compiler.split("(GCC)")[-1].strip().split("-")[0] if "(GCC)" in compiler else "?"
         return "MinGW-w64 GCC %s" % version
+    if image_format(entry.get("toolchain")) == "ELF":
+        # The native GCC announces itself as "gcc (Ubuntu 13.3.0-6ubuntu2~
+        # 24.04.1) 13.3.0", where the last field is the version and the
+        # parenthesised part is the distribution's packaging string - which
+        # must not be printed, because a parenthesis closes a markdown link
+        # early and the column would be different on every distribution for
+        # the same compiler. The target is named because that is the whole
+        # difference between this row and a MinGW one.
+        version = compiler.split()[-1].split(".")[0] if compiler else "?"
+        return "GCC %s (Linux, glibc)" % version
     # cl.exe announces itself as "Microsoft (R) C/C++ Optimizing Compiler
     # Version 19.44.35228 for x64". Printing that verbatim would be wrong as
     # well as long: one row spans both architectures, and the entry this

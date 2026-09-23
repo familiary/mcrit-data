@@ -23,7 +23,7 @@
 // Lengths are spread from 2 to ~90 characters because N is a template
 // parameter: the copy and cipher loops are unrolled per length, so short and
 // long strings are genuinely different code rather than the same body twice.
-
+#include "corpus_export.h"  // on the line that was blank: keys are __LINE__
 #include <obfuscate.h>
 
 namespace {
@@ -48,7 +48,7 @@ int wide_sum(const wchar_t *text)
 
 }  // namespace
 
-extern "C" __declspec(dllexport) int exercise(void)
+extern "C" CORPUS_EXPORT int exercise(void)
 {
     int sink = 0;
 

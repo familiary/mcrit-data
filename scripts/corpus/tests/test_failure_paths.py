@@ -1778,6 +1778,170 @@ class ProvenanceToolchainTest(unittest.TestCase):
             [("Fam_1.0", _Recipe(["mingw_x86"], [_Artifact("f.dll")]))])
         self.assertEqual(recipe.toolchains, ["mingw_x86"])
 
+    def _linux_pair(self):
+        """The shape all four string-obfuscator families now have."""
+        return [("Fam_1.0", _Recipe(["mingw_x86", "mingw_x64"],
+                                    [_Artifact("f.dll")])),
+                ("Fam_1.0_linux", _Recipe(["linux_x86", "linux_x64"],
+                                          [_Artifact("f.so")]))]
+
+    def test_the_slug_picks_the_linux_recipe_over_the_mingw_one(self):
+        """The producer segment is "gcc13" and the alias is "linux_x64".
+
+        Nothing about those two strings relates them, so this only works
+        because both sides go through corpus.toolchain.canonical_alias.
+        Without it every artefact of the four families that now have a
+        MinGW and a Linux recipe for one version would be unresolvable.
+        """
+        recipe, _ = self._resolve("Fam_1.0_gcc13_x64_f.so",
+                                  {"version": "1.0", "component": "f.so"},
+                                  self._linux_pair())
+        self.assertEqual(recipe.toolchains, ["linux_x86", "linux_x64"])
+
+    def test_the_mingw_slug_still_picks_the_mingw_recipe(self):
+        recipe, _ = self._resolve("Fam_1.0_mingw13_x86_f.dll",
+                                  {"version": "1.0", "component": "f.dll"},
+                                  self._linux_pair())
+        self.assertEqual(recipe.toolchains, ["mingw_x86", "mingw_x64"])
+
+    def test_a_gcc_slug_reads_as_the_linux_alias(self):
+        import refresh_provenance
+
+        self.assertEqual(
+            refresh_provenance._toolchain_of(
+                "Obfuscate_2026-06-03_gcc13_x64_ay_obfuscate.so",
+                "Obfuscate", "2026-06-03"),
+            "linux_x64")
+
+
+class ToolchainAliasTest(unittest.TestCase):
+    """The three spellings of the Linux toolchain have to fold onto one.
+
+    It is registered under its versioned id, under the version-less alias
+    that id folds onto by the digit-stripping rule every slug reader uses,
+    and under the alias recipes declare - which is named after the target
+    rather than the compiler, so no rule over the string alone relates it to
+    the other two.
+    """
+
+    def test_every_spelling_folds_onto_the_recipe_alias(self):
+        from corpus.toolchain import canonical_alias
+
+        for spelling in ("gcc13_x64", "gcc_x64", "linux_x64"):
+            self.assertEqual(canonical_alias(spelling), "linux_x64", spelling)
+
+    def test_the_windows_toolchains_are_untouched(self):
+        from corpus.toolchain import canonical_alias
+
+        self.assertEqual(canonical_alias("mingw13_x86"), "mingw_x86")
+        self.assertEqual(canonical_alias("mingw_x64"), "mingw_x64")
+        self.assertEqual(canonical_alias("msvc143_x64"), "msvc_x64")
+
+    def test_an_unrecognised_id_is_returned_with_its_digits_stripped(self):
+        from corpus.toolchain import canonical_alias
+
+        self.assertEqual(canonical_alias("clang19_x64"), "clang_x64")
+        self.assertEqual(canonical_alias(""), "")
+
+    def test_the_container_follows_the_toolchain(self):
+        """readme.py labels a row from this, so a blob's None must not fail."""
+        from corpus.toolchain import image_format
+
+        for spelling in ("gcc13_x64", "gcc_x86", "linux_x64"):
+            self.assertEqual(image_format(spelling), "ELF", spelling)
+        for spelling in ("mingw13_x64", "msvc143_x86", "", None):
+            self.assertEqual(image_format(spelling), "PE", repr(spelling))
+
+
+class LinuxToolchainShapeTest(unittest.TestCase):
+    """What kind="linux" changes, and what it must leave alone.
+
+    The MinGW probe command line in particular: the baseline measured with
+    it is a constant the rest of this corpus was filtered against, so a
+    change there silently invalidates every committed report.
+    """
+
+    def _toolchain(self, kind, arch_flag=""):
+        from corpus.toolchain import Toolchain
+
+        return Toolchain(id="t", short_id="t", arch="x64", bitness=64,
+                         prefix="", cc="cc", cxx="cxx", windres="wr",
+                         strip="s", ar="ar", ranlib="rl", kind=kind,
+                         arch_flag=arch_flag)
+
+    def test_the_mingw_probe_command_is_unchanged(self):
+        toolchain = self._toolchain("mingw")
+        self.assertEqual(toolchain.probe_command("cc", "p.c", "out", True),
+                         ["cc", "-O2", "-o", "out", "p.c", "-shared"])
+
+    def test_the_linux_probe_command_names_the_abi_and_is_position_independent(self):
+        toolchain = self._toolchain("linux", "-m32")
+        self.assertEqual(toolchain.probe_command("cc", "p.c", "out", True),
+                         ["cc", "-m32", "-O2", "-fPIC", "-o", "out", "p.c",
+                          "-shared"])
+
+    def test_the_linux_environment_does_not_export_an_empty_windres(self):
+        """An autotools build that tests for it would find it set and run ""."""
+        environment = self._toolchain("linux", "-m64").build_env()
+        self.assertNotIn("WINDRES", environment)
+        self.assertEqual(environment["CC"], "cc -m64")
+        self.assertEqual(environment["STRIP"], "true")
+
+    def test_the_mingw_environment_still_exports_windres(self):
+        self.assertEqual(self._toolchain("mingw").build_env()["WINDRES"], "wr")
+
+    def test_the_linux_target_triple_is_not_built_from_an_empty_prefix(self):
+        """{platform} expanding to "" made cargo report an unknown target."""
+        placeholders = self._toolchain("linux", "-m64").placeholders()
+        self.assertEqual(placeholders["platform"], "x86_64")
+        self.assertEqual(placeholders["host"], "x86_64-linux-gnu")
+        self.assertEqual(placeholders["archflag"], "-m64")
+
+    def test_the_cross_compilers_still_take_their_triple_from_the_prefix(self):
+        from corpus.toolchain import Toolchain
+
+        toolchain = Toolchain(id="t", short_id="t", arch="x86", bitness=32,
+                              prefix="i686-w64-mingw32-", cc="cc", cxx="cxx",
+                              windres="wr", strip="s", ar="ar", ranlib="rl")
+        placeholders = toolchain.placeholders()
+        self.assertEqual(placeholders["platform"], "i686")
+        self.assertEqual(placeholders["host"], "i686-w64-mingw32")
+        self.assertEqual(placeholders["archflag"], "")
+
+
+class ElfReadmeRowTest(unittest.TestCase):
+    """A .so must not be offered to a reader as a PE."""
+
+    def _entry(self, toolchain, compiler):
+        return {"toolchain": toolchain, "compiler": compiler,
+                "version": "1.0", "component": "f", "architecture": "x64",
+                "mcrit": "data/F/x64/mcrit/f.mcrit",
+                "smda": "data/F/x64/smda/f.7z"}
+
+    def test_a_linux_row_is_labelled_elf_and_names_the_target(self):
+        from corpus import readme
+        from corpus.toolchain import image_format
+
+        entry = self._entry("gcc13_x64", "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0")
+        self.assertEqual(image_format(entry["toolchain"]), "ELF")
+        self.assertEqual(readme._compiler_label(entry), "GCC 13 (Linux, glibc)")
+
+    def test_the_packaging_string_never_reaches_the_table(self):
+        """A parenthesis in a markdown cell closes the link beside it early."""
+        from corpus import readme
+
+        label = readme._compiler_label(
+            self._entry("gcc13_x86", "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"))
+        self.assertNotIn("(Ubuntu", label)
+
+    def test_the_mingw_label_is_unchanged(self):
+        from corpus import readme
+
+        self.assertEqual(
+            readme._compiler_label(
+                self._entry("mingw13_x64", "x86_64-w64-mingw32-gcc (GCC) 13.2.0")),
+            "MinGW-w64 GCC 13.2.0")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -11,7 +11,6 @@
 import argparse
 import logging
 import os
-import re
 import sys
 import traceback
 
@@ -19,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from corpus import config, recipes, validate
 from corpus.pipeline import run_recipe
-from corpus.toolchain import available_toolchains
+from corpus.toolchain import available_toolchains, canonical_alias
 
 
 def _normalise_toolchain(toolchain_id):
@@ -31,8 +30,13 @@ def _normalise_toolchain(toolchain_id):
     concrete id is a legal thing for one to declare, and a selector that
     matched only one spelling would silently drop such a recipe out of a CI
     leg rather than say so.
+
+    The Linux toolchain is registered under two aliases rather than one -
+    ``gcc_x64`` after its compiler and ``linux_x64`` after its target - so
+    the fold is corpus.toolchain's rather than a regex here; see
+    canonical_alias.
     """
-    return re.sub(r"^([a-z]+)\d+_", r"\1_", toolchain_id)
+    return canonical_alias(toolchain_id)
 
 
 def _select_recipes(toolchain_ids):

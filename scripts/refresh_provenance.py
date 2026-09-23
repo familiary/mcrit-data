@@ -38,6 +38,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from corpus import config, package, recipes
+from corpus.toolchain import canonical_alias
 
 
 # Everything else in an entry - digests, source pin, compiler, counts, paths,
@@ -88,6 +89,15 @@ def _toolchain_of(slug, family, version):
     known prefix rather than by counting underscores from either end. The
     producer's version digits are dropped because that is how recipes spell
     a toolchain: the slug says mingw13, the recipe declares mingw_x86.
+
+    Dropping the digits is not always enough. The Linux toolchain's producer
+    segment is "gcc13" and the alias its recipes declare is "linux_x64" -
+    named after the target rather than the compiler, because that is what is
+    different about it - so the fold goes through corpus.toolchain, which
+    owns that correspondence. Without it every family that has both a MinGW
+    and a Linux recipe for one version (all four of the string obfuscators)
+    would be unresolvable: two candidates, and a slug that narrows to
+    neither.
     """
     prefix = "%s_%s_" % (family, version)
     if not version or not slug.startswith(prefix):
@@ -95,7 +105,7 @@ def _toolchain_of(slug, family, version):
     rest = slug[len(prefix):].split("_")
     if len(rest) < 2 or rest[1] not in ("x86", "x64"):
         return None
-    return "%s_%s" % (re.sub(r"\d+$", "", rest[0]), rest[1])
+    return canonical_alias("%s_%s" % (re.sub(r"\d+$", "", rest[0]), rest[1]))
 
 
 def _resolve(index, family, slug, entry):
@@ -126,7 +136,7 @@ def _resolve(index, family, slug, entry):
         if any(a.is_blob for _, recipe in candidates for a in recipe.artifacts):
             wanted = None
         narrowed = [(name, recipe) for name, recipe in candidates
-                    if wanted in {re.sub(r"^([a-z]+)\d+_", r"\1_", t)
+                    if wanted in {canonical_alias(t)
                                   for t in recipe.toolchains}]
         if len(narrowed) == 1:
             candidates = narrowed

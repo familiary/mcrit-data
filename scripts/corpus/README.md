@@ -3,7 +3,8 @@
 `scripts/build_corpus.py` builds reference data from unmodified upstream
 source, for cases where the IDA Pro / [lib2smda](https://github.com/danielplohmann/lib2smda)
 route is not available. It follows the same pipeline the repository README
-describes, with the IDA stage replaced by a direct SMDA pass over PE images:
+describes, with the IDA stage replaced by a direct SMDA pass over PE and ELF
+images:
 
     fetch -> build -> smdaify -> export -> package -> validate
 
@@ -402,11 +403,82 @@ merely smaller. That is a question for the maintainer about how the x86
 MinGW inputs were crawled, not something a new contribution should paper
 over by adding a separate libstdc++ family.
 
+## The Linux half
+
+Four families - `Obfuscate`, `StringObfuscatorCT`, `StringObfuscator` and
+`obfstr` - also carry ELF artefacts, built by the host's own `gcc`/`g++`
+through the `linux_x86` and `linux_x64` toolchains. They are the corpus's
+only non-PE reference data. All four are portable libraries used on Linux as
+well as Windows, and the recipes are `*_linux.py` modules beside the
+existing ones: same pinned commit, same exerciser or driver crate, same
+optimization level, so an ELF row and a PE row of the same family differ in
+the container and nothing else.
+
+The toolchain is registered as `gcc13_x64`, with the version-less aliases
+`gcc_x64` and `linux_x64`. Two aliases rather than one because the id is
+named after the compiler and the alias recipes declare is named after the
+target, which is the thing that is actually different: the same GCC the
+mingw-w64 cross compilers are built from, aimed at glibc and ELF.
+`corpus.toolchain.canonical_alias` owns that correspondence and everything
+that has to read a toolchain out of a filename goes through it.
+`linux_x86` is only registered when `gcc -print-multi-lib` reports a 32-bit
+multilib; the C++ recipes additionally need `g++-multilib`, which no cheap
+probe can test for and which fails at the compile step with the compiler's
+own message.
+
+Three things about this side are worth knowing before adding to it.
+
+**Build a `.so`, not an executable.** A `-shared` ELF object links glibc,
+libstdc++ and libm dynamically, so none of their bodies are in the image at
+all - every call to them is an unnamed `.plt` stub. The measured glue
+baseline is therefore 28 symbols on x64 and 37 on x86, against 2893 for
+MinGW x64, and of those only 7 and 18 are link glue; the rest are libstdc++
+templates the headers instantiate into the probe's own translation unit. A
+static build would put the whole C runtime into the sample under a library's
+name, which is what `-static` did to monomorph: 1393 of 1397 symbols glibc
+and zlib.
+
+**Build `-fvisibility=hidden`.** This is the one that is easy to miss and
+expensive to miss. An ELF shared object exports every global symbol by
+default, and a call to an exported symbol from inside the same object goes
+through a three-instruction `.plt` stub, because another object is allowed to
+interpose it. Without the flag a header-only C++ library's own template
+instantiations are all exported and all called through stubs:
+`StringObfuscatorCT` x64 came out at 385 functions of which 271 were unnamed
+stubs, and was refused by the symbol-coverage gate at 113 of 256. With it the
+same source is 137 functions with 133 named. It is also what the PE side has
+had all along - a MinGW DLL with no `.def` exports only what is marked
+`dllexport` - so the flag makes the two comparable rather than making the ELF
+one special. The entry point is exempted through
+`corpus/exercisers/corpus_export.h`, which is one macro spelling
+`__declspec(dllexport)` on Windows and `visibility("default")` elsewhere so
+that one exerciser serves both platforms.
+
+**A handful of x86 link glue survives the filter**, on every 32-bit ELF
+artefact: `_init`, `_fini`, `register_tm_clones`, `deregister_tm_clones`,
+`__do_global_dtors_aux`, and `__stack_chk_fail_local` in the three C++ ones
+(obfstr's Rust driver does not use the stack protector) - six functions of
+233, 137 and 71 respectively, five of obfstr's 55. Not a gap in the
+baseline. On 32-bit PIC each of those bodies reaches the GOT through
+`call __x86.get_pc_thunk.bx; add ebx, <delta>` and the delta is that image's
+own layout, so the body - and its PicHash - differs between any two images.
+The filter matches on symbol *and* PicHash deliberately, which is what stops
+it deleting a project's own `strlen`, so these stay. The x64 artefacts have
+no such problem and their glue is removed in full.
+
 ## Adding a recipe
 
 Recipes are declarative (`corpus/recipes/*.py`) and carry no logic, so every
 project goes through the same code path. Pin sources by SHA-256 for a release
 tarball or by tag/commit for a clone; never by a moving branch.
+
+An exerciser keyed on the preprocessor deserves one more check than the
+pipeline can make. `ay_obfuscate.cpp` instantiates on
+`ay::generate_key(__LINE__)`, so adding an `#include` above its call sites
+changes every key, every mangled name and every function body while leaving
+the function count exactly as the provenance record says - nothing fails and
+nothing notices. Compare the recovered symbol names of a rebuild against the
+committed report, not just the counts, whenever an exerciser is edited.
 
 ## Targets investigated but not built
 

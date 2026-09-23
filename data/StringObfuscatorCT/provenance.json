@@ -1,4 +1,68 @@
 {
+  "StringObfuscatorCT_2019-12-11_gcc13_x64_snowapril_obfuscator.so": {
+    "architecture": "x64",
+    "build_flags": "-O0 -std=c++14 -fPIC -shared -fvisibility=hidden SOURCE_DATE_EPOCH=1576062057 (exerciser; every one of these is load-bearing, see notes)",
+    "built_artifact": "snowapril_obfuscator.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "snowapril_obfuscator.so",
+    "family": "StringObfuscatorCT",
+    "generated": "2026-09-23",
+    "is_blob": false,
+    "license": "MIT (LICENSE carries the MIT text with the copyright line left as 'Copyright (c) 2018 ' - no holder is named)",
+    "mcrit": "data/StringObfuscatorCT/x64/mcrit/StringObfuscatorCT_2019-12-11_gcc13_x64_snowapril_obfuscator.so.mcrit",
+    "notes": "The ELF build of the same commit and the same exerciser as the MinGW artefacts of this family, so the two are comparable. Built from an exerciser translation unit, since the library is header-only and its cipher runs entirely in the type system; the emitted functions are the library's own. -O0 is the only usable level and that was re-measured here rather than assumed: at -O2 this exerciser emits 8 of the library's functions, all constructors, against 125 at -O0, because every OBFUSCATE builds a temporary that dies at the end of the statement and the optimiser folds it into the caller. SOURCE_DATE_EPOCH is set because meta_random.hpp seeds itself from __TIME__ and the resulting cipher parameters are template arguments: measured here, two builds seconds apart without it share not one of their 124 MetaString names. With it the two .so files are byte-identical - unlike the MinGW artefacts, which still differ by 667 bytes of PE link timestamp and randomised image base that an ELF shared object does not have. obfuscator.hpp is also not self-contained - it uses an unqualified size_t and includes only <array> - so the exerciser includes <cstddef> ahead of it. The 32-bit artefact needs gcc-multilib and g++-multilib installed.",
+    "num_functions": 131,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_fini",
+      "_init",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "a9a6c93e31ed04d22c4a3513f6e0f5e8b18d9c42d15e643d9e4576b140f0a672",
+    "smda": "data/StringObfuscatorCT/x64/smda/StringObfuscatorCT_2019-12-11_gcc13_x64_snowapril_obfuscator.so.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "93718ba36c1e1f22289a85354ca6849931968d48",
+      "git_ref": "93718ba36c1e1f22289a85354ca6849931968d48",
+      "git_url": "https://github.com/Snowapril/String-Obfuscator-In-Compile-Time.git"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://github.com/Snowapril/String-Obfuscator-In-Compile-Time",
+    "version": "2019-12-11"
+  },
+  "StringObfuscatorCT_2019-12-11_gcc13_x86_snowapril_obfuscator.so": {
+    "architecture": "x86",
+    "build_flags": "-O0 -std=c++14 -fPIC -shared -fvisibility=hidden SOURCE_DATE_EPOCH=1576062057 (exerciser; every one of these is load-bearing, see notes)",
+    "built_artifact": "snowapril_obfuscator.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "snowapril_obfuscator.so",
+    "family": "StringObfuscatorCT",
+    "generated": "2026-09-23",
+    "is_blob": false,
+    "license": "MIT (LICENSE carries the MIT text with the copyright line left as 'Copyright (c) 2018 ' - no holder is named)",
+    "mcrit": "data/StringObfuscatorCT/x86/mcrit/StringObfuscatorCT_2019-12-11_gcc13_x86_snowapril_obfuscator.so.mcrit",
+    "notes": "The ELF build of the same commit and the same exerciser as the MinGW artefacts of this family, so the two are comparable. Built from an exerciser translation unit, since the library is header-only and its cipher runs entirely in the type system; the emitted functions are the library's own. -O0 is the only usable level and that was re-measured here rather than assumed: at -O2 this exerciser emits 8 of the library's functions, all constructors, against 125 at -O0, because every OBFUSCATE builds a temporary that dies at the end of the statement and the optimiser folds it into the caller. SOURCE_DATE_EPOCH is set because meta_random.hpp seeds itself from __TIME__ and the resulting cipher parameters are template arguments: measured here, two builds seconds apart without it share not one of their 124 MetaString names. With it the two .so files are byte-identical - unlike the MinGW artefacts, which still differ by 667 bytes of PE link timestamp and randomised image base that an ELF shared object does not have. obfuscator.hpp is also not self-contained - it uses an unqualified size_t and includes only <array> - so the exerciser includes <cstddef> ahead of it. The 32-bit artefact needs gcc-multilib and g++-multilib installed.",
+    "num_functions": 137,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "c34f62727de8d1a81f5e24eb637b5a679f14c157089e7f2ab68cf7107e86ab46",
+    "smda": "data/StringObfuscatorCT/x86/smda/StringObfuscatorCT_2019-12-11_gcc13_x86_snowapril_obfuscator.so.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "93718ba36c1e1f22289a85354ca6849931968d48",
+      "git_ref": "93718ba36c1e1f22289a85354ca6849931968d48",
+      "git_url": "https://github.com/Snowapril/String-Obfuscator-In-Compile-Time.git"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://github.com/Snowapril/String-Obfuscator-In-Compile-Time",
+    "version": "2019-12-11"
+  },
   "StringObfuscatorCT_2019-12-11_mingw13_x64_snowapril_obfuscator.dll": {
     "architecture": "x64",
     "build_flags": "-O0 -std=c++14 SOURCE_DATE_EPOCH=1576062057 (exerciser; both settings are load-bearing, see notes)",

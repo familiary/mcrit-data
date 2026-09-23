@@ -2,9 +2,10 @@
 
 This replaces the lib2smda/IDA Pro stage of the README pipeline for inputs
 that are PE or ELF images. MinGW writes a COFF symbol table into unstripped
-output, which SMDA reads, so the resulting reports carry function symbols of
-a quality comparable to the IDA-with-symbols path; static .LIB/.A archives
-still need IDA and remain out of reach here.
+output and GCC-on-Linux an ELF one, both of which SMDA reads, so the
+resulting reports carry function symbols of a quality comparable to the
+IDA-with-symbols path; static .LIB/.A archives still need IDA and remain out
+of reach here.
 """
 
 import logging
@@ -193,15 +194,30 @@ def assert_symbols_survived(report, binary_path, min_named_ratio):
     # cannot tell a stripped build from one where the floor was set wrong,
     # and that is the one distinction this message has to support.
     #
-    # The remedy differs by toolchain and the message says both: MinGW keeps
-    # symbols in a COFF table that a build system can strip, which STRIP=true
-    # is about, while MSVC keeps them in a PDB that either exists or does not.
+    # The remedy differs by toolchain and the message says all three: MinGW
+    # and GCC-on-Linux keep symbols in a COFF or ELF symbol table that a
+    # build system can strip, which STRIP=true is about, while MSVC keeps
+    # them in a PDB that either exists or does not.
+    #
+    # An ELF shared object has a third way to fail this that is not a strip
+    # at all, and the message names it because it is what actually happened
+    # when this corpus gained its first ELF family: every global symbol is
+    # exported by default, and an intra-object call to an exported symbol
+    # goes through a three-instruction .plt stub that carries no name, so a
+    # library whose own functions are all exported is mostly unnamed stubs
+    # by count. StringObfuscatorCT's Linux x64 build was refused here at 113
+    # of 256, and -fvisibility=hidden - which is what the PE side has had all
+    # along, since a DLL with no .def exports only what is marked dllexport -
+    # took the same source to 133 of 134.
     raise DisassemblyError(
         "%s: only %d of %d functions of at least %d instructions carry "
         "symbols (%.0f%%); the build most likely stripped them - pass "
-        "STRIP=true to a MinGW build system, or check that an MSVC build "
-        "compiled /Zi or /Z7 and that the link wrote the PDB this report was "
-        "read with. Over every function it is %d of %d."
+        "STRIP=true to a MinGW or GCC build system, or check that an MSVC "
+        "build compiled /Zi or /Z7 and that the link wrote the PDB this "
+        "report was read with. For an ELF shared object, check "
+        "-fvisibility=hidden as well: without it every intra-object call "
+        "runs through an unnamed .plt stub. Over every function it is %d "
+        "of %d."
         % (binary_path, named, len(functions),
            config.MIN_NAMED_SAMPLE_INSTRUCTIONS, 100 * ratio,
            len([f for f in report.getFunctions() if f.function_name]),
@@ -238,6 +254,15 @@ def assert_not_incrementally_linked(report, binary_path):
     Over all 392 generated reports the longest such run outside an
     incrementally linked image is 18 and the shortest inside one is 70; see
     ``MAX_INCREMENTAL_THUNK_RUN`` for the full split.
+
+    Kept unconditional now that the corpus has ELF artefacts as well, rather
+    than narrowed to a PE: there is no /INCREMENTAL on ld, so it can only
+    ever pass there, and a check that costs nothing is not worth making
+    conditional on a format. It was measured rather than assumed - an ELF
+    .plt entry is at a 16-byte stride, not five, and reaches its target
+    through the GOT, so it is written "jmp qword ptr [...]" and
+    _is_direct_target rejects it; the eight ELF artefacts in this corpus
+    carry no unnamed direct-jump function at all, so their longest run is 0.
     """
     thunks = []
     for function in report.getFunctions():

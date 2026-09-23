@@ -1,4 +1,67 @@
 {
+  "obfstr_0.4.6_gcc13_x64_obfstr_driver.so": {
+    "architecture": "x64",
+    "build_flags": "cargo --release (opt-level 3, LTO off) for i686-unknown-linux-gnu / x86_64-unknown-linux-gnu, driver crate #![no_std] with panic=abort, OBFSTR_SEED unset",
+    "built_artifact": "obfstr_driver/target/x86_64-unknown-linux-gnu/release/libobfstr_driver.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "obfstr_driver.so",
+    "family": "obfstr",
+    "generated": "2026-09-23",
+    "is_blob": false,
+    "license": "MIT, Copyright (c) 2019-2020 Casper <CasualX@users.noreply.github.com>",
+    "mcrit": "data/obfstr/x64/mcrit/obfstr_0.4.6_gcc13_x64_obfstr_driver.so.mcrit",
+    "notes": "The ELF build of the same tag and the same driver crate as the MinGW artefacts of this family, so the two are comparable. Built from a driver crate, since the library is a compiletime obfuscator and emits nothing until a consumer uses its macros; the emitted functions are the library's own. Rust edition 2024, so rustc 1.85 or newer is required, and the two targets need `rustup target add i686-unknown-linux-gnu x86_64-unknown-linux-gnu`. The artefact is dominated by obfstr::xref::inner, which upstream marks #[inline(never)] and which is generic over `const SEED: u64`: one monomorphisation per obfuscated item, for the 46 strings, byte strings, C strings, wide strings and xrefs the driver obfuscates. The driver is #![no_std] with panic=abort so the image contains no Rust std or core code to be misfiled under this family - which matters more on this target than on Windows, since Rust has no shared libstd anywhere and a stock cdylib would link all of it statically. OBFSTR_SEED is left unset, which is obfstr's own reproducible default (option_env! falls back to \"FIXED\").",
+    "num_functions": 50,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_fini",
+      "_init",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "11aa8c3c43a0ec925631102ae3ca1cd4cfe0add5da69817857cad1cab2f829e0",
+    "smda": "data/obfstr/x64/smda/obfstr_0.4.6_gcc13_x64_obfstr_driver.so.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "9e56c1938dfd3bd65fe305fbafcb57394c701356",
+      "git_ref": "v0.4.6",
+      "git_url": "https://github.com/CasualX/obfstr.git"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://github.com/CasualX/obfstr",
+    "version": "0.4.6"
+  },
+  "obfstr_0.4.6_gcc13_x86_obfstr_driver.so": {
+    "architecture": "x86",
+    "build_flags": "cargo --release (opt-level 3, LTO off) for i686-unknown-linux-gnu / x86_64-unknown-linux-gnu, driver crate #![no_std] with panic=abort, OBFSTR_SEED unset",
+    "built_artifact": "obfstr_driver/target/i686-unknown-linux-gnu/release/libobfstr_driver.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "obfstr_driver.so",
+    "family": "obfstr",
+    "generated": "2026-09-23",
+    "is_blob": false,
+    "license": "MIT, Copyright (c) 2019-2020 Casper <CasualX@users.noreply.github.com>",
+    "mcrit": "data/obfstr/x86/mcrit/obfstr_0.4.6_gcc13_x86_obfstr_driver.so.mcrit",
+    "notes": "The ELF build of the same tag and the same driver crate as the MinGW artefacts of this family, so the two are comparable. Built from a driver crate, since the library is a compiletime obfuscator and emits nothing until a consumer uses its macros; the emitted functions are the library's own. Rust edition 2024, so rustc 1.85 or newer is required, and the two targets need `rustup target add i686-unknown-linux-gnu x86_64-unknown-linux-gnu`. The artefact is dominated by obfstr::xref::inner, which upstream marks #[inline(never)] and which is generic over `const SEED: u64`: one monomorphisation per obfuscated item, for the 46 strings, byte strings, C strings, wide strings and xrefs the driver obfuscates. The driver is #![no_std] with panic=abort so the image contains no Rust std or core code to be misfiled under this family - which matters more on this target than on Windows, since Rust has no shared libstd anywhere and a stock cdylib would link all of it statically. OBFSTR_SEED is left unset, which is obfstr's own reproducible default (option_env! falls back to \"FIXED\").",
+    "num_functions": 55,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "30831de12c4a4061e115b00f162330ac4d58bcce0405aafc45f64e219c7d9d52",
+    "smda": "data/obfstr/x86/smda/obfstr_0.4.6_gcc13_x86_obfstr_driver.so.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "9e56c1938dfd3bd65fe305fbafcb57394c701356",
+      "git_ref": "v0.4.6",
+      "git_url": "https://github.com/CasualX/obfstr.git"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://github.com/CasualX/obfstr",
+    "version": "0.4.6"
+  },
   "obfstr_0.4.6_mingw13_x64_obfstr_driver.dll": {
     "architecture": "x64",
     "build_flags": "cargo --release (opt-level 3, LTO off) for i686-pc-windows-gnu / x86_64-pc-windows-gnu, driver crate #![no_std] with panic=abort, OBFSTR_SEED unset",

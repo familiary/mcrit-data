@@ -35,8 +35,11 @@
 // `template <size_t... I, ...>` with an unqualified size_t and includes only
 // <array> and its own meta_random.hpp, neither of which is guaranteed to
 // declare ::size_t. GCC 13 with mingw-w64 headers rejects it on its own, so
-// the consumer has to provide the declaration - including <cstddef> first is
-// enough.
+// the consumer has to provide the declaration - including <cstddef> ahead of
+// it is enough.
+
+#include "corpus_export.h"
+
 #include <cstddef>
 
 #include <obfuscator.hpp>
@@ -54,7 +57,7 @@ int narrow_sum(const char *text)
 
 }  // namespace
 
-extern "C" __declspec(dllexport) int exercise(void)
+extern "C" CORPUS_EXPORT int exercise(void)
 {
     int sink = 0;
 

@@ -1,4 +1,68 @@
 {
+  "StringObfuscator_2021-08-07_gcc13_x64_katursis_str_obfuscator.so": {
+    "architecture": "x64",
+    "build_flags": "-O2 -std=c++14 -fPIC -shared -fvisibility=hidden (exerciser; -O2 is required by upstream, see notes)",
+    "built_artifact": "katursis_str_obfuscator.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "katursis_str_obfuscator.so",
+    "family": "StringObfuscator",
+    "generated": "2026-09-23",
+    "is_blob": false,
+    "license": "MIT, Copyright (c) 2016 katursis",
+    "mcrit": "data/StringObfuscator/x64/mcrit/StringObfuscator_2021-08-07_gcc13_x64_katursis_str_obfuscator.so.mcrit",
+    "notes": "The ELF build of the same commit and the same exerciser as the MinGW artefacts of this family, so the two are comparable. Built from an exerciser translation unit, since the library is header-only and constexpr; the emitted functions are the library's own. -O2 is mandatory, not preferred: upstream's README states 'Requirements - O2', and at -O0 the constexpr constructor is not folded, so the strings are never encrypted and appear in the image in clear text - re-measured on this toolchain at 22 plaintext hits at -O0 and 0 at -O1 and -O2. This is the reverse of the Obfuscate and StringObfuscatorCT families here, which only emit anything at -O0. string_encryptor is templated on the buffer size alone, with the key being S % 255, so the number of functions follows the number of distinct string lengths rather than the number of strings: the exerciser sweeps lengths 4-63 and yields exactly 60 decrypt() bodies. decrypt() survives -O2 only because upstream marks it __attribute__((noinline)) under #ifdef __GNUC__, which the native GCC takes as the mingw-w64 one does. Built -shared so glibc stays out of the image, and -fvisibility=hidden so the object exports only the exerciser's entry point and calls its own functions directly, which is what the MinGW DLL does. The 32-bit artefact needs gcc-multilib and g++-multilib installed.",
+    "num_functions": 65,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_fini",
+      "_init",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "143002f017bfd0ee683793c4ff547d3305417009a3a15bc08d6cf2016f34d44a",
+    "smda": "data/StringObfuscator/x64/smda/StringObfuscator_2021-08-07_gcc13_x64_katursis_str_obfuscator.so.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "9bfc18b4165621807de74e37164b85fa318ceed2",
+      "git_ref": "9bfc18b4165621807de74e37164b85fa318ceed2",
+      "git_url": "https://github.com/katursis/StringObfuscator.git"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://github.com/katursis/StringObfuscator",
+    "version": "2021-08-07"
+  },
+  "StringObfuscator_2021-08-07_gcc13_x86_katursis_str_obfuscator.so": {
+    "architecture": "x86",
+    "build_flags": "-O2 -std=c++14 -fPIC -shared -fvisibility=hidden (exerciser; -O2 is required by upstream, see notes)",
+    "built_artifact": "katursis_str_obfuscator.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "katursis_str_obfuscator.so",
+    "family": "StringObfuscator",
+    "generated": "2026-09-23",
+    "is_blob": false,
+    "license": "MIT, Copyright (c) 2016 katursis",
+    "mcrit": "data/StringObfuscator/x86/mcrit/StringObfuscator_2021-08-07_gcc13_x86_katursis_str_obfuscator.so.mcrit",
+    "notes": "The ELF build of the same commit and the same exerciser as the MinGW artefacts of this family, so the two are comparable. Built from an exerciser translation unit, since the library is header-only and constexpr; the emitted functions are the library's own. -O2 is mandatory, not preferred: upstream's README states 'Requirements - O2', and at -O0 the constexpr constructor is not folded, so the strings are never encrypted and appear in the image in clear text - re-measured on this toolchain at 22 plaintext hits at -O0 and 0 at -O1 and -O2. This is the reverse of the Obfuscate and StringObfuscatorCT families here, which only emit anything at -O0. string_encryptor is templated on the buffer size alone, with the key being S % 255, so the number of functions follows the number of distinct string lengths rather than the number of strings: the exerciser sweeps lengths 4-63 and yields exactly 60 decrypt() bodies. decrypt() survives -O2 only because upstream marks it __attribute__((noinline)) under #ifdef __GNUC__, which the native GCC takes as the mingw-w64 one does. Built -shared so glibc stays out of the image, and -fvisibility=hidden so the object exports only the exerciser's entry point and calls its own functions directly, which is what the MinGW DLL does. The 32-bit artefact needs gcc-multilib and g++-multilib installed.",
+    "num_functions": 71,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "735f6752bc8b3eb0a84c9e67b7fc585ed10835154b77c83673552d9a6ab44cd4",
+    "smda": "data/StringObfuscator/x86/smda/StringObfuscator_2021-08-07_gcc13_x86_katursis_str_obfuscator.so.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "9bfc18b4165621807de74e37164b85fa318ceed2",
+      "git_ref": "9bfc18b4165621807de74e37164b85fa318ceed2",
+      "git_url": "https://github.com/katursis/StringObfuscator.git"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://github.com/katursis/StringObfuscator",
+    "version": "2021-08-07"
+  },
   "StringObfuscator_2021-08-07_mingw13_x64_katursis_str_obfuscator.dll": {
     "architecture": "x64",
     "build_flags": "-O2 -std=c++14 (exerciser; -O2 is required by upstream, see notes)",

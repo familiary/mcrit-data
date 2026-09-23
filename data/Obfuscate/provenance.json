@@ -1,4 +1,68 @@
 {
+  "Obfuscate_2026-06-03_gcc13_x64_ay_obfuscate.so": {
+    "architecture": "x64",
+    "build_flags": "-O0 -std=c++14 -fPIC -shared -fvisibility=hidden (exerciser; -O0 and the visibility setting are both load-bearing, see notes)",
+    "built_artifact": "ay_obfuscate.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "ay_obfuscate.so",
+    "family": "Obfuscate",
+    "generated": "2026-09-23",
+    "is_blob": false,
+    "license": "Unlicense (public domain dedication, stated at the foot of obfuscate.h and in LICENSE)",
+    "mcrit": "data/Obfuscate/x64/mcrit/Obfuscate_2026-06-03_gcc13_x64_ay_obfuscate.so.mcrit",
+    "notes": "The ELF build of the same commit and the same exerciser as the MinGW artefacts of this family, so the two are comparable. Built from an exerciser translation unit, since the library is header-only and constexpr; the emitted functions are the library's own. -O0 is deliberate and was re-measured on this toolchain: at -O2 GCC 13 on Linux leaves 35 of the library's functions and every one is a 2-instruction `endbr64; ret` ~obfuscated_data() stub, against 216 real ones at -O0 - so an -O2 consumer of this library has nothing in it for these functions to match, on ELF exactly as on PE. A .so linking glibc and libstdc++ dynamically is what keeps the C++ runtime out of the sample: of the x64 artefact's 227 functions, 216 are the library's, 3 the exerciser's and the other 8 are unnamed one- to three-instruction .plt/.plt.sec lazy-binding stubs. The x86 artefact additionally keeps six named link glue functions (_init, _fini, the tm_clones pair, __do_global_dtors_aux, __stack_chk_fail_local): on 32-bit PIC their bodies embed this image's own GOT delta, so the measured baseline's PicHash does not match and the filter, correctly, does not remove them on a name alone. obfuscated_data is templated on <N, KEY, CHAR_TYPE> with KEY defaulting to ay::generate_key(__LINE__), so the exerciser puts every AY_OBFUSCATE on its own source line; calls sharing a line and a length collapse into a single instantiation. The 32-bit artefact needs gcc-multilib and g++-multilib installed.",
+    "num_functions": 227,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_fini",
+      "_init",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "e555a621372f416239a12b7550569336e2f474dcc69703f9b839d69a26dcbb3d",
+    "smda": "data/Obfuscate/x64/smda/Obfuscate_2026-06-03_gcc13_x64_ay_obfuscate.so.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "5390a353f4e83ffd596730eab0b0e4ac629dbbbc",
+      "git_ref": "5390a353f4e83ffd596730eab0b0e4ac629dbbbc",
+      "git_url": "https://github.com/adamyaxley/Obfuscate.git"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://github.com/adamyaxley/Obfuscate",
+    "version": "2026-06-03"
+  },
+  "Obfuscate_2026-06-03_gcc13_x86_ay_obfuscate.so": {
+    "architecture": "x86",
+    "build_flags": "-O0 -std=c++14 -fPIC -shared -fvisibility=hidden (exerciser; -O0 and the visibility setting are both load-bearing, see notes)",
+    "built_artifact": "ay_obfuscate.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "ay_obfuscate.so",
+    "family": "Obfuscate",
+    "generated": "2026-09-23",
+    "is_blob": false,
+    "license": "Unlicense (public domain dedication, stated at the foot of obfuscate.h and in LICENSE)",
+    "mcrit": "data/Obfuscate/x86/mcrit/Obfuscate_2026-06-03_gcc13_x86_ay_obfuscate.so.mcrit",
+    "notes": "The ELF build of the same commit and the same exerciser as the MinGW artefacts of this family, so the two are comparable. Built from an exerciser translation unit, since the library is header-only and constexpr; the emitted functions are the library's own. -O0 is deliberate and was re-measured on this toolchain: at -O2 GCC 13 on Linux leaves 35 of the library's functions and every one is a 2-instruction `endbr64; ret` ~obfuscated_data() stub, against 216 real ones at -O0 - so an -O2 consumer of this library has nothing in it for these functions to match, on ELF exactly as on PE. A .so linking glibc and libstdc++ dynamically is what keeps the C++ runtime out of the sample: of the x64 artefact's 227 functions, 216 are the library's, 3 the exerciser's and the other 8 are unnamed one- to three-instruction .plt/.plt.sec lazy-binding stubs. The x86 artefact additionally keeps six named link glue functions (_init, _fini, the tm_clones pair, __do_global_dtors_aux, __stack_chk_fail_local): on 32-bit PIC their bodies embed this image's own GOT delta, so the measured baseline's PicHash does not match and the filter, correctly, does not remove them on a name alone. obfuscated_data is templated on <N, KEY, CHAR_TYPE> with KEY defaulting to ay::generate_key(__LINE__), so the exerciser puts every AY_OBFUSCATE on its own source line; calls sharing a line and a length collapse into a single instantiation. The 32-bit artefact needs gcc-multilib and g++-multilib installed.",
+    "num_functions": 233,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "00fea91f071505562c6adcffc42e42d98a35c148d1a690b235db394bf9b0e55e",
+    "smda": "data/Obfuscate/x86/smda/Obfuscate_2026-06-03_gcc13_x86_ay_obfuscate.so.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "5390a353f4e83ffd596730eab0b0e4ac629dbbbc",
+      "git_ref": "5390a353f4e83ffd596730eab0b0e4ac629dbbbc",
+      "git_url": "https://github.com/adamyaxley/Obfuscate.git"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://github.com/adamyaxley/Obfuscate",
+    "version": "2026-06-03"
+  },
   "Obfuscate_2026-06-03_mingw13_x64_ay_obfuscate.dll": {
     "architecture": "x64",
     "build_flags": "-O0 -std=c++14 (exerciser; -O0 chosen deliberately, see notes)",
