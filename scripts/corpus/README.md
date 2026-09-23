@@ -143,13 +143,21 @@ minutes: it extracts every `.7z` and decompresses every `.mcrit`.
   small bodies that happen to hash alike, which is what the instruction floor
   bounds rather than eliminates.
 
-Today the corpus has **546** cross-family PicHashes at the ten-instruction
-floor, split **345** standard-library instantiations, **157** whose names
-differ between the families sharing them, **43** carrying no symbol in any
+Today the corpus has **566** cross-family PicHashes at the ten-instruction
+floor, split **347** standard-library instantiations, **161** whose names
+differ between the families sharing them, **57** carrying no symbol in any
 family, and the **one** leakage finding described above. The totals grew
-with the corpus - they were 58 when it was MinGW-only - so they are a
-measure of how much C++ it now contains rather than of anything getting
-worse.
+with the corpus - they were 58 when it was MinGW-only, and 546 before the
+lib2smda#1 wishlist families arrived - so they are a measure of how much
+C++ it now contains rather than of anything getting worse.
+
+That last step is the useful control. It added six MSVC families and eight
+ELF artefacts, among them five separate implementations of the same WOW64
+transition, sitting beside BlackBone's vendored copy of rewolf-wow64ext.
+Five implementations of one technique is where new leakage would be
+expected if the filter were weak, and the leakage count did not move: all
+twenty of the new shared hashes classify as standard-library instantiation,
+differing names, or unnamed.
 
 A hash counts as standard-library code only when every name sharing it is
 one; an earlier rule accepted a hash as soon as *one* of the names was, and
