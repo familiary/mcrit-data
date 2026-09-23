@@ -565,7 +565,10 @@ not have; the probe on run 35855463795 reported `WDK-PROBE` PRESENT on all
 five paths, APICallProxy then proved a `.sys` goes through this pipeline, and
 what was left was that nobody had written a recipe. `blackbonedrv.py` is that
 recipe: `Win10Release|x64` of `src/BlackBoneDrv/BlackBoneDrv.sln`, which is
-upstream's own CI command line, for 139 functions of the driver's own. It is
+upstream's own CI command line. It built: 321 functions reported, of which 58
+are MSVC string-literal COMDATs and 112 are thunks of three instructions or
+fewer, leaving 144 of ten instructions or more against the 139 counted in the
+source. It is
 a separate family from the user-mode library rather than a second component
 of it - the two share no code, and two recipes on one `(family, version)` key
 is exactly the ambiguity `refresh_provenance.py` narrows by toolchain alias

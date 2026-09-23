@@ -25,9 +25,9 @@ blackbonedrv.py, a separate family, from the same commit. That recipe's
 docstring argues the split - the two images share no code, and both recipes
 pinning one commit would put two entries on the `(BlackBone, 2023-07-17)`
 key that refresh_provenance.py cannot tell apart, since its narrowing is by
-toolchain alias and both declare msvc_x64. The ``notes`` below still say the
-driver is not built, which is true of the artefacts this family already
-holds; correct it in the same commit that imports the driver's data.
+toolchain alias and both declare msvc_x64. The ``notes`` below point at that
+family rather than claiming the driver is unbuilt, which they did until its
+data was imported.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -104,7 +104,8 @@ RECIPES = {
               "sources into the same image, so functions from those projects "
               "are present here under the BlackBone family; BeaEngine is "
               "imported from its own DLL and is not. The kernel driver is "
-              "not built. The project links with EnableCOMDATFolding, i.e. "
+              "built separately, as the BlackBoneDrv family, from this same "
+              "commit. The project links with EnableCOMDATFolding, i.e. "
               "/OPT:ICF, so routines that compiled to identical bodies are "
               "present once, under whichever name the linker kept; the "
               "VX-API recipe in this repository passes /OPT:NOICF to prevent "

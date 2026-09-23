@@ -641,7 +641,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi /W4 (CMake Release, /Zi added; /W4 is upstream's own MSVC branch); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/example/DllLoader/DllLoader.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "DllLoader.exe",
     "family": "MemoryModule",
     "generated": "2026-09-23",
@@ -826,7 +826,7 @@
       "strtol",
       "terminate"
     ],
-    "sha256": "c656cab21101f265561f1626d3b4b5f5e7046cae725ca8304f14d94ae0a55213",
+    "sha256": "d1aae5ee01291bbe7a28cd125a3fef488321f8d8b136af5fb28a172bb4d711e4",
     "smda": "data/MemoryModule/x64/smda/MemoryModule_2019-02-24_msvc143_x64_DllLoader.exe.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -842,7 +842,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi /W4 (CMake Release, /Zi added; /W4 is upstream's own MSVC branch); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/example/DllLoader/DllLoader.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "DllLoader.exe",
     "family": "MemoryModule",
     "generated": "2026-09-23",
@@ -1024,7 +1024,7 @@
       "pre_c_initialization",
       "pre_cpp_initialization"
     ],
-    "sha256": "09f8b58e35b59829da466ac3ee024c8285b5548f7fe4521239f30c7295b5f31a",
+    "sha256": "9385ab2368d5ead1400bd100ac6c28fd578af43997c12e68ecc622e94f95db56",
     "smda": "data/MemoryModule/x86/smda/MemoryModule_2019-02-24_msvc143_x86_DllLoader.exe.7z",
     "smda_version": "4.8.0",
     "source": {

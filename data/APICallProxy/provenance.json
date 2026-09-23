@@ -3,7 +3,7 @@
     "architecture": "x64",
     "build_flags": "Release|x64, the project's only configuration carrying link libraries: netio.lib, ntoskrnl.lib, hal.lib, wmilib.lib, $(KernelBufferOverflowLib) and KMDF's WdfLdr.lib and WdfDriverEntry.lib. The project sets no ClCompile settings in any configuration, so optimization, warning level and runtime library are the WindowsKernelModeDriver10.0 toolset's defaults rather than anything upstream chose. This recipe forces /Zi (DebugInformationFormat ProgramDatabase) with separate compiler and linker PDBs, a full /DEBUG, /OPT:NOREF /OPT:NOICF, no whole-program optimization at either end (/p:WholeProgramOptimization=false plus LinkTimeCodeGeneration Default), /Brepro, /INCREMENTAL:NO, and TreatWarningAsError false; signing is turned off with SignMode=Off and driver-package INF validation with SkipPackageVerification=true, neither of which reaches the compiler or the linker - the driver is linked and disassembled, never packaged or installed. RuntimeLibrary is left alone - a kernel driver has no ucrt to move out of the image",
     "built_artifact": "out/APICallProxy.sys",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "APICallProxy.sys",
     "family": "APICallProxy",
     "generated": "2026-09-23",
@@ -36,7 +36,7 @@
       "wcscpy",
       "wcsstr"
     ],
-    "sha256": "ef5ee94d0052b07297ffa685d1320d9eeaf8038991262aff2e24312181f6eea4",
+    "sha256": "6491171cf1071210830d2ca4987be9375f81d6d2a66d4088af6a881e61ae01f8",
     "smda": "data/APICallProxy/x64/smda/APICallProxy_2022-12-09_msvc143_x64_APICallProxy.sys.7z",
     "smda_version": "4.8.0",
     "source": {

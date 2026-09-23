@@ -199,7 +199,7 @@
     "architecture": "x64",
     "build_flags": "Release configuration: /O2 /Oi /Gy /sdl /W3 /GL, compiled as C with _CRT_SECURE_NO_WARNINGS and VISUAL_STUDIO_PATCHES defined; /LTCG /OPT:REF /OPT:ICF at link (all upstream's own); /MD, /Zi, /DEBUG and /Brepro added by this recipe, and the toolset retargeted from v140/v141 to v143",
     "built_artifact": "msvc/bin/x64/Release/q3vm.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "q3vm.exe",
     "family": "q3vm",
     "generated": "2026-09-23",
@@ -282,7 +282,7 @@
       "pre_cpp_initialization",
       "terminate"
     ],
-    "sha256": "a1bceb100b6368fb1183a29bd82780bc40ee8a37e7ba1395c5e28d2e821ca227",
+    "sha256": "62609712c033600d88e10a44b564e19f21b153b749f8eea865f8fb8c2c9177ab",
     "smda": "data/q3vm/x64/smda/q3vm_1.3.1_msvc143_x64_q3vm.exe.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -298,7 +298,7 @@
     "architecture": "x86",
     "build_flags": "Release configuration: /O2 /Oi /Gy /sdl /W3 /GL, compiled as C with _CRT_SECURE_NO_WARNINGS and VISUAL_STUDIO_PATCHES defined; /LTCG /OPT:REF /OPT:ICF at link (all upstream's own); /MD, /Zi, /DEBUG and /Brepro added by this recipe, and the toolset retargeted from v140/v141 to v143",
     "built_artifact": "msvc/bin/Win32/Release/q3vm.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "q3vm.exe",
     "family": "q3vm",
     "generated": "2026-09-23",
@@ -385,7 +385,7 @@
       "pre_c_initialization",
       "pre_cpp_initialization"
     ],
-    "sha256": "8ef94ca24a249e2d9a8f6122fbb6ab0b718d97f41800c5101f8b6400a5975c95",
+    "sha256": "8a47d49b54a6940cb2fad7605f991f29a0ed521897b1021809bfc07a384f1840",
     "smda": "data/q3vm/x86/smda/q3vm_1.3.1_msvc143_x86_q3vm.exe.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -597,7 +597,7 @@
     "architecture": "x64",
     "build_flags": "Release configuration: /O2 /Oi /Gy /sdl /W3 /GL, compiled as C with _CRT_SECURE_NO_WARNINGS and VISUAL_STUDIO_PATCHES defined; /LTCG /OPT:REF /OPT:ICF at link (all upstream's own); /MD, /Zi, /DEBUG and /Brepro added by this recipe, and the toolset retargeted from v140/v141 to v143",
     "built_artifact": "msvc/bin/x64/Release/q3vm.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "q3vm.exe",
     "family": "q3vm",
     "generated": "2026-09-23",
@@ -680,7 +680,7 @@
       "pre_cpp_initialization",
       "terminate"
     ],
-    "sha256": "b1d06d58924d1c1ad34a6d049ad1c81781c4979609d9a73e666412225434abc0",
+    "sha256": "cb23d666d093a5b9ebfa70b155de644e68bf9a2daa3713075fffbcaa57797f26",
     "smda": "data/q3vm/x64/smda/q3vm_2026-03-06_msvc143_x64_q3vm.exe.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -696,7 +696,7 @@
     "architecture": "x86",
     "build_flags": "Release configuration: /O2 /Oi /Gy /sdl /W3 /GL, compiled as C with _CRT_SECURE_NO_WARNINGS and VISUAL_STUDIO_PATCHES defined; /LTCG /OPT:REF /OPT:ICF at link (all upstream's own); /MD, /Zi, /DEBUG and /Brepro added by this recipe, and the toolset retargeted from v140/v141 to v143",
     "built_artifact": "msvc/bin/Win32/Release/q3vm.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "q3vm.exe",
     "family": "q3vm",
     "generated": "2026-09-23",
@@ -783,7 +783,7 @@
       "pre_c_initialization",
       "pre_cpp_initialization"
     ],
-    "sha256": "cad3966aec1e5e14274a15e5ff0def68d5704d6917bc7fab4afd4237c571a669",
+    "sha256": "d8d7eb0c61731b0f44bc4e93f7a8152b4f2cfb3e150b83f87ca26f25a0de1097",
     "smda": "data/q3vm/x86/smda/q3vm_2026-03-06_msvc143_x86_q3vm.exe.7z",
     "smda_version": "4.8.0",
     "source": {

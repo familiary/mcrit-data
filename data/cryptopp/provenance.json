@@ -645,7 +645,7 @@
     "architecture": "x64",
     "build_flags": "cryptlib.vcxproj Release: /O2 /Ob2 /Oi /Oy /Gy /GF /W4 /MD /Z7, NDEBUG and USE_PRECOMPILED_HEADERS defined, plus the per-file ISA settings upstream assigns (AdvancedVectorExtensions2 for chacha_avx.cpp and so on); x86 additionally /arch:SSE2 from the project's Win32 group. /MD and /Z7 replace upstream's /MT and its unstated debug format, and /GL is turned off, all three by this recipe. Whole archive linked into a DLL with /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF.",
     "built_artifact": "cryptopp.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "cryptopp.dll",
     "family": "cryptopp",
     "generated": "2026-09-23",
@@ -2226,7 +2226,7 @@
       "void __cdecl std::_Xout_of_range(char const *)",
       "wcslen"
     ],
-    "sha256": "dc70e45006354ceb28bcefbd3171cd3a480094edc6bdff4e1da4d241abf1c779",
+    "sha256": "5f8e334a0182560e6f8f86addfee6199395d3dd69401eebea6284f6f660d26a3",
     "smda": "data/cryptopp/x64/smda/cryptopp_8.9.0_msvc143_x64_cryptopp.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -2242,7 +2242,7 @@
     "architecture": "x86",
     "build_flags": "cryptlib.vcxproj Release: /O2 /Ob2 /Oi /Oy /Gy /GF /W4 /MD /Z7, NDEBUG and USE_PRECOMPILED_HEADERS defined, plus the per-file ISA settings upstream assigns (AdvancedVectorExtensions2 for chacha_avx.cpp and so on); x86 additionally /arch:SSE2 from the project's Win32 group. /MD and /Z7 replace upstream's /MT and its unstated debug format, and /GL is turned off, all three by this recipe. Whole archive linked into a DLL with /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF.",
     "built_artifact": "cryptopp.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "cryptopp.dll",
     "family": "cryptopp",
     "generated": "2026-09-23",
@@ -3851,7 +3851,7 @@
       "void __cdecl std::_Xlength_error(char const *)",
       "void __cdecl std::_Xout_of_range(char const *)"
     ],
-    "sha256": "6c2e5df73784d2e0bea2adba06b823e6ac2ba66cbaf84f39afb378140c446776",
+    "sha256": "c15ead84276434e7b1b310c991cdd823c6f6fee8f9aa6173974de8e1805555c1",
     "smda": "data/cryptopp/x86/smda/cryptopp_8.9.0_msvc143_x86_cryptopp.dll.7z",
     "smda_version": "4.8.0",
     "source": {

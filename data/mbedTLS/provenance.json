@@ -2889,7 +2889,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Z7 (CMake Release, with /Z7 in place of a PDB-writing /Zi so the debug info rides in the .obj files and survives being archived and re-linked) plus the /W3 /utf-8 upstream appends for MSVC, /WX suppressed with MBEDTLS_FATAL_WARNINGS=OFF; the three static archives then linked whole into one DLL with /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF. No interprocedural optimization: mbedTLS enables none and the wrapper link would otherwise be an LTCG link that undoes /WHOLEARCHIVE.",
     "built_artifact": "mbedtls_all.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "mbedtls_all.dll",
     "family": "mbedTLS",
     "generated": "2026-09-23",
@@ -3068,7 +3068,7 @@
       "time",
       "vsnprintf"
     ],
-    "sha256": "c67c7ef402718062583c33bf45139068dd22401ab8e980150d0699569f95c86e",
+    "sha256": "a99a1996f614bae246fec7f62ea3b243fff4c1e2192bc62d81acf987556cf7de",
     "smda": "data/mbedTLS/x64/smda/mbedTLS_3.6.7_msvc143_x64_mbedtls_all.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -3087,7 +3087,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Z7 (CMake Release, with /Z7 in place of a PDB-writing /Zi so the debug info rides in the .obj files and survives being archived and re-linked) plus the /W3 /utf-8 upstream appends for MSVC, /WX suppressed with MBEDTLS_FATAL_WARNINGS=OFF; the three static archives then linked whole into one DLL with /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF. No interprocedural optimization: mbedTLS enables none and the wrapper link would otherwise be an LTCG link that undoes /WHOLEARCHIVE.",
     "built_artifact": "mbedtls_all.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "mbedtls_all.dll",
     "family": "mbedTLS",
     "generated": "2026-09-23",
@@ -3263,7 +3263,7 @@
       "time",
       "vsnprintf"
     ],
-    "sha256": "3ec73226613796be3585472f0f47e226806bdc98d1bcad13f9d8ce1922a5b6e3",
+    "sha256": "7fe126b9b156feafdb9fb34d218a61d78ed4594ca939c184449fb9988ef4f23a",
     "smda": "data/mbedTLS/x86/smda/mbedTLS_3.6.7_msvc143_x86_mbedtls_all.dll.7z",
     "smda_version": "4.8.0",
     "source": {

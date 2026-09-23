@@ -322,7 +322,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi /W0 (CMake Release, /Zi added, /W0 overriding the /Wall upstream prepends on WIN32); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/wolfssl.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "wolfssl.dll",
     "family": "wolfSSL",
     "generated": "2026-09-23",
@@ -494,7 +494,7 @@
       "terminate",
       "time"
     ],
-    "sha256": "b9e87e1b6ee834d8869a03612f94b238e3391de6ce56c755f194ef98c1589052",
+    "sha256": "39b68be2660a55ac2d7cd46b91bfec8f3e40ea193eca50463d14d1073c977955",
     "smda": "data/wolfSSL/x64/smda/wolfSSL_5.9.2_msvc143_x64_wolfssl.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -510,7 +510,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi /W0 (CMake Release, /Zi added, /W0 overriding the /Wall upstream prepends on WIN32); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/wolfssl.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "wolfssl.dll",
     "family": "wolfSSL",
     "generated": "2026-09-23",
@@ -693,7 +693,7 @@
       "is_potentially_valid_image_base",
       "time"
     ],
-    "sha256": "0bf1878787b9ff613fd0b6c4f351732383887efde15ce89040c942db2ecdef55",
+    "sha256": "11edc353903103880df8dab9134bca51d56a7895771145bd84f0b69a01db75c3",
     "smda": "data/wolfSSL/x86/smda/wolfSSL_5.9.2_msvc143_x86_wolfssl.dll.7z",
     "smda_version": "4.8.0",
     "source": {

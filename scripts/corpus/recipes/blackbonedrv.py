@@ -486,6 +486,9 @@ RECIPES = {
         # x86 leg here in any case. The expectation is that very nearly all
         # 139 functions carry a name; if a build comes back near the floor,
         # that is a finding about the build rather than a reason to lower it.
+        # Measured: 321 of 321 named, a ratio of 1.000, so the PDB was found
+        # and applied. The count is higher than the source's 139 because the
+        # PDB also names string-literal COMDATs and import thunks; see notes.
         notes="The kernel half of BlackBone, in its own solution and sharing "
               "no code with the user-mode library recorded under the "
               "BlackBone family - that one is C++ linked against the ucrt, "
@@ -500,7 +503,17 @@ RECIPES = {
               "under _WIN10_: BlackBoneDrv.c 5, Dispatch.c 1, Inject.c 4, "
               "Loader.c 14, MMap.c 19, NotifyRoutine.c 1, Private.c 13, "
               "Remap.c 25, Routines.c 21, Utils.c 23, VadHelpers.c 4, "
-              "VadRoutines.c 5, ldrreloc.c 4. Eight of the 139 are not this "
+              "VadRoutines.c 5, ldrreloc.c 4. The built artefact reports 321 "
+              "functions, which overstates that: 58 are MSVC string-literal "
+              "COMDAT symbols (??_C@_...) sitting in the code sections and "
+              "disassembled as one- to six-instruction fragments rather than "
+              "being code at all, and a further 112 are three instructions "
+              "or fewer, almost all import thunks into ntoskrnl. The 144 "
+              "functions of ten instructions or more are the driver's own "
+              "code and agree with the 139 counted in the source, the excess "
+              "being static helpers and AVL callbacks the file-by-file count "
+              "does not reach. Judge coverage on those 144. Eight of the "
+              "139 are not this "
               "project's code and are present here under this family: "
               "ldrreloc.c's four Ldr* relocation routines are Windows "
               "Research Kernel source and say so in the file, and "

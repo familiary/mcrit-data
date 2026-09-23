@@ -694,7 +694,7 @@
     "architecture": "x64",
     "build_flags": "/W3 /wd4090 /O2 /MD /Zi /Gs0 /GF /Gy (VC-WIN32 / VC-WIN64A release defaults, unmodified), no-asm; /nologo /debug /Brepro /OPT:NOREF /OPT:NOICF at link, replacing upstream's /nologo /debug",
     "built_artifact": "libcrypto.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "libcrypto",
     "family": "OpenSSL",
     "generated": "2026-09-23",
@@ -887,7 +887,7 @@
       "terminate",
       "wcsstr"
     ],
-    "sha256": "2517b0c2513cf1bf20445dc6cc26eb538894c5e45bae823bc2d04ba757f0ba4a",
+    "sha256": "7d13137245d8cff5e9b587e1f53ecdfb964aa42bcc0a2eab64f0b8b6d50a8c57",
     "smda": "data/OpenSSL/x64/smda/OpenSSL_1.1.1w_msvc143_x64_libcrypto.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -903,7 +903,7 @@
     "architecture": "x64",
     "build_flags": "/W3 /wd4090 /O2 /MD /Zi /Gs0 /GF /Gy (VC-WIN32 / VC-WIN64A release defaults, unmodified), no-asm; /nologo /debug /Brepro /OPT:NOREF /OPT:NOICF at link, replacing upstream's /nologo /debug",
     "built_artifact": "libssl.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "libssl",
     "family": "OpenSSL",
     "generated": "2026-09-23",
@@ -1057,7 +1057,7 @@
       "strncmp",
       "terminate"
     ],
-    "sha256": "81e96be6cc079782bd71b99158176bbf877f23e263e9f0ce1db5ce833d68a7ad",
+    "sha256": "48933c99c223ccf5e5e991ebaaee8799c11a5dbfa74b39c5f718cd8d4adb3a91",
     "smda": "data/OpenSSL/x64/smda/OpenSSL_1.1.1w_msvc143_x64_libssl.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1073,7 +1073,7 @@
     "architecture": "x86",
     "build_flags": "/W3 /wd4090 /O2 /MD /Zi /Gs0 /GF /Gy (VC-WIN32 / VC-WIN64A release defaults, unmodified), no-asm; /nologo /debug /Brepro /OPT:NOREF /OPT:NOICF at link, replacing upstream's /nologo /debug",
     "built_artifact": "libcrypto.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "libcrypto",
     "family": "OpenSSL",
     "generated": "2026-09-23",
@@ -1299,7 +1299,7 @@
       "time",
       "time"
     ],
-    "sha256": "3ff68e8da95034af03d5100abd1821e565c3adf1daf5f0f4d0006a88e6f01701",
+    "sha256": "1720caf5db0e1598229e14082a09b47e5c4be35bd2ba8da520978916562749ae",
     "smda": "data/OpenSSL/x86/smda/OpenSSL_1.1.1w_msvc143_x86_libcrypto.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1315,7 +1315,7 @@
     "architecture": "x86",
     "build_flags": "/W3 /wd4090 /O2 /MD /Zi /Gs0 /GF /Gy (VC-WIN32 / VC-WIN64A release defaults, unmodified), no-asm; /nologo /debug /Brepro /OPT:NOREF /OPT:NOICF at link, replacing upstream's /nologo /debug",
     "built_artifact": "libssl.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "libssl",
     "family": "OpenSSL",
     "generated": "2026-09-23",
@@ -1473,7 +1473,7 @@
       "time",
       "time"
     ],
-    "sha256": "13411de7c9401153228c8579af87f56f2a3bb139e9fa5f88b6cc5702b73843b7",
+    "sha256": "1688779427dd9ea28780952c5e8aed0c80ce65b61a3a04fd2b0b97cad20cf762",
     "smda": "data/OpenSSL/x86/smda/OpenSSL_1.1.1w_msvc143_x86_libssl.7z",
     "smda_version": "4.8.0",
     "source": {

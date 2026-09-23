@@ -166,7 +166,7 @@
     "architecture": "x64",
     "build_flags": "ReleaseDLL configuration: /O2 /Ob1 /Oi /Oy- /Gy /MD /Zi /W3, NDEBUG and UNICODE defined, SODIUM_DLL_EXPORT; x86 takes v143's default /arch because upstream's SSE2 group is conditioned on a Processor property nothing defines; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link, the last three forced by this recipe over upstream's /OPT:REF /OPT:ICF and commented-out GenerateDebugInformation",
     "built_artifact": "bin/x64/Release/v143/dynamic/libsodium.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "libsodium.dll",
     "family": "libsodium",
     "generated": "2026-09-23",
@@ -320,7 +320,7 @@
       "strrchr",
       "terminate"
     ],
-    "sha256": "cc2ebbfa852e8676b1b953b91e769c36db6021da1b996c6d7265d3bdb433d097",
+    "sha256": "48f2bd1c6bb5eb929d2794cd8e0515f9ec17fe53ddc44fbefa70b6b855659ed9",
     "smda": "data/libsodium/x64/smda/libsodium_1.0.18_msvc143_x64_libsodium.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -336,7 +336,7 @@
     "architecture": "x86",
     "build_flags": "ReleaseDLL configuration: /O2 /Ob1 /Oi /Oy- /Gy /MD /Zi /W3, NDEBUG and UNICODE defined, SODIUM_DLL_EXPORT; x86 takes v143's default /arch because upstream's SSE2 group is conditioned on a Processor property nothing defines; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link, the last three forced by this recipe over upstream's /OPT:REF /OPT:ICF and commented-out GenerateDebugInformation",
     "built_artifact": "bin/Win32/Release/v143/dynamic/libsodium.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "libsodium.dll",
     "family": "libsodium",
     "generated": "2026-09-23",
@@ -489,7 +489,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "2e256a3d1a3595aeb5f958915a65e947fec89ef117e8842512a4e6e9c082c439",
+    "sha256": "505644b2e4b64b815da3bfa6283b26e1ad27880da39a334c312ad3824ffdba79",
     "smda": "data/libsodium/x86/smda/libsodium_1.0.18_msvc143_x86_libsodium.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -668,7 +668,7 @@
     "architecture": "x64",
     "build_flags": "ReleaseDLL configuration: /O2 /Ob1 /Oi /Oy- /Gy /MD /Zi /W3, NDEBUG and UNICODE defined, SODIUM_DLL_EXPORT; x86 takes v143's default /arch because upstream's SSE2 group is conditioned on a Processor property nothing defines; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link, the last three forced by this recipe over upstream's /OPT:REF /OPT:ICF and commented-out GenerateDebugInformation",
     "built_artifact": "bin/x64/Release/v143/dynamic/libsodium.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "libsodium.dll",
     "family": "libsodium",
     "generated": "2026-09-23",
@@ -822,7 +822,7 @@
       "strrchr",
       "terminate"
     ],
-    "sha256": "7e24a183da0c958835da5b50bbe667ade1a8a7f8c6a08989fd09a38dd0411907",
+    "sha256": "f58d38181be75e6e5a4bd5193cceee927b18ee4b4506c7bfadbbc69fda95d709",
     "smda": "data/libsodium/x64/smda/libsodium_1.0.20_msvc143_x64_libsodium.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -838,7 +838,7 @@
     "architecture": "x86",
     "build_flags": "ReleaseDLL configuration: /O2 /Ob1 /Oi /Oy- /Gy /MD /Zi /W3, NDEBUG and UNICODE defined, SODIUM_DLL_EXPORT; x86 takes v143's default /arch because upstream's SSE2 group is conditioned on a Processor property nothing defines; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link, the last three forced by this recipe over upstream's /OPT:REF /OPT:ICF and commented-out GenerateDebugInformation",
     "built_artifact": "bin/Win32/Release/v143/dynamic/libsodium.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "libsodium.dll",
     "family": "libsodium",
     "generated": "2026-09-23",
@@ -991,7 +991,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "aec35defd1a1cae4319116b13060f2dd0ee86f3ae27819090dd71685028397e3",
+    "sha256": "1a7bf64b09a41fbf61931e4eed5bd60b3e35ff59c0dd7b295b3de840c4114925",
     "smda": "data/libsodium/x86/smda/libsodium_1.0.20_msvc143_x86_libsodium.dll.7z",
     "smda_version": "4.8.0",
     "source": {

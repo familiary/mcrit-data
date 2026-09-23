@@ -3,7 +3,7 @@
     "architecture": "x86",
     "build_flags": "Release|Win32: Optimization Disabled and InlineFunctionExpansion Disabled, IntrinsicFunctions off, /Gy /Oy /GS- /Gd, EnableEnhancedInstructionSet NoExtensions, exception handling and control-flow guard off, /MT, compiled as C (CompileAs CompileAsC), WIN32;NDEBUG;_CONSOLE, and at link IgnoreAllDefaultLibraries with EntryPointSymbol main and SubSystem Console; this recipe retargets v140 to v143 and the 8.1 SDK to 10.0, replaces DebugFastLink with /Zi and a full /DEBUG, turns /OPT:REF and /OPT:ICF off, and adds /Brepro /INCREMENTAL:NO and kernel32.lib",
     "built_artifact": "out/HeavensGate.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "HeavensGate.exe",
     "family": "HeavensGate2",
     "generated": "2026-09-23",
@@ -12,7 +12,7 @@
     "mcrit": "data/HeavensGate2/x86/mcrit/HeavensGate2_2017-07-23_msvc143_x86_HeavensGate.exe.mcrit",
     "notes": "No licence of any kind: the repository carries no LICENSE or COPYING file and no per-file notice, and the only statement of authorship is the comment at the top of HeavensGate.h, \"Made by David Cernak - Dadas1337\". x86 only: the solution's single platform is x86, mapped to the project's only configuration Release|Win32, and no other configuration is selectable. Eleven functions against a floor of eight - ten in the header plus Source.cpp's main - kept separate by upstream's own Release settings, Optimization Disabled and InlineFunctionExpansion Disabled. Compiled as C, not C++, which is upstream's CompileAs setting. No C runtime is linked at all - IgnoreAllDefaultLibraries with EntryPointSymbol main - so the image is those eleven functions and a four-entry kernel32 import table and nothing else. None of the 64-bit code is assembled: it is byte arrays in the data of memcpy64, GetPEB64 and X64Call, copied to an RWX page and patched with the call's operands before each use, so the gate itself is data in this artefact and the surrounding code is the patcher. README.md is stale and contradicts the header on three of the ten functions; the header is what was built.",
     "num_functions": 15,
-    "sha256": "a24b4c2939c9c7685ad405edbd941a76867be38bc7b6d4644edd4337b421980a",
+    "sha256": "030b0231ae9c8669110d2b42e1dfcec46d9183f10bae14815b7397576ffd2983",
     "smda": "data/HeavensGate2/x86/smda/HeavensGate2_2017-07-23_msvc143_x86_HeavensGate.exe.7z",
     "smda_version": "4.8.0",
     "source": {

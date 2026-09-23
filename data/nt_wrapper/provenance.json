@@ -3,7 +3,7 @@
     "architecture": "x64",
     "build_flags": "/Od /MD /Zi /EHsc /bigobj /std:c++20 /permissive- /D_SCL_SECURE_NO_WARNINGS, except that the ntw::ob translation unit is compiled /permissive because three defects in upstream's impl/thread.inl are non-dependent expressions in uninstantiated template bodies and a conforming two-phase lookup diagnoses them at parse time even though nothing calls them; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF and ntdll.lib at link. /Od rather than the corpus default /O2 on purpose: detail/config.hpp defines NTW_INLINE as __forceinline and uses it 958 times across 56 headers, so at /O2 cl folds almost the entire library into its caller and the artefact can fall to a handful of functions. Upstream's own test/CMakeLists.txt forces /Od even in Release for the same reason. This sample therefore describes an unoptimised consumer of nt_wrapper.",
     "built_artifact": "nt_wrapper.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "nt_wrapper.dll",
     "dependencies": {
       "phnt": {
@@ -139,7 +139,7 @@
       "memset",
       "terminate"
     ],
-    "sha256": "f5e14eb16425cb04f325bacd302aaf36537fa2c68567acaf6a844a398423a823",
+    "sha256": "54c5cd8e1bd34d15ba16d1b56ab3c46af055dc2972dc0b5cc0e0e8ca06d096a3",
     "smda": "data/nt_wrapper/x64/smda/nt_wrapper_2021-02-02_msvc143_x64_nt_wrapper.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -158,7 +158,7 @@
     "architecture": "x86",
     "build_flags": "/Od /MD /Zi /EHsc /bigobj /std:c++20 /permissive- /D_SCL_SECURE_NO_WARNINGS, except that the ntw::ob translation unit is compiled /permissive because three defects in upstream's impl/thread.inl are non-dependent expressions in uninstantiated template bodies and a conforming two-phase lookup diagnoses them at parse time even though nothing calls them; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF and ntdll.lib at link. /Od rather than the corpus default /O2 on purpose: detail/config.hpp defines NTW_INLINE as __forceinline and uses it 958 times across 56 headers, so at /O2 cl folds almost the entire library into its caller and the artefact can fall to a handful of functions. Upstream's own test/CMakeLists.txt forces /Od even in Release for the same reason. This sample therefore describes an unoptimised consumer of nt_wrapper.",
     "built_artifact": "nt_wrapper.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "nt_wrapper.dll",
     "dependencies": {
       "phnt": {
@@ -300,7 +300,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "c5d2a4a78b3476661b94ba5ca2142f912c154ea30c7106820eced613fc1e2404",
+    "sha256": "b94ac9bfe0b52fc8ebdb98ea66c3923e816afb0980a8f5c913964d85ec35b6f7",
     "smda": "data/nt_wrapper/x86/smda/nt_wrapper_2021-02-02_msvc143_x86_nt_wrapper.dll.7z",
     "smda_version": "4.8.0",
     "source": {

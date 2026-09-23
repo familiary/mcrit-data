@@ -167,7 +167,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), JIT enabled; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/pcre2-8.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "pcre2-8.dll",
     "family": "pcre2",
     "generated": "2026-09-23",
@@ -316,7 +316,7 @@
       "strlen",
       "terminate"
     ],
-    "sha256": "d56291e8096925575c9e820e5eade84fb926dbb385c535f8e6a996dec8cd5fce",
+    "sha256": "fa47db3959422299d825e1148d3366e617842fc67e3a03c0c15ab7231c2df935",
     "smda": "data/pcre2/x64/smda/pcre2_10.39_msvc143_x64_pcre2-8.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -332,7 +332,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), JIT enabled; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/pcre2-8.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "pcre2-8.dll",
     "family": "pcre2",
     "generated": "2026-09-23",
@@ -474,7 +474,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "4641ac5e75cb191b8bf3b7f50111b19f4813ca1c5fe3f6865b660b4a3e243f01",
+    "sha256": "7f830b74a366af9eb1f594ef7e08d69d96de6afb181a1b536d0af5fe658b6a03",
     "smda": "data/pcre2/x86/smda/pcre2_10.39_msvc143_x86_pcre2-8.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -654,7 +654,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), JIT enabled; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/pcre2-8.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "pcre2-8.dll",
     "family": "pcre2",
     "generated": "2026-09-23",
@@ -803,7 +803,7 @@
       "strlen",
       "terminate"
     ],
-    "sha256": "be8e27fe30756a7408b35d34f73d654a760ebb9825da82e038c99b16a60bfb58",
+    "sha256": "95ddc0ce4f9160ca8ac0f09f256ffc96a106931fdbc59416496d9bbfb75ef128",
     "smda": "data/pcre2/x64/smda/pcre2_10.45_msvc143_x64_pcre2-8.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -822,7 +822,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), JIT enabled; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/pcre2-8.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "pcre2-8.dll",
     "family": "pcre2",
     "generated": "2026-09-23",
@@ -964,7 +964,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "36275bf51dd6cd603d895a07cf6259566af4cf52ebfc2edb724707694373b47b",
+    "sha256": "73023c617e015eb77517c153ebbc60c4ec3bf8ad338445a52147f271a724b8e6",
     "smda": "data/pcre2/x86/smda/pcre2_10.45_msvc143_x86_pcre2-8.dll.7z",
     "smda_version": "4.8.0",
     "source": {

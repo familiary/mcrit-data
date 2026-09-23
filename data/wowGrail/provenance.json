@@ -3,7 +3,7 @@
     "architecture": "x86",
     "build_flags": "Release|Win32 as upstream defines it: /Od (Optimization Disabled), /Ob1 (InlineFunctionExpansion OnlyExplicitInline), /Oi- (IntrinsicFunctions false), /Gy /W3 /permissive- (ConformanceMode), Unicode character set, WIN32, NDEBUG and _CONSOLE defined, and both /sdl (SDLCheck true) and /GS- (BufferSecurityCheck false) - /sdl overrides /GS-, so stack cookies are present despite the project asking for none; at link Console subsystem, /OPT:REF /OPT:ICF and /NXCOMPAT:NO (DataExecutionPrevention false). /MD replaces upstream's /MT, /Zi replaces its unstated debug format, /Brepro /INCREMENTAL:NO are appended at link, and whole-program optimization is turned off at both ends - /p:WholeProgramOptimization=false and LinkTimeCodeGeneration Default, since the project's ClCompile clears it but its Configuration PropertyGroup sets it, which would otherwise link /LTCG - all by this recipe; the toolset is retargeted from v142 to v143.",
     "built_artifact": "out/wowGrail.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "wowGrail.exe",
     "family": "wowGrail",
     "generated": "2026-09-23",
@@ -111,7 +111,7 @@
       "type_info::`scalar deleting destructor'",
       "void __cdecl std::_Xlength_error(char const *)"
     ],
-    "sha256": "06606c5f3129eebcb68a0b6f091d668b2861ea6f40054a8107e02db6797bece7",
+    "sha256": "bfa791e9010bebf48594cdb894c42baff35031552979dd6e472b5915b38a5062",
     "smda": "data/wowGrail/x86/smda/wowGrail_2021-05-27_msvc143_x86_wowGrail.exe.7z",
     "smda_version": "4.8.0",
     "source": {

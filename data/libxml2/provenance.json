@@ -401,7 +401,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), optional codecs disabled; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/libxml2.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "libxml2.dll",
     "family": "libxml2",
     "generated": "2026-09-23",
@@ -583,7 +583,7 @@
       "terminate",
       "vsnprintf"
     ],
-    "sha256": "4abc0ca6d393a76697ceb04eb1c6300bea2fd3089ed6b6de390700a1ecc889de",
+    "sha256": "99140c751b3f776f10a712025b282986ca716e7206e867903af924a45a6931df",
     "smda": "data/libxml2/x64/smda/libxml2_2.14.3_msvc143_x64_libxml2.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -599,7 +599,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), optional codecs disabled; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/libxml2.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "libxml2.dll",
     "family": "libxml2",
     "generated": "2026-09-23",
@@ -787,7 +787,7 @@
       "sscanf",
       "vsnprintf"
     ],
-    "sha256": "3024baa742e409c36ef4af605e3eba3bdf576438f79f5ceaa91e9a0ded8a517e",
+    "sha256": "8fcf84ba32a3e5081b26b01241fe2c0d2874f42863e445b7a012465bf94120c7",
     "smda": "data/libxml2/x86/smda/libxml2_2.14.3_msvc143_x86_libxml2.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1208,7 +1208,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), optional codecs disabled; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/libxml2.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
     "component": "libxml2.dll",
     "family": "libxml2",
     "generated": "2026-09-23",
@@ -1397,7 +1397,7 @@
       "terminate",
       "vsnprintf"
     ],
-    "sha256": "3c77dc1be7e659c5a7a363662a742a1cf072495c819c2138e38815a333f95a1c",
+    "sha256": "0ca476146ff398b1561db2957445340b19c421efa7e7a5ab70f9c9b87e099c7c",
     "smda": "data/libxml2/x64/smda/libxml2_2.9.14_msvc143_x64_libxml2.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1413,7 +1413,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), optional codecs disabled; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/libxml2.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
     "component": "libxml2.dll",
     "family": "libxml2",
     "generated": "2026-09-23",
@@ -1607,7 +1607,7 @@
       "sscanf",
       "vsnprintf"
     ],
-    "sha256": "2344909239be19c296e72085a9dfaae4e0b3cdd0c1a19540c510771bcb3208be",
+    "sha256": "1b26f802e78166f4cd44fdc7b62ca8bb7650c425257d66c5850f17d1cb147f2a",
     "smda": "data/libxml2/x86/smda/libxml2_2.9.14_msvc143_x86_libxml2.dll.7z",
     "smda_version": "4.8.0",
     "source": {

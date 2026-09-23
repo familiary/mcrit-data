@@ -878,11 +878,16 @@ Generated with `scripts/build_corpus.py`; see `data/BlackBone/provenance.json` f
 ### BlackBoneDrv<a id='blackbonedrv'></a>
 
 BlackBone's kernel driver, from the same commit as the library above and in its own solution. It does from ring 0 what the library cannot do from ring 3: manually maps images into other processes, injects and queues APCs, remaps one process's memory into another, edits VAD nodes and PTEs to hide or reprotect regions, hooks the SSDT and patches handle-table entries - all reached from user mode through a single `DeviceIoControl` switch. A separate family rather than a second component of `BlackBone`, because the two images have not one function in common: that one is C++ linked against the ucrt, this is C compiled against `ntifs.h`. Built `Win10Release|x64`, which is upstream's own CI configuration and the only one of the four whose undocumented structure layouts describe a kernel anyone still runs; all eight of the project's configurations are x64 and it refuses to compile for x86 at all.  
-Eight of its 139 functions are not this project's code and a match on them is a match on Windows kernel source: `ldrreloc.c`'s four `Ldr*` relocation routines say in the file that they are Windows Research Kernel source, usable only under a licence agreement the repository does not carry, and `VadHelpers.c`'s four `Mi*` AVL routines are the same kernel's code carried in without a copyright header at all.  
+Read its 321 functions with two subtractions in mind. 58 of them are not code at all: they are MSVC string-literal COMDAT symbols (`??_C@_...`), which sit in the driver's code sections and are disassembled as one- to six-instruction fragments. A further 112 reach three instructions or fewer, almost all of them import thunks into `ntoskrnl`. What is left is 144 functions of ten instructions or more, which is the driver's own code and lines up with the 139 functions counted in its source - the small excess being static helpers and AVL callbacks the file-by-file count does not reach. Match quality should be judged on those 144, not on 321.
+
+Eight of them are not this project's code, and a match on those eight is a match on Windows kernel source: `ldrreloc.c`'s four `Ldr*` relocation routines say in the file that they are Windows Research Kernel source, usable only under a licence agreement the repository does not carry, and `VadHelpers.c`'s four `Mi*` AVL routines are the same kernel's code carried in without a copyright header at all.  
 
 Generated with `scripts/build_corpus.py`; see `data/BlackBoneDrv/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: BlackBoneDrv -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| BlackBoneDrv | 2023-07-17 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/BlackBoneDrv/x64/mcrit/BlackBoneDrv_2023-07-17_msvc143_x64_BlackBoneDrv10.sys.mcrit) | [x64 PE](data/BlackBoneDrv/x64/smda/BlackBoneDrv_2023-07-17_msvc143_x64_BlackBoneDrv10.sys.7z) |
 <!-- /generated -->
 
 ### SysWhispers<a id='syswhispers'></a>
