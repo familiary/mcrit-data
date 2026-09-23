@@ -404,7 +404,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added); -DCJSON_EXPORT_SYMBOLS -DCJSON_API_VISIBILITY from cJSON's own ENABLE_PUBLIC_SYMBOLS default; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link. Unlike the MinGW pair, none of cJSON's ENABLE_CUSTOM_COMPILER_FLAGS list reaches this build: the list is gated on GNU/Clang and the -fvisibility=hidden appended outside that gate is rejected by CHECK_C_COMPILER_FLAG under cl. So there is no -std=c89, no -fstack-protector-strong and no -Werror here",
     "built_artifact": "build-x86/cjson.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "cjson.dll",
     "family": "cJSON",
     "generated": "2026-09-23",
@@ -549,7 +549,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "4cf4a9aec3d99243911c35867ae1a37fb3160226ee4bb58f2709f0fc2c1d1fe9",
+    "sha256": "467f22ebb569a8928b34ceaa1e04a60fe1192964587203a71c92882464f6f0fb",
     "smda": "data/cJSON/x86/smda/cJSON_1.6.0_msvc143_x86_cjson.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1214,7 +1214,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added); -DCJSON_EXPORT_SYMBOLS -DCJSON_API_VISIBILITY from cJSON's own ENABLE_PUBLIC_SYMBOLS default; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link. Unlike the MinGW pair, none of cJSON's ENABLE_CUSTOM_COMPILER_FLAGS list reaches this build: the list is gated on GNU/Clang and the -fvisibility=hidden appended outside that gate is rejected by CHECK_C_COMPILER_FLAG under cl. So there is no -std=c89, no -fstack-protector-strong and no -Werror here",
     "built_artifact": "build-x86/cjson.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "cjson.dll",
     "family": "cJSON",
     "generated": "2026-09-23",
@@ -1359,7 +1359,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "2e83d5be54af67efb81c786a4411ae4cbf9f8c4a66b83338181c4903ecdd0e9a",
+    "sha256": "60bf7b2511c841dfc94e84496062cfe6dbd5a82a2e40c46cb22836966d0a0026",
     "smda": "data/cJSON/x86/smda/cJSON_1.7.19_msvc143_x86_cjson.dll.7z",
     "smda_version": "4.8.0",
     "source": {

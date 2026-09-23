@@ -810,6 +810,19 @@ Generated with `scripts/build_corpus.py`; see `data/WinApiObfuscator/provenance.
 | WinApiObfuscator | 2.0.0.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/WinApiObfuscator/x86/mcrit/WinApiObfuscator_2.0.0.0_msvc143_x86_winapi_obfuscator.dll.mcrit) / [x64 PE](data/WinApiObfuscator/x64/mcrit/WinApiObfuscator_2.0.0.0_msvc143_x64_winapi_obfuscator.dll.mcrit) | [x86 PE](data/WinApiObfuscator/x86/smda/WinApiObfuscator_2.0.0.0_msvc143_x86_winapi_obfuscator.dll.7z) / [x64 PE](data/WinApiObfuscator/x64/smda/WinApiObfuscator_2.0.0.0_msvc143_x64_winapi_obfuscator.dll.7z) |
 <!-- /generated -->
 
+### nt_wrapper<a id='nt_wrapper'></a>
+
+A header-only C++20 wrapper over the native NT API, built against a pinned copy of phnt rather than a vcpkg-resolved one. Built at `/Od`, and not as a preference: `NTW_INLINE` is `__forceinline` and appears 958 times across 56 headers, so at `/O2` cl folds essentially the whole library into its caller and there is nothing left to record - upstream's own test CMakeLists forces `/Od` even in Release for the same reason. The consequence is worth stating rather than leaving to be discovered: this sample describes an unoptimised consumer, and an `/O2` consumer has hardly any nt_wrapper functions left to match.  
+The exerciser is five translation units rather than one, each compiled with failure tolerated and the link taking whatever objects were produced, so one bad spelling costs one slice of coverage instead of the family. That is safe here only because every function the library provides is inline. 140 functions on each architecture, 126 of them the library's own.  
+
+Generated with `scripts/build_corpus.py`; see `data/nt_wrapper/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: nt_wrapper -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| nt_wrapper | 2021-02-02 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/nt_wrapper/x86/mcrit/nt_wrapper_2021-02-02_msvc143_x86_nt_wrapper.dll.mcrit) / [x64 PE](data/nt_wrapper/x64/mcrit/nt_wrapper_2021-02-02_msvc143_x64_nt_wrapper.dll.mcrit) | [x86 PE](data/nt_wrapper/x86/smda/nt_wrapper_2021-02-02_msvc143_x86_nt_wrapper.dll.7z) / [x64 PE](data/nt_wrapper/x64/smda/nt_wrapper_2021-02-02_msvc143_x64_nt_wrapper.dll.7z) |
+<!-- /generated -->
+
 ### APICallProxy<a id='apicallproxy'></a>
 
 Proxies Win32 calls through a kernel driver, so the work a process appears to do in user mode is performed by `APICallProxy.sys` on its behalf via IOCTLs. The driver is the only part worth recording - the seven user-mode executables beside it hold one to four functions each and cannot clear the eight-function floor. Built `Release|x64` only, which is the single project configuration carrying the link libraries. This is the corpus's first kernel-mode artefact: the runner's WDK was confirmed present by probe rather than assumed, and the recipe records that a `.sys` links runtime the msvcrt/ucrt baseline cannot recognise, so some kernel glue stays under this family's name.  

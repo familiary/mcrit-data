@@ -415,7 +415,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), plus /W4 and upstream's own /wd4100-style suppressions from its compiler probes; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/uv.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "uv.dll",
     "family": "libuv",
     "generated": "2026-09-23",
@@ -641,7 +641,7 @@
       "vsnprintf",
       "wmemcpy"
     ],
-    "sha256": "de07e2ebe97e68d86bf4973a38fba00be64da30d82f48356243a319f2dcd32ff",
+    "sha256": "b76d720656c3c56fd9c6f610c0cf901d561d2841f8a88ef00ec868a18c6dee20",
     "smda": "data/libuv/x86/smda/libuv_1.44.2_msvc143_x86_uv.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1179,7 +1179,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), plus /W4 and upstream's own /wd4100-style suppressions from its compiler probes; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/uv.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "uv.dll",
     "family": "libuv",
     "generated": "2026-09-23",
@@ -1402,7 +1402,7 @@
       "vsnprintf",
       "wmemcpy"
     ],
-    "sha256": "649bdd32bf2f1313699ef400cf3df8ec8cc16425aea286979d664fc1ab3fcf5a",
+    "sha256": "aecfc97388f8c1332094b2adf9de96d30267ee2e7f6a7bf129e5e9dadd86fa02",
     "smda": "data/libuv/x86/smda/libuv_1.52.1_msvc143_x86_uv.dll.7z",
     "smda_version": "4.8.0",
     "source": {

@@ -268,7 +268,7 @@
     "architecture": "x86",
     "build_flags": "Release configuration: /Oi /Gy /W3 /GS-, ConformanceMode (/permissive-), Unicode character set, NDEBUG;_CONSOLE, include\\ on the include path, and no <Optimization> element in any configuration so the compile is not /O2; upstream's /MT is replaced with /MD, DebugInformationFormat None with /Zi and a full /DEBUG, WholeProgramOptimization (/GL and /LTCG) and OptimizeReferences/EnableCOMDATFolding (/OPT:REF /OPT:ICF) are turned off, /Brepro and /INCREMENTAL:NO are added, and the toolset is retargeted from v142 to v143",
     "built_artifact": "out/Win32/cobf.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "cobf.exe",
     "family": "CallObfuscator",
     "generated": "2026-09-23",
@@ -498,7 +498,7 @@
       "type_info::~type_info",
       "void __cdecl std::_Xlength_error(char const *)"
     ],
-    "sha256": "09b1647dbe4ceb1a906ff5decbf5292357565e151c8944b2c0170360a5ff51cc",
+    "sha256": "a9c78499398abed95fb04edee7c297e860d3b58b3ebc64ce0a7f4601de1bcbd0",
     "smda": "data/CallObfuscator/x86/smda/CallObfuscator_2.0_msvc143_x86_cobf.exe.7z",
     "smda_version": "4.8.0",
     "source": {

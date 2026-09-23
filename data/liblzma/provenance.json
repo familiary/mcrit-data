@@ -334,7 +334,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/liblzma.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "liblzma.dll",
     "family": "liblzma",
     "generated": "2026-09-23",
@@ -481,7 +481,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "b2204caf8d913fa8fc3fc598ea2a04d37f5bfb7a5fe43dea858e7646acc06bc7",
+    "sha256": "5abff3e4bda69901684e9fd4f6db93b423a0c8b416c05d5a8f77b913d6ea5bbb",
     "smda": "data/liblzma/x86/smda/liblzma_5.4.7_msvc143_x86_liblzma.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -827,7 +827,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/liblzma.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "liblzma.dll",
     "family": "liblzma",
     "generated": "2026-09-23",
@@ -973,7 +973,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "0dadd5dfb71ea0ca8a1de4687ddf9d281d24e35174f3f54442e2dc702617f7b6",
+    "sha256": "e8d9d010f32a53d896b740e386db61328636884499874eabae085e7ecf247745",
     "smda": "data/liblzma/x86/smda/liblzma_5.8.1_msvc143_x86_liblzma.dll.7z",
     "smda_version": "4.8.0",
     "source": {

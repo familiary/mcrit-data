@@ -2200,7 +2200,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi /std:c++17 (CMake Release, /Zi added), plus the switches RE2's own CMakeLists applies to an MSVC/WIN32 build: /utf-8, /wd4100 /wd4201 /wd4456 /wd4457 /wd4702 /wd4815, -DUNICODE -D_UNICODE -DSTRICT -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/re2.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "re2.dll",
     "family": "re2",
     "generated": "2026-09-23",
@@ -4116,7 +4116,7 @@
       "void __cdecl std::_Xlength_error(char const *)",
       "void __cdecl std::_Xout_of_range(char const *)"
     ],
-    "sha256": "c0b24975753298af09f593af529e429b30342a524f735d411e544b446ad72c1f",
+    "sha256": "59fd88db0859da305966642899e6245d7b26af1228310230e840df3e9028b3f1",
     "smda": "data/re2/x86/smda/re2_2022-06-01_msvc143_x86_re2.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -6199,7 +6199,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi /std:c++17 (CMake Release, /Zi added), plus the switches RE2's own CMakeLists applies to an MSVC/WIN32 build: /utf-8, /wd4100 /wd4201 /wd4456 /wd4457 /wd4702 /wd4815, -DUNICODE -D_UNICODE -DSTRICT -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/re2.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "re2.dll",
     "dependencies": {
       "absl": {
@@ -7970,7 +7970,7 @@
       "void __cdecl std::_Xout_of_range(char const *)",
       "wmemcpy"
     ],
-    "sha256": "5bbfdb069662e22f7966d6fe101b4c523299e38f9a27a8546361a8abf2ebd0b1",
+    "sha256": "e8351219ce6305f31c0492094cae3999d1711110809c6df7b771bef07d3486da",
     "smda": "data/re2/x86/smda/re2_2025-11-05_msvc143_x86_re2.dll.7z",
     "smda_version": "4.8.0",
     "source": {

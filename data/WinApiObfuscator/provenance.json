@@ -150,7 +150,7 @@
     "architecture": "x86",
     "build_flags": "/Od /MD /Zi /EHsc /std:c++17; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF and kernel32.lib at link. /Od rather than the corpus default /O2 as a cautious choice, not a measured one: at /O2 cl is expected to inline almost all of win_api_import<T>::function_holder into its callers, and how much would survive was not measured, so /Od was taken as the level that cannot fall under the eight-function floor. This sample therefore describes an unoptimised consumer of the header.",
     "built_artifact": "winapi_obfuscator.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "winapi_obfuscator.dll",
     "family": "WinApiObfuscator",
     "generated": "2026-09-23",
@@ -286,7 +286,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "dc57f1dad34d6357af21e6d80f34f8d63ffb5777a3b484697681f3c83909331c",
+    "sha256": "0bd178511f445bcbc103c2a364ae1d3608923dcd9bd8939327b7f3864eb1a393",
     "smda": "data/WinApiObfuscator/x86/smda/WinApiObfuscator_2.0.0.0_msvc143_x86_winapi_obfuscator.dll.7z",
     "smda_version": "4.8.0",
     "source": {

@@ -2695,7 +2695,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi /std:c++17 (CMake Release, /Zi added) plus Abseil's own ABSL_MSVC_FLAGS: /W3 /bigobj /wd4005 /wd4068 /wd4180 /wd4244 /wd4267 /wd4503 /wd4800 -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D_ENABLE_EXTENDED_ALIGNED_STORAGE, and -DABSL_BUILD_DLL on the DLL's own sources; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF and upstream's -ignore:4221 at link",
     "built_artifact": "build-x86/bin/abseil_dll.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "abseil_dll.dll",
     "family": "abseil",
     "generated": "2026-09-23",
@@ -4624,7 +4624,7 @@
       "vsnprintf",
       "wmemcpy"
     ],
-    "sha256": "6ad3e1302d0eeef4e91f38ee10c635aac0322956597ae4ffcc9e1fead9c376c5",
+    "sha256": "188429ad120fe53909b623c5d4269e90e8f337e86bd8462acbbda1f880efe640",
     "smda": "data/abseil/x86/smda/abseil_20250127.1_msvc143_x86_abseil_dll.dll.7z",
     "smda_version": "4.8.0",
     "source": {

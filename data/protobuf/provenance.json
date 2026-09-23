@@ -2577,7 +2577,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), plus upstream's /MP /bigobj /utf-8 and its /wd list; PROTOBUF_USE_DLLS and LIBPROTOBUF_EXPORTS defined by the shared build; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/libprotobuf.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "protobuf.dll",
     "family": "protobuf",
     "generated": "2026-09-23",
@@ -4807,7 +4807,7 @@
       "wmemcmp",
       "wmemcpy"
     ],
-    "sha256": "a2c8de7e401d25435a47052ed9384c45c8f5e3e37885686a25da046458368783",
+    "sha256": "c3a212e6d825ecb3807117b462a8e585e08569591185f133d9635b059ce3adff",
     "smda": "data/protobuf/x86/smda/protobuf_21.12_msvc143_x86_protobuf.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -7757,7 +7757,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi /std:c++17 (CMake Release, /Zi added), plus upstream's /MP /bigobj /utf-8 and its /wd list; PROTOBUF_USE_DLLS and LIBPROTOBUF_EXPORTS defined by the shared build; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/bin/libprotobuf.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "protobuf.dll",
     "dependencies": {
       "absl": {
@@ -9760,6 +9760,7 @@
       "std::basic_stringbuf<char,std::char_traits<char>,std::allocator<char> >::_Getstate",
       "std::basic_stringbuf<char,std::char_traits<char>,std::allocator<char> >::`scalar deleting destructor'",
       "std::basic_stringbuf<char,std::char_traits<char>,std::allocator<char> >::basic_stringbuf<char,std::char_traits<char>,std::allocator<char> >",
+      "std::basic_stringbuf<char,std::char_traits<char>,std::allocator<char> >::pbackfail",
       "std::basic_stringbuf<char,std::char_traits<char>,std::allocator<char> >::seekoff",
       "std::basic_stringbuf<char,std::char_traits<char>,std::allocator<char> >::seekpos",
       "std::basic_stringbuf<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >::_Get_buffer_view",
@@ -9995,7 +9996,7 @@
       "wmemcmp",
       "wmemcpy"
     ],
-    "sha256": "43ae9376bf39849965ac9873003485bd344319468d775af4e43d1a7a3e5904a8",
+    "sha256": "866e58cea60f0aca7e810f554e46570f8f069e52d1370773fefc3b3767af5c6d",
     "smda": "data/protobuf/x86/smda/protobuf_31.1_msvc143_x86_protobuf.dll.7z",
     "smda_version": "4.8.0",
     "source": {

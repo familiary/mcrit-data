@@ -333,7 +333,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), JIT and UTF enabled; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/pcre.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "pcre.dll",
     "family": "pcre",
     "generated": "2026-09-23",
@@ -474,7 +474,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "9b81cc9a51bcfb9dae9b77a2be3e05e9c6034696833b19d06a9a8030ecebfbfa",
+    "sha256": "3cd869b35d78bcadee45fbb3abdee1aac81b7cc0ee532ee5451f0bae959274df",
     "smda": "data/pcre/x86/smda/pcre_8.45_msvc143_x86_pcre.dll.7z",
     "smda_version": "4.8.0",
     "source": {

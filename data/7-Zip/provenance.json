@@ -737,7 +737,7 @@
     "architecture": "x86",
     "build_flags": "-O1/-O2 -MD -Z7 -EHsc -Gy -GR- -GF -GS- -W0 -WX -Gr -MP (CPP/Build.mak, with -MD selected by MY_DYNAMIC_LINK and the warning level lowered); MASM fast paths assembled with ml/ml64 -WX; -DEBUG -Brepro -OPT:NOREF -OPT:NOICF appended to upstream's link line",
     "built_artifact": "CPP/7zip/Bundles/Format7zF/x86/7z.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "7z.dll",
     "family": "7-Zip",
     "generated": "2026-09-23",
@@ -959,7 +959,7 @@
       "type_info::`scalar deleting destructor'",
       "type_info::~type_info"
     ],
-    "sha256": "a3b66cff27c6369edc05f17198b2d37a18d137f0e7d160e6505851ac337bf5b0",
+    "sha256": "80235027c7c5563d17755544c942ea8c5c58eef1b3f1ea2743dd46827de5a82d",
     "smda": "data/7-Zip/x86/smda/7-Zip_23.01_msvc143_x86_7z.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1707,7 +1707,7 @@
     "architecture": "x86",
     "build_flags": "-O1/-O2 -MD -Z7 -EHsc -Gy -GR- -GF -GS- -W0 -WX -Gr -MP (CPP/Build.mak, with -MD selected by MY_DYNAMIC_LINK and the warning level lowered); MASM fast paths assembled with ml/ml64 -WX; -DEBUG -Brepro -OPT:NOREF -OPT:NOICF appended to upstream's link line",
     "built_artifact": "CPP/7zip/Bundles/Format7zF/x86/7z.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "7z.dll",
     "family": "7-Zip",
     "generated": "2026-09-23",
@@ -1929,7 +1929,7 @@
       "type_info::`scalar deleting destructor'",
       "type_info::~type_info"
     ],
-    "sha256": "6c8dc35ae1d714c26bce6d3844bd2de321bbb0fff2b9cfe2e97530790a9290c9",
+    "sha256": "dd0187c10579ef5ee4ae7571b1ec3c3b201f52c4948af82643e42ddb9090d22e",
     "smda": "data/7-Zip/x86/smda/7-Zip_26.03_msvc143_x86_7z.dll.7z",
     "smda_version": "4.8.0",
     "source": {

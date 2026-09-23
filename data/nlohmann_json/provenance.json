@@ -2552,7 +2552,7 @@
     "architecture": "x86",
     "build_flags": "/O2 /MD /Zi /EHsc /bigobj /std:c++17; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "nlohmann_json.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "nlohmann_json.dll",
     "family": "nlohmann_json",
     "generated": "2026-09-23",
@@ -4483,7 +4483,7 @@
       "vsnprintf",
       "wmemcpy"
     ],
-    "sha256": "ad189c884d2475e2d0de6efeb7906737d0c6c62b321489141450a99e653c6833",
+    "sha256": "8d14fc5b569c8a51a833dbce14284c72da41955bbdcb9f1b58614f697b94705b",
     "smda": "data/nlohmann_json/x86/smda/nlohmann_json_3.11.3_msvc143_x86_nlohmann_json.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -6725,7 +6725,7 @@
     "architecture": "x86",
     "build_flags": "/O2 /MD /Zi /EHsc /bigobj /std:c++17; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "nlohmann_json.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "nlohmann_json.dll",
     "family": "nlohmann_json",
     "generated": "2026-09-23",
@@ -8656,7 +8656,7 @@
       "vsnprintf",
       "wmemcpy"
     ],
-    "sha256": "f76832f4f92df8e601f449d182616bcd484f6e9afafab298343dc32c3b09bb79",
+    "sha256": "c5cb2d7473e21192553a65b9c7da60dec95e65c94476df6f93bebd0d9bbfa611",
     "smda": "data/nlohmann_json/x86/smda/nlohmann_json_3.12.0_msvc143_x86_nlohmann_json.dll.7z",
     "smda_version": "4.8.0",
     "source": {

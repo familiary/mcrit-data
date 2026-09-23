@@ -336,7 +336,7 @@
     "architecture": "x86",
     "build_flags": "ReleaseDLL configuration: /O2 /Ob1 /Oi /Oy- /Gy /MD /Zi /W3, NDEBUG and UNICODE defined, SODIUM_DLL_EXPORT; x86 takes v143's default /arch because upstream's SSE2 group is conditioned on a Processor property nothing defines; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link, the last three forced by this recipe over upstream's /OPT:REF /OPT:ICF and commented-out GenerateDebugInformation",
     "built_artifact": "bin/Win32/Release/v143/dynamic/libsodium.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "libsodium.dll",
     "family": "libsodium",
     "generated": "2026-09-23",
@@ -489,7 +489,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "505644b2e4b64b815da3bfa6283b26e1ad27880da39a334c312ad3824ffdba79",
+    "sha256": "2e256a3d1a3595aeb5f958915a65e947fec89ef117e8842512a4e6e9c082c439",
     "smda": "data/libsodium/x86/smda/libsodium_1.0.18_msvc143_x86_libsodium.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -838,7 +838,7 @@
     "architecture": "x86",
     "build_flags": "ReleaseDLL configuration: /O2 /Ob1 /Oi /Oy- /Gy /MD /Zi /W3, NDEBUG and UNICODE defined, SODIUM_DLL_EXPORT; x86 takes v143's default /arch because upstream's SSE2 group is conditioned on a Processor property nothing defines; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link, the last three forced by this recipe over upstream's /OPT:REF /OPT:ICF and commented-out GenerateDebugInformation",
     "built_artifact": "bin/Win32/Release/v143/dynamic/libsodium.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "libsodium.dll",
     "family": "libsodium",
     "generated": "2026-09-23",
@@ -991,7 +991,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "1a7bf64b09a41fbf61931e4eed5bd60b3e35ff59c0dd7b295b3de840c4114925",
+    "sha256": "aec35defd1a1cae4319116b13060f2dd0ee86f3ae27819090dd71685028397e3",
     "smda": "data/libsodium/x86/smda/libsodium_1.0.20_msvc143_x86_libsodium.dll.7z",
     "smda_version": "4.8.0",
     "source": {

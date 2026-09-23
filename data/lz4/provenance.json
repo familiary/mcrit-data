@@ -327,7 +327,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/lz4.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "lz4.dll",
     "family": "lz4",
     "generated": "2026-09-23",
@@ -470,7 +470,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "f4ac0343b845a986b8d68fa254f9be4c458ddabe9de44bbff03bd81e43d93c36",
+    "sha256": "99dff5a8cd0b039dde862d7f1b5e71bea1bb38dd23864ce52f8bc67fea538948",
     "smda": "data/lz4/x86/smda/lz4_1.10.0_msvc143_x86_lz4.dll.7z",
     "smda_version": "4.8.0",
     "source": {

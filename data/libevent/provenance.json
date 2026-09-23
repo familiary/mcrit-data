@@ -1036,7 +1036,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/bin/event_core.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "event_core.dll",
     "family": "libevent",
     "generated": "2026-09-23",
@@ -1226,7 +1226,7 @@
       "sscanf",
       "time"
     ],
-    "sha256": "28dc23751d74707208070b97261038ff7ac160e07fc84f33c2ed457be90daeeb",
+    "sha256": "5077315ac9b119eef5328bf9be48f251602ef054e0a248d42972552579b3bf3b",
     "smda": "data/libevent/x86/smda/libevent_2.1.12_msvc143_x86_event_core.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1242,7 +1242,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/bin/event_extra.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "event_extra.dll",
     "family": "libevent",
     "generated": "2026-09-23",
@@ -1390,7 +1390,7 @@
       "is_potentially_valid_image_base",
       "sscanf"
     ],
-    "sha256": "35e502b27fea1de62eec1180e89916ee0a1862f0f7260dcb9dc00d4cc90786ce",
+    "sha256": "365bd512443d171737792c90fd99517a450dd4048a0d1753da821c97555e8b2c",
     "smda": "data/libevent/x86/smda/libevent_2.1.12_msvc143_x86_event_extra.dll.7z",
     "smda_version": "4.8.0",
     "source": {

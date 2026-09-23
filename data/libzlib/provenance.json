@@ -726,7 +726,7 @@
     "architecture": "x86",
     "build_flags": "-MD -W3 -O2 -Oy- -Zi (win32/Makefile.msc defaults, unmodified); -nologo -debug -incremental:no -Brepro -OPT:NOREF -OPT:NOICF at link, replacing upstream's -opt:ref",
     "built_artifact": "zlib1.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "zlib1.dll",
     "family": "libzlib",
     "generated": "2026-09-23",
@@ -867,7 +867,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "ba9a767f116ce592920abeacd8873a7736a309647d07314b01a6d9c0ddd93c29",
+    "sha256": "acbdd564020f702d97cdddd17a5abfb784f12c0e2965a5c688c29775797f9480",
     "smda": "data/libzlib/x86/smda/libzlib_1.2.13_msvc143_x86_zlib1.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1608,7 +1608,7 @@
     "architecture": "x86",
     "build_flags": "-MD -W3 -O2 -Oy- -Zi (win32/Makefile.msc defaults, unmodified); -nologo -debug -incremental:no -Brepro -OPT:NOREF -OPT:NOICF at link, replacing upstream's -opt:ref",
     "built_artifact": "zlib1.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "zlib1.dll",
     "family": "libzlib",
     "generated": "2026-09-23",
@@ -1749,7 +1749,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "76e8efdde2be67f1767b175b6da13a0347f9c5f9f39d715223a86e5165e10980",
+    "sha256": "e7fa582b3b561ca8f4f09094195977289ff7c07651faec9ef3788f91e57170b9",
     "smda": "data/libzlib/x86/smda/libzlib_1.3.1_msvc143_x86_zlib1.dll.7z",
     "smda_version": "4.8.0",
     "source": {
