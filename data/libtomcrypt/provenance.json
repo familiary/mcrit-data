@@ -77,7 +77,7 @@
       }
     },
     "family": "libtomcrypt",
-    "generated": "2026-09-21",
+    "generated": "2026-09-23",
     "is_blob": false,
     "license": "public domain / WTFPL-2.0 (dual, licensee's choice)",
     "mcrit": "data/libtomcrypt/x64/mcrit/libtomcrypt_1.18.2_msvc143_x64_libtomcrypt.dll.mcrit",
@@ -260,7 +260,7 @@
       }
     },
     "family": "libtomcrypt",
-    "generated": "2026-09-21",
+    "generated": "2026-09-23",
     "is_blob": false,
     "license": "public domain / WTFPL-2.0 (dual, licensee's choice)",
     "mcrit": "data/libtomcrypt/x86/mcrit/libtomcrypt_1.18.2_msvc143_x86_libtomcrypt.dll.mcrit",

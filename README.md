@@ -745,6 +745,82 @@ Generated with `scripts/build_corpus.py`; see `data/wow64pp/provenance.json` for
 | wow64pp | 2020-09-19 | MinGW-w64 GCC 13 | [x86 PE](data/wow64pp/x86/mcrit/wow64pp_2020-09-19_mingw13_x86_wow64pp.dll.mcrit) | [x86 PE](data/wow64pp/x86/smda/wow64pp_2020-09-19_mingw13_x86_wow64pp.dll.7z) |
 <!-- /generated -->
 
+### RtlWow64<a id='rtlwow64'></a>
+
+A WOW64 transition library that exposes the 64-bit ntdll to 32-bit code, through `RtlInvokeX64` and a family of `RtlGetProcAddressWow64` helpers. Unlike most Heaven's Gate code it ships as a DLL with an eleven-symbol export table, so it is linked rather than copied and the same names appear wherever it is used. 26 functions, 17 of them the library's own.  
+
+Generated with `scripts/build_corpus.py`; see `data/RtlWow64/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: RtlWow64 -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| RtlWow64 | 2021-02-12 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/RtlWow64/x86/mcrit/RtlWow64_2021-02-12_msvc143_x86_RtlWow64.dll.mcrit) | [x86 PE](data/RtlWow64/x86/smda/RtlWow64_2021-02-12_msvc143_x86_RtlWow64.dll.7z) |
+<!-- /generated -->
+
+### wowGrail<a id='wowgrail'></a>
+
+Issues 32-bit direct syscalls by walking the WOW64 ntdll and calling `Wow64SystemServiceEx`, rather than by the usual far-return gate. It is a proof-of-concept executable rather than a library, so what is recorded is the tool itself. Built `Release|Win32` specifically, which upstream requires because Debug instrumentation moves the memory layout the technique depends on. Of its 41 functions only 9 are wowGrail's own; the rest is the `std::string` and `std::wstring` machinery its `get64b_CSTR` and `get64b_WSTR` helpers instantiate.  
+
+Generated with `scripts/build_corpus.py`; see `data/wowGrail/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: wowGrail -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| wowGrail | 2021-05-27 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/wowGrail/x86/mcrit/wowGrail_2021-05-27_msvc143_x86_wowGrail.exe.mcrit) | [x86 PE](data/wowGrail/x86/smda/wowGrail_2021-05-27_msvc143_x86_wowGrail.exe.7z) |
+<!-- /generated -->
+
+### HeavensGate2<a id='heavensgate2'></a>
+
+A compact Heaven's Gate implementation reaching 64-bit code from a 32-bit process by far-returning through selector 0x33. The gate is a patched byte array rather than assembly, which is what lets it carry no MSVC-only assembly syntax at all. Built with optimization and inlining disabled as its project file specifies, and with no C runtime in the image - it links `IgnoreAllDefaultLibraries` with `main` as the entry point, which is why the runtime filter is turned off for it. 15 functions, 12 of them its own.  
+
+Generated with `scripts/build_corpus.py`; see `data/HeavensGate2/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: HeavensGate2 -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| HeavensGate2 | 2017-07-23 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/HeavensGate2/x86/mcrit/HeavensGate2_2017-07-23_msvc143_x86_HeavensGate.exe.mcrit) | [x86 PE](data/HeavensGate2/x86/smda/HeavensGate2_2017-07-23_msvc143_x86_HeavensGate.exe.7z) |
+<!-- /generated -->
+
+### NTTITONHeavensGate<a id='nttitonheavensgate'></a>
+
+A second Heaven's Gate demonstration, and a useful contrast to the others: it implements the gate in `__declspec(naked)` functions with full inline assembly rather than in patched byte arrays, so its emitted shape differs even though the technique is the same. Only the `Heavens Gate` subdirectory of its repository is compiled - one named translation unit, nothing globbed - and nothing else in that tree is built, referenced or recorded. The repository ships no build system, so the compile and link lines come from the recipe. 26 functions, 20 of them its own.  
+
+Generated with `scripts/build_corpus.py`; see `data/NTTITONHeavensGate/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: NTTITONHeavensGate -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| NTTITONHeavensGate | 2017-06-16 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/NTTITONHeavensGate/x86/mcrit/NTTITONHeavensGate_2017-06-16_msvc143_x86_HeavensGate.exe.mcrit) | [x86 PE](data/NTTITONHeavensGate/x86/smda/NTTITONHeavensGate_2017-06-16_msvc143_x86_HeavensGate.exe.7z) |
+<!-- /generated -->
+
+## WinAPI obfuscation
+
+Projects that hide which Windows APIs a binary calls - by resolving imports from hashes at run time, or by rewriting the import table so a call appears to target something else.
+
+### WinApiObfuscator<a id='winapiobfuscator'></a>
+
+Resolves imports at run time by hashing export names with MurmurHash2A, so the import table carries no recognisable API names. The hash and the export-table walk are ordinary out-of-line functions; the rest is a template wrapper instantiated once per resolved function type, which is why the artefact is almost entirely the library's own code - 170 of 180 functions on x64 and 194 of 204 on x86. Built at `/Od`: the level was chosen cautiously rather than measured, because at `/O2` much of the wrapper collapses into its callers.  
+
+Generated with `scripts/build_corpus.py`; see `data/WinApiObfuscator/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: WinApiObfuscator -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| WinApiObfuscator | 2.0.0.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/WinApiObfuscator/x86/mcrit/WinApiObfuscator_2.0.0.0_msvc143_x86_winapi_obfuscator.dll.mcrit) / [x64 PE](data/WinApiObfuscator/x64/mcrit/WinApiObfuscator_2.0.0.0_msvc143_x64_winapi_obfuscator.dll.mcrit) | [x86 PE](data/WinApiObfuscator/x86/smda/WinApiObfuscator_2.0.0.0_msvc143_x86_winapi_obfuscator.dll.7z) / [x64 PE](data/WinApiObfuscator/x64/smda/WinApiObfuscator_2.0.0.0_msvc143_x64_winapi_obfuscator.dll.7z) |
+<!-- /generated -->
+
+### CallObfuscator<a id='callobfuscator'></a>
+
+Rewrites a PE's import table so calls to one API appear to target another. What is recorded is the tool, not its output - a patched binary is somebody else's code with this project's edits applied. Its injected shellcode is worth knowing about: it is not a byte blob but ordinary C++ static member functions, each `__declspec(noinline)` and address-taken in a static table, so the linker can neither discard nor fold them. The x86 artefact carries 89 unnamed functions against x64's none; those are the `__ehhandler$` and `__unwindfunclet$` fragments that 32-bit C++ exception handling emits and the PDB records no symbol for, which is why the symbol gate ignores functions below three instructions.  
+
+Generated with `scripts/build_corpus.py`; see `data/CallObfuscator/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: CallObfuscator -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| CallObfuscator | 2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/CallObfuscator/x86/mcrit/CallObfuscator_2.0_msvc143_x86_cobf.exe.mcrit) / [x64 PE](data/CallObfuscator/x64/mcrit/CallObfuscator_2.0_msvc143_x64_cobf.exe.mcrit) | [x86 PE](data/CallObfuscator/x86/smda/CallObfuscator_2.0_msvc143_x86_cobf.exe.7z) / [x64 PE](data/CallObfuscator/x64/smda/CallObfuscator_2.0_msvc143_x64_cobf.exe.7z) |
+<!-- /generated -->
+
 ## Offensive tooling
 
 Public offensive-tooling code bases that are copied into implants more or less verbatim. All three need Visual Studio - ATL, the DIA SDK or MASM - and are built on a windows-2022 runner by `.github/workflows/windows-reference-data.yml` rather than approximated with GCC.
