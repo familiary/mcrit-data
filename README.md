@@ -768,3 +768,59 @@ Generated with `scripts/build_corpus.py`; see `data/SysWhispers/provenance.json`
 |----------|---------|----------|-------|------|
 | SysWhispers | 2021-07-06 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers/x64/mcrit/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.mcrit) | [x64 PE](data/SysWhispers/x64/smda/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.7z) |
 <!-- /generated -->
+
+## String obfuscation
+
+Compile-time string obfuscators, which hide literals by encrypting them during compilation and decrypting on first use. None of them exists in a binary until something uses it - the C++ ones are header-only and almost entirely `constexpr`, and the Rust one encodes in `const` context - so the reference data comes from an exerciser or driver that uses the library; the functions recorded are the library's own.
+
+These are the one group here where the optimization level is not a free choice, and it differs per project - the level each was built at is recorded in `build_flags` and argued in `notes`, because it decides what survives into the binary at all. Reference data built at one level will not match a consumer built at another.
+
+### Obfuscate<a id='obfuscate'></a>
+
+adamyaxley/Obfuscate encrypts each literal with a key derived from its source line and decrypts it on first use. It instantiates per (length, line), so a binary carries one small cluster of functions per obfuscated string rather than one shared routine. Built at `-O0`: at `-O2` every instantiation collapses to a five-byte `endbr64; ret` stub, because the destructor's zeroing loop is dead-store eliminated and the function survives only because `thread_local` takes its address.  
+
+Generated with `scripts/build_corpus.py`; see `data/Obfuscate/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Obfuscate -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Obfuscate | 2026-06-03 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscate/x86/mcrit/Obfuscate_2026-06-03_mingw13_x86_ay_obfuscate.dll.mcrit) / [x64 PE](data/Obfuscate/x64/mcrit/Obfuscate_2026-06-03_mingw13_x64_ay_obfuscate.dll.mcrit) | [x86 PE](data/Obfuscate/x86/smda/Obfuscate_2026-06-03_mingw13_x86_ay_obfuscate.dll.7z) / [x64 PE](data/Obfuscate/x64/smda/Obfuscate_2026-06-03_mingw13_x64_ay_obfuscate.dll.7z) |
+<!-- /generated -->
+
+### StringObfuscatorCT<a id='stringobfuscatorct'></a>
+
+Snowapril's compile-time obfuscator, instantiated per call site through `__COUNTER__`, so even identical strings at different sites emit different functions. Built at `-O0`, which is the only level that emits anything: there is no `constexpr` variable forcing compile-time evaluation, so at `-O0` the encryption is emitted as real runtime code and at `-O1` and above it inlines into the caller and disappears entirely.  
+Built with `SOURCE_DATE_EPOCH` pinned, because upstream seeds its generator from `__TIME__` and without that the cipher constants and the mangled symbol names change on every rebuild.  
+
+Generated with `scripts/build_corpus.py`; see `data/StringObfuscatorCT/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: StringObfuscatorCT -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| StringObfuscatorCT | 2019-12-11 | MinGW-w64 GCC 13 | [x86 PE](data/StringObfuscatorCT/x86/mcrit/StringObfuscatorCT_2019-12-11_mingw13_x86_snowapril_obfuscator.dll.mcrit) / [x64 PE](data/StringObfuscatorCT/x64/mcrit/StringObfuscatorCT_2019-12-11_mingw13_x64_snowapril_obfuscator.dll.mcrit) | [x86 PE](data/StringObfuscatorCT/x86/smda/StringObfuscatorCT_2019-12-11_mingw13_x86_snowapril_obfuscator.dll.7z) / [x64 PE](data/StringObfuscatorCT/x64/smda/StringObfuscatorCT_2019-12-11_mingw13_x64_snowapril_obfuscator.dll.7z) |
+<!-- /generated -->
+
+### StringObfuscator<a id='stringobfuscator'></a>
+
+katursis/StringObfuscator templates on string length alone, so a binary using it carries one decrypt routine per distinct length rather than one per string - adding more strings of a length already present adds no new code. Built at `-O2`, which upstream requires and which this corpus confirmed the reason for: at `-O0` the obfuscation does not happen and the exerciser's literals were recoverable from the binary with `strings`, where at `-O1` and `-O2` none were. Its `decrypt()` survives `-O2` because it carries `__attribute__((noinline))`, guarded by `#ifdef __GNUC__` - which is why there is no MSVC build of it here.  
+
+Generated with `scripts/build_corpus.py`; see `data/StringObfuscator/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: StringObfuscator -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| StringObfuscator | 2021-08-07 | MinGW-w64 GCC 13 | [x86 PE](data/StringObfuscator/x86/mcrit/StringObfuscator_2021-08-07_mingw13_x86_katursis_str_obfuscator.dll.mcrit) / [x64 PE](data/StringObfuscator/x64/mcrit/StringObfuscator_2021-08-07_mingw13_x64_katursis_str_obfuscator.dll.mcrit) | [x86 PE](data/StringObfuscator/x86/smda/StringObfuscator_2021-08-07_mingw13_x86_katursis_str_obfuscator.dll.7z) / [x64 PE](data/StringObfuscator/x64/smda/StringObfuscator_2021-08-07_mingw13_x64_katursis_str_obfuscator.dll.7z) |
+<!-- /generated -->
+
+### obfstr<a id='obfstr'></a>
+
+CasualX/obfstr is the Rust entry in this group, and the first Rust family this tooling generates rather than inherits. Its decoder, `obfstr::xref::inner`, is `#[inline(never)]` and generic over `const SEED: u64`, so it emits exactly one monomorphization per obfuscated item and each one is a different shape: the seed selects the arithmetic and drives a control-flow flattening pass around it. Unlike the C++ obfuscators above, it emits that same one-per-string shape in debug and in release alike, so the optimization level is not the provenance hazard here; release is what is recorded.  
+The driver crate is `#![no_std]` with `panic = "abort"`, because a stock Rust `cdylib` would pull thousands of Rust std and core functions into the sample under this family's name - the same trap `-static-libstdc++` is for the C++ families. `OBFSTR_SEED` is left unset, which is upstream's own reproducible default.  
+
+Generated with `scripts/build_corpus.py`; see `data/obfstr/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: obfstr -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| obfstr | 0.4.6 | MinGW-w64 GCC 13 | [x86 PE](data/obfstr/x86/mcrit/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.mcrit) / [x64 PE](data/obfstr/x64/mcrit/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.mcrit) | [x86 PE](data/obfstr/x86/smda/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.7z) / [x64 PE](data/obfstr/x64/smda/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.7z) |
+<!-- /generated -->
