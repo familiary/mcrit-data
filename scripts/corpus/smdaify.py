@@ -305,8 +305,12 @@ def _is_direct_target(instruction):
 def smdaify(binary_path, family, version, component, is_library=True,
             toolchain_id=None, drop_crt_glue=True, filename=None,
             min_named_ratio=0.5, is_blob=False, bitness=None,
-            base_addr=0x400000, pdb_path=""):
-    """Disassemble ``binary_path`` and label it the way the corpus expects."""
+            base_addr=0x400000, pdb_path="", min_functions=None):
+    """Disassemble ``binary_path`` and label it the way the corpus expects.
+
+    ``min_functions`` is the recipe's replacement for
+    ``config.MIN_USEFUL_FUNCTIONS``; None means that constant applies.
+    """
     if is_blob:
         if bitness not in (32, 64):
             raise DisassemblyError(
@@ -339,10 +343,18 @@ def smdaify(binary_path, family, version, component, is_library=True,
             raise DisassemblyError(
                 "%s yielded only %d instructions, which is too little to be "
                 "useful reference data" % (binary_path, recovered))
-    elif report.num_functions < config.MIN_USEFUL_FUNCTIONS:
-        raise DisassemblyError(
-            "%s yielded only %d functions, which is too little to be useful reference data"
-            % (binary_path, report.num_functions))
+    else:
+        # A recipe may lower this floor for a project that really is that
+        # small, and says so in its own comment; see Recipe.min_functions.
+        # The recipe's number is used exactly as given rather than being
+        # clamped against config.MIN_USEFUL_FUNCTIONS, because clamping would
+        # make the override silently do nothing in the one case it exists for.
+        floor = config.MIN_USEFUL_FUNCTIONS if min_functions is None else min_functions
+        if report.num_functions < floor:
+            raise DisassemblyError(
+                "%s yielded only %d functions, which is too little to be "
+                "useful reference data (this recipe requires %d)"
+                % (binary_path, report.num_functions, floor))
 
     report.family = family
     report.version = version

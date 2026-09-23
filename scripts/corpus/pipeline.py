@@ -135,6 +135,7 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                     drop_crt_glue=recipe.drop_crt_glue,
                     filename=os.path.basename(binary_path),
                     min_named_ratio=recipe.min_named_ratio,
+                    min_functions=recipe.min_functions,
                     is_blob=artifact.is_blob,
                     bitness=artifact.bitness,
                     base_addr=artifact.base_addr,

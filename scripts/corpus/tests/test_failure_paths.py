@@ -1606,6 +1606,99 @@ class SymbolCoverageTest(unittest.TestCase):
                         body.index("_drop_crt_glue"))
 
 
+class _CountedReport(object):
+    """Enough of an SmdaReport for smdaify's own floor check.
+
+    The floor is applied inside smdaify() rather than in a helper of its own,
+    so the only way to test it is to run smdaify() over a stand-in report -
+    which has the side benefit of pinning that the recipe's number actually
+    reaches the comparison rather than merely being stored on the dataclass.
+    """
+
+    def __init__(self, count):
+        self.status = "ok"
+        self.message = ""
+        self.num_functions = count
+        self.bitness = 32
+        self._functions = [_Function(40, "named_%d" % i) for i in range(count)]
+
+    def getFunctions(self):
+        return self._functions
+
+
+class MinimumFunctionsTest(unittest.TestCase):
+    """The floor that refuses a sample too small to be reference data.
+
+    config.MIN_USEFUL_FUNCTIONS is eight because every build accident anyone
+    had seen - an empty stub, the wrong artefact picked up - lands below it
+    and every real project lands above. 4g3nt47/Obfuscator is the first real
+    project that does not: it has seven functions and no library API, so
+    nothing can raise the count. Recipe.min_functions is for that case only,
+    and these tests pin what keeps it from becoming a way to wave a defective
+    build through: the default does not move, an override admits exactly its
+    own value, and an override admits nothing below itself.
+    """
+
+    def _run(self, count, min_functions=None):
+        from corpus import smdaify
+
+        with mock.patch.object(smdaify, "disassemble",
+                               return_value=_CountedReport(count)):
+            return smdaify.smdaify("x.exe", "Fam", "1", "x.exe",
+                                   min_named_ratio=0, drop_crt_glue=False,
+                                   min_functions=min_functions)
+
+    def test_the_default_floor_still_refuses_seven_functions(self):
+        """Nothing about adding the override may move the default."""
+        from corpus import config
+
+        self.assertEqual(config.MIN_USEFUL_FUNCTIONS, 8)
+        with self.assertRaises(Exception) as caught:
+            self._run(7)
+        self.assertIn("only 7 functions", str(caught.exception))
+
+    def test_the_default_floor_admits_eight(self):
+        report, _ = self._run(8)
+        self.assertEqual(report.num_functions, 8)
+
+    def test_an_override_admits_exactly_its_own_value(self):
+        """Obfuscator's case: seven functions, all seven of them real."""
+        report, _ = self._run(7, min_functions=7)
+        self.assertEqual(report.num_functions, 7)
+
+    def test_an_override_does_not_admit_anything_below_it(self):
+        """The point of the whole exercise: it is a floor, not a switch.
+
+        A recipe that states seven and produces six has lost a function
+        between the recipe being written and the build being run, which is
+        exactly the accident the floor is for.
+        """
+        with self.assertRaises(Exception) as caught:
+            self._run(6, min_functions=7)
+        self.assertIn("only 6 functions", str(caught.exception))
+        self.assertIn("this recipe requires 7", str(caught.exception))
+
+    def test_an_override_above_the_default_is_used_as_given(self):
+        """Not clamped to MIN_USEFUL_FUNCTIONS in either direction."""
+        self.assertRaises(Exception, self._run, 20, 32)
+        report, _ = self._run(32, min_functions=32)
+        self.assertEqual(report.num_functions, 32)
+
+    def test_none_means_the_shared_constant(self):
+        """The default on the dataclass must not be a number of its own."""
+        from corpus.recipe import Recipe
+
+        self.assertIsNone(Recipe.min_functions)
+
+    def test_the_recipe_value_reaches_smdaify(self):
+        """pipeline.py has to pass it; a dataclass field alone does nothing."""
+        import inspect
+        from corpus import pipeline
+
+        self.assertIn("min_functions=recipe.min_functions",
+                      inspect.getsource(pipeline.run_recipe))
+
+
 class IncrementalLinkTableTest(unittest.TestCase):
     """The check that refuses a PE linked with /INCREMENTAL.
 

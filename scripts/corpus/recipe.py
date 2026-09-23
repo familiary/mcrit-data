@@ -111,6 +111,24 @@ class Recipe:
     # build is accepted. Lower it only for projects that genuinely cannot keep
     # symbols; 0 disables the check.
     min_named_ratio: float = 0.5
+    # Minimum number of functions this recipe's artefacts must yield, in place
+    # of config.MIN_USEFUL_FUNCTIONS. None means that floor applies.
+    #
+    # The floor exists to catch a build accident - an empty stub, the wrong
+    # artefact picked up - and eight is above every such accident and below
+    # every real project anyone had tried. Then a real project turned up
+    # below it: 4g3nt47/Obfuscator has seven functions, all seven of them
+    # present and correct, and no driver can raise that because there is no
+    # library API to instantiate.
+    #
+    # So this is only ever for a project that genuinely contains that few
+    # functions, and the number set has to be the count that was measured in
+    # the artefact, stated in the recipe. It must never be used to make a
+    # defective build pass: a truncated or stub build fails this floor for
+    # exactly the reason the floor is there, and lowering it to admit one is
+    # how this corpus would start shipping build accidents as reference data.
+    # Set it to what the project has, not to what the build produced.
+    min_functions: Optional[int] = None
     # What actually governs optimization for this build, recorded as
     # provenance: most upstream build systems set their own flags and ignore
     # the CFLAGS this tooling exports.

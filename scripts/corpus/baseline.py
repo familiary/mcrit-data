@@ -248,6 +248,196 @@ _PROBE_EXE = _PROBE_DLL.replace(
     "BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }",
     "int main(int argc, char **argv) { probe_runtime(argv[0], (double)argc); return 0; }")
 
+# MinGW only, and the character-at-a-time half of stdio that _PROBE_DLL never
+# touches. That probe formats, seeks and reads blocks; it never calls printf,
+# puts, fgetc, fputc, feof, rewind or atoi, so none of those were in the
+# baseline and all of them were being filed under whichever family linked
+# them. It is measurable in the committed data: q3vm's MinGW x64 report is 20
+# functions of which printf, puts and rewind are msvcrt import thunks wearing
+# the q3vm family name, and 4g3nt47/Obfuscator - seven functions of its own -
+# came out at 28 on x64 with feof, fgetc, printf twice, rewind and atoi among
+# them.
+#
+# Two things about the printf family in particular, both measured rather than
+# assumed, because they are what an obvious version of this probe gets wrong:
+#
+#   * The format has to be one the optimiser cannot see. mingw-w64's stdio.h
+#     defines printf as a static inline wrapper around __mingw_vfprintf, and
+#     given a literal format GCC clones it as printf.constprop.0 - so the
+#     name the artefacts carry, plain "printf", is never in the probe image
+#     at all. The first draft of this probe did exactly that and removed
+#     nothing. Reading the format out of a volatile pointer defeats the clone
+#     and is the same trick the math block above uses against builtins.
+#   * The wrapper is compiled from the probe's own translation unit, so its
+#     body is whatever the optimiser makes of it, and the PicHash follows:
+#     on x64 the same wrapper is 25 instructions at -O0, 19 at -O1, 19 with a
+#     different hash at -O2 and 18 at -Os, four distinct PicHashes for one
+#     name. probe_command builds at -O2, which matches every recipe here
+#     except Obfuscator's -O0, so this source is registered a second time at
+#     -O0 below. That second registration is narrow and was measured: it adds
+#     a second PicHash for exactly the mingw-w64 header wrappers - printf,
+#     fprintf, sprintf, snprintf, vprintf, vfprintf, vsprintf, vsnprintf,
+#     fscanf, strtof - and for nothing else, because everything else in the
+#     image comes out of the prebuilt CRT archives rather than out of this
+#     translation unit.
+#
+# One source rather than lines added to _PROBE_DLL, on the standing rule in
+# this file: that probe already works, and a probe that fails to build does
+# not fail the family being built - it silently shrinks the baseline.
+_PROBE_STDIO = """\
+#include <windows.h>
+#include <ctype.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* Read through a volatile pointer so the format is not a constant the
+   optimiser can specialise the wrapper on. See the note above. */
+static volatile const char *probe_stdio_format = "%s %d %s";
+
+static int probe_stdio_forward(const char *format, ...)
+{
+    char buffer[256];
+    va_list arguments;
+    int written;
+
+    va_start(arguments, format);
+    written = vprintf(format, arguments);
+    va_end(arguments);
+    va_start(arguments, format);
+    written += vfprintf(stderr, format, arguments);
+    va_end(arguments);
+    va_start(arguments, format);
+    written += vsnprintf(buffer, sizeof(buffer), format, arguments);
+    va_end(arguments);
+    va_start(arguments, format);
+    written += vsprintf(buffer, format, arguments);
+    va_end(arguments);
+    return written;
+}
+
+__declspec(dllexport) int probe_stdio_streams(const char *path, const char *text)
+{
+    const char *format = (const char *)probe_stdio_format;
+    char buffer[256];
+    FILE *stream;
+    int c = EOF;
+    long where;
+
+    printf(format, text, 1, text);
+    fprintf(stderr, format, text, 1, text);
+    sprintf(buffer, format, text, 1, text);
+    snprintf(buffer, sizeof(buffer), format, text, 1, text);
+    probe_stdio_forward(format, text, 1, text);
+    puts(text);
+    putchar('x');
+    fputs(text, stderr);
+    fflush(stderr);
+    perror(text);
+
+    stream = fopen(path, "rb");
+    if (stream) {
+        setvbuf(stream, NULL, _IOFBF, 4096);
+        /* feof/fgetc in the shape a file walker writes them, which is what
+           Obfuscator's obfs_read_until_null does. */
+        while (!feof(stream)) {
+            c = fgetc(stream);
+            if (c == EOF)
+                break;
+        }
+        getc(stream);
+        ungetc(c, stream);
+        fgets(buffer, sizeof(buffer), stream);
+        fscanf(stream, "%255s", buffer);
+        fread(buffer, 1, 1, stream);
+        fseek(stream, 0, SEEK_SET);
+        ferror(stream);
+        clearerr(stream);
+        rewind(stream);
+        where = ftell(stream);
+        fclose(stream);
+        (void)where;
+    }
+    stream = fopen(path, "wb");
+    if (stream) {
+        fputc('y', stream);
+        putc('z', stream);
+        fwrite(text, 1, strlen(text), stream);
+        fclose(stream);
+    }
+    remove(path);
+    return c;
+}
+
+__declspec(dllexport) int probe_stdio_convert(const char *text)
+{
+    int total = 0;
+    size_t index;
+
+    total += atoi(text);
+    total += (int)atol(text);
+    total += (int)atoll(text);
+    total += (int)atof(text);
+    total += (int)strtoul(text, NULL, 10);
+    total += (int)strtoull(text, NULL, 16);
+    total += (int)strtof(text, NULL);
+    total += abs(total);
+    for (index = 0; index < strlen(text); index++) {
+        total += toupper((unsigned char)text[index]);
+        total += tolower((unsigned char)text[index]);
+        total += isalpha((unsigned char)text[index]);
+        total += isdigit((unsigned char)text[index]);
+        total += isspace((unsigned char)text[index]);
+        total += isupper((unsigned char)text[index]);
+        total += islower((unsigned char)text[index]);
+        total += isalnum((unsigned char)text[index]);
+        total += isprint((unsigned char)text[index]);
+        total += ispunct((unsigned char)text[index]);
+        total += isxdigit((unsigned char)text[index]);
+    }
+    return total;
+}
+
+__declspec(dllexport) size_t probe_stdio_strings(char *destination,
+                                                 const char *text)
+{
+    char *copy = strdup(text);
+
+    strncat(destination, text, 8);
+    strrchr(destination, 'x');
+    strcspn(destination, text);
+    strspn(destination, text);
+    strpbrk(destination, text);
+    strtok(destination, text);
+    strncmp(destination, text, 4);
+    memcmp(destination, text, 4);
+    memchr(destination, 'x', 4);
+    strerror(0);
+    if (copy)
+        free(copy);
+    return strlen(destination);
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# The EXE variant, for the same reason _PROBE_EXE exists beside _PROBE_DLL:
+# the two startup paths are different object sets, and the families that wear
+# this residue - q3vm, Obfuscator - are executables.
+_PROBE_STDIO_EXE = _PROBE_STDIO.replace(
+    "BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }",
+    "int main(int argc, char **argv)\n"
+    "{\n"
+    "    /* A scratch path rather than argv[0]: nothing runs a probe, but a\n"
+    "       probe that would truncate and delete its own image if anyone did\n"
+    "       is not worth the five characters it saves. */\n"
+    "    char buffer[256] = \"probe\";\n"
+    "    return probe_stdio_streams(\"probe_stdio.tmp\", argv[argc - 1])\n"
+    "           + probe_stdio_convert(argv[0])\n"
+    "           + (int)probe_stdio_strings(buffer, argv[0]);\n"
+    "}")
+
 # Anything linked with g++ drags in libstdc++ and the GCC unwinder, which are
 # far larger than the C runtime and belong to the compiler just the same.
 _PROBE_CXX = """\
@@ -2594,6 +2784,28 @@ def crt_glue(toolchain_id):
         ]
         if toolchain.kind == "msvc":
             probes += _msvc_probes(toolchain)
+        else:
+            # MinGW only, deliberately. The stdio surface below is plain C
+            # and cl would compile it, but registering it there would move
+            # the MSVC baseline on a change nobody here can measure - MSVC
+            # is only available on the Windows runner - and a probe that
+            # fails to build now fails the whole run. The residue this
+            # answers was measured on MinGW artefacts; what the MSVC side
+            # carries is its own measurement to make.
+            #
+            # The second registration is the same source at -O0, which
+            # overrides the -O2 probe_command puts in front of it. It is
+            # there for the header wrappers only: their bodies are compiled
+            # from this translation unit, so their PicHash follows the
+            # optimisation level, and Obfuscator is the one recipe here that
+            # builds at -O0. crt_glue maps a name to a *set* of PicHashes,
+            # so a second flavour only ever adds members to that set.
+            probes += [
+                (toolchain.cc, "probe_stdio.c", _PROBE_STDIO, ["-shared"]),
+                (toolchain.cc, "probe_stdio_exe.c", _PROBE_STDIO_EXE, []),
+                (toolchain.cc, "probe_stdio_exe_o0.c", _PROBE_STDIO_EXE,
+                 ["-O0"]),
+            ]
     glue = {}
     # Set before the loop, so that a toolchain whose probes all built is
     # recorded as measured-and-clean rather than as never measured.
@@ -2660,8 +2872,13 @@ def crt_glue(toolchain_id):
     # helpers and classes of their own, and a hand-kept list is exactly the
     # kind that acquires a gap - the one name that is forgotten becomes a
     # function this repository starts deleting out of somebody's library.
-    # None of these prefixes can reach a MinGW baseline: the sources that
-    # define them are only ever compiled by cl.
+    # All but one of these prefixes cannot reach a MinGW baseline at all:
+    # the sources that define them are only ever compiled by cl.
+    #
+    # probe_stdio_ is the exception, and is a prefix from the start rather
+    # than a list for the reason the note above gives: GCC does emit
+    # `probe_stdio_forward.constprop.0` and `.cold` partitions, and a list
+    # would miss them the way it misses probe_vscprintf's today.
     #
     # The Linux probes are matched by prefix for the same reason, and can be:
     # every function they define is named probe_linux_*, including the
@@ -2670,6 +2887,7 @@ def crt_glue(toolchain_id):
     # that defines them is only ever compiled by the native gcc.
     for name in [name for name in glue
                  if name.startswith(("probe_atl_", "_probe_atl_",
+                                     "probe_stdio_", "_probe_stdio_",
                                      "probe_msvcrt_", "_probe_msvcrt_",
                                      "probe_stl_", "_probe_stl_",
                                      "probe_linux_", "_probe_linux_",

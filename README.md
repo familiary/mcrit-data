@@ -890,11 +890,11 @@ Generated with `scripts/build_corpus.py`; see `data/SysWhispers/provenance.json`
 
 ## String obfuscation
 
-Compile-time string obfuscators, which hide literals by encrypting them during compilation and decrypting on first use. None of them exists in a binary until something uses it - the C++ ones are header-only and almost entirely `constexpr`, and the Rust one encodes in `const` context - so the reference data comes from an exerciser or driver that uses the library; the functions recorded are the library's own.
+Four compile-time string obfuscators, which hide literals by encrypting them during compilation and decrypting on first use, and one post-build patcher that does the same job from outside the compiler. None of the four exists in a binary until something uses it - the C++ ones are header-only and almost entirely `constexpr`, and the Rust one encodes in `const` context - so the reference data comes from an exerciser or driver that uses the library; the functions recorded are the library's own.
 
 These are the one group here where the optimization level is not a free choice, and it differs per project - the level each was built at is recorded in `build_flags` and argued in `notes`, because it decides what survives into the binary at all. Reference data built at one level will not match a consumer built at another.
 
-All four are portable, and all four are also built for Linux: these are the corpus's only ELF artefacts, and every one of them is an ELF row beside the PE row in the same table. Same pinned commit, same exerciser or driver, same optimization level - only the container differs, so the two are directly comparable. They are shared objects rather than executables on purpose: a `-shared` ELF links glibc, libstdc++ and libm dynamically, so none of their code enters the sample under a library's name, and they are built `-fvisibility=hidden` so that only the exerciser's entry point is exported and the library's own calls stay direct, which is what the PE builds get for free from `__declspec(dllexport)`.
+All four of the compile-time obfuscators are portable, and all four are also built for Linux: these are the corpus's only ELF artefacts, and every one of them is an ELF row beside the PE row in the same table. Same pinned commit, same exerciser or driver, same optimization level - only the container differs, so the two are directly comparable. They are shared objects rather than executables on purpose: a `-shared` ELF links glibc, libstdc++ and libm dynamically, so none of their code enters the sample under a library's name, and they are built `-fvisibility=hidden` so that only the exerciser's entry point is exported and the library's own calls stay direct, which is what the PE builds get for free from `__declspec(dllexport)`.
 
 ### Obfuscate<a id='obfuscate'></a>
 
@@ -962,4 +962,17 @@ Generated with `scripts/build_corpus.py`; see `data/obfstr/provenance.json` for 
 |----------|---------|----------|-------|------|
 | obfstr | 0.4.6 | GCC 13 (Linux, glibc) | [x86 ELF](data/obfstr/x86/mcrit/obfstr_0.4.6_gcc13_x86_obfstr_driver.so.mcrit) / [x64 ELF](data/obfstr/x64/mcrit/obfstr_0.4.6_gcc13_x64_obfstr_driver.so.mcrit) | [x86 ELF](data/obfstr/x86/smda/obfstr_0.4.6_gcc13_x86_obfstr_driver.so.7z) / [x64 ELF](data/obfstr/x64/smda/obfstr_0.4.6_gcc13_x64_obfstr_driver.so.7z) |
 | obfstr | 0.4.6 | MinGW-w64 GCC 13 | [x86 PE](data/obfstr/x86/mcrit/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.mcrit) / [x64 PE](data/obfstr/x64/mcrit/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.mcrit) | [x86 PE](data/obfstr/x86/smda/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.7z) / [x64 PE](data/obfstr/x64/smda/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.7z) |
+<!-- /generated -->
+
+### Obfuscator4g3nt47<a id='obfuscator4g3nt47'></a>
+
+4g3nt47/Obfuscator is not a compile-time obfuscator at all, and is here for contrast as much as for coverage: it is a standalone command-line tool that opens an already-built binary, finds every string prefixed with the marker `[OBFS_ENC]`, XORs it with a rolling key and writes a new file. Nothing of it is ever linked into the program it protects. The only part that propagates downstream is a copy-pasted ten-line `obfs_decode()`, which the upstream README asks you to paste into your own source, so it appears in whatever shape your own compiler gives it rather than in the shape recorded here. What this family identifies is the tool binary itself.  
+Seven functions is the whole project - `obfs_encode`, `obfs_decode`, `obfs_find_offset`, `obfs_filecpy`, `obfs_read_until_null`, `obfs_run` and `main` - so the recipe sets `min_functions=7` against the corpus-wide floor of eight, and the runtime residue it used to clear that floor on is now measured by a baseline probe instead. Built at `-O0`, not upstream's `-Os`: `obfs_decode` is byte-identical to `obfs_encode`, so identical-code folding reduces it to a one-instruction tail jump at `-Os` and `-O2`. Compiled directly rather than through upstream's Makefile, which hardcodes `-s` on the link line, never creates the `bin/` directory it writes objects to, and installs a `bin/main` that no rule builds.  
+
+Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Obfuscator4g3nt47 -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
 <!-- /generated -->

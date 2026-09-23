@@ -89,6 +89,31 @@ compile, added at the same time: `probe_msvcrt.c` had never built at all
 had `probe_atl_typeinfo.cpp`. Both had been failing silently on every run
 since they were written.
 
+**A fifth round is measured and has not been applied.** Adding
+4g3nt47/Obfuscator turned up a whole half of stdio that `_PROBE_DLL` never
+calls - it formats, seeks and reads blocks, and never once calls `printf`,
+`puts`, `fgetc`, `feof`, `ferror`, `clearerr`, `rewind`, `remove` or `atoi`.
+`_PROBE_STDIO` now measures that surface, registered three ways on the MinGW
+side: as a DLL, as an EXE, and as an EXE a second time at `-O0`, because
+mingw-w64's `stdio.h` defines `printf` and its relatives as static inline
+wrappers compiled from each calling translation unit, so their PicHash
+follows the optimisation level (25 instructions at `-O0`, 19 at `-O2`, 18 at
+`-Os` for x64 `printf`). The baselines went from 3101 to 3126 symbols on x86
+and 2900 to 2926 on x64.
+
+`refilter --dry-run` over the committed corpus with that baseline reports
+**67 artefacts in 14 families, 510 functions**: mbedTLS 14, OpenSSL 9, Lua
+and LuaJIT 6 each, abseil, libcurl, libtiff and libxml2 4 each, q3vm 4,
+libevent and libuv 3, bzip2, cryptopp and libpng 2. `printf` is much the
+largest share (106 bodies across 14 artefacts, one per translation unit that
+calls it), then `fprintf`, `ferror`, `fgets`, `feof`, `remove` and
+`clearerr`. Every name in the list is a C library name; no project code is
+in it.
+
+Only `data/Obfuscator4g3nt47` was built against the new baseline. Whether to
+spend a refilter round on the other 67 is a maintainer's call and has not
+been made here.
+
 **What remains is one finding.** `__scrt_common_main_seh`, the MSVC CRT's
 x64 entry-point wrapper, at 99 instructions in Lua, MemoryModule and bzip2.
 It is unambiguously Microsoft's code and the baseline ought to catch it; it
@@ -505,7 +530,6 @@ Recorded here so the analysis is not repeated:
 | gRPC | #10 | cross-building needs a full native build first to obtain `protoc` and `grpc_cpp_plugin`, plus boringssl (which needs Go); 45-90 minutes for two architectures, and its statically-linked-into-Windows-malware rate is close to zero |
 | BlackBone kernel driver | #8 | a separate solution from the user-mode library, which is built. The reason given here used to be "needing the WDK", and that was wrong: the `windows-2022` runner does carry one. `.github/workflows/windows-reference-data.yml` now probes for it and run 35855463795 reported `WDK-PROBE` PRESENT on all five paths - the `WindowsKernelModeDriver10.0` toolset, KMDF 1.15 through 1.21 under `Lib\wdf\kmdf`, and `ntoskrnl.lib`, `hal.lib`, `wmilib.lib` and `netio.lib` under `Lib\10.0.26100.0\km\x64`. So this one is worth reopening on its merits rather than on toolchain grounds; it simply has not been attempted |
 | DavidBuchanan314/monomorph | [lib2smda#1](https://github.com/familiary/lib2smda/issues/1) | Linux x86-64 ELF only. That alone is no longer the obstacle it was when this row was written - `linux_x86` and `linux_x64` exist now - but the reason that mattered does not move: its own code is four functions, `get_bit`, `decode_buf`, `inflate_buf` and `main`, 679 bytes between them, against a floor of eight. The committed artefact carries 1397 function symbols, but 1393 of them are statically linked glibc and zlib, and with no glibc baseline to subtract them they would enter under monomorph's name and duplicate `data/libzlib`. What is distinctive about the project is the 4 MB array of MD5 collision blocks, which is data rather than code; upstream points at a collision detector for identifying it |
-| 4g3nt47/Obfuscator | [lib2smda#1](https://github.com/familiary/lib2smda/issues/1) | seven functions of its own - `obfs_encode`, `obfs_decode`, `obfs_find_offset`, `obfs_filecpy`, `obfs_read_until_null`, `obfs_run` and `main` - and no driver can raise that, because there is nothing to instantiate. The interesting part is that the gate does not catch it: measured through `smdaify` with the glue drop on, it reports 15 functions on x86 and 28 on x64, clearing `MIN_USEFUL_FUNCTIONS` purely on msvcrt residue the baseline does not classify - named `feof`, `fgetc`, `printf`, `rewind`, and `atoi` on x64, plus 3 and 15 unnamed. Passing on that residue is the misattribution `drop_crt_glue` exists to prevent, so no recipe was written, no threshold was moved and nothing was hand-added to the baseline. Its reference value would be thin regardless: nothing from it is ever linked into a protected program - it is a standalone patcher that XORs bytes in an already-built file, and the only part that propagates is a copy-pasted ten-line `obfs_decode()`, which appears downstream in whatever shape the downstream compiler gives it |
 
 VX-API (#4), BlackBone (#8) and SysWhispers v1 (#9) were on this list and are
 not any more: they need ATL, the DIA SDK or MASM, none of which exists for
@@ -514,6 +538,26 @@ GCC, so they are built with MSVC on a `windows-2022` runner by
 Crypto++ (#10) has also left it - upstream's own `cryptopp.dll` target
 exports only the FIPS subset, but its GNUmakefile builds `libcryptopp.a`
 cleanly and that is linked into a DLL with `--whole-archive`.
+
+4g3nt47/Obfuscator (lib2smda#1) has left it too, and it is the one entry here
+that left because the tooling changed rather than because the project was
+looked at again. It has seven functions against a floor of eight, but the
+count was never what kept it out: measured through `smdaify` it reported 15
+functions on x86 and 28 on x64, so it *cleared* the floor already - on
+`feof`, `fgetc`, `printf`, `rewind` and `atoi`, MinGW runtime the baseline
+did not classify because `_PROBE_DLL` never calls any of them. Clearing a
+floor on misattributed runtime is what made it unbuildable, not failing one,
+and lowering the floor would not have touched that. Two changes fixed it
+between them. `_PROBE_STDIO` measures the character-at-a-time half of stdio,
+so those names are now runtime like every other runtime function - the
+artefacts are 10 and 22 functions and every named one of them is the
+project's. And `Recipe.min_functions` lets a recipe state the count a
+project genuinely has, so what admits this family is its own seven rather
+than a total that includes the unnamed thunks no name-matching filter can
+reach. Neither is a threshold moved to let something through, and nothing
+was hand-added to the baseline. Its reference value is still thin and the
+recipe says so: nothing from this project is ever linked into a protected
+program.
 
 None of the three MSVC builds patches upstream source. BlackBone needs one
 compiler switch that its project file does not set (`/permissive`, because
