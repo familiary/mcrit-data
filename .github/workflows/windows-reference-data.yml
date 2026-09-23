@@ -115,6 +115,51 @@ jobs:
       - name: Show detected toolchains
         run: python scripts/build_corpus.py list
 
+      # Informational only, and deliberately the one step here that looks at
+      # what the image has installed rather than at what a recipe declares.
+      #
+      # Two statements in this repository disagree about the WDK: the header
+      # comment above says the windows-2022 image carries it, and
+      # scripts/corpus/README.md's "Targets investigated but not built" table
+      # gives "a separate solution needing the WDK" as the reason BlackBone's
+      # kernel driver is absent. Both cannot be right in the sense a reader
+      # takes them, and neither is worth "fixing" on speculation. This prints
+      # the answer, so the next round corrects whichever one is wrong and any
+      # kernel-mode recipe - MahmoudZohdy/APICallProxy is the one waiting on
+      # it, and BlackBone's driver would follow - is written against a
+      # measurement. The four things asked about are exactly what
+      # APICallProxy's Release|x64 link line needs: the KMDF platform toolset,
+      # the KMDF import libraries, $(DDK_LIB_PATH)'s ntoskrnl/hal/wmilib, and
+      # netio.lib for its WSK socket layer.
+      #
+      # continue-on-error so a missing path can never fail the leg; the paths
+      # are wildcarded so a different VS edition or SDK version still answers.
+      - name: Probe for a WDK and KMDF (informational, never fatal)
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          function Probe($label, $glob) {
+            $hits = @(Get-ChildItem -Path $glob -ErrorAction SilentlyContinue |
+                      Select-Object -First 6 -ExpandProperty FullName)
+            if ($hits) {
+              Write-Host "WDK-PROBE ${label}: PRESENT"
+              $hits | ForEach-Object { Write-Host "    $_" }
+            } else {
+              Write-Host "WDK-PROBE ${label}: ABSENT ($glob)"
+            }
+          }
+          $vs = "C:\Program Files*\Microsoft Visual Studio\2022\*\MSBuild\Microsoft\VC\*"
+          $kits = "C:\Program Files*\Windows Kits\10\Lib"
+          Probe "WindowsKernelModeDriver10.0 platform toolset" `
+                "$vs\Platforms\*\PlatformToolsets\WindowsKernelModeDriver10.0"
+          Probe "KMDF import libraries (path names the KMDF version)" `
+                "$kits\wdf\kmdf\*\*\WdfDriverEntry.lib"
+          Probe "DDK_LIB_PATH ntoskrnl.lib" "$kits\*\km\*\ntoskrnl.lib"
+          Probe "DDK_LIB_PATH hal.lib" "$kits\*\km\*\hal.lib"
+          Probe "DDK_LIB_PATH wmilib.lib" "$kits\*\km\*\wmilib.lib"
+          Probe "netio.lib (APICallProxy's WSK socket layer)" `
+                "$kits\*\km\*\netio.lib"
+
       # Does NOT fail the job when a recipe fails. Everything this leg did
       # build is still scoped, validated and uploaded by the steps below, and
       # the job is failed at the very end instead - see "Fail the job if any
@@ -327,9 +372,18 @@ jobs:
             Write-Host "::endgroup::"
           }
 
+      # Uploaded on a green run too, which the step above deliberately is not.
+      # A recipe may now succeed while having built less than it meant to:
+      # nt_wrapper compiles its five exerciser translation units with
+      # allow_failure and links whatever objects resulted, so a degraded build
+      # reaches this point reporting OK, with the NTW-TU-FAILED lines and the
+      # object inventory that explain it sitting only in build/*.log. Showing
+      # every log on the job page would drown a thirty-recipe leg; keeping the
+      # logs as an artifact costs nothing and makes the degraded case
+      # diagnosable after the fact. The function count printed by the build
+      # step is what says a build is worth looking into.
       - name: Upload build logs
-        if: ${{ !cancelled() && steps.build.conclusion != 'skipped'
-             && (failure() || steps.build.outputs.exit-code != '0') }}
+        if: ${{ !cancelled() && steps.build.conclusion != 'skipped' }}
         uses: actions/upload-artifact@v4
         with:
           name: build-logs-${{ matrix.arch }}
