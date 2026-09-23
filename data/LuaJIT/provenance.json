@@ -405,7 +405,7 @@
     "architecture": "x64",
     "build_flags": "/O2 /W3 /MD /Zi (upstream src/msvcbuild.bat, \"debug\" argument - the release build plus /Zi, not a debug CRT); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF /INCREMENTAL:NO at link, appended through _LINK_ over upstream's own link options",
     "built_artifact": "src/lua51.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "lua51.dll",
     "family": "LuaJIT",
     "generated": "2026-09-23",
@@ -624,7 +624,7 @@
       "vsprintf",
       "vswprintf"
     ],
-    "sha256": "6f74a721946647994d791efe027cefa717bc1e554a961c45b451affed2cc2cb6",
+    "sha256": "1b4c70ad7e3d5106e5ed59c08ee2aff4a17daa3d23a94086568855f87aff0d80",
     "smda": "data/LuaJIT/x64/smda/LuaJIT_2.0.5_msvc143_x64_lua51.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1666,7 +1666,7 @@
     "architecture": "x64",
     "build_flags": "/O2 /W3 /MD /Zi (upstream src/msvcbuild.bat, \"debug\" argument - the release build plus /Zi, not a debug CRT); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF /INCREMENTAL:NO at link, appended through _LINK_ over upstream's own link options",
     "built_artifact": "src/lua51.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "lua51.dll",
     "family": "LuaJIT",
     "generated": "2026-09-23",
@@ -1900,7 +1900,7 @@
       "vsprintf",
       "vswprintf"
     ],
-    "sha256": "3d6b972f2e717e18c5fcf48c09d852ffb2a43b0395312f41a9a9299955745496",
+    "sha256": "c78a8ba498c205cb8defc78eadf17d17d440c6e100e14f5f6727caa32d972db9",
     "smda": "data/LuaJIT/x64/smda/LuaJIT_2.1.0-beta3_msvc143_x64_lua51.dll.7z",
     "smda_version": "4.8.0",
     "source": {

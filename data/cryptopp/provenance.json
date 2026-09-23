@@ -706,7 +706,7 @@
     "architecture": "x64",
     "build_flags": "cryptlib.vcxproj Release: /O2 /Ob2 /Oi /Oy /Gy /GF /W4 /MD /Z7, NDEBUG and USE_PRECOMPILED_HEADERS defined, plus the per-file ISA settings upstream assigns (AdvancedVectorExtensions2 for chacha_avx.cpp and so on); x86 additionally /arch:SSE2 from the project's Win32 group. /MD and /Z7 replace upstream's /MT and its unstated debug format, and /GL is turned off, all three by this recipe. Whole archive linked into a DLL with /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF.",
     "built_artifact": "cryptopp.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "cryptopp.dll",
     "family": "cryptopp",
     "generated": "2026-09-23",
@@ -2287,7 +2287,7 @@
       "void __cdecl std::_Xout_of_range(char const *)",
       "wcslen"
     ],
-    "sha256": "5f8e334a0182560e6f8f86addfee6199395d3dd69401eebea6284f6f660d26a3",
+    "sha256": "dc70e45006354ceb28bcefbd3171cd3a480094edc6bdff4e1da4d241abf1c779",
     "smda": "data/cryptopp/x64/smda/cryptopp_8.9.0_msvc143_x64_cryptopp.dll.7z",
     "smda_version": "4.8.0",
     "source": {

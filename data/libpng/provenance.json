@@ -327,7 +327,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), PNG_INTEL_SSE on (upstream's default on x86/amd64); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/libpng16.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "libpng16.dll",
     "dependencies": {
       "zlib_archive": {
@@ -493,7 +493,7 @@
       "strlen",
       "terminate"
     ],
-    "sha256": "63ce50f8af9364e5fe5012234be6c09db2c8f208df9fdfd320bf36559710a86e",
+    "sha256": "37415df3ecc719973cf91507cbc92e3cddfcdf3d26bb905bd26c8ef4045be91e",
     "smda": "data/libpng/x64/smda/libpng_1.6.50_msvc143_x64_libpng16.dll.7z",
     "smda_version": "4.8.0",
     "source": {

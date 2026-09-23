@@ -676,7 +676,7 @@
     "architecture": "x64",
     "build_flags": "/W3 /wd4090 /O2 /MD /Zi /Gs0 /GF /Gy (VC-WIN32 / VC-WIN64A release defaults, unmodified), no-asm; /nologo /debug /Brepro /OPT:NOREF /OPT:NOICF at link, replacing upstream's /nologo /debug",
     "built_artifact": "libcrypto.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "libcrypto",
     "family": "OpenSSL",
     "generated": "2026-09-23",
@@ -869,7 +869,7 @@
       "terminate",
       "wcsstr"
     ],
-    "sha256": "41a7a22dcd9cb165e268a64ee15709f2df5c0a380c0984274727db006a90d117",
+    "sha256": "a7b5842e94554a9c4c0cc6cb0accfc616946af300f4a0127a1393a101e2c2448",
     "smda": "data/OpenSSL/x64/smda/OpenSSL_1.1.1w_msvc143_x64_libcrypto.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -885,7 +885,7 @@
     "architecture": "x64",
     "build_flags": "/W3 /wd4090 /O2 /MD /Zi /Gs0 /GF /Gy (VC-WIN32 / VC-WIN64A release defaults, unmodified), no-asm; /nologo /debug /Brepro /OPT:NOREF /OPT:NOICF at link, replacing upstream's /nologo /debug",
     "built_artifact": "libssl.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "libssl",
     "family": "OpenSSL",
     "generated": "2026-09-23",
@@ -1039,7 +1039,7 @@
       "strncmp",
       "terminate"
     ],
-    "sha256": "48933c99c223ccf5e5e991ebaaee8799c11a5dbfa74b39c5f718cd8d4adb3a91",
+    "sha256": "81e96be6cc079782bd71b99158176bbf877f23e263e9f0ce1db5ce833d68a7ad",
     "smda": "data/OpenSSL/x64/smda/OpenSSL_1.1.1w_msvc143_x64_libssl.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1281,7 +1281,7 @@
       "time",
       "time"
     ],
-    "sha256": "a53cad9d05c679cc297f18100ab0178e56abd0f44d9d789e9368365538874e74",
+    "sha256": "6db19c62e84085aee522e7e8feb0e406ff5e9b7a6dbd600e1755477951abe4eb",
     "smda": "data/OpenSSL/x86/smda/OpenSSL_1.1.1w_msvc143_x86_libcrypto.7z",
     "smda_version": "4.8.0",
     "source": {

@@ -67,7 +67,7 @@
     "architecture": "x64",
     "build_flags": "/O2 /MD /Zi (both libtomcrypt and the bundled libtommath), LTC_SOURCE /DUSE_LTM /DLTM_DESC, /W3 for libtomcrypt and /Wall /WX- for libtommath (upstream's own levels); /DLL /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /WHOLEARCHIVE at link",
     "built_artifact": "libtomcrypt.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "libtomcrypt.dll",
     "dependencies": {
       "libtommath": {
@@ -234,7 +234,7 @@
       "terminate",
       "vsnprintf"
     ],
-    "sha256": "4965c9729c81e19f36859712a088e5f04f318faf2845e4e1f0c023950a2efabe",
+    "sha256": "a4b5d6efa5394b6567c315052003f85a271092a2e8c3ff3cedc9a15cccda81f1",
     "smda": "data/libtomcrypt/x64/smda/libtomcrypt_1.18.2_msvc143_x64_libtomcrypt.dll.7z",
     "smda_version": "4.8.0",
     "source": {

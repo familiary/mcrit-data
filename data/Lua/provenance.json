@@ -465,7 +465,7 @@
     "architecture": "x64",
     "build_flags": "/O2 /MD /W3 /Zi (etc/luavs.bat's flags plus /Zi); /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link; statically linked interpreter, not linked against lua51.dll",
     "built_artifact": "src/lua.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "lua.exe",
     "family": "Lua",
     "generated": "2026-09-23",
@@ -687,7 +687,7 @@
       "terminate",
       "time"
     ],
-    "sha256": "d522631125353539dcbf4ccfb7373f13f988b7dd3252b83c21dd551394bddb48",
+    "sha256": "fdbeb7ffd34f98879a4dbecd3eb09bc34a4a7798439630adcb0317cc5ced95a0",
     "smda": "data/Lua/x64/smda/Lua_5.1.5_msvc143_x64_lua.exe.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1793,7 +1793,7 @@
     "architecture": "x64",
     "build_flags": "/O2 /MD /W3 /Zi (etc/luavs.bat's flags plus /Zi); /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link; statically linked interpreter, not linked against lua51.dll",
     "built_artifact": "src/lua.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "lua.exe",
     "family": "Lua",
     "generated": "2026-09-23",
@@ -2013,7 +2013,7 @@
       "time",
       "time"
     ],
-    "sha256": "6ed28eb453ba3b446c1fa035ed1d4ec7c2e1048b8e102a909a42639f79a4e930",
+    "sha256": "70749b5158947ab2e215e70fec678efe5ba5b72de44a2b16098b95142de6dbd1",
     "smda": "data/Lua/x64/smda/Lua_5.4.8_msvc143_x64_lua.exe.7z",
     "smda_version": "4.8.0",
     "source": {

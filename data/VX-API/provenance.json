@@ -3,7 +3,7 @@
     "architecture": "x64",
     "build_flags": "/O2 /MD /Zi /std:c++20",
     "built_artifact": "vxapi.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "vxapi.dll",
     "family": "VX-API",
     "generated": "2026-09-23",
@@ -314,7 +314,7 @@
       "type_info::`scalar deleting destructor'",
       "type_info::~type_info"
     ],
-    "sha256": "5351a7e67092e60bb7827cfdfc0316bea6346d8495c17099640772e6056ceb57",
+    "sha256": "69a96fb5264e555b25c7f95ad149da9f1b440b5c80728fd279f46b21865fd375",
     "smda": "data/VX-API/x64/smda/VX-API_2.01.015_msvc143_x64_vxapi.dll.7z",
     "smda_version": "4.8.0",
     "source": {

@@ -327,7 +327,7 @@
     "architecture": "x64",
     "build_flags": "/O2 /MD /Zi, -DWIN32 -D_FILE_OFFSET_BITS=64; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "bzip2.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "bzip2.exe",
     "family": "bzip2",
     "generated": "2026-09-23",
@@ -504,7 +504,7 @@
       "strstr",
       "terminate"
     ],
-    "sha256": "61672902cbc982d01769797fe6e4e6f71467775eaeef918c37b297fb68febe93",
+    "sha256": "75f72c99006f876542de2a00e162c2662e91657ec2faa828e15a65b34f8a0902",
     "smda": "data/bzip2/x64/smda/bzip2_1.0.8_msvc143_x64_bzip2.exe.7z",
     "smda_version": "4.8.0",
     "source": {

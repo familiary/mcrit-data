@@ -743,6 +743,7 @@ Generated with `scripts/build_corpus.py`; see `data/wow64pp/provenance.json` for
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | wow64pp | 2020-09-19 | MinGW-w64 GCC 13 | [x86 PE](data/wow64pp/x86/mcrit/wow64pp_2020-09-19_mingw13_x86_wow64pp.dll.mcrit) | [x86 PE](data/wow64pp/x86/smda/wow64pp_2020-09-19_mingw13_x86_wow64pp.dll.7z) |
+| wow64pp | 2020-09-19 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/wow64pp/x86/mcrit/wow64pp_2020-09-19_msvc143_x86_wow64pp.dll.mcrit) | [x86 PE](data/wow64pp/x86/smda/wow64pp_2020-09-19_msvc143_x86_wow64pp.dll.7z) |
 <!-- /generated -->
 
 ### RtlWow64<a id='rtlwow64'></a>
@@ -807,6 +808,19 @@ Generated with `scripts/build_corpus.py`; see `data/WinApiObfuscator/provenance.
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | WinApiObfuscator | 2.0.0.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/WinApiObfuscator/x86/mcrit/WinApiObfuscator_2.0.0.0_msvc143_x86_winapi_obfuscator.dll.mcrit) / [x64 PE](data/WinApiObfuscator/x64/mcrit/WinApiObfuscator_2.0.0.0_msvc143_x64_winapi_obfuscator.dll.mcrit) | [x86 PE](data/WinApiObfuscator/x86/smda/WinApiObfuscator_2.0.0.0_msvc143_x86_winapi_obfuscator.dll.7z) / [x64 PE](data/WinApiObfuscator/x64/smda/WinApiObfuscator_2.0.0.0_msvc143_x64_winapi_obfuscator.dll.7z) |
+<!-- /generated -->
+
+### APICallProxy<a id='apicallproxy'></a>
+
+Proxies Win32 calls through a kernel driver, so the work a process appears to do in user mode is performed by `APICallProxy.sys` on its behalf via IOCTLs. The driver is the only part worth recording - the seven user-mode executables beside it hold one to four functions each and cannot clear the eight-function floor. Built `Release|x64` only, which is the single project configuration carrying the link libraries. This is the corpus's first kernel-mode artefact: the runner's WDK was confirmed present by probe rather than assumed, and the recipe records that a `.sys` links runtime the msvcrt/ucrt baseline cannot recognise, so some kernel glue stays under this family's name.  
+It also vendors two third parties without reproducing their terms: `DisableDSE/hde64.h` is Vyacheslav Patkov's Hacker Disassembler Engine, carrying a copyright line and no grant of permission, and roughly 25 of its functions are wbenny/KSOCKET's `Ks*` socket layer renamed to `APIProxy*` - that one is MIT, so what is missing is the attribution rather than the permission.  
+
+Generated with `scripts/build_corpus.py`; see `data/APICallProxy/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: APICallProxy -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| APICallProxy | 2022-12-09 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/APICallProxy/x64/mcrit/APICallProxy_2022-12-09_msvc143_x64_APICallProxy.sys.mcrit) | [x64 PE](data/APICallProxy/x64/smda/APICallProxy_2022-12-09_msvc143_x64_APICallProxy.sys.7z) |
 <!-- /generated -->
 
 ### CallObfuscator<a id='callobfuscator'></a>

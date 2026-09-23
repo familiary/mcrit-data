@@ -515,7 +515,7 @@
     "architecture": "x64",
     "build_flags": "-O1/-O2 -MD -Z7 -EHsc -Gy -GR- -GF -GS- -W0 -WX -Gr -MP (CPP/Build.mak, with -MD selected by MY_DYNAMIC_LINK and the warning level lowered); MASM fast paths assembled with ml/ml64 -WX; -DEBUG -Brepro -OPT:NOREF -OPT:NOICF appended to upstream's link line",
     "built_artifact": "CPP/7zip/Bundles/Format7zF/x64/7z.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "7z.dll",
     "family": "7-Zip",
     "generated": "2026-09-23",
@@ -721,7 +721,7 @@
       "wcsstr",
       "wmemcpy"
     ],
-    "sha256": "f2c5babd6416a6612f7df5bdf142c5fda8ed32797b6086328a3b19b600d5e76a",
+    "sha256": "285ef47728a5cb0187896a351dfc733e13b9c30f1e91f5a8b3fc4875a81dce9e",
     "smda": "data/7-Zip/x64/smda/7-Zip_23.01_msvc143_x64_7z.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1485,7 +1485,7 @@
     "architecture": "x64",
     "build_flags": "-O1/-O2 -MD -Z7 -EHsc -Gy -GR- -GF -GS- -W0 -WX -Gr -MP (CPP/Build.mak, with -MD selected by MY_DYNAMIC_LINK and the warning level lowered); MASM fast paths assembled with ml/ml64 -WX; -DEBUG -Brepro -OPT:NOREF -OPT:NOICF appended to upstream's link line",
     "built_artifact": "CPP/7zip/Bundles/Format7zF/x64/7z.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "7z.dll",
     "family": "7-Zip",
     "generated": "2026-09-23",
@@ -1691,7 +1691,7 @@
       "wcsstr",
       "wmemcpy"
     ],
-    "sha256": "230562994401f6ff546af4a90fd7b5428b0a5685b16605d25d3ac9b81eb58daf",
+    "sha256": "80c68949a7fec3f16d40a992a2b28741b9332feb83c5607c9a967d5d8c9be0ae",
     "smda": "data/7-Zip/x64/smda/7-Zip_26.03_msvc143_x64_7z.dll.7z",
     "smda_version": "4.8.0",
     "source": {

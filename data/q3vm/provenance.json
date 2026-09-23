@@ -195,7 +195,7 @@
     "architecture": "x64",
     "build_flags": "Release configuration: /O2 /Oi /Gy /sdl /W3 /GL, compiled as C with _CRT_SECURE_NO_WARNINGS and VISUAL_STUDIO_PATCHES defined; /LTCG /OPT:REF /OPT:ICF at link (all upstream's own); /MD, /Zi, /DEBUG and /Brepro added by this recipe, and the toolset retargeted from v140/v141 to v143",
     "built_artifact": "msvc/bin/x64/Release/q3vm.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "q3vm.exe",
     "family": "q3vm",
     "generated": "2026-09-23",
@@ -278,7 +278,7 @@
       "pre_cpp_initialization",
       "terminate"
     ],
-    "sha256": "62609712c033600d88e10a44b564e19f21b153b749f8eea865f8fb8c2c9177ab",
+    "sha256": "a1bceb100b6368fb1183a29bd82780bc40ee8a37e7ba1395c5e28d2e821ca227",
     "smda": "data/q3vm/x64/smda/q3vm_1.3.1_msvc143_x64_q3vm.exe.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -589,7 +589,7 @@
     "architecture": "x64",
     "build_flags": "Release configuration: /O2 /Oi /Gy /sdl /W3 /GL, compiled as C with _CRT_SECURE_NO_WARNINGS and VISUAL_STUDIO_PATCHES defined; /LTCG /OPT:REF /OPT:ICF at link (all upstream's own); /MD, /Zi, /DEBUG and /Brepro added by this recipe, and the toolset retargeted from v140/v141 to v143",
     "built_artifact": "msvc/bin/x64/Release/q3vm.exe",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "q3vm.exe",
     "family": "q3vm",
     "generated": "2026-09-23",
@@ -672,7 +672,7 @@
       "pre_cpp_initialization",
       "terminate"
     ],
-    "sha256": "cb23d666d093a5b9ebfa70b155de644e68bf9a2daa3713075fffbcaa57797f26",
+    "sha256": "b1d06d58924d1c1ad34a6d049ad1c81781c4979609d9a73e666412225434abc0",
     "smda": "data/q3vm/x64/smda/q3vm_2026-03-06_msvc143_x64_q3vm.exe.7z",
     "smda_version": "4.8.0",
     "source": {

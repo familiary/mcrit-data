@@ -326,7 +326,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), Schannel TLS backend; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/lib/libcurl.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "libcurl.dll",
     "family": "libcurl",
     "generated": "2026-09-23",
@@ -528,7 +528,7 @@
       "wcsncmp",
       "wcsncpy"
     ],
-    "sha256": "ea03a979c301692601a45ed915597649c6ddb46f895e7b4bac01c80bf530cf49",
+    "sha256": "946651a2010b8525dc420387540ed166cfde2d42a4e1feddd290d35fea05f2f7",
     "smda": "data/libcurl/x64/smda/libcurl_8.15.0_msvc143_x64_libcurl.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -1170,7 +1170,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), Schannel TLS backend; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/lib/libcurl.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "libcurl.dll",
     "family": "libcurl",
     "generated": "2026-09-23",
@@ -1370,7 +1370,7 @@
       "vsnprintf",
       "wcslen"
     ],
-    "sha256": "c5fae2f988b08444efe5e52aa967fb036f7ebd77d5cf24ebe2f592a10321c453",
+    "sha256": "de55dfe28557ec3f63d706a9858fee37250e1854d5da300172cb1280b36cff9e",
     "smda": "data/libcurl/x64/smda/libcurl_8.4.0_msvc143_x64_libcurl.dll.7z",
     "smda_version": "4.8.0",
     "source": {

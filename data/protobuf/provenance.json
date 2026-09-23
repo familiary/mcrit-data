@@ -351,7 +351,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), plus upstream's /MP /bigobj /utf-8 and its /wd list; PROTOBUF_USE_DLLS and LIBPROTOBUF_EXPORTS defined by the shared build; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/libprotobuf.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "protobuf.dll",
     "family": "protobuf",
     "generated": "2026-09-23",
@@ -2557,7 +2557,7 @@
       "wmemcmp",
       "wmemcpy"
     ],
-    "sha256": "fe7f2617bf5857e4589e9764ce5987810967a8dbcf1e040b93a16b02a3cdfcd1",
+    "sha256": "67624dd3497c3ae2c75673de61b646c2e8915651d23b759d021b5dd726e8208f",
     "smda": "data/protobuf/x64/smda/protobuf_21.12_msvc143_x64_protobuf.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -5523,7 +5523,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi /std:c++17 (CMake Release, /Zi added), plus upstream's /MP /bigobj /utf-8 and its /wd list; PROTOBUF_USE_DLLS and LIBPROTOBUF_EXPORTS defined by the shared build; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/bin/libprotobuf.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "protobuf.dll",
     "dependencies": {
       "absl": {
@@ -7741,7 +7741,7 @@
       "wmemcmp",
       "wmemcpy"
     ],
-    "sha256": "670c492e373df963cbbd716ecdfca287443ccd569c2a0963feec9ea5b02694b1",
+    "sha256": "67db11d84f7390e72bb20dca009bdf886b98254c64b49e91efc97e42ef8e2db2",
     "smda": "data/protobuf/x64/smda/protobuf_31.1_msvc143_x64_protobuf.dll.7z",
     "smda_version": "4.8.0",
     "source": {

@@ -183,7 +183,7 @@
     "architecture": "x64",
     "build_flags": "/O2 /MD /Zi, FTS5/RTREE/JSON1 enabled; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "sqlite3.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "sqlite3.dll",
     "family": "sqlite3",
     "generated": "2026-09-23",
@@ -359,7 +359,7 @@
       "strrchr",
       "terminate"
     ],
-    "sha256": "69075db843a4bfe4693298794b628dc4781d64e7819f4456d3bc8ad21fc16f99",
+    "sha256": "dfa43729a3b1b7ee05616c079fc6cc1b91c17f2ea889ff3f466434675b205b9e",
     "smda": "data/sqlite3/x64/smda/sqlite3_3.31.1_msvc143_x64_sqlite3.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -767,7 +767,7 @@
     "architecture": "x64",
     "build_flags": "/O2 /MD /Zi, FTS5/RTREE/JSON1 enabled; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "sqlite3.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "sqlite3.dll",
     "family": "sqlite3",
     "generated": "2026-09-23",
@@ -946,7 +946,7 @@
       "strrchr",
       "terminate"
     ],
-    "sha256": "f5e7313761db5d2a653fd5e8d3ec56a8c365081e299bf568ecfd82e151710170",
+    "sha256": "76c4bdd1b5f10b3c3b3c648130763cc707bcafa5150b78672ae318717bd247f3",
     "smda": "data/sqlite3/x64/smda/sqlite3_3.50.4_msvc143_x64_sqlite3.dll.7z",
     "smda_version": "4.8.0",
     "source": {

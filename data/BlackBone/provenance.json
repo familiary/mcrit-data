@@ -3,7 +3,7 @@
     "architecture": "x64",
     "build_flags": "Release(DLL) configuration: x86 /Ox /Ob2 /Ot /GS-, x64 /O2 /sdl; both /GL /Gy /Oi /MD /std:c++latest and /LTCG /OPT:REF /OPT:ICF at link; /permissive and /Brepro appended by this recipe",
     "built_artifact": "build/x64/Release(DLL)/BlackBone.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "BlackBone.dll",
     "family": "BlackBone",
     "generated": "2026-09-23",
@@ -226,7 +226,7 @@
       "terminate",
       "type_info::`scalar deleting destructor'"
     ],
-    "sha256": "309d30ed4c2aeaa93d36bfb51728cd873b380f28ba30460ff6ba9a569a931d39",
+    "sha256": "bfb6aadd010010dc3357ade556265a6cf5ae19fd6d5c8fbed2a6ca94ba8e8511",
     "smda": "data/BlackBone/x64/smda/BlackBone_2023-07-17_msvc143_x64_BlackBone.dll.7z",
     "smda_version": "4.8.0",
     "source": {

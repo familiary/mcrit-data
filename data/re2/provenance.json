@@ -267,7 +267,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi /std:c++17 (CMake Release, /Zi added), plus the switches RE2's own CMakeLists applies to an MSVC/WIN32 build: /utf-8, /wd4100 /wd4201 /wd4456 /wd4457 /wd4702 /wd4815, -DUNICODE -D_UNICODE -DSTRICT -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/re2.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "re2.dll",
     "family": "re2",
     "generated": "2026-09-23",
@@ -2184,7 +2184,7 @@
       "void __cdecl std::_Xlength_error(char const *)",
       "void __cdecl std::_Xout_of_range(char const *)"
     ],
-    "sha256": "4584c542cc84a9e5745660cbb54504b259ff0175a50e77f5a01d3af06b5a8708",
+    "sha256": "561c96fc2fe899ffb38f954ba2021c779d9d4e3412e8b1b18e0fd305ab6d5e05",
     "smda": "data/re2/x64/smda/re2_2022-06-01_msvc143_x64_re2.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -4400,7 +4400,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi /std:c++17 (CMake Release, /Zi added), plus the switches RE2's own CMakeLists applies to an MSVC/WIN32 build: /utf-8, /wd4100 /wd4201 /wd4456 /wd4457 /wd4702 /wd4815, -DUNICODE -D_UNICODE -DSTRICT -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/re2.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "re2.dll",
     "dependencies": {
       "absl": {
@@ -6183,7 +6183,7 @@
       "wcslen",
       "wmemcpy"
     ],
-    "sha256": "de7449495f134d038699bb2fd9e0d4c68278224c1e714fa721e5ce347d53d607",
+    "sha256": "f7fd9aa37d6cc914306ac63c6e0530dde4afa2fa5c7bf2425751a6e0620c5f73",
     "smda": "data/re2/x64/smda/re2_2025-11-05_msvc143_x64_re2.dll.7z",
     "smda_version": "4.8.0",
     "source": {
