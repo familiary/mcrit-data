@@ -50,8 +50,8 @@ whatever the registry says today, which is neither reproducible nor recorded.
 The headers are fetched through extra_sources instead, at a full commit hash,
 so they are pinned and end up in provenance.json like any other dependency.
 
-The phnt commit is 2b70847be7f731126fba453568e2cfbf560614bf, 2024-06-24
-("Update to 24H2"), and it is NOT the commit contemporary with nt_wrapper's
+The phnt commit is df94006275bb26ed739785556c1200496b78b1a2, 2024-08-06
+("Sync latest"), and it is NOT the commit contemporary with nt_wrapper's
 own pin. That was the first choice - 4bd2da2537532fe78d49517755dbdb906b80a4b9,
 2020-12-22, the last commit before nt_wrapper's 2021-02-02 pin - and CI run
 35858415869 proved it unusable. All five translation units failed, on both
@@ -79,25 +79,115 @@ lowering the target version, which is the usual way out of a collision like
 this, cannot work: winnt.h defines them whatever NTDDI_VERSION says, and the
 2020 phnt defines them unconditionally too.
 
-phnt fixed it on its own side, in exactly the commit pinned above: ntioapi.h
-now wraps all three in "#if !defined(NTDDI_WIN11_GE) || (NTDDI_VERSION <
-NTDDI_WIN11_GE)", and sdkddkver.h in this SDK defines NTDDI_WIN11_GE as
-0x0A000010 with NTDDI_VERSION defaulting to it, so phnt stands down and the
-SDK's definitions are used. A corollary worth stating because it is a trap:
-NTDDI_VERSION must NOT be lowered now either, or the guard opens and the
-collision comes back from the other direction.
+phnt fixed it on its own side, in 2b70847be7f731126fba453568e2cfbf560614bf
+(2024-06-24, "Update to 24H2"): ntioapi.h there wraps all three in
+"#if !defined(NTDDI_WIN11_GE) || (NTDDI_VERSION < NTDDI_WIN11_GE)", and
+sdkddkver.h in this SDK defines NTDDI_WIN11_GE as 0x0A000010 with
+NTDDI_VERSION defaulting to it, so phnt stands down and the SDK's definitions
+are used. A corollary worth stating because it is a trap: NTDDI_VERSION must
+NOT be lowered now either, or the guard opens and the collision comes back
+from the other direction. That guard is intact at the commit pinned above,
+which is the one immediately after it.
+
+Why the pin is 2024-08-06 and not 2024-06-24: ntwmi.h. Pinning 2b70847 fixed
+ntioapi.h and CI run 35867402146 then failed all five translation units, on
+both legs, identically, somewhere else entirely. The first error of every
+translation unit, byte for byte the same on x86 and x64:
+
+    .../nt_wrapper-...-phnt/ntwmi.h(482): error C3646: 'ClientContext':
+        unknown override specifier
+    .../nt_wrapper-...-phnt/ntwmi.h(482): error C4430: missing type specifier
+        - int assumed. Note: C++ does not support default-int
+
+This one is worth reading carefully, because its census looks like something
+it is not. Forty C4430, thirty C3646, twenty-five "C2369: '__C_ASSERT__':
+redefinition; different subscripts", twenty C2118 negative subscript and
+twenty C2148 read like a C_ASSERT firing - like phnt asserting a struct layout
+that no longer holds against this SDK. It is not that. Every one of those is
+downstream of the two errors above.
+
+ntwmi.h:482 is
+
+    ETW_BUFFER_CONTEXT                 ClientContext;      // LoggerId/...
+
+and ETW_BUFFER_CONTEXT is not a phnt type at all: at 2b70847 it appears in
+exactly one place in the whole phnt tree, that line. It belongs to the Windows
+SDK, shared/evntrace.h:1357. So do the other two names that fail: ntwmi.h:2991
+and five more lines spell EVENT_TRACE_HEADER (shared/evntrace.h:955) and
+ntwmi.h:5236 spells WNODE_HEADER (shared/wmistr.h:54, which evntrace.h
+includes). C3646 "unknown override specifier" is what MSVC says when the thing
+before a member name is not a type; C4430 is the same event again. MSVC then
+drops the member, so ntwmi.h:507 "C_ASSERT(FIELD_OFFSET(WMI_BUFFER_HEADER,
+ClientContext) == 0x28)" is C2039 "is not a member", and the four offsets
+after it - State, Offset, BufferFlag, BufferType - each come out four bytes
+short of what is asserted, which is what C2118 negative subscript means. The
+whole cascade is one missing declaration.
+
+And nothing declares it. phnt_windows.h at 2b70847 includes windows.h,
+windowsx.h, ntstatus.h and winioctl.h and nothing else, and windows.h never
+reaches evntrace.h: in SDK 10.0.26100 exactly two headers include it, um/tdh.h
+and um/evntcons.h, and neither is in windows.h's closure with or without
+WIN32_LEAN_AND_MEAN (which phnt_windows.h defines). System Informer, whose
+tree phnt is cut from, includes the ETW headers in its own prologue; a
+consumer that does what ntw/detail/common.hpp does - phnt_windows.h then
+phnt.h, nothing else - does not.
+
+The reason this arrived with the ntioapi fix rather than before it is that
+ntwmi.h is new. It does not exist at the 2020-12-22 pin - the tree there has
+thirty-four files and ntwmi.h is not one of them - and 2b70847 is the commit
+that both adds it and adds "#include <ntwmi.h>" to phnt.h. The ntioapi fix and
+the ntwmi regression are the same commit.
+
+phnt fixed this on its own side too, in the very next commit, which is the one
+pinned above: df94006 adds "#include <evntrace.h>" to phnt_windows.h (along
+with COM_NO_WINDOWS_H and <ole2.h>). common.hpp includes phnt_windows.h before
+phnt.h, so by the time ntwmi.h is parsed the three types are declared by the
+SDK. With a real ETW_BUFFER_CONTEXT - a two-byte union plus a USHORT LoggerId,
+four bytes - the ten offset assertions do hold, and hold on both legs: union1
+is eight-aligned by its ULONGLONG bitfield and union2 by ETW_REF_CLOCK's
+LARGE_INTEGERs, so ClientContext lands at 0x28, State at 0x2c, Offset at 0x30,
+BufferFlag at 0x34, BufferType at 0x36 and sizeof at 0x48 on x86 exactly as on
+x64. That is a hand computation from the two struct definitions, not a
+compilation.
 
 The bump is 3.5 years of drift, so what it costs was measured rather than
-hoped for. Every Nt*/Rtl*/Zw* routine and every *Information constant that
-nt_wrapper's headers and these five exercisers name - 75 identifiers - was
-extracted and looked up in both trees: 73 are present at the old pin, 74 at
-the new one, and nothing present at the old pin is missing from the new one.
-The one gained is NtAllocateVirtualMemoryEx. phnt.h and phnt_windows.h are
-still both at the tree root, PHNT_19H1 is still 107, and PHNT_MODE still
-defaults to PHNT_MODE_USER, so the three lines in ntw/detail/common.hpp that
-consume phnt still mean what they meant. What was not measured, and cannot be
-from a container with no MSVC, is whether 2024 phnt and 2021 nt_wrapper agree
-on every struct field the wrapper touches.
+hoped for, and the measurement was redone against df94006. Every Nt*/Rtl*/Zw*
+routine and every *Information identifier that nt_wrapper's 64 headers and
+inline files and these five exercisers name - 80 identifiers - was extracted
+and looked up in both trees: 79 are present at 2b70847 and the same 79 at
+df94006, nothing lost and nothing gained between them. (Relative to the 2020
+pin the one gained is still NtAllocateVirtualMemoryEx.) The eightieth,
+NtDeviceIoControl, is in neither tree and never was: it is a doc-comment
+spelling in nt_wrapper's own io/file.hpp:46 and :54, not an ntdll routine.
+phnt.h and phnt_windows.h are still both at the tree root, PHNT_19H1 is still
+107, and PHNT_MODE still defaults to PHNT_MODE_USER, so the three lines in
+ntw/detail/common.hpp that consume phnt still mean what they meant.
+
+Twice now the failure has been a name phnt and the SDK both own, so that class
+was swept rather than waited for. All 1604 struct/union/enum tags phnt defines
+at df94006 were compared against all 23138 the SDK defines: 74 tags overlap,
+but only um/winnt.h among the SDK files holding them is unconditionally in
+windows.h's closure - winternl.h, ntdef.h, SubAuth.h, MSChapp.h, NTSecAPI.h,
+delayloadhandler.h, relogger.h and NetSh.h are not included by anything this
+build reaches. df94006 adds exactly three tags that winnt.h also defines, and
+all three are already guarded on the phnt side: _FILE_NOTIFY_INFORMATION
+behind "#if !defined(NTDDI_WIN10_RS5) || (NTDDI_VERSION < NTDDI_WIN10_RS5)",
+and _SERVERSILO_DIAGNOSTIC_INFORMATION and
+_JOBOBJECT_NETWORK_ACCOUNTING_INFORMATION behind the NTDDI_WIN11_GE form
+above. sdkddkver.h puts NTDDI_WIN10_RS5 at 0x0A000006 and NTDDI_WIN11_GE at
+0x0A000010 and defaults NTDDI_VERSION to the latter, so all three guards are
+false and the SDK wins - the same mechanism as the ntioapi fix, and one more
+reason NTDDI_VERSION must not be lowered. One further overlap is created by
+the new include rather than by phnt: _EVENT_DESCRIPTOR is defined by phnt's
+ntwmi.h and by the SDK's shared/evntprov.h, which evntrace.h pulls in. Both
+sides wrap it in "#ifndef EVENT_DESCRIPTOR_DEF" and evntrace.h is included
+first, so phnt stands down there as well.
+
+What is still not measured, and cannot be from a container with no MSVC: that
+the offset arithmetic above is what cl actually computes; that <ole2.h>,
+arriving in this consumer for the first time, collides with nothing; and
+whether 2024 phnt and 2021 nt_wrapper agree on every struct field the wrapper
+touches.
 
 phnt carries its own licence, CC BY 4.0, which is why the licence field below
 is not simply Apache-2.0.
@@ -140,9 +230,9 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 # gets /permissive instead, for the measured reason set out above _compile.
 # /EHsc and /D_SCL_SECURE_NO_WARNINGS are upstream's own MSVC test settings.
 #
-# The first CI run also settled a question this recipe could not answer from
-# the container. Nothing compiled, so obj\ was empty, and the link step then
-# reported it as
+# The first two CI runs also settled a question this recipe could not answer
+# from the container, and settled it the same way both times. Nothing
+# compiled, so obj\ was empty, and the link step then reported it as
 #
 #   LINK : warning LNK4001: no object files specified; libraries used
 #   LINK : error LNK2001: unresolved external symbol _DllMainCRTStartup
@@ -286,7 +376,7 @@ RECIPES = {
         license="Apache-2.0 (full text in LICENSE, per-file \"Copyright 2020 "
                 "Justas Masiulis\" headers). Builds against the Process "
                 "Hacker native API headers, winsiderss/phnt at "
-                "2b70847be7f731126fba453568e2cfbf560614bf, which are CC BY "
+                "df94006275bb26ed739785556c1200496b78b1a2, which are CC BY "
                 "4.0; those are declarations only and contribute no code to "
                 "the artefact, but they are a pinned input and are recorded "
                 "as one.",
@@ -299,7 +389,7 @@ RECIPES = {
         # call in this library compiles to.
         extra_sources={
             "phnt": Source(git_url="https://github.com/winsiderss/phnt.git",
-                           git_ref="2b70847be7f731126fba453568e2cfbf560614bf"),
+                           git_ref="df94006275bb26ed739785556c1200496b78b1a2"),
         },
         build=(
             [BuildStep("md obj", allow_failure=True)]
@@ -347,7 +437,7 @@ RECIPES = {
               "for an unoptimised consumer rather than for an /O2 one. Depends "
               "on the Process Hacker native API headers (phnt), fetched "
               "through extra_sources rather than vcpkg and pinned to "
-              "2b70847be7f731126fba453568e2cfbf560614bf (2024-06-24); they are "
+              "df94006275bb26ed739785556c1200496b78b1a2 (2024-08-06); they are "
               "declarations and contribute no code to the artefact. That is "
               "deliberately not the phnt commit contemporary with this "
               "library's 2021 pin: the contemporary one defines "
@@ -357,7 +447,18 @@ RECIPES = {
               "winnt.h with no version guard of any kind, and every "
               "translation unit failed with C2011 type redefinition until the "
               "pin was moved forward to the phnt release that guards them "
-              "behind NTDDI_WIN11_GE. Upstream's own CMake is "
+              "behind NTDDI_WIN11_GE. That release, 2b70847 (2024-06-24), is "
+              "also the one that first adds ntwmi.h and includes it from "
+              "phnt.h, and ntwmi.h names three types it does not define - "
+              "ETW_BUFFER_CONTEXT, EVENT_TRACE_HEADER and WNODE_HEADER, all "
+              "from the SDK's evntrace.h and wmistr.h, which nothing in "
+              "windows.h's include closure reaches. Every translation unit "
+              "then failed again, with C3646 at ntwmi.h:482 and a long "
+              "downstream cascade of C_ASSERT errors that look like a struct "
+              "layout mismatch and are not one. The pin is therefore the next "
+              "commit, df94006, which adds the missing #include <evntrace.h> "
+              "to phnt_windows.h; the module docstring has the full reading. "
+              "Upstream's own CMake is "
               "not used, because its test/ subdirectory needs the Catch2 "
               "submodule and everything else it does is one flag and one "
               "include path. Seven pieces of the public API are not exercised "
