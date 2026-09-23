@@ -9,11 +9,13 @@
 // the driver instead. The functions that land in the binary are wow64pp's;
 // this file only decides which ones get emitted.
 //
-// Coverage is every entry point the header has: the three documented
-// functions and both of their error_code/exception spellings, plus the
-// detail:: layer underneath them, which is where the Heaven's Gate work
-// actually happens - the 64-bit PEB walk, the x64 ntdll export-directory
-// parse and the far-call thunk in call_function.
+// Coverage is every entry point the header has: module_handle and import in
+// both their error_code and exception spellings, and call_function in both
+// its arities - it is a variadic template with no error_code overload, so
+// arity is what there is to vary - plus the detail:: layer underneath them,
+// which is where the Heaven's Gate work actually happens: the 64-bit PEB
+// walk, the x64 ntdll export-directory parse and the far-call thunk in
+// call_function.
 //
 // Nothing here is ever run. The exerciser is compiled and disassembled, so
 // the arguments are whatever makes each overload resolve; they do not have to
@@ -78,7 +80,8 @@ extern "C" __declspec(dllexport) void wow64pp_take_addresses(void)
 {
     void **out = wow64pp_entry_points;
 
-    // The three documented entry points, both spellings each.
+    // Two of the three documented entry points, both spellings each.
+    // call_function, the third, is below - it has only the one spelling.
     *out++ = (void *)static_cast<std::uint64_t (*)(const std::string &)>(
         &wow64pp::module_handle);
     *out++ = (void *)static_cast<std::uint64_t (*)(const std::string &,

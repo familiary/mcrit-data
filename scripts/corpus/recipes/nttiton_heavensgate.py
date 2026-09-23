@@ -89,7 +89,8 @@ _COMPILE = ('cl /nologo /c /Od /MD /Zi /W3 '
 #
 # /Brepro drops the link timestamp so two runs give identical sha256s.
 #
-# kernel32.lib is named for OpenProcess and CloseHandle. The CRT's own import
+# kernel32.lib is named for OpenProcess and CloseHandle at "Heavens Gate.c"
+# :425 and :441, and for the GetModuleHandle at :124. The CRT's own import
 # libraries come in through the object's /DEFAULTLIB directives, which are
 # honoured here - unlike in heavensgate2.py, whose project suppresses them.
 _LINK = ('link /nologo /DEBUG /Brepro /INCREMENTAL:NO '
@@ -149,14 +150,11 @@ RECIPES = {
               "Seven of the eleven are inline assembly - memcpy64, GetPEB64, "
               "m_memcmp, GetImageBase and strlen64 are __declspec(naked) "
               "with a full __asm body, and CallFunction64 and SysCall64 "
-              "embed __asm blocks - so this artefact is largely hand-written "
-              "code that a compiler did not choose the instructions for, "
-              "which is what makes it recognisable and also what makes it "
-              "MSVC-only and x86-only. The far-call sequence itself is "
-              "emitted byte by byte through __asm __emit, so the gate is in "
-              "the instruction stream here rather than in data as it is in "
-              "HeavensGate2. Built against the DLL runtime, so the MSVC C "
-              "runtime is imported rather than linked in and stays "
-              "attributed to data/MSVC.",
+              "embed __asm blocks - so most of this artefact is "
+              "hand-written code whose instructions no compiler chose, and "
+              "the far-call sequence itself is emitted byte by byte through "
+              "__asm __emit rather than held in data. Built against the DLL "
+              "runtime, so the MSVC C runtime is imported rather than linked "
+              "in and stays attributed to data/MSVC.",
     ),
 }

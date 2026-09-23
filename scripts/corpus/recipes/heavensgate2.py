@@ -10,22 +10,32 @@ around it is the patcher. That is the shape an analyst meets when this
 header has been copied into something, and it is what makes the sample worth
 having beside the other three.
 
-It is also the only one of the five Heaven's Gate repositories surveyed for
-the wishlist issue that contains no MSVC-only assembly syntax: no .asm file,
-no __asm block, no __declspec(naked). It is nevertheless built with MSVC
-only, for the reason vxapi.py gives - the single build system the repository
-ships is an MSVC solution, and a GCC rendering of a 2017 Visual Studio proof
-of concept would be a code shape nobody runs.
+It carries no hand-written assembly - no .asm file, no __asm block, no
+__declspec(naked) - which is true of three of the five Heaven's Gate
+repositories surveyed for the wishlist issue rather than of this one alone:
+grepping all five for those three forms finds hits only in RtlWow64
+(RtlWow64.cpp:791, "__asm int 3;") and NTTITON's, leaving wow64pp, wowGrail
+and this repository clean. wow64pp's freedom from inline assembly is in fact
+its stated selling point, quoted from upstream in wow64pp_msvc.py. It is
+nevertheless built with MSVC only, for the reason vxapi.py gives - the
+single build system the repository ships is an MSVC solution, and a GCC
+rendering of a 2017 Visual Studio proof of concept would be a code shape
+nobody runs.
 
 x86 only, and upstream agrees twice over. The solution's single
 SolutionConfigurationPlatform is ``Release|x86`` and the project's single
 ProjectConfiguration is ``Release|Win32``; the Debug and x64
 PropertyGroups/ItemDefinitionGroups in HeavensGate.vcxproj are orphans that
-no configuration selects. And the code could not be built 64-bit anyway -
-HeavensGate.h casts 64-bit pointers down with ``(uint32_t)(peb)`` and
-``(uint64_t)(unsigned)(&ptr)`` in roughly twenty places, which is a hard
-error on an x64 target rather than a warning. A library that opens a gate
-from 32-bit to 64-bit code has nothing to do on x64 in any case.
+no configuration selects. That is the whole of the argument and it is
+sufficient on its own. The header is also written for 32 bits throughout -
+it truncates 64-bit pointers with ``(uint32_t)(peb)`` and
+``(uint64_t)(unsigned)(&ptr)`` 42 times on 37 lines - but that is not by
+itself what rules out an x64 build: the project compiles as C (CompileAs
+CompileAsC, recorded in build_flags), and in C a pointer-to-integer
+narrowing cast is a diagnostic rather than an error. Measured on the x64
+target with "x86_64-w64-mingw32-gcc -c -x c", it is 45 warnings, no errors
+and rc=0. A library that opens a gate from 32-bit to 64-bit code has nothing
+to do on x64 in any case.
 
 Eleven functions: the ten in HeavensGate.h - memcpy64, GetPEB64,
 GetModuleLDREntry, GetModuleHandle64, X64Call, MyGetProcAddress, MakeUTFStr,
@@ -182,28 +192,22 @@ RECIPES = {
         notes="No licence of any kind: the repository carries no LICENSE or "
               "COPYING file and no per-file notice, and the only statement "
               "of authorship is the comment at the top of HeavensGate.h, "
-              "\"Made by David Cernak - Dadas1337\". x86 only - the "
+              "\"Made by David Cernak - Dadas1337\". x86 only: the "
               "solution's single platform is x86, mapped to the project's "
-              "only configuration Release|Win32, and the header truncates "
-              "64-bit pointers to 32 bits in roughly twenty places, which "
-              "does not compile on x64. Eleven functions, against a floor of "
-              "eight: the project is one header of ten functions and a "
-              "fifteen-line example, and upstream's own Release settings "
-              "(Optimization Disabled, InlineFunctionExpansion Disabled) are "
-              "what keeps all of them separate. Source.cpp is compiled as C, "
-              "not C++, which is upstream's CompileAs setting. No C runtime "
-              "is linked at all - IgnoreAllDefaultLibraries with "
-              "EntryPointSymbol main - so the image is the eleven functions "
-              "and a kernel32 import table and nothing else. None of the "
-              "64-bit code is assembled: it is byte arrays in the data of "
-              "memcpy64, GetPEB64 and X64Call, copied to an RWX page and "
-              "patched with the call's operands before each use, so the gate "
-              "itself is data in this artefact and the surrounding code is "
-              "the patcher - which also makes this the one repository of the "
-              "five surveyed for the wishlist issue that carries no .asm "
-              "file, no __asm block and no __declspec(naked). README.md is "
-              "stale "
-              "and contradicts the header on three of the ten functions; the "
-              "header is what was built.",
+              "only configuration Release|Win32, and no other configuration "
+              "is selectable. Eleven functions against a floor of eight - "
+              "ten in the header plus Source.cpp's main - kept separate by "
+              "upstream's own Release settings, Optimization Disabled and "
+              "InlineFunctionExpansion Disabled. Compiled as C, not C++, "
+              "which is upstream's CompileAs setting. No C runtime is linked "
+              "at all - IgnoreAllDefaultLibraries with EntryPointSymbol main "
+              "- so the image is those eleven functions and a four-entry "
+              "kernel32 import table and nothing else. None of the 64-bit "
+              "code is assembled: it is byte arrays in the data of memcpy64, "
+              "GetPEB64 and X64Call, copied to an RWX page and patched with "
+              "the call's operands before each use, so the gate itself is "
+              "data in this artefact and the surrounding code is the "
+              "patcher. README.md is stale and contradicts the header on "
+              "three of the ten functions; the header is what was built.",
     ),
 }

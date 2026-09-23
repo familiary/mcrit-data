@@ -28,13 +28,16 @@ extraction depends on MSVC emitting those functions contiguously and in
 source order, which is why this artefact contains them as separate
 functions and why the recipe leaves them separate.
 
-MSVC only. MinGW comes close - four of the five C++ translation units
-compile clean - but include/shellcode.hpp:13 includes ``<Windows.h>`` with a
-capital W, which a case-sensitive cross-build cannot resolve, and
-src/shellcode.cpp:16 writes ``PVOID shellcode::shellcode_start = exit;``,
-which GCC rejects. Both of those are fixable; the layout assumption above is
-not. A MinGW build would link and be functionally wrong, which is worse than
-one that fails, so no MinGW recipe is written.
+MSVC only, and MinGW is further off than it first looks. As the tree stands
+exactly one of the five C++ translation units compiles - src/utils.cpp -
+because include/shellcode.hpp:13 includes ``<Windows.h>`` with a capital W,
+which a case-sensitive cross-build cannot resolve, and the other four reach
+that header. Correct the include case and four of the five compile, with
+src/shellcode.cpp:16 still failing: ``PVOID shellcode::shellcode_start =
+exit;`` is an invalid conversion from ``void (*)()`` to ``void *``.
+Measured with x86_64-w64-mingw32-g++ 13. Both of those are fixable; the
+layout assumption above is not. A MinGW build would link and be functionally
+wrong, which is worse than one that fails, so no MinGW recipe is written.
 
 Both architectures are built. The tool's bitness has to match the PE it
 patches, upstream provides all four Platform x Configuration combinations,
@@ -123,8 +126,14 @@ _PROPS = (
 # WindowsTargetPlatformVersion is already 10.0 upstream and is left alone.
 #
 # The solution's platforms are x86 and x64 and map to the project's Win32 and
-# x64, so /p:Platform takes {arch} while the output path takes
-# {msbuild_platform}, the same split q3vm_msvc.py makes.
+# x64, so /p:Platform takes {arch} - the same reason q3vm_msvc.py passes
+# {arch} there. The output path takes {msbuild_platform}, but unlike in
+# q3vm_msvc.py that is a free choice rather than a forced one: q3vm inherits
+# an upstream OutDir of $(SolutionDir)..\\bin\\$(Platform)\\$(Configuration)\\
+# and therefore has to spell the directory the project's way, whereas this
+# recipe pins OutDir itself just below and either spelling would have worked.
+# {msbuild_platform} is used anyway so the tree on disk matches what MSBuild
+# calls the platform everywhere else in the build.
 #
 # OutDir and IntDir are pinned rather than inherited, as wowgrail.py pins
 # them: the Microsoft.Cpp defaults put a Win32 build one directory shallower

@@ -3,8 +3,8 @@
 A 32-bit process on 64-bit Windows keeps a second, 64-bit ntdll mapped that
 its own loader will not show it. RtlWow64 reaches that side and wraps it in
 the shape of the native API: RtlGetModuleHandleWow64,
-RtlGetProcAddressWow64, RtlLoadLibraryWow64, RtlLoadKernel32X64 and
-RtlInvokeX64, backed by RtlpGetModuleHandleWow64 and
+RtlGetProcAddressWow64, RtlGetNativeProcAddressWow64, RtlLoadLibraryWow64,
+RtlLoadKernel32X64 and RtlInvokeX64, backed by RtlpGetModuleHandleWow64 and
 RtlpGetProcAddressWow64, which walk the 64-bit PEB loader list and parse the
 x64 export directory by hand. Underneath them RtlpWow64Execute64 copies a
 small "Heaven's Gate" thunk - the Wow64Execute byte array at
@@ -56,12 +56,16 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 # ucrtbase.dll and vcruntime140.dll with only import thunks here.
 #
 # DebugInformationFormat: the Release|Win32 ClCompile group sets none, so
-# whether the compiler emits debug info at all depends on an MSBuild default.
-# MSVC keeps symbols in a PDB rather than in a COFF symbol table, so without
-# one SMDA can name only the eleven functions m.def exports and smdaify
-# rejects the build; build.py turns a declared-but-missing PDB into a hard
-# failure, which is what makes this worth forcing rather than hoping for.
-# GenerateDebugInformation is already true in the project and is left alone.
+# whether the compiler emits debug information at all depends on an MSBuild
+# default. This is not a question of whether a PDB exists - the project's
+# GenerateDebugInformation is already true, so the linker writes one either
+# way and build.py's declared-but-missing check would pass. It is a question
+# of what is in it: a PDB built from objects compiled without /Zi carries
+# public symbols only, with no private symbols and no line information, and
+# MSVC keeps symbols in a PDB rather than in a COFF symbol table. That is
+# the same failure callobfuscator.py forces ProgramDatabase to avoid. The
+# override makes the compiler emit full debug information; the project's
+# GenerateDebugInformation is left alone.
 #
 # /Brepro: without it MSVC stamps the PE with the build time, so two runs over
 # identical source record different sha256s - which the BlackBone x86 DLL did
@@ -139,11 +143,22 @@ RECIPES = {
         # architecture in the other direction and needs no special case.
         toolchains=["msvc_x86"],
         build_flags=_FLAGS,
-        notes="A small sample by design. The project is three translation "
-              "units holding eighteen functions of its own - thirteen in "
+        notes="A small sample by design. The project's three translation "
+              "units hold eighteen functions of their own - thirteen in "
               "RtlWow64.cpp, the three NtWow64* forwarders in RtlNative.cpp "
-              "and RtlpInitialize plus DllMain in dllmain.cpp - of which "
-              "RtlWow64\\m.def exports eleven, so the artefact clears "
+              "and RtlpInitialize plus DllMain in dllmain.cpp. That count "
+              "is of the .cpp files only; RtlNative.h carries six more "
+              "FORCEINLINE string helpers (RtlInitAnsiString, "
+              "RtlInitAnsiString64, RtlInitUnicodeString, "
+              "RtlInitUnicodeString64, RtlFreeUnicodeString64 and "
+              "RtlCreateUnicodeString64FromAsciiz) whose presence in the "
+              "image is the compiler's decision, and the project states no "
+              "Optimization element for Release|Win32. RtlWow64\\m.def "
+              "exports eleven of the eighteen - RtlpGetModuleHandleWow64, "
+              "RtlpGetProcAddressWow64, the three NtWow64* forwarders, "
+              "RtlGetModuleHandleWow64, RtlGetProcAddressWow64, "
+              "RtlGetNativeProcAddressWow64, RtlLoadLibraryWow64, "
+              "RtlLoadKernel32X64 and RtlInvokeX64 - so the artefact clears "
               "config.MIN_USEFUL_FUNCTIONS on the exports alone whatever "
               "upstream's /OPT:REF and /OPT:ICF decide about the rest. "
               "Folding is left on because it is upstream's own Release "
@@ -153,11 +168,10 @@ RECIPES = {
               "same shape but load different globals (LdrGetDllHandle "
               "against LdrLoadDll) and call different string initialisers, "
               "so their bodies are not identical. Built against the DLL "
-              "runtime, so the MSVC C "
-              "runtime is imported rather than linked in and stays "
-              "attributed to data/MSVC. No dependencies: the project links "
-              "only ntdll.lib, through a #pragma comment in RtlNative.h, and "
-              "the Windows import libraries. The test executable in the "
-              "solution is not built.",
+              "runtime, so the MSVC C runtime is imported rather than linked "
+              "in and stays attributed to data/MSVC. No dependencies: the "
+              "project links only ntdll.lib, through a #pragma comment in "
+              "RtlNative.h, and the Windows import libraries. The test "
+              "executable in the solution is not built.",
     ),
 }

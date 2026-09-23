@@ -33,10 +33,16 @@ mode, if you're using MSVC toolchain. Due to MSVC's performance
 instrumentation in Debug mode, there'll be an unexpected memory layout" - and
 the configuration is tuned for it rather than merely faster: Release|Win32
 sets Optimization Disabled and InlineFunctionExpansion OnlyExplicitInline so
-the layout stays predictable, BufferSecurityCheck false so no stack cookie is
-inserted around the JIT buffers, and DataExecutionPrevention false so the
-string-literal thunks are executable. Those four are exactly what the
-technique depends on, and none of them is touched here.
+the layout stays predictable, BufferSecurityCheck false to ask for /GS-, and
+DataExecutionPrevention false so the string-literal thunks are executable.
+None of those is touched here.
+
+The /GS- does not actually take effect, and that is upstream's doing rather
+than this recipe's. The same ItemDefinitionGroup sets SDLCheck true, i.e.
+/sdl, which is documented as a superset of /GS that overrides /GS-, so the
+artefact carries stack cookies around the JIT buffers whatever the project
+file asks for. Both switches are recorded in build_flags because both are on
+the compile line; the cookie is the one that wins.
 
 Upstream never tagged a release, so the pin is the full commit hash of
 master as of 2021-05-27 and the version string is that date.
@@ -50,16 +56,34 @@ not in the repository. It is disassembled and nothing else.
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
-# RuntimeLibrary: Release|Win32 asks for MultiThreaded, i.e. /MT, and that is
-# the one compile setting this recipe overrides. Under /MT the MSVC C runtime
-# is linked into the artefact and filed under this family - what put 1947 of
-# VX-API's 4219 functions into that sample, duplicating data/MSVC - and this
-# is a console C++ executable using std::string, std::wstring and printf, so
-# a static CRT would be most of the image. MultiThreadedDLL leaves it in
-# ucrtbase.dll and vcruntime140.dll. cryptopp_msvc.py and q3vm_msvc.py make
-# the same call. The four settings the technique depends on - Optimization,
-# InlineFunctionExpansion, BufferSecurityCheck, DataExecutionPrevention - are
-# not among them and stay exactly as upstream sets them.
+# RuntimeLibrary: Release|Win32 asks for MultiThreaded, i.e. /MT. Under /MT
+# the MSVC C runtime is linked into the artefact and filed under this family
+# - what put 1947 of VX-API's 4219 functions into that sample, duplicating
+# data/MSVC - and this is a console C++ executable using std::string,
+# std::wstring and printf, so a static CRT would be most of the image.
+# MultiThreadedDLL leaves it in ucrtbase.dll and vcruntime140.dll.
+# cryptopp_msvc.py and q3vm_msvc.py make the same call. The four settings the
+# technique depends on - Optimization, InlineFunctionExpansion,
+# BufferSecurityCheck, DataExecutionPrevention - are not touched and stay
+# exactly as upstream sets them.
+#
+# LinkTimeCodeGeneration is stated here, and WholeProgramOptimization is
+# cleared on the command line below, because the two reach the build by
+# different routes and only the pair together guarantees no /LTCG - the same
+# reasoning callobfuscator.py sets out. The project asks for both spellings
+# and they disagree: wowGrail.vcxproj:134 sets WholeProgramOptimization false
+# on Release|Win32's ClCompile, so no /GL is passed to the compiler, while
+# :39 sets it true in the Release|Win32 Configuration PropertyGroup, which is
+# where the link's LinkTimeCodeGeneration default comes from. The project
+# states no LinkTimeCodeGeneration of its own, so without these two the link
+# would run /LTCG over objects that carry no IL. Whether that is a no-op or
+# whether the linker still inlines, folds or reorders bodies is exactly the
+# question this corpus should not have to answer from memory: LTCG is
+# permitted to change function boundaries, and on a sample of ten own
+# functions built for a predictable memory layout, a boundary that moves is
+# a function that is recorded differently. Turning it off at both ends is
+# cheaper than reasoning about it, and it makes build_flags true as written
+# rather than true only if the reasoning holds.
 #
 # DebugInformationFormat: the Release|Win32 ClCompile group sets none, so
 # whether the compiler emits debug info depends on an MSBuild default. MSVC
@@ -86,12 +110,18 @@ _PROPS = (
     "'<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>'"
     "'<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>'"
     "'</ClCompile><Link>'"
+    "'<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>'"
     "'<AdditionalOptions>/Brepro /INCREMENTAL:NO</AdditionalOptions>'"
     "'</Link></ItemDefinitionGroup></Project>')"
     '"')
 
 # PlatformToolset has to be overridden: the project asks for v142, which the
 # windows-2022 runner image does not carry - it ships VS2022 and v143 only.
+#
+# /p:WholeProgramOptimization=false is a command-line global property rather
+# than a props entry because the project sets WholeProgramOptimization in a
+# PropertyGroup evaluated before Microsoft.Cpp.props, which a forced import
+# is too late to reach. See the note above _PROPS for why it matters here.
 #
 # OutDir and IntDir are pinned rather than inherited. The project states
 # neither and there is no solution, so both would come from the
@@ -102,21 +132,26 @@ _PROPS = (
 # the linker PDB - the separation nlohmann_msvc.py spells out.
 _MSBUILD = ('msbuild wowGrail\\wowGrail.vcxproj '
             '/p:Configuration=Release /p:Platform={msbuild_platform} '
-            '/p:PlatformToolset=v143 '
+            '/p:PlatformToolset=v143 /p:WholeProgramOptimization=false '
             '/p:OutDir=%CD%\\out\\ /p:IntDir=%CD%\\obj\\ '
             '/p:ForceImportBeforeCppTargets=%CD%\\corpus-msvc.props '
             '/m /v:minimal')
 
 _FLAGS = ("Release|Win32 as upstream defines it: /Od (Optimization "
           "Disabled), /Ob1 (InlineFunctionExpansion OnlyExplicitInline), "
-          "/GS- (BufferSecurityCheck false), /Oi- (IntrinsicFunctions "
-          "false), /Gy /sdl /W3 /permissive- "
+          "/Oi- (IntrinsicFunctions false), /Gy /W3 /permissive- "
           "(ConformanceMode), Unicode character set, WIN32, NDEBUG and "
-          "_CONSOLE defined, WholeProgramOptimization off; at link Console "
-          "subsystem, /OPT:REF /OPT:ICF and /NXCOMPAT:NO "
+          "_CONSOLE defined, and both /sdl (SDLCheck true) and /GS- "
+          "(BufferSecurityCheck false) - /sdl overrides /GS-, so stack "
+          "cookies are present despite the project asking for none; at link "
+          "Console subsystem, /OPT:REF /OPT:ICF and /NXCOMPAT:NO "
           "(DataExecutionPrevention false). /MD replaces upstream's /MT, /Zi "
-          "replaces its unstated debug format, and /Brepro /INCREMENTAL:NO "
-          "are appended at link, all by this recipe; the toolset is "
+          "replaces its unstated debug format, /Brepro /INCREMENTAL:NO are "
+          "appended at link, and whole-program optimization is turned off at "
+          "both ends - /p:WholeProgramOptimization=false and "
+          "LinkTimeCodeGeneration Default, since the project's ClCompile "
+          "clears it but its Configuration PropertyGroup sets it, which "
+          "would otherwise link /LTCG - all by this recipe; the toolset is "
           "retargeted from v142 to v143.")
 
 
