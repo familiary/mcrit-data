@@ -44,8 +44,35 @@
 // which [dcl.link]/6 makes ill-formed and which MSVC diagnoses as C2733.
 // NO_STRICT makes HANDLE, HMODULE and every other handle PVOID again, at
 // which point all five declarations match the SDK's exactly. It changes
-// typedefs only and not one byte of emitted code.
+// typedefs only and not one byte of emitted code. Measured: the first cl
+// build of this file (CI run 35858415869, x86) emitted no C2733, so NO_STRICT
+// does do what it is here for - the declarations at wow64pp.hpp:188-205 all
+// passed, and the first diagnostic was at line 356, 150 lines further down.
+//
+// NOMINMAX is load-bearing for cl and only for cl, and the MinGW build of
+// this same file could not have found it. The SDK's shared/minwindef.h reads
+//
+//     #ifndef NOMINMAX
+//     #ifndef max
+//     #define max(a,b)            (((a) > (b)) ? (a) : (b))
+//
+// with no C++ guard, while mingw-w64's own minwindef.h wraps that same block
+// in "#ifndef __cplusplus" (line 170) and so never defines it for a C++
+// translation unit at all. wow64pp.hpp calls
+// std::numeric_limits<std::uint32_t>::max() at lines 356 and 381, in the two
+// detail::read_memory overloads, so under cl the macro is invoked with zero
+// arguments and the header stops being parseable:
+//
+//     wow64pp.hpp(356): warning C4003: not enough arguments for
+//                       function-like macro invocation 'max'
+//     wow64pp.hpp(356): error C2589: '(': illegal token on right side of '::'
+//
+// - and then a hundred cascading errors until C1003 gives up. That is what
+// failed the first MSVC x86 build; defining NOMINMAX is the whole fix. It
+// suppresses two macro definitions and changes no emitted code, and on
+// mingw-w64 it is a no-op over a block the C++ guard has already excluded.
 #define NO_STRICT
+#define NOMINMAX
 #include <windows.h>
 
 #include <algorithm>

@@ -1,17 +1,27 @@
 """APICallProxy (MahmoudZohdy) - a KMDF kernel driver. MSVC x64 only.
 
-UNVERIFIED AND CONDITIONAL. Nothing in this module has been built. It was
-written against the upstream tree and the project file alone, on a container
-that has neither MSVC nor a WDK, and it is only usable at all if the
-``WDK-PROBE`` lines the Windows workflow prints come back PRESENT for the
-WindowsKernelModeDriver10.0 platform toolset, the KMDF import libraries and
-the km link libraries. If they say ABSENT this module is not a recipe, it is
-a plan, and the "investigated but not built" row for this project in
-scripts/corpus/README.md stands. Every claim below about what the build
-produces - what the WDK's defaults emit, whether the link resolves, what
-SMDA recovers - is reasoning from the sources, not a measurement, and the
-"Open risks" section at the end of this docstring lists the ones that could
-still cost a CI round.
+PARTLY VERIFIED. One CI round has been spent on this module, run
+35858415869, and it moved some of what follows from reasoning to measurement
+while leaving the rest exactly where it was.
+
+Verified. The WDK is present and the toolset resolves: msbuild reported
+"Building 'APICallProxy' with toolset 'WindowsKernelModeDriver10.0' and the
+'Desktop' target platform", which is the probe's PRESENT answer arriving as
+a build line rather than as a probe. TargetVersion, SignMode and the forced
+props import were all accepted without complaint. The .vcxproj-not-.sln
+choice, the pinned OutDir and IntDir and the command line's shape are
+therefore sound.
+
+Not verified, and not for want of trying: nothing was compiled and nothing
+was linked. The build failed in package validation, ahead of the compiler -
+see the note above _MSBUILD for the error, the WDK target that raises it and
+the property that turns it off. That failure had not been predicted at all;
+the "Open risks" list below predicted a link failure, and the build never
+reached the link. So every claim here about what the compile emits, whether
+the KMDF entry point resolves, how many functions come back and what SMDA
+makes of a .sys remains reasoning from the sources. Risk 1 in particular is
+untouched: it is still the most likely next failure, and it is still
+unsettled.
 
 What the project is. A driver that exposes the Nt*/Zw* kernel API surface to
 user mode through a single DeviceIoControl entry point, so that a user-mode
@@ -73,7 +83,9 @@ Driver signing is not a consideration. A driver must be signed to *load*;
 nothing here loads it, it is linked and disassembled. SignMode=Off is passed
 so the packaging tail does not go looking for a test certificate.
 
-Open risks, in the order they would bite:
+Open risks, in the order they would bite. All three are still open: the one
+failure seen so far was none of them, and is recorded above rather than here
+because it is now fixed rather than pending.
 
 1. The KMDF link. The project declares DriverType KMDF and links
    WdfDriverEntry.lib and WdfLdr.lib, which makes FxDriverEntry the image
@@ -228,9 +240,44 @@ _PROPS = (
 # package directory is named after the project, so inheriting them means
 # guessing at the artefact path from a container that has no WDK to look at.
 # Pinning also keeps the compiler PDB out of the linker PDB's directory.
+#
+# SkipPackageVerification=true is what CI run 35858415869 was spent finding
+# out, and it is not optional. Without it the build gets no further than
+#
+#   APICallProxy.inf(5-5): error 1324: [Version] section should specify
+#     PnpLockdown=1 to prevent external apps from modifying installed
+#     driver files.
+#
+# and exits 1 having compiled nothing at all - the log goes straight from
+# StampInf's two "Stamping" lines to that error, with no ClCompile output,
+# which at /v:minimal is how a compile that did not happen looks.
+#
+# The mechanism is in the WDK's own WindowsDriver.Common.targets, read at
+# 10.0.26100.0, the version the runner's probe reports:
+#
+#   <Target Name="InfVerif" Condition="'@(Inf)' != '' ..."
+#           AfterTargets="StampInf" BeforeTargets="PreBuildEvent">
+#     <DPVerifierTask Condition="'@(InfItems)' != ''
+#                      and '$(SkipPackageVerification)' != 'true' ..." />
+#
+# BeforeTargets="PreBuildEvent" is why nothing compiled: package validation
+# runs ahead of the whole compile-and-link chain, so an INF that upstream
+# wrote in 2022 to pre-PnpLockdown rules fails the project before the driver
+# is ever built. SkipPackageVerification is the only condition on the task,
+# and it gates all three of its version-selected invocations.
+#
+# Skipping it is right rather than merely expedient. PnpLockdown is an
+# install-time directive about who may overwrite a driver file on a running
+# system; this recipe links a .sys and disassembles it and installs nothing,
+# so the check has no subject here. The alternative would be adding
+# PnpLockdown=1 to upstream's INF, which is patching upstream source to
+# satisfy a rule that does not apply. It is a global property, so a WDK that
+# spelled it differently would ignore it rather than fail on it, which is the
+# same reasoning TargetVersion and SignMode are passed under.
 _MSBUILD = ('msbuild APICallProxy\\APICallProxy\\APICallProxy.vcxproj '
             '/p:Configuration=Release /p:Platform={msbuild_platform} '
             '/p:TargetVersion=Windows10 /p:SignMode=Off '
+            '/p:SkipPackageVerification=true '
             '/p:WholeProgramOptimization=false '
             '/p:OutDir=%CD%\\out\\ /p:IntDir=%CD%\\obj\\ '
             '/p:ForceImportBeforeCppTargets=%CD%\\corpus-msvc.props '
@@ -256,7 +303,10 @@ _FLAGS = ("Release|x64, the project's only configuration carrying link "
           "whole-program optimization at either end "
           "(/p:WholeProgramOptimization=false plus LinkTimeCodeGeneration "
           "Default), /Brepro, /INCREMENTAL:NO, and TreatWarningAsError "
-          "false; signing is turned off with SignMode=Off. RuntimeLibrary is "
+          "false; signing is turned off with SignMode=Off and driver-package "
+          "INF validation with SkipPackageVerification=true, neither of which "
+          "reaches the compiler or the linker - the driver is linked and "
+          "disassembled, never packaged or installed. RuntimeLibrary is "
           "left alone - a kernel driver has no ucrt to move out of the image")
 
 

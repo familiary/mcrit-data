@@ -50,16 +50,57 @@ whatever the registry says today, which is neither reproducible nor recorded.
 The headers are fetched through extra_sources instead, at a full commit hash,
 so they are pinned and end up in provenance.json like any other dependency.
 
-The phnt commit is 4bd2da2537532fe78d49517755dbdb906b80a4b9, 2020-12-22 - the
-last commit before nt_wrapper's own 2021-02-02 pin, i.e. the state of those
-headers on the day this library was last touched. It was cloned and read rather
-than assumed: phnt.h and phnt_windows.h are both at the tree root, phnt.h
-defines PHNT_19H1 as 107, and every NT routine and constant the exercisers
-reach through nt_wrapper is present in it (NtCreateThreadEx, NtGetNextThread,
-NtQueueApcThreadEx, APC_FORCE_THREAD_SIGNAL, NtIsProcessInJob,
-NtMakePermanentObject, SystemModuleInformationEx, SystemPoolTagInformation and
-the rest). phnt carries its own licence, CC BY 4.0, which is why the licence
-field below is not simply Apache-2.0.
+The phnt commit is 2b70847be7f731126fba453568e2cfbf560614bf, 2024-06-24
+("Update to 24H2"), and it is NOT the commit contemporary with nt_wrapper's
+own pin. That was the first choice - 4bd2da2537532fe78d49517755dbdb906b80a4b9,
+2020-12-22, the last commit before nt_wrapper's 2021-02-02 pin - and CI run
+35858415869 proved it unusable. All five translation units failed, on both
+legs, with the same three errors and no others:
+
+    .../nt_wrapper-...-phnt/ntioapi.h(756): error C2011:
+        '_FILE_STAT_INFORMATION': 'struct' type redefinition
+    .../Windows Kits/10/include/10.0.26100.0/um/winnt.h(15457): note:
+        see declaration of '_FILE_STAT_INFORMATION'
+
+(paths written with forward slashes here; the log has backslashes, and a
+backslash in a Python docstring is an escape.)
+
+and the same pair again for _FILE_STAT_LX_INFORMATION and
+_FILE_CASE_SENSITIVE_INFORMATION. The runner's Windows SDK has caught up with
+phnt: those three structures are private NT types that phnt published years
+before the SDK did, and winnt.h now ships them itself.
+
+There is no compile flag that resolves this, and that was checked rather than
+assumed. The SDK's own headers were fetched (Microsoft.Windows.SDK.CPP
+10.0.26100) and read: all three definitions sit at winnt.h:15088, :15121 and
+:15193 with no _WIN32_WINNT or NTDDI_VERSION guard around them at all - the
+only enclosing conditional in the file is "#ifndef _WINNT_" at line 18. So
+lowering the target version, which is the usual way out of a collision like
+this, cannot work: winnt.h defines them whatever NTDDI_VERSION says, and the
+2020 phnt defines them unconditionally too.
+
+phnt fixed it on its own side, in exactly the commit pinned above: ntioapi.h
+now wraps all three in "#if !defined(NTDDI_WIN11_GE) || (NTDDI_VERSION <
+NTDDI_WIN11_GE)", and sdkddkver.h in this SDK defines NTDDI_WIN11_GE as
+0x0A000010 with NTDDI_VERSION defaulting to it, so phnt stands down and the
+SDK's definitions are used. A corollary worth stating because it is a trap:
+NTDDI_VERSION must NOT be lowered now either, or the guard opens and the
+collision comes back from the other direction.
+
+The bump is 3.5 years of drift, so what it costs was measured rather than
+hoped for. Every Nt*/Rtl*/Zw* routine and every *Information constant that
+nt_wrapper's headers and these five exercisers name - 75 identifiers - was
+extracted and looked up in both trees: 73 are present at the old pin, 74 at
+the new one, and nothing present at the old pin is missing from the new one.
+The one gained is NtAllocateVirtualMemoryEx. phnt.h and phnt_windows.h are
+still both at the tree root, PHNT_19H1 is still 107, and PHNT_MODE still
+defaults to PHNT_MODE_USER, so the three lines in ntw/detail/common.hpp that
+consume phnt still mean what they meant. What was not measured, and cannot be
+from a container with no MSVC, is whether 2024 phnt and 2021 nt_wrapper agree
+on every struct field the wrapper touches.
+
+phnt carries its own licence, CC BY 4.0, which is why the licence field below
+is not simply Apache-2.0.
 
 Version "2021-02-02", the pinned commit's date, because the project's own
 version strings disagree: CMakeLists.txt says "project(nt_wrapper VERSION
@@ -95,8 +136,24 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 # upstream's, and the library uses <span>, concepts-era syntax and class
 # template argument deduction throughout. /permissive- is implied by
 # /std:c++20 on v143 and is passed explicitly so the mode does not depend on
-# that staying true. /EHsc and /D_SCL_SECURE_NO_WARNINGS are upstream's own
-# MSVC test settings.
+# that staying true - for four of the five translation units; nt_wrapper_ob.cpp
+# gets /permissive instead, for the measured reason set out above _compile.
+# /EHsc and /D_SCL_SECURE_NO_WARNINGS are upstream's own MSVC test settings.
+#
+# The first CI run also settled a question this recipe could not answer from
+# the container. Nothing compiled, so obj\ was empty, and the link step then
+# reported it as
+#
+#   LINK : warning LNK4001: no object files specified; libraries used
+#   LINK : error LNK2001: unresolved external symbol _DllMainCRTStartup
+#   nt_wrapper.dll : fatal error LNK1120: 1 unresolved externals
+#
+# That is the intended floor doing its job - a build that compiled nothing
+# must not be reported as a build - but it is worth recording that the
+# unresolved symbol in that case is the CRT entry point and says nothing
+# about ntdll. Whether ntdll.lib actually resolves every Nt*/Rtl* routine
+# these exercisers reach is still unmeasured: no translation unit has yet
+# reached the linker.
 #
 # /bigobj because at /Od every instantiated NTW_INLINE function becomes its own
 # COMDAT with its own debug information; the 65279-section object limit is a
@@ -110,7 +167,7 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 # information lands in one compiler PDB - and a different file from the
 # linker's /PDB:, which is the one SMDA is handed. Pointing both at one path
 # would have link.exe write the file it is reading its type information from.
-_COMPILE = ('cl /nologo /c /Od /MD /Zi /EHsc /bigobj /std:c++20 /permissive- '
+_COMPILE = ('cl /nologo /c /Od /MD /Zi /EHsc /bigobj /std:c++20 %s '
             '/D_SCL_SECURE_NO_WARNINGS /Iinclude /I{phnt} '
             '/Fdnt_wrapper.compiler.pdb /Fo:obj\\ '
             '{repo}/scripts/corpus/exercisers/nt_wrapper/%s.cpp')
@@ -129,9 +186,58 @@ _TRANSLATION_UNITS = (
 )
 
 
+# nt_wrapper_ob.cpp, and only it, is compiled /permissive rather than
+# /permissive-, and the reason is measured rather than defensive.
+#
+# The header comment in that exerciser lists four pieces of ntw::ob that are
+# broken as published and are therefore never called. Three of them were
+# diagnosed anyway in CI run 35858415869, with the translation unit never
+# naming them:
+#
+#   ...\ntw\ob\impl/thread.inl(255): error C2039: 'get': is not a member
+#       of '_OBJECT_ATTRIBUTES'
+#   ...\ntw\ob\impl/thread.inl(373): error C2039: 'details': is not a
+#       member of 'ntw'
+#   ...\ntw\ob\impl/thread.inl(400): error C2039: 'details': is not a
+#       member of 'ntw'
+#
+# That is two-phase lookup, which /permissive- turns on. Both defects are
+# non-dependent expressions inside an uninstantiated template body, so a
+# conforming compiler must diagnose them at definition time, the moment the
+# header is parsed: thread.inl:255 is "OBJECT_ATTRIBUTES attr = attr.get();",
+# where OBJECT_ATTRIBUTES is a concrete type and .get() therefore resolvable
+# immediately, and :373 and :400 spell a fully qualified "::ntw::details::"
+# for what is "::ntw::detail::". Nothing the exerciser does or avoids doing
+# can prevent it - the errors arrive with <ntw/ob/thread.hpp>.
+#
+# The fourth defect confirms the reading rather than merely fitting it. It is
+# basic_token<H>::open calling "thread->get()" on a type with no operator->,
+# and it was NOT diagnosed, because there the object is a template parameter
+# and the expression is dependent, so the check is deferred to an
+# instantiation that never happens. Dependent defect silent, non-dependent
+# defects fatal, is exactly what two-phase lookup predicts, and MSVC's own
+# notes print the enclosing function as "basic_thread<Handle>" with Handle
+# unsubstituted - a definition-time diagnosis, not an instantiation.
+#
+# /permissive restores MSVC's older model, in which a template body is not
+# checked until it is instantiated, and these three are never instantiated.
+# It is the adjustment blackbone.py already makes for the same class of
+# problem: upstream source through a newer compiler, no upstream file
+# touched.
+#
+# Applying it to this one translation unit rather than all five is the point.
+# The other four carry no such defect and compile conformantly, and
+# /permissive is a weaker mode that could plausibly cost them something; if
+# it costs ob.cpp instead, ob.cpp is a unit that does not build today anyway,
+# so the change cannot lose anything that is not already lost. This is the
+# per-unit tolerance in the module docstring being used for what it is for.
+_PERMISSIVE_UNITS = frozenset({"nt_wrapper_ob"})
+
+
 def _compile(unit):
+    conformance = "/permissive" if unit in _PERMISSIVE_UNITS else "/permissive-"
     return BuildStep("%s || echo NTW-TU-FAILED %s.cpp"
-                     % (_COMPILE % unit, unit),
+                     % (_COMPILE % (conformance, unit), unit),
                      allow_failure=True)
 
 
@@ -150,7 +256,10 @@ def _compile(unit):
 # #pragma comment(lib, "ntdll.lib"); the whole library is calls into ntdll, so
 # without it the link is a wall of unresolved Nt* externals. There is
 # deliberately no /FORCE here: the five translation units do not reference each
-# other, so a missing one leaves nothing unresolved, and /FORCE would also make
+# other, so a missing one leaves nothing unresolved - still an argument from
+# the sources rather than a measurement, because the first CI run compiled
+# none of them and so never reached a link with a partial object set - and
+# /FORCE would also make
 # link.exe ignore the /INCREMENTAL:NO below.
 #
 # /Brepro, /OPT:NOREF and /OPT:NOICF for the reasons spelled out in
@@ -177,7 +286,7 @@ RECIPES = {
         license="Apache-2.0 (full text in LICENSE, per-file \"Copyright 2020 "
                 "Justas Masiulis\" headers). Builds against the Process "
                 "Hacker native API headers, winsiderss/phnt at "
-                "4bd2da2537532fe78d49517755dbdb906b80a4b9, which are CC BY "
+                "2b70847be7f731126fba453568e2cfbf560614bf, which are CC BY "
                 "4.0; those are declarations only and contribute no code to "
                 "the artefact, but they are a pinned input and are recorded "
                 "as one.",
@@ -190,7 +299,7 @@ RECIPES = {
         # call in this library compiles to.
         extra_sources={
             "phnt": Source(git_url="https://github.com/winsiderss/phnt.git",
-                           git_ref="4bd2da2537532fe78d49517755dbdb906b80a4b9"),
+                           git_ref="2b70847be7f731126fba453568e2cfbf560614bf"),
         },
         build=(
             [BuildStep("md obj", allow_failure=True)]
@@ -208,7 +317,12 @@ RECIPES = {
                             pdb="nt_wrapper.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags="/Od /MD /Zi /EHsc /bigobj /std:c++20 /permissive- "
-                    "/D_SCL_SECURE_NO_WARNINGS; /DEBUG /Brepro "
+                    "/D_SCL_SECURE_NO_WARNINGS, except that the ntw::ob "
+                    "translation unit is compiled /permissive because three "
+                    "defects in upstream's impl/thread.inl are non-dependent "
+                    "expressions in uninstantiated template bodies and a "
+                    "conforming two-phase lookup diagnoses them at parse time "
+                    "even though nothing calls them; /DEBUG /Brepro "
                     "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF and ntdll.lib at "
                     "link. /Od rather than the corpus default /O2 on purpose: "
                     "detail/config.hpp defines NTW_INLINE as __forceinline and "
@@ -231,10 +345,19 @@ RECIPES = {
               "floor is the backstop if too little was produced. Compiled at "
               "/Od: see build_flags for why, and read the sample as reference "
               "for an unoptimised consumer rather than for an /O2 one. Depends "
-              "on the Process Hacker native API headers (phnt), pinned to the "
-              "commit contemporary with this library's own pin and fetched "
-              "through extra_sources rather than vcpkg; they are declarations "
-              "and contribute no code to the artefact. Upstream's own CMake is "
+              "on the Process Hacker native API headers (phnt), fetched "
+              "through extra_sources rather than vcpkg and pinned to "
+              "2b70847be7f731126fba453568e2cfbf560614bf (2024-06-24); they are "
+              "declarations and contribute no code to the artefact. That is "
+              "deliberately not the phnt commit contemporary with this "
+              "library's 2021 pin: the contemporary one defines "
+              "FILE_STAT_INFORMATION, FILE_STAT_LX_INFORMATION and "
+              "FILE_CASE_SENSITIVE_INFORMATION unconditionally, the Windows "
+              "SDK on the build machine (10.0.26100) now defines all three in "
+              "winnt.h with no version guard of any kind, and every "
+              "translation unit failed with C2011 type redefinition until the "
+              "pin was moved forward to the phnt release that guards them "
+              "behind NTDDI_WIN11_GE. Upstream's own CMake is "
               "not used, because its test/ subdirectory needs the Catch2 "
               "submodule and everything else it does is one flag and one "
               "include path. Seven pieces of the public API are not exercised "
