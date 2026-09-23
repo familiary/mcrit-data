@@ -89,7 +89,7 @@ compile, added at the same time: `probe_msvcrt.c` had never built at all
 had `probe_atl_typeinfo.cpp`. Both had been failing silently on every run
 since they were written.
 
-**A fifth round is measured and has not been applied.** Adding
+**The fifth round.** Adding
 4g3nt47/Obfuscator turned up a whole half of stdio that `_PROBE_DLL` never
 calls - it formats, seeks and reads blocks, and never once calls `printf`,
 `puts`, `fgetc`, `feof`, `ferror`, `clearerr`, `rewind`, `remove` or `atoi`.
@@ -110,9 +110,17 @@ calls it), then `fprintf`, `ferror`, `fgets`, `feof`, `remove` and
 `clearerr`. Every name in the list is a C library name; no project code is
 in it.
 
-Only `data/Obfuscator4g3nt47` was built against the new baseline. Whether to
-spend a refilter round on the other 67 is a maintainer's call and has not
-been made here.
+It was applied, in commit `4bf28b5`, after the dry run above had been read:
+67 artefacts corrected, 510 functions, `refresh_provenance --check` clean
+across all 51 families afterwards and `validate` at 0 problems.
+
+One thing it did not do, which is worth stating because the opposite was
+expected: it did not move the cross-family census. None of those 510
+functions could have been in it. `ferror`, `feof`, `clearerr`, `rewind` and
+the import thunks are a handful of instructions each and sit below the
+ten-instruction floor the census counts at. A refilter round corrects
+misattribution; it is not a collision fix, and the two numbers move for
+different reasons.
 
 **What remains is one finding.** `__scrt_common_main_seh`, the MSVC CRT's
 x64 entry-point wrapper, at 99 instructions in Lua, MemoryModule and bzip2.
@@ -168,13 +176,26 @@ minutes: it extracts every `.7z` and decompresses every `.mcrit`.
   small bodies that happen to hash alike, which is what the instruction floor
   bounds rather than eliminates.
 
-Today the corpus has **568** cross-family PicHashes at the ten-instruction
-floor, split **349** standard-library instantiations, **161** whose names
+Today the corpus has **571** cross-family PicHashes at the ten-instruction
+floor, split **349** standard-library instantiations, **164** whose names
 differ between the families sharing them, **57** carrying no symbol in any
 family, and the **one** leakage finding described above. The totals grew
 with the corpus - they were 58 when it was MinGW-only, and 546 before the
 lib2smda#1 wishlist families arrived - so they are a measure of how much
 C++ it now contains rather than of anything getting worse.
+
+Re-measured after the fifth glue round, and the round did not move the
+number down. None of the 510 functions it removed can have been in this
+census: a body carrying the same C library name across three families is
+exactly what the leakage bucket is, and that bucket held one finding before
+the round as well as after. `ferror`, `feof`, `clearerr`, `rewind` and the
+import thunks are a handful of instructions each and sit below the floor
+counted here. A refilter round is a misattribution fix, not a collision
+fix, and the two are measured separately on purpose. What did move since
+this paragraph was last written is three hashes, all of them in the
+differing-names bucket. The leakage count did not: it is the same single
+`__scrt_common_main_seh` across Lua, MemoryModule and bzip2, unchanged
+through the last imports and through 510 functions leaving 67 artefacts.
 
 That last step is the useful control. It added six MSVC families and eight
 ELF artefacts, among them five separate implementations of the same WOW64
