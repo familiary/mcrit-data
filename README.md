@@ -840,3 +840,16 @@ Generated with `scripts/build_corpus.py`; see `data/obfstr/provenance.json` for 
 |----------|---------|----------|-------|------|
 | obfstr | 0.4.6 | MinGW-w64 GCC 13 | [x86 PE](data/obfstr/x86/mcrit/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.mcrit) / [x64 PE](data/obfstr/x64/mcrit/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.mcrit) | [x86 PE](data/obfstr/x86/smda/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.7z) / [x64 PE](data/obfstr/x64/smda/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.7z) |
 <!-- /generated -->
+
+### obfstr<a id='obfstr'></a>
+
+The Rust equivalent, and the only one of these four that keeps a function alive by design: `xref::inner` is `#[inline(never)]` and generic over a `const SEED: u64`, so it emits exactly one monomorphization per obfuscated string in both debug and release, each a different shape because the seed drives a per-string control-flow-flattening table. The seed derives from the file, line, column and the string itself, so identical strings at different call sites still emit distinct functions. Measured here, 46 strings gave 46 `obfstr::` functions on each architecture.  
+This is the corpus's first generated Rust family. The driver crate is `#![no_std]` with `panic = "abort"` so that Rust's standard library does not enter the sample under obfstr's name; `OBFSTR_SEED` is left unset, which is what makes release builds byte-identical across rebuilds.  
+
+Generated with `scripts/build_corpus.py`; see `data/obfstr/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: obfstr -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| obfstr | 0.4.6 | MinGW-w64 GCC 13 | [x86 PE](data/obfstr/x86/mcrit/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.mcrit) / [x64 PE](data/obfstr/x64/mcrit/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.mcrit) | [x86 PE](data/obfstr/x86/smda/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.7z) / [x64 PE](data/obfstr/x64/smda/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.7z) |
+<!-- /generated -->
