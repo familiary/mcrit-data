@@ -20,8 +20,14 @@ recorded in the notes so the attribution is not mistaken for BlackBone's own
 code. BeaEngine is different: it is linked through a prebuilt import library,
 so only its thunks appear and its code stays in its own DLL.
 
-The kernel driver has its own solution and is not built here even though the
-runner has a WDK.
+The kernel driver has its own solution and is not built here: it is
+blackbonedrv.py, a separate family, from the same commit. That recipe's
+docstring argues the split - the two images share no code, and both recipes
+pinning one commit would put two entries on the `(BlackBone, 2023-07-17)`
+key that refresh_provenance.py cannot tell apart, since its narrowing is by
+toolchain alias and both declare msvc_x64. The ``notes`` below still say the
+driver is not built, which is true of the artefacts this family already
+holds; correct it in the same commit that imports the driver's data.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

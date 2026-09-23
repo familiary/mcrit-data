@@ -850,7 +850,7 @@ Generated with `scripts/build_corpus.py`; see `data/CallObfuscator/provenance.js
 
 ## Offensive tooling
 
-Public offensive-tooling code bases that are copied into implants more or less verbatim. All three need Visual Studio - ATL, the DIA SDK or MASM - and are built on a windows-2022 runner by `.github/workflows/windows-reference-data.yml` rather than approximated with GCC.
+Public offensive-tooling code bases that are copied into implants more or less verbatim. Every one of them needs Visual Studio - ATL, the DIA SDK, MASM, or in BlackBone's driver's case a WDK - and they are built on a windows-2022 runner by `.github/workflows/windows-reference-data.yml` rather than approximated with GCC.
 ### VX-API<a id='vx-api'></a>
 
 A collection of Win32 API-abuse routines. Upstream ships no static-library or DLL configuration, so the sources are compiled into one and linked with `/OPT:NOREF`, which keeps routines nothing calls - the point here is coverage, not a minimal binary. A small number of sources need ATL or `__try`/`__except` and are skipped.  
@@ -865,7 +865,7 @@ Generated with `scripts/build_corpus.py`; see `data/VX-API/provenance.json` for 
 
 ### BlackBone<a id='blackbone'></a>
 
-A Windows memory-hacking library: process and module management, manual PE mapping, local and remote hooking, pattern search. Built in its `Release(DLL)` configuration, which statically compiles the vendored AsmJit and rewolf-wow64ext sources into the same image - so functions from those projects are present here under the BlackBone family, as they are in any real BlackBone DLL. BeaEngine is imported from its own DLL and is not. The kernel driver is not built.  
+A Windows memory-hacking library: process and module management, manual PE mapping, local and remote hooking, pattern search. Built in its `Release(DLL)` configuration, which statically compiles the vendored AsmJit and rewolf-wow64ext sources into the same image - so functions from those projects are present here under the BlackBone family, as they are in any real BlackBone DLL. BeaEngine is imported from its own DLL and is not. The kernel driver is a separate family, [BlackBoneDrv](#blackbonedrv), because it shares no code with this image.  
 
 Generated with `scripts/build_corpus.py`; see `data/BlackBone/provenance.json` for source digests, compiler and flags.
 
@@ -873,6 +873,16 @@ Generated with `scripts/build_corpus.py`; see `data/BlackBone/provenance.json` f
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | BlackBone | 2023-07-17 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/BlackBone/x86/mcrit/BlackBone_2023-07-17_msvc143_x86_BlackBone.dll.mcrit) / [x64 PE](data/BlackBone/x64/mcrit/BlackBone_2023-07-17_msvc143_x64_BlackBone.dll.mcrit) | [x86 PE](data/BlackBone/x86/smda/BlackBone_2023-07-17_msvc143_x86_BlackBone.dll.7z) / [x64 PE](data/BlackBone/x64/smda/BlackBone_2023-07-17_msvc143_x64_BlackBone.dll.7z) |
+<!-- /generated -->
+
+### BlackBoneDrv<a id='blackbonedrv'></a>
+
+BlackBone's kernel driver, from the same commit as the library above and in its own solution. It does from ring 0 what the library cannot do from ring 3: manually maps images into other processes, injects and queues APCs, remaps one process's memory into another, edits VAD nodes and PTEs to hide or reprotect regions, hooks the SSDT and patches handle-table entries - all reached from user mode through a single `DeviceIoControl` switch. A separate family rather than a second component of `BlackBone`, because the two images have not one function in common: that one is C++ linked against the ucrt, this is C compiled against `ntifs.h`. Built `Win10Release|x64`, which is upstream's own CI configuration and the only one of the four whose undocumented structure layouts describe a kernel anyone still runs; all eight of the project's configurations are x64 and it refuses to compile for x86 at all.  
+Eight of its 139 functions are not this project's code and a match on them is a match on Windows kernel source: `ldrreloc.c`'s four `Ldr*` relocation routines say in the file that they are Windows Research Kernel source, usable only under a licence agreement the repository does not carry, and `VadHelpers.c`'s four `Mi*` AVL routines are the same kernel's code carried in without a copyright header at all.  
+
+Generated with `scripts/build_corpus.py`; see `data/BlackBoneDrv/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: BlackBoneDrv -->
 <!-- /generated -->
 
 ### SysWhispers<a id='syswhispers'></a>

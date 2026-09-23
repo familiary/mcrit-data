@@ -549,7 +549,6 @@ Recorded here so the analysis is not repeated:
 | gperftools (tcmalloc) | #10 | its Windows port targets MSVC; `src/windows/port.h` clashes with mingw's `nanosleep` linkage and needs a source patch |
 | google/tcmalloc | #10 | Bazel-only and Linux-only - it cannot produce a PE at all. Issue #10's "tcmalloc" is almost certainly gperftools |
 | gRPC | #10 | cross-building needs a full native build first to obtain `protoc` and `grpc_cpp_plugin`, plus boringssl (which needs Go); 45-90 minutes for two architectures, and its statically-linked-into-Windows-malware rate is close to zero |
-| BlackBone kernel driver | #8 | a separate solution from the user-mode library, which is built. The reason given here used to be "needing the WDK", and that was wrong: the `windows-2022` runner does carry one. `.github/workflows/windows-reference-data.yml` now probes for it and run 35855463795 reported `WDK-PROBE` PRESENT on all five paths - the `WindowsKernelModeDriver10.0` toolset, KMDF 1.15 through 1.21 under `Lib\wdf\kmdf`, and `ntoskrnl.lib`, `hal.lib`, `wmilib.lib` and `netio.lib` under `Lib\10.0.26100.0\km\x64`. So this one is worth reopening on its merits rather than on toolchain grounds; it simply has not been attempted |
 | DavidBuchanan314/monomorph | [lib2smda#1](https://github.com/familiary/lib2smda/issues/1) | Linux x86-64 ELF only. That alone is no longer the obstacle it was when this row was written - `linux_x86` and `linux_x64` exist now - but the reason that mattered does not move: its own code is four functions, `get_bit`, `decode_buf`, `inflate_buf` and `main`, 679 bytes between them, against a floor of eight. The committed artefact carries 1397 function symbols, but 1393 of them are statically linked glibc and zlib, and with no glibc baseline to subtract them they would enter under monomorph's name and duplicate `data/libzlib`. What is distinctive about the project is the 4 MB array of MD5 collision blocks, which is data rather than code; upstream points at a collision detector for identifying it |
 
 VX-API (#4), BlackBone (#8) and SysWhispers v1 (#9) were on this list and are
@@ -559,6 +558,18 @@ GCC, so they are built with MSVC on a `windows-2022` runner by
 Crypto++ (#10) has also left it - upstream's own `cryptopp.dll` target
 exports only the FIPS subset, but its GNUmakefile builds `libcryptopp.a`
 cleanly and that is linked into a DLL with `--whole-archive`.
+
+BlackBone's kernel driver (#8) is the most recent departure, and it left for
+neither of those reasons. Its row said the driver needed a WDK the runner did
+not have; the probe on run 35855463795 reported `WDK-PROBE` PRESENT on all
+five paths, APICallProxy then proved a `.sys` goes through this pipeline, and
+what was left was that nobody had written a recipe. `blackbonedrv.py` is that
+recipe: `Win10Release|x64` of `src/BlackBoneDrv/BlackBoneDrv.sln`, which is
+upstream's own CI command line, for 139 functions of the driver's own. It is
+a separate family from the user-mode library rather than a second component
+of it - the two share no code, and two recipes on one `(family, version)` key
+is exactly the ambiguity `refresh_provenance.py` narrows by toolchain alias
+and could not resolve here, both declaring `msvc_x64`.
 
 4g3nt47/Obfuscator (lib2smda#1) has left it too, and it is the one entry here
 that left because the tooling changed rather than because the project was
