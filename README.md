@@ -17,7 +17,7 @@ This repository is intended to grow over time, as we find time to process more o
 If you feel that something especially relevant is missing, please open an issue and/or provide input data and we will see what we can do.
 
 Compilers
-* [Golang](#gloang)
+* [Golang](#golang)
 * [Microsoft Visual Studio](#msvc)
 * [MinGW](#mingw)
 * [Nim](#nim)
@@ -35,34 +35,40 @@ Reference code extracted from all files containing precompiled code found in ins
 ### Golang<a id='golang'></a>
 
 Many thanks to Daniel Enders for creating these reference binaries during his Master thesis in 2022!  
-Also many thanks to Max Ufer for providing more recent builds of Go versions 1.19-1.22!  
+Also many thanks to Max Ufer for providing the first builds of Go versions 1.19-1.22!  
 The source file used to compile these included as many Golang standard library files as possible to create coverage for common functions.  
+Starting with 1.19, the references are built reproducibly from the latest patch release of each version with [scripts/golang](scripts/golang/): the source is generated from `go list std` and references every exported, non-generic function and method of every importable standard library package (`CGO_ENABLED=0 go build -trimpath`, not stripped), and function names are taken from the pclntab by SMDA.  
+Note that for x64 builds of Go 1.22+, SMDA currently over-approximates type switch jump tables for about 20 functions per file ([smda#363](https://github.com/danielplohmann/smda/issues/363)), so these files will be regenerated once that is fixed.  
 When using these with MCRIT, you probably want to have as few as possible / the most fitting version only as you may otherwise run into performance issues. We noticed that the similarity in Golang library functions can lead to huge candidate clusters for which all functions will have to be matched.
 
 
-| Name      | Date       | Version                           | MCRIT | SMDA |
-|-----------|------------|-----------------------------------|-------|------|
-| Golang   | 2014-05-05 | 1.2.2  | [x86](data/Golang/x86/smda/golang_1.2.2_x86.7z) / x64                                           | [x86](data/Golang/x86/mcrit/golang_1.2.2_x86.mcrit) / x64                                               |
-| Golang   | 2014-06-18 | 1.3    | [x86](data/Golang/x86/smda/golang_1.3_x86.7z) / [x64](data/Golang/x64/smda/golang_1.3_x64.7z)   | [x86](data/Golang/x86/mcrit/golang_1.3_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.3_x64.mcrit)   |
-| Golang   | 2014-12-10 | 1.4    | [x86](data/Golang/x86/smda/golang_1.4_x86.7z) / [x64](data/Golang/x64/smda/golang_1.4_x64.7z)   | [x86](data/Golang/x86/mcrit/golang_1.4_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.4_x64.mcrit)   |
-| Golang   | 2015-08-19 | 1.5    | [x86](data/Golang/x86/smda/golang_1.5_x86.7z) / [x64](data/Golang/x64/smda/golang_1.5_x64.7z)   | [x86](data/Golang/x86/mcrit/golang_1.5_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.5_x64.mcrit)   |
-| Golang   | 2016-02-17 | 1.6    | [x86](data/Golang/x86/smda/golang_1.6_x86.7z) / [x64](data/Golang/x64/smda/golang_1.6_x64.7z)   | [x86](data/Golang/x86/mcrit/golang_1.6_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.6_x64.mcrit)   |
-| Golang   | 2016-08-15 | 1.7    | [x86](data/Golang/x86/smda/golang_1.7_x86.7z) / [x64](data/Golang/x64/smda/golang_1.7_x64.7z)   | [x86](data/Golang/x86/mcrit/golang_1.7_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.7_x64.mcrit)   |
-| Golang   | 2017-02-16 | 1.8    | [x86](data/Golang/x86/smda/golang_1.8_x86.7z) / [x64](data/Golang/x64/smda/golang_1.8_x64.7z)   | [x86](data/Golang/x86/mcrit/golang_1.8_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.8_x64.mcrit)   |
-| Golang   | 2017-08-24 | 1.9    | [x86](data/Golang/x86/smda/golang_1.9_x86.7z) / [x64](data/Golang/x64/smda/golang_1.9_x64.7z)   | [x86](data/Golang/x86/mcrit/golang_1.9_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.9_x64.mcrit)   |
-| Golang   | 2018-02-16 | 1.10   | [x86](data/Golang/x86/smda/golang_1.10_x86.7z) / [x64](data/Golang/x64/smda/golang_1.10_x64.7z) | [x86](data/Golang/x86/mcrit/golang_1.10_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.10_x64.mcrit) |
-| Golang   | 2018-08-24 | 1.11   | [x86](data/Golang/x86/smda/golang_1.11_x86.7z) / [x64](data/Golang/x64/smda/golang_1.11_x64.7z) | [x86](data/Golang/x86/mcrit/golang_1.11_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.11_x64.mcrit) |
-| Golang   | 2019-02-25 | 1.12   | [x86](data/Golang/x86/smda/golang_1.12_x86.7z) / [x64](data/Golang/x64/smda/golang_1.12_x64.7z) | [x86](data/Golang/x86/mcrit/golang_1.12_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.12_x64.mcrit) |
-| Golang   | 2019-09-03 | 1.13   | [x86](data/Golang/x86/smda/golang_1.13_x86.7z) / [x64](data/Golang/x64/smda/golang_1.13_x64.7z) | [x86](data/Golang/x86/mcrit/golang_1.13_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.13_x64.mcrit) |
-| Golang   | 2020-02-25 | 1.14   | [x86](data/Golang/x86/smda/golang_1.14_x86.7z) / [x64](data/Golang/x64/smda/golang_1.14_x64.7z) | [x86](data/Golang/x86/mcrit/golang_1.14_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.14_x64.mcrit) |
-| Golang   | 2020-08-11 | 1.15   | [x86](data/Golang/x86/smda/golang_1.15_x86.7z) / [x64](data/Golang/x64/smda/golang_1.15_x64.7z) | [x86](data/Golang/x86/mcrit/golang_1.15_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.15_x64.mcrit) |
-| Golang   | 2021-02-16 | 1.16   | [x86](data/Golang/x86/smda/golang_1.16_x86.7z) / [x64](data/Golang/x64/smda/golang_1.16_x64.7z) | [x86](data/Golang/x86/mcrit/golang_1.16_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.16_x64.mcrit) |
-| Golang   | 2021-08-16 | 1.17   | [x86](data/Golang/x86/smda/golang_1.17_x86.7z) / [x64](data/Golang/x64/smda/golang_1.17_x64.7z) | [x86](data/Golang/x86/mcrit/golang_1.17_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.17_x64.mcrit) |
-| Golang   | 2022-03-15 | 1.18   | [x86](data/Golang/x86/smda/golang_1.18_x86.7z) / [x64](data/Golang/x64/smda/golang_1.18_x64.7z) | [x86](data/Golang/x86/mcrit/golang_1.18_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.18_x64.mcrit) |
-| Golang   | 2022-08-02 | 1.19   | [x86](data/Golang/x86/smda/golang_1.19_x86.7z) / [x64](data/Golang/x64/smda/golang_1.19_x64.7z) | [x86](data/Golang/x86/mcrit/golang_1.19_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.19_x64.mcrit) |
-| Golang   | 2023-02-01 | 1.20   | [x86](data/Golang/x86/smda/golang_1.20_x86.7z) / [x64](data/Golang/x64/smda/golang_1.20_x64.7z) | [x86](data/Golang/x86/mcrit/golang_1.20_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.20_x64.mcrit) |
-| Golang   | 2024-04-03 | 1.21.9 | [x86](data/Golang/x86/smda/golang_1.21_x86.7z) / [x64](data/Golang/x64/smda/golang_1.21_x64.7z) | [x86](data/Golang/x86/mcrit/golang_1.21_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.21_x64.mcrit) |
-| Golang   | 2024-01-24 | 1.22.2 | [x86](data/Golang/x86/smda/golang_1.22_x86.7z) / [x64](data/Golang/x64/smda/golang_1.22_x64.7z) | [x86](data/Golang/x86/mcrit/golang_1.22_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.22_x64.mcrit) |
+| Name      | Date       | Version | MCRIT | SMDA |
+|-----------|------------|---------|-------|------|
+| Golang    | 2014-05-05 | 1.2.2 | [x86](data/Golang/x86/mcrit/golang_1.2.2_x86.mcrit) / x64 | [x86](data/Golang/x86/smda/golang_1.2.2_x86.7z) / x64 |
+| Golang    | 2014-06-18 | 1.3 | [x86](data/Golang/x86/mcrit/golang_1.3_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.3_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.3_x86.7z) / [x64](data/Golang/x64/smda/golang_1.3_x64.7z) |
+| Golang    | 2014-12-10 | 1.4 | [x86](data/Golang/x86/mcrit/golang_1.4_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.4_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.4_x86.7z) / [x64](data/Golang/x64/smda/golang_1.4_x64.7z) |
+| Golang    | 2015-08-19 | 1.5 | [x86](data/Golang/x86/mcrit/golang_1.5_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.5_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.5_x86.7z) / [x64](data/Golang/x64/smda/golang_1.5_x64.7z) |
+| Golang    | 2016-02-17 | 1.6 | [x86](data/Golang/x86/mcrit/golang_1.6_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.6_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.6_x86.7z) / [x64](data/Golang/x64/smda/golang_1.6_x64.7z) |
+| Golang    | 2016-08-15 | 1.7 | [x86](data/Golang/x86/mcrit/golang_1.7_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.7_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.7_x86.7z) / [x64](data/Golang/x64/smda/golang_1.7_x64.7z) |
+| Golang    | 2017-02-16 | 1.8 | [x86](data/Golang/x86/mcrit/golang_1.8_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.8_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.8_x86.7z) / [x64](data/Golang/x64/smda/golang_1.8_x64.7z) |
+| Golang    | 2017-08-24 | 1.9 | [x86](data/Golang/x86/mcrit/golang_1.9_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.9_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.9_x86.7z) / [x64](data/Golang/x64/smda/golang_1.9_x64.7z) |
+| Golang    | 2018-02-16 | 1.10 | [x86](data/Golang/x86/mcrit/golang_1.10_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.10_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.10_x86.7z) / [x64](data/Golang/x64/smda/golang_1.10_x64.7z) |
+| Golang    | 2018-08-24 | 1.11 | [x86](data/Golang/x86/mcrit/golang_1.11_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.11_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.11_x86.7z) / [x64](data/Golang/x64/smda/golang_1.11_x64.7z) |
+| Golang    | 2019-02-25 | 1.12 | [x86](data/Golang/x86/mcrit/golang_1.12_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.12_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.12_x86.7z) / [x64](data/Golang/x64/smda/golang_1.12_x64.7z) |
+| Golang    | 2019-09-03 | 1.13 | [x86](data/Golang/x86/mcrit/golang_1.13_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.13_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.13_x86.7z) / [x64](data/Golang/x64/smda/golang_1.13_x64.7z) |
+| Golang    | 2020-02-25 | 1.14 | [x86](data/Golang/x86/mcrit/golang_1.14_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.14_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.14_x86.7z) / [x64](data/Golang/x64/smda/golang_1.14_x64.7z) |
+| Golang    | 2020-08-11 | 1.15 | [x86](data/Golang/x86/mcrit/golang_1.15_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.15_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.15_x86.7z) / [x64](data/Golang/x64/smda/golang_1.15_x64.7z) |
+| Golang    | 2021-02-16 | 1.16 | [x86](data/Golang/x86/mcrit/golang_1.16_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.16_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.16_x86.7z) / [x64](data/Golang/x64/smda/golang_1.16_x64.7z) |
+| Golang    | 2021-08-16 | 1.17 | [x86](data/Golang/x86/mcrit/golang_1.17_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.17_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.17_x86.7z) / [x64](data/Golang/x64/smda/golang_1.17_x64.7z) |
+| Golang    | 2022-03-15 | 1.18 | [x86](data/Golang/x86/mcrit/golang_1.18_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.18_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.18_x86.7z) / [x64](data/Golang/x64/smda/golang_1.18_x64.7z) |
+| Golang    | 2023-09-06 | 1.19.13 | [x86](data/Golang/x86/mcrit/golang_1.19.13_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.19.13_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.19.13_x86.7z) / [x64](data/Golang/x64/smda/golang_1.19.13_x64.7z) |
+| Golang    | 2024-02-06 | 1.20.14 | [x86](data/Golang/x86/mcrit/golang_1.20.14_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.20.14_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.20.14_x86.7z) / [x64](data/Golang/x64/smda/golang_1.20.14_x64.7z) |
+| Golang    | 2024-08-06 | 1.21.13 | [x86](data/Golang/x86/mcrit/golang_1.21.13_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.21.13_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.21.13_x86.7z) / [x64](data/Golang/x64/smda/golang_1.21.13_x64.7z) |
+| Golang    | 2025-02-04 | 1.22.12 | [x86](data/Golang/x86/mcrit/golang_1.22.12_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.22.12_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.22.12_x86.7z) / [x64](data/Golang/x64/smda/golang_1.22.12_x64.7z) |
+| Golang    | 2025-08-06 | 1.23.12 | [x86](data/Golang/x86/mcrit/golang_1.23.12_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.23.12_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.23.12_x86.7z) / [x64](data/Golang/x64/smda/golang_1.23.12_x64.7z) |
+| Golang    | 2026-02-04 | 1.24.13 | [x86](data/Golang/x86/mcrit/golang_1.24.13_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.24.13_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.24.13_x86.7z) / [x64](data/Golang/x64/smda/golang_1.24.13_x64.7z) |
+| Golang    | 2026-08-19 | 1.25.14 | [x86](data/Golang/x86/mcrit/golang_1.25.14_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.25.14_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.25.14_x86.7z) / [x64](data/Golang/x64/smda/golang_1.25.14_x64.7z) |
+| Golang    | 2026-09-01 | 1.26.8 | [x86](data/Golang/x86/mcrit/golang_1.26.8_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.26.8_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.26.8_x86.7z) / [x64](data/Golang/x64/smda/golang_1.26.8_x64.7z) |
 
 
 ### Microsoft Visual Studio<a id='msvc'></a>
