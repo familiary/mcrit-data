@@ -163,13 +163,13 @@ Built with no Microsoft-licensed material (rust-lld, mingw-w64 import libraries,
 
 | Name | Date | Version | Compiler | MCRIT | SMDA |
 |------|------|---------|----------|-------|------|
-| Rust crates | 2023-04-20 | rustc 1.69.0 | x86_64-pc-windows-msvc, opt3-ltofat | [35 MB](data/Rust/x64/mcrit/rust-crates_1.69.0_x86_64-pc-windows-msvc_opt3-ltofat.mcrit) | [13 MB](data/Rust/x64/smda/rust-crates_1.69.0_x86_64-pc-windows-msvc_opt3-ltofat.7z) |
+| Rust crates | 2023-04-20 | rustc 1.69.0 | x86_64-pc-windows-msvc, opt3-ltofat | [42 MB](data/Rust/x64/mcrit/rust-crates_1.69.0_x86_64-pc-windows-msvc_opt3-ltofat.mcrit) | [16 MB](data/Rust/x64/smda/rust-crates_1.69.0_x86_64-pc-windows-msvc_opt3-ltofat.7z) |
 | Rust crates | 2023-11-16 | rustc 1.74.0 | x86_64-unknown-linux-gnu, optz-ltofat | [16 MB](data/Rust/x64/mcrit/rust-crates_1.74.0_x86_64-unknown-linux-gnu_optz-ltofat.mcrit) | [7 MB](data/Rust/x64/smda/rust-crates_1.74.0_x86_64-unknown-linux-gnu_optz-ltofat.7z) |
 | Rust crates | 2024-06-13 | rustc 1.79.0 | x86_64-pc-windows-gnu, opt3-ltooff | [22 MB](data/Rust/x64/mcrit/rust-crates_1.79.0_x86_64-pc-windows-gnu_opt3-ltooff.mcrit) | [10 MB](data/Rust/x64/smda/rust-crates_1.79.0_x86_64-pc-windows-gnu_opt3-ltooff.7z) |
 | Rust crates | 2024-11-28 | rustc 1.83.0 | x86_64-pc-windows-msvc, opt3-ltooff | [30 MB](data/Rust/x64/mcrit/rust-crates_1.83.0_x86_64-pc-windows-msvc_opt3-ltooff.mcrit) | [11 MB](data/Rust/x64/smda/rust-crates_1.83.0_x86_64-pc-windows-msvc_opt3-ltooff.7z) |
-| Rust crates | 2025-05-15 | rustc 1.87.0 | x86_64-pc-windows-msvc, opts-ltooff | [24 MB](data/Rust/x64/mcrit/rust-crates_1.87.0_x86_64-pc-windows-msvc_opts-ltooff.mcrit) | [9 MB](data/Rust/x64/smda/rust-crates_1.87.0_x86_64-pc-windows-msvc_opts-ltooff.7z) |
-| Rust crates | 2026-03-05 | rustc 1.94.0 | i686-pc-windows-msvc, optz-ltofat | [33 MB](data/Rust/x86/mcrit/rust-crates_1.94.0_i686-pc-windows-msvc_optz-ltofat.mcrit) | [11 MB](data/Rust/x86/smda/rust-crates_1.94.0_i686-pc-windows-msvc_optz-ltofat.7z) |
-| Rust crates | 2026-04-16 | rustc 1.95.0 | x86_64-pc-windows-msvc, optz-ltooff | [67 MB](data/Rust/x64/mcrit/rust-crates_1.95.0_x86_64-pc-windows-msvc_optz-ltooff.mcrit) | [25 MB](data/Rust/x64/smda/rust-crates_1.95.0_x86_64-pc-windows-msvc_optz-ltooff.7z) |
+| Rust crates | 2025-05-15 | rustc 1.87.0 | x86_64-pc-windows-msvc, opts-ltooff | [44 MB](data/Rust/x64/mcrit/rust-crates_1.87.0_x86_64-pc-windows-msvc_opts-ltooff.mcrit) | [17 MB](data/Rust/x64/smda/rust-crates_1.87.0_x86_64-pc-windows-msvc_opts-ltooff.7z) |
+| Rust crates | 2026-03-05 | rustc 1.94.0 | i686-pc-windows-msvc, optz-ltofat | [37 MB](data/Rust/x86/mcrit/rust-crates_1.94.0_i686-pc-windows-msvc_optz-ltofat.mcrit) | [12 MB](data/Rust/x86/smda/rust-crates_1.94.0_i686-pc-windows-msvc_optz-ltofat.7z) |
+| Rust crates | 2026-04-16 | rustc 1.95.0 | x86_64-pc-windows-msvc, optz-ltooff | [74 MB](data/Rust/x64/mcrit/rust-crates_1.95.0_x86_64-pc-windows-msvc_optz-ltooff.mcrit) | [27 MB](data/Rust/x64/smda/rust-crates_1.95.0_x86_64-pc-windows-msvc_optz-ltooff.7z) |
 
 
 
