@@ -150,24 +150,36 @@ Settled by round 1 (run 36101417064), so not risks any more:
     ExAllocatePoolWithTag and one for ExAllocatePoolWithQuotaTag, which is
     exactly why the props file forces TreatWarningAsError false.
 
-Open risks, in the order they would bite. Round 2 has not run yet.
+Also settled by round 2 (dispatch run 36107196526, x64 green):
 
-  1. Whether the new HiddenLib step actually satisfies the CLI link. The
-     library is built into the pinned OutDir and the props file adds
-     $(OutDir) to AdditionalLibraryDirectories, but a StaticLibrary target
-     takes <Lib> rather than <Link>, so if upstream's project pins its own
-     output name or location the .lib may still land somewhere the CLI does
-     not look. The "dir /s out" step at the end of the build exists to answer
-     this from the log.
-  2. Whether HiddenCLI.exe clears min_named_ratio. Its PDB is forced, but the
-     library half arrives through a .lib whose debug information lives in a
-     separate compiler PDB, and if the linker cannot find
-     obj\\lib\\HiddenLib.compiler.pdb those functions link in unnamed. A leg
-     under the 0.5 floor is a finding about the build to record, not a floor
-     to move.
-  3. How much of Hidden.sys is Zydis rather than this project. Not a build
-     risk - a reporting one. The count has to be broken down before it is
-     quoted, the way BlackBoneDrv's 321 became 144.
+  - The HiddenLib step satisfies the CLI link. Both artefacts built and both
+    were named almost perfectly: Hidden.sys 506 of 507, HiddenCLI.exe 952 of
+    952. min_named_ratio was never in danger.
+  - Hidden.sys is 507 functions and 138 of them are this project's. The
+    subtractions are 150 MSVC string-literal COMDATs, 141 functions of three
+    instructions or fewer (import thunks into ntoskrnl), and 103 Zydis or
+    Zycore functions, 91 of them substantial. Zydis is a fifth of the image.
+  - HiddenCLI.exe at /MT was 952 functions and only about 130 of them were
+    this project's - everything else was statically linked CRT and STL. That
+    is the defect /MD now fixes, and the reason the user-mode props file
+    exists. The round-2 numbers above are therefore the /MT ones and will
+    change; re-measure from round 3 rather than quoting them.
+
+Open risks, in the order they would bite. Round 3 has not run yet.
+
+  1. Whether /MD actually links. Upstream chose /MT, and a project that has
+     never been built /MD can carry a mismatch the linker only finds at the
+     end - most often LNK2038 over _ITERATOR_DEBUG_LEVEL or RuntimeLibrary if
+     HiddenLib and HiddenCLI somehow disagree. They are built from the same
+     props file here, so they should not.
+  2. What HiddenCLI.exe is worth once the CRT leaves it. If /MD drops it to
+     roughly 130 functions the family is worth having; if the honest count
+     comes out near the floor of eight, that is a finding to record rather
+     than a number to talk up.
+  3. Whether Zydis inside Hidden.sys collides with anything on a
+     validate --deep PicHash sweep. Nothing in the corpus carries Zydis
+     today, so there is nothing for it to collide with yet - but adding a
+     Zydis family later would light this up, and the notes say so.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -177,31 +189,48 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 # compiler PDB is named $(IntDir)$(ProjectName).compiler.pdb rather than a
 # hardcoded stem, because two different projects import this one props file
 # and a fixed name would have them writing to each other's PDB.
+# TWO props files, not one, and the difference between them is RuntimeLibrary.
+#
+# corpus-drv.props goes to the driver and leaves RuntimeLibrary alone, for
+# blackbonedrv.py's and apicallproxy.py's reason: a kernel driver has no ucrt
+# to move out of the image.
+#
+# corpus-um.props goes to HiddenLib and HiddenCLI and forces
+# MultiThreadedDLL - /MD. Round 2 is why. Upstream builds the user-mode half
+# /MT, and the resulting HiddenCLI.exe came back 952 functions of which only
+# ~130 were this project's: the rest were the statically linked CRT and STL,
+# std::num_put, __crt_strtox, __acrt_fltout, the __FrameHandler4 EH machinery.
+# That is precisely what callobfuscator.py records for VX-API, where /MT put
+# 1947 of 4219 functions into the artefact as MSVC runtime, duplicating
+# data/MSVC - the corpus's own reference for exactly that code. /MD leaves it
+# in ucrtbase and vcruntime140 where it belongs.
+#
+# AdditionalLibraryDirectories is also user-mode only: it exists so the CLI
+# can find the HiddenLib.lib the step below puts in the pinned OutDir, and the
+# driver has no use for it. $(OutDir) rather than a literal, because a props
+# file cannot see cmd's %CD%.
 _PROPS = (
     'python -c "'
-    "open('corpus-msvc.props','w').write("
-    "'<Project><ItemDefinitionGroup><ClCompile>'"
-    "'<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>'"
-    "'<ProgramDataBaseFileName>$(IntDir)$(ProjectName).compiler.pdb"
-    "</ProgramDataBaseFileName>'"
-    "'<WholeProgramOptimization>false</WholeProgramOptimization>'"
-    "'<TreatWarningAsError>false</TreatWarningAsError>'"
-    "'</ClCompile><Link>'"
-    "'<GenerateDebugInformation>true</GenerateDebugInformation>'"
-    "'<ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>'"
-    "'<OptimizeReferences>false</OptimizeReferences>'"
-    "'<EnableCOMDATFolding>false</EnableCOMDATFolding>'"
-    "'<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>'"
-    # HiddenCLI names HiddenLib.lib as a plain linker input and the project
-    # carries no ProjectReference to produce it, so the library is built by
-    # its own step below into the same pinned OutDir. $(OutDir) rather than a
-    # literal, because OutDir is pinned identically for all three steps and a
-    # props file cannot see cmd's %CD%.
+    "c='<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>"
+    "<ProgramDataBaseFileName>$(IntDir)$(ProjectName).compiler.pdb"
+    "</ProgramDataBaseFileName>"
+    "<WholeProgramOptimization>false</WholeProgramOptimization>"
+    "<TreatWarningAsError>false</TreatWarningAsError>';"
+    "l='<GenerateDebugInformation>true</GenerateDebugInformation>"
+    "<ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>"
+    "<OptimizeReferences>false</OptimizeReferences>"
+    "<EnableCOMDATFolding>false</EnableCOMDATFolding>"
+    "<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>"
+    "<AdditionalOptions>%(AdditionalOptions) /Brepro /INCREMENTAL:NO"
+    "</AdditionalOptions>';"
+    "w=lambda f,a,b: open(f,'w').write("
+    "'<Project><ItemDefinitionGroup><ClCompile>'+a+'</ClCompile><Link>'"
+    "+b+'</Link></ItemDefinitionGroup></Project>');"
+    "w('corpus-drv.props',c,l);"
+    "w('corpus-um.props',"
+    "'<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>'+c,"
     "'<AdditionalLibraryDirectories>$(OutDir);"
-    "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>'"
-    "'<AdditionalOptions>%(AdditionalOptions) /Brepro /INCREMENTAL:NO"
-    "</AdditionalOptions>'"
-    "'</Link></ItemDefinitionGroup></Project>')"
+    "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>'+l)"
     '"')
 
 # The driver. No PlatformToolset override - the project already names the
@@ -215,7 +244,7 @@ _MSBUILD_DRV = ('msbuild Hidden\\Hidden.vcxproj '
                 '/p:SkipPackageVerification=true '
                 '/p:WholeProgramOptimization=false '
                 '/p:OutDir=%CD%\\out\\ /p:IntDir=%CD%\\obj\\drv\\ '
-                '/p:ForceImportBeforeCppTargets=%CD%\\corpus-msvc.props '
+                '/p:ForceImportBeforeCppTargets=%CD%\\corpus-drv.props '
                 '/m /v:minimal')
 
 # The static library, built in its own step because nothing else builds it.
@@ -230,7 +259,7 @@ _MSBUILD_LIB = ('msbuild HiddenLib\\HiddenLib.vcxproj '
                 '/p:PlatformToolset=v143 '
                 '/p:WholeProgramOptimization=false '
                 '/p:OutDir=%CD%\\out\\ /p:IntDir=%CD%\\obj\\lib\\ '
-                '/p:ForceImportBeforeCppTargets=%CD%\\corpus-msvc.props '
+                '/p:ForceImportBeforeCppTargets=%CD%\\corpus-um.props '
                 '/m /v:minimal')
 
 # The user-mode client. PlatformToolset IS overridden here, v142 -> v143, and
@@ -245,7 +274,7 @@ _MSBUILD_CLI = ('msbuild HiddenCLI\\HiddenCLI.vcxproj '
                 '/p:PlatformToolset=v143 '
                 '/p:WholeProgramOptimization=false '
                 '/p:OutDir=%CD%\\out\\ /p:IntDir=%CD%\\obj\\cli\\ '
-                '/p:ForceImportBeforeCppTargets=%CD%\\corpus-msvc.props '
+                '/p:ForceImportBeforeCppTargets=%CD%\\corpus-um.props '
                 '/m /v:minimal')
 
 # As in blackbonedrv.py: everything before the first semicolon is inherited
@@ -281,9 +310,11 @@ _FLAGS = ("Release|x64. All five of the solution's projects declare Debug and "
           "TreatWarningAsError false. Signing is turned off with "
           "SignMode=Off and driver-package validation with "
           "SkipPackageVerification=true, neither of which reaches the "
-          "compiler or the linker. RuntimeLibrary is left alone: the driver "
-          "has no ucrt to move out of the image, and the client's is "
-          "upstream's choice. The Hidden Package project, which runs Inf2Cat "
+          "compiler or the linker. RuntimeLibrary is split between the two "
+          "halves, which is why there are two props files: left alone for "
+          "the driver, which has no ucrt to move out of the image, and "
+          "forced to MultiThreadedDLL for HiddenLib and HiddenCLI, which "
+          "upstream builds /MT. The Hidden Package project, which runs Inf2Cat "
           "to produce a catalogue and no code, is not built; the binaries "
           "are linked and disassembled, never packaged, signed, installed or "
           "loaded")
