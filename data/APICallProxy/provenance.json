@@ -1,0 +1,51 @@
+{
+  "APICallProxy_2022-12-09_msvc143_x64_APICallProxy.sys": {
+    "architecture": "x64",
+    "build_flags": "Release|x64, the project's only configuration carrying link libraries: netio.lib, ntoskrnl.lib, hal.lib, wmilib.lib, $(KernelBufferOverflowLib) and KMDF's WdfLdr.lib and WdfDriverEntry.lib. The project sets no ClCompile settings in any configuration, so optimization, warning level and runtime library are the WindowsKernelModeDriver10.0 toolset's defaults rather than anything upstream chose. This recipe forces /Zi (DebugInformationFormat ProgramDatabase) with separate compiler and linker PDBs, a full /DEBUG, /OPT:NOREF /OPT:NOICF, no whole-program optimization at either end (/p:WholeProgramOptimization=false plus LinkTimeCodeGeneration Default), /Brepro, /INCREMENTAL:NO, and TreatWarningAsError false; signing is turned off with SignMode=Off and driver-package INF validation with SkipPackageVerification=true, neither of which reaches the compiler or the linker - the driver is linked and disassembled, never packaged or installed. RuntimeLibrary is left alone - a kernel driver has no ucrt to move out of the image",
+    "built_artifact": "out/APICallProxy.sys",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "component": "APICallProxy.sys",
+    "family": "APICallProxy",
+    "generated": "2026-09-23",
+    "is_blob": false,
+    "license": "MIT (Copyright (c) 2022 MahmoudZohdy); the Ks*/WSK socket layer in APICallProxy/Utility.h and Network.h is derived from wbenny/KSOCKET, itself MIT (Copyright (c) 2019 Petr Benes) but reproduced here without its copyright line or licence text, credited only by URL in the README's Reference section; APICallProxy/DisableDSE/hde64.h is Vyacheslav Patkov's Hacker Disassembler Engine 64, \"Copyright (c) 2008-2009 ... All rights reserved\" with no licence grant in the tree - it is not in this artefact, DisableDSE being one of the user-mode projects that are not built",
+    "mcrit": "data/APICallProxy/x64/mcrit/APICallProxy_2022-12-09_msvc143_x64_APICallProxy.sys.mcrit",
+    "notes": "A KMDF kernel driver that proxies the Nt*/Zw* API surface for user mode over a single DeviceIoControl entry point, so the call is made by the kernel and never appears on the user-mode side. 75 functions of its own in one translation unit - main.cpp includes all seven headers, which define rather than declare - across FileSystem.h 6, General.h 14, Network.h 12, Process.h 4, Registry.h 5, Thread.h 3, Utility.h 27 and main.cpp 4. Roughly 25 of the 75 are wbenny/KSOCKET's code carried into the tree by hand and are present here under the APICallProxy family: Utility.h's ten Ks* routines keep KSOCKET's own names, its five APIProxyAsyncContext* helpers are KSOCKET's KspAsyncContext* renamed, its four APIProxyAddrInfo*/FreeAddrInfo* conversions and its four byte-order helpers are berkeley.c's KspUtil* and htonl/htons/ntohl/ntohs, and Network.h's APIProxyWSAStartup and APIProxyWSACleanup are KsInitialize and KsDestroy with the WSK registration moved into a caller-owned struct. The remaining APIProxy* routines are thin dispatch wrappers over those and are this project's own. The seven user-mode .exe projects in the same solution hold one to four functions each, below MIN_USEFUL_FUNCTIONS, and are not built. The image also carries whatever kernel-mode runtime the WDK links in - the /GS support from KernelBufferOverflowLib, the KMDF WdfDriverEntry stub - and the compiler-runtime filter cannot recognise it, because the baseline it measures against is a user-mode ucrt/vcruntime build; those functions are therefore filed under this family and are not this project's code. The driver is linked and disassembled, never loaded: it is unsigned, and loading it would put an unauthenticated kernel-mode proxy for NtWriteVirtualMemory and NtQueueApcThread on the machine.",
+    "num_functions": 183,
+    "removed_runtime_functions": [
+      "ReadNoFence64",
+      "ReadPointerNoFence",
+      "__C_specific_handler",
+      "__GSHandlerCheck",
+      "__GSHandlerCheck_SEH",
+      "__castguard_check_failure_debugbreak",
+      "__castguard_check_failure_fastfail",
+      "__castguard_check_failure_nop",
+      "__castguard_compat_check",
+      "__castguard_slow_path_check_debugbreak",
+      "__castguard_slow_path_check_fastfail",
+      "__castguard_slow_path_check_nop",
+      "__castguard_slow_path_compat_check",
+      "__security_check_cookie",
+      "_guard_check_icall_nop",
+      "_guard_dispatch_icall",
+      "_guard_dispatch_icall_nop",
+      "_guard_icall_checks_enforced",
+      "_guard_rf_checks_enforced",
+      "_guard_xfg_dispatch_icall_nop",
+      "wcscpy",
+      "wcsstr"
+    ],
+    "sha256": "6491171cf1071210830d2ca4987be9375f81d6d2a66d4088af6a881e61ae01f8",
+    "smda": "data/APICallProxy/x64/smda/APICallProxy_2022-12-09_msvc143_x64_APICallProxy.sys.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "3a897e36a3f974d971c2d3dab63c296ac287cb91",
+      "git_ref": "3a897e36a3f974d971c2d3dab63c296ac287cb91",
+      "git_url": "https://github.com/MahmoudZohdy/APICallProxy.git"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://github.com/MahmoudZohdy/APICallProxy",
+    "version": "2022-12-09"
+  }
+}

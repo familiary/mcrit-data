@@ -1,0 +1,189 @@
+"""Render README table rows for generated families.
+
+The README lists every artefact in a per-project markdown table. Writing those
+rows by hand is how a wrong filename ends up in the table (cf. commit e84966e),
+so they are generated from the same provenance records the pipeline writes.
+
+    python scripts/build_corpus.py readme libzlib
+"""
+
+import json
+import os
+import re
+
+from . import config
+from .toolchain import image_format
+
+
+HEADER = ("| Name     | Version | Compiler | MCRIT | SMDA |\n"
+          "|----------|---------|----------|-------|------|")
+
+# A generated table is fenced in the README so it can be rewritten in place.
+# The comments do not render. Only tables that come wholly from a
+# provenance.json are fenced: libzlib and aPLib carry a Date column this
+# tooling has no source for, and stay hand-maintained.
+# Neither marker takes the surrounding newline with it. It did, and an empty
+# fence - a section added before its data existed - then could not match at
+# all: the opening marker had already eaten the newline the closing one was
+# looking for, so the match ran on to the *next* fence's close and the
+# rewrite swallowed every section in between. Six went missing that way.
+FENCE = re.compile(
+    r"(?P<open><!-- generated: (?P<family>[A-Za-z0-9_.+-]+) -->)"
+    r".*?"
+    r"(?P<close><!-- /generated -->)",
+    re.DOTALL)
+
+
+def _link(label, path):
+    return "[%s](%s)" % (label, path)
+
+
+def update_readme(path=None):
+    """Rewrite every fenced table in the README from the provenance records.
+
+    Returns the families whose block changed. A fence naming a family with no
+    provenance is an error rather than a no-op: it means the data it
+    describes has gone, and leaving the stale table in place is exactly the
+    failure this is here to prevent.
+    """
+    path = path or os.path.join(config.REPO_ROOT, "README.md")
+    with open(path, encoding="utf-8") as handle:
+        original = handle.read()
+
+    changed = []
+
+    def _replace(match):
+        family = match.group("family")
+        new = "%s\n%s\n%s" % (match.group("open"), render_family(family),
+                              match.group("close"))
+        if new != match.group(0):
+            changed.append(family)
+        return new
+
+    updated = FENCE.sub(_replace, original)
+    # A rewrite may only ever change what is inside the fences. Checking the
+    # headings survive is cheap and catches the class of bug that made this
+    # function delete six sections: anything that makes a fence fail to match
+    # lets the next match run past it and take real content with it.
+    before = original.count("\n### ")
+    after = updated.count("\n### ")
+    if before != after:
+        raise ValueError(
+            "rewriting the README would change the number of sections from "
+            "%d to %d; refusing to write it" % (before, after))
+    if updated != original:
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(updated)
+    return changed
+
+
+def render_family(family):
+    """Return the markdown table for one family, newest version last."""
+    path = os.path.join(config.DATA_DIR, family, "provenance.json")
+    if not os.path.exists(path):
+        raise FileNotFoundError("no provenance recorded for %s" % family)
+    with open(path, encoding="utf-8") as handle:
+        entries = json.load(handle)
+
+    # Group the per-architecture artefacts of one build onto a single row.
+    grouped = {}
+    for entry in entries.values():
+        # A blob records no toolchain at all - it was compiled upstream, and
+        # the host that ran the extraction is not what produced the code - so
+        # the grouping key falls back to the producer its filename names.
+        toolchain = entry.get("toolchain") or "msvc"
+        key = (entry["version"], toolchain.rsplit("_", 1)[0],
+               _component_key(entry["component"]))
+        grouped.setdefault(key, {})[entry["architecture"]] = entry
+
+    rows = []
+    for key in sorted(grouped, key=lambda k: (_version_key(k[0]), k[1], k[2])):
+        version, _, _ = key
+        by_arch = grouped[key]
+        first = next(iter(by_arch.values()))
+        # Raw shellcode is not a PE, so it must not be labelled as one - and
+        # neither is an ELF shared object. The container is read off the
+        # record's own toolchain id, not off the grouping key, which has had
+        # its architecture suffix removed and so no longer parses as one; and
+        # off the id rather than off a field of its own, so the ~200 records
+        # written before this corpus had a Linux side answer too. See
+        # toolchain.image_format.
+        label = ("code" if any(e.get("is_blob") for e in by_arch.values())
+                 else image_format(first.get("toolchain")))
+        mcrit_links = " / ".join(
+            _link("%s %s" % (arch, label), by_arch[arch]["mcrit"])
+            for arch in ("x86", "x64") if arch in by_arch)
+        smda_links = " / ".join(
+            _link("%s %s" % (arch, label), by_arch[arch]["smda"])
+            for arch in ("x86", "x64") if arch in by_arch)
+        compiler = _compiler_label(first)
+        rows.append("| %s | %s | %s | %s | %s |" % (family, version, compiler, mcrit_links, smda_links))
+    return "\n".join([HEADER] + rows)
+
+
+def _compiler_label(entry):
+    """Human readable compiler column, e.g. "MinGW-w64 GCC 13"."""
+    compiler = entry.get("compiler", "")
+    if entry.get("is_blob"):
+        # The blob was compiled by whoever committed it, not by the toolchain
+        # that happened to run the extraction.
+        return "MSVC (as committed upstream)"
+    if "mingw" in (entry.get("toolchain") or ""):
+        version = compiler.split("(GCC)")[-1].strip().split("-")[0] if "(GCC)" in compiler else "?"
+        return "MinGW-w64 GCC %s" % version
+    if image_format(entry.get("toolchain")) == "ELF":
+        # The native GCC announces itself as "gcc (Ubuntu 13.3.0-6ubuntu2~
+        # 24.04.1) 13.3.0", where the last field is the version and the
+        # parenthesised part is the distribution's packaging string - which
+        # must not be printed, because a parenthesis closes a markdown link
+        # early and the column would be different on every distribution for
+        # the same compiler. The target is named because that is the whole
+        # difference between this row and a MinGW one.
+        version = compiler.split()[-1].split(".")[0] if compiler else "?"
+        return "GCC %s (Linux, glibc)" % version
+    # cl.exe announces itself as "Microsoft (R) C/C++ Optimizing Compiler
+    # Version 19.44.35228 for x64". Printing that verbatim would be wrong as
+    # well as long: one row spans both architectures, and the entry this
+    # label is taken from is whichever of the two came first, so the x86
+    # links in the row would sit under a column saying "for x64". The
+    # architectures are already named in the links themselves.
+    #
+    # The toolset is named because that is what a reader matching a binary
+    # against this data wants, and it is derived rather than hardcoded. The
+    # rule is toolchain._detect_msvc's, deliberately and not coincidentally:
+    # that function turns the same banner into the "msvc143" in every one of
+    # these filenames, so a second rule here could put a v142 label on a row
+    # of msvc143 files. A version it does not recognise falls back to the
+    # bare number rather than claiming a toolset nobody checked.
+    match = re.search(r"Version (\d+)\.(\d+)", compiler)
+    if "Microsoft" in compiler and match:
+        major, minor = int(match.group(1)), int(match.group(2))
+        toolset = {"143": " (Visual Studio 2022, v143)",
+                   "142": " (Visual Studio 2019, v142)",
+                   "141": " (Visual Studio 2017, v141)"}
+        year = ""
+        if major == 19:
+            year = toolset["143" if minor >= 30
+                           else "142" if minor >= 20 else "141"]
+        return "MSVC %d.%d%s" % (major, minor, year)
+    return compiler or entry.get("toolchain", "")
+
+
+def _component_key(component):
+    """Component name with any architecture suffix removed.
+
+    A blob's component has to name its architecture, because the same source
+    file yields a 32- and a 64-bit variant; for table grouping those are two
+    halves of one row, not two rows.
+    """
+    for suffix in ("_x86", "_x64"):
+        if component.endswith(suffix):
+            return component[:-len(suffix)]
+    return component
+
+
+def _version_key(version):
+    parts = []
+    for chunk in version.replace("-", ".").split("."):
+        parts.append((0, int(chunk)) if chunk.isdigit() else (1, 0))
+    return parts

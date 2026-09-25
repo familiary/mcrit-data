@@ -1,0 +1,58 @@
+{
+  "donut_1.1_msvc_x64_loader_x64": {
+    "architecture": "x64",
+    "build_flags": "MSVC -Zp8 -Gy -Os -O1 -GR- -EHa -Oi -GS- (Makefile.msvc, as committed upstream)",
+    "built_artifact": "donut_loader_x64.bin",
+    "compiler": "MSVC (upstream, exact version unknown)",
+    "component": "loader_x64",
+    "family": "donut",
+    "generated": "2026-09-20",
+    "is_blob": true,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/donut/x64/mcrit/donut_1.1_msvc_x64_loader_x64.mcrit",
+    "notes": "The loader blobs committed upstream in loader_exe_x86.h and loader_exe_x64.h, which is the code donut embeds in its output. The generator is not built: it statically links the vendored lib/aplib64.lib, and aPLib is already a family in this repository. The blobs carry aPLib code as well - Makefile.msvc compiles loader/depack.c, aPLib's C depacker by Joergen Ibsen, into the loader - and that one is unavoidable, because it is part of the loader donut ships rather than a build-time choice. It is not a second copy of what data/aPLib holds: that family carries the assembly depackers and the packer, and shares no PicHash with either blob.",
+    "num_functions": 52,
+    "sha256": "da0ac2320629d45cd2669a4a21003ecde56bd11f73fa8bfb21abec3863407a1f",
+    "smda": "data/donut/x64/smda/donut_1.1_msvc_x64_loader_x64.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "47758d787209dd1744f58c140102ac91b649df16",
+      "git_ref": "47758d787209dd1744f58c140102ac91b649df16",
+      "git_url": "https://github.com/TheWover/donut.git",
+      "submodules": [
+        "fcdcc35d591c954251d96642b93040527cee608d generators/go-donut (heads/master)"
+      ]
+    },
+    "toolchain": null,
+    "upstream": "https://github.com/TheWover/donut",
+    "version": "1.1"
+  },
+  "donut_1.1_msvc_x86_loader_x86": {
+    "architecture": "x86",
+    "build_flags": "MSVC -Zp8 -Gy -Os -O1 -GR- -EHa -Oi -GS- (Makefile.msvc, as committed upstream)",
+    "built_artifact": "donut_loader_x86.bin",
+    "compiler": "MSVC (upstream, exact version unknown)",
+    "component": "loader_x86",
+    "family": "donut",
+    "generated": "2026-09-20",
+    "is_blob": true,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/donut/x86/mcrit/donut_1.1_msvc_x86_loader_x86.mcrit",
+    "notes": "The loader blobs committed upstream in loader_exe_x86.h and loader_exe_x64.h, which is the code donut embeds in its output. The generator is not built: it statically links the vendored lib/aplib64.lib, and aPLib is already a family in this repository. The blobs carry aPLib code as well - Makefile.msvc compiles loader/depack.c, aPLib's C depacker by Joergen Ibsen, into the loader - and that one is unavoidable, because it is part of the loader donut ships rather than a build-time choice. It is not a second copy of what data/aPLib holds: that family carries the assembly depackers and the packer, and shares no PicHash with either blob.",
+    "num_functions": 60,
+    "sha256": "0c29cccff1b027d57c467564a333e9ade455144649909a4b797b09b43002ac71",
+    "smda": "data/donut/x86/smda/donut_1.1_msvc_x86_loader_x86.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "47758d787209dd1744f58c140102ac91b649df16",
+      "git_ref": "47758d787209dd1744f58c140102ac91b649df16",
+      "git_url": "https://github.com/TheWover/donut.git",
+      "submodules": [
+        "fcdcc35d591c954251d96642b93040527cee608d generators/go-donut (heads/master)"
+      ]
+    },
+    "toolchain": null,
+    "upstream": "https://github.com/TheWover/donut",
+    "version": "1.1"
+  }
+}

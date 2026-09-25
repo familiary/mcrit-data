@@ -159,4 +159,15 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 *2022_Pro_x86.mcrit
-scripts
+# Local scratch scripts are not tracked, but the reference-data tooling is.
+scripts/*
+!scripts/build_tables.py
+!scripts/build_corpus.py
+!scripts/refresh_provenance.py
+!scripts/explain_collisions.py
+!scripts/import_ci_artifacts.py
+!scripts/requirements.txt
+!scripts/corpus/
+
+# Working directory of scripts/build_corpus.py (downloads, source trees, logs).
+/build/
