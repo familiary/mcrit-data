@@ -69,7 +69,9 @@ Loaders and shellcode
 Offensive tooling
 * [VX-API](#vx-api)
 * [BlackBone](#blackbone)
+* [BlackBoneDrv](#blackbonedrv)
 * [SysWhispers](#syswhispers)
+* [Hidden](#hidden)
 
 ## Compilers
 
@@ -850,7 +852,7 @@ Generated with `scripts/build_corpus.py`; see `data/CallObfuscator/provenance.js
 
 ## Offensive tooling
 
-Public offensive-tooling code bases that are copied into implants more or less verbatim. Every one of them needs Visual Studio - ATL, the DIA SDK, MASM, or in BlackBone's driver's case a WDK - and they are built on a windows-2022 runner by `.github/workflows/windows-reference-data.yml` rather than approximated with GCC.
+Public offensive-tooling code bases that are copied into implants more or less verbatim. Every one of them needs Visual Studio - ATL, the DIA SDK, MASM, or in the two kernel drivers' case a WDK - and they are built on a windows-2022 runner by `.github/workflows/windows-reference-data.yml` rather than approximated with GCC.
 ### VX-API<a id='vx-api'></a>
 
 A collection of Win32 API-abuse routines. Upstream ships no static-library or DLL configuration, so the sources are compiled into one and linked with `/OPT:NOREF`, which keeps routines nothing calls - the point here is coverage, not a minimal binary. A small number of sources need ATL or `__try`/`__except` and are skipped.  
@@ -901,6 +903,17 @@ Generated with `scripts/build_corpus.py`; see `data/SysWhispers/provenance.json`
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | SysWhispers | 2021-07-06 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers/x64/mcrit/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.mcrit) | [x64 PE](data/SysWhispers/x64/smda/SysWhispers_2021-07-06_msvc143_x64_syscalls.dll.7z) |
+<!-- /generated -->
+
+### Hidden<a id='hidden'></a>
+
+A WDM filter driver that hides and protects filesystem objects, registry keys and processes, together with the user-mode client that drives it. The driver registers a filesystem minifilter and a registry callback, watches process creation against a rule set it keeps in memory, reads its configuration from the registry, and exposes the whole surface through a single `DeviceIoControl` switch. Two artefacts come out of the one solution: `Hidden.sys`, and `HiddenCLI.exe` with the `HiddenLib` static library linked into it - the `.lib` is an archive rather than a PE and is not collected on its own, so a match on the client may be a match on the library.  
+A large share of `Hidden.sys` is not this project's code: `Hidden/Disasm` carries a vendored Zydis 3.1.0 and Zycore 1.0.0 compiled into the driver, so a match landing in the instruction decoder is a match on Zydis. It is built with `ZYAN_NO_LIBC`, which changes what Zydis compiles, so those functions will not necessarily agree with a Zydis built the ordinary way.  
+The project carries no licence of any kind - no LICENSE or COPYING file and no copyright line in any of its own sources. The only licence text in the repository is the MIT header on the vendored Zydis and Zycore files. The `Hidden Package` project, which runs `Inf2Cat` over the driver's `.inf` to emit a catalogue and produces no code, is not built; the binaries are linked and disassembled, never packaged, signed, installed or loaded.  
+
+Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Hidden -->
 <!-- /generated -->
 
 ## String obfuscation
