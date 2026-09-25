@@ -29,6 +29,27 @@ Read this next to an existing recipe rather than instead of one:
 5. Import the artefacts in a second commit, then regenerate the fence with
    `build_corpus.py readme <Family>`.
 
+### Iterate with `workflow_dispatch`, not with pushes
+
+A push rebuilds the entire corpus and takes about fifty minutes. A new driver
+recipe will not be right first time, so do not spend that on every attempt.
+The workflow already takes a `recipes` input - space separated recipe keys, or
+`all-msvc` - so a single recipe can be built on its own in a few minutes:
+
+```
+gh workflow run windows-reference-data.yml \
+   --ref <branch> -f recipes=<Family>_<version>
+```
+
+or the equivalent `actions_run_trigger` / `run_workflow` MCP call with
+`inputs: {"recipes": "<Family>_<version>"}`. The scoping step then uploads only
+that family's data, which is exactly what the import wants. Use the full push
+run to confirm nothing else regressed, and dispatch runs to iterate.
+
+This does not remove the need to be right before you push: a dispatch run still
+costs minutes, and the checks under "Open risks are part of the recipe" below
+are cheaper than any of them.
+
 ## What the runner actually has
 
 `.github/workflows/windows-reference-data.yml` contains no WDK setup. It runs
