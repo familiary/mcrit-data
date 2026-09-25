@@ -54,6 +54,47 @@ the build takes whatever the image carries. That means the build is not
 reproducible across runner images from the recipe alone. Read the resolved
 version out of the build log and put it in `notes`.
 
+### x86 kernel drivers cannot be built. Declare `msvc_x64` and move on
+
+This is the single rule most likely to save you a red round. WDK 10.0.26100 -
+the kit on `windows-2022` - **does not support Win32 kernel-mode targets at
+all**. A driver recipe declaring `msvc_x86` fails during msbuild target
+evaluation, before any compiler runs:
+
+```
+C:\Program Files (x86)\Windows Kits\10\build\10.0.26100.0\WindowsDriver.common.targets(271,5):
+  error :  'Win32' is not a valid architecture for Kernel mode drivers or UMDF drivers
+```
+
+The kit's import libraries confirm it: `Lib\10.0.26100.0\km\` contains `arm64`
+and `x64` and **no `x86` directory whatsoever**. So this is not something a
+property, a retarget or a source fix can work around.
+
+It holds regardless of what the project offers. Hidden's five projects all
+declare `Release|Win32` and no source refuses x86, and it still cannot build -
+`hidden.py` declares both legs in round 1 and paid a red CI job for it. So:
+
+> For the driver artefact, declare `toolchains=["msvc_x64"]`. Do not infer the
+> architecture from the `.vcxproj`.
+
+BlackBoneDrv reaching the same place from the project's side (all eight of its
+configurations are x64, and its header `#error`s on `_M_IX86`) hid this for a
+while - it looked like a property of that project rather than of the kit.
+
+**Do not trust the probe on this point.** It reports the
+`WindowsKernelModeDriver10.0` toolset PRESENT and lists a `Platforms\Win32`
+directory for it, because that directory genuinely exists. The targets file and
+the import libraries still refuse x86. PRESENT means installed, not buildable.
+
+**Watch the blast radius when you narrow.** `toolchains` is declared per
+*recipe*, not per artefact, so narrowing a recipe that also builds user-mode
+binaries drops their x86 builds too, and those would usually have compiled
+fine. If the user-mode half is worth an x86 build, give it its own family on the
+BlackBone/BlackBoneDrv pattern rather than dragging it down to the driver's
+architecture - remembering that two recipes must not share a
+`(family, version)` key. Do that once the user-mode half is known to build; a
+speculative split just risks two red recipes instead of one.
+
 ## Writing the recipe
 
 ### Do not retarget the kernel toolset

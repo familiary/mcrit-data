@@ -86,36 +86,70 @@ project's, and because ZYAN_NO_LIBC changes what Zydis compiles, they will
 not necessarily match a Zydis built the ordinary way. The notes say so, and
 this is a good argument for adding Zydis as a family in its own right.
 
-Both architectures. All five projects declare Debug|Win32, Debug|x64,
-Release|Win32 and Release|x64, and nothing in the driver sources refuses x86
-the way BlackBoneDrv.h:3 does. So both legs are declared. The x86 driver leg
-is the least certain thing in this recipe - see "Open risks".
+x64 only, and not because the project says so. All five projects declare
+Debug|Win32, Debug|x64, Release|Win32 and Release|x64, and nothing in the
+driver sources refuses x86 the way BlackBoneDrv.h:3 does. The first round
+declared both legs on that basis and the x86 leg failed, for a reason that
+belongs to the WDK rather than to this project (run 36101417064, job
+107964495363):
+
+    WindowsDriver.common.targets(271,5): error :
+     'Win32' is not a valid architecture for Kernel mode drivers or UMDF drivers
+
+That is the WDK's own architecture guard, hit during target evaluation - no
+cl.exe or link.exe ever ran. WDK 10.0.26100 carries kernel-mode import
+libraries for x64 and ARM64 only; the same run's probe lists
+Lib\10.0.26100.0\km\arm64 and km\x64 and there is no km\x86 directory at all.
+So an x86 kernel driver cannot be built on this runner by any recipe, and this
+one is x64 only as a property of the toolchain rather than of the project.
+
+Worth knowing before trusting the probe: it reports the
+WindowsKernelModeDriver10.0 toolset PRESENT and lists a Platforms\Win32
+directory for it. The toolset directory exists for Win32; the targets file and
+the import libraries still refuse it. PRESENT there does not mean buildable.
+
+That decision costs the x86 build of HiddenCLI, which is user-mode and would
+very likely have compiled, because toolchains is declared per recipe rather
+than per artefact. That is a deliberate trade for now: the user-mode half has
+never been built at all - the driver step fails first, so the CLI step has
+never run on either leg - and splitting it into its own family on the
+BlackBone/BlackBoneDrv pattern is worth doing once it is known to build,
+not before. If the x64 CLI comes back healthy, a HiddenCLI family declaring
+both legs is the follow-up.
 
 Upstream pins nothing and builds nothing. No .gitmodules, no submodules, no
 nuget packages, no Directory.Build.props, no makefile, no CI workflow, and a
 README "Building" section that gives GUI steps only. The msbuild command
 lines below are this recipe's construction, not upstream's.
 
-Open risks, in the order they would bite:
+Settled by round 1 (run 36101417064), so not risks any more:
 
-  1. The x86 driver leg. A Win32 kernel-mode target on WDK 10.0.26100 is the
-     part most likely to fail outright, either because the toolset declines
-     the target or because a source assumption is x64-only. If it fails, the
-     fix is to narrow toolchains to ["msvc_x64"] and record why here - not to
-     lower a gate. The x64 leg is the one this recipe expects to carry the
-     family.
-  2. The v142 -> v143 retarget on HiddenCLI. blackbone.py does the same
+  - The x86 driver leg fails, and cannot be made to pass. See "x64 only"
+    above. The recipe now declares msvc_x64 alone.
+
+Open risks, in the order they would bite. None of these has been tested yet:
+the driver step failed first on the only leg that ran, so nothing below has
+ever executed.
+
+  1. The v142 -> v143 retarget on HiddenCLI. blackbone.py does the same
      retarget successfully, but that is a different codebase; C++ that built
      under VS2019 can need a fix or two under v143.
-  3. HiddenCLI's named ratio on x86. It is C++ with exception handling, and
-     blackbone.py's x86 leg lands at 0.523 against a 0.5 floor because of
-     32-bit unwind funclets. If HiddenCLI x86 comes in under the floor that
-     is a fact about the build to record, not a floor to move.
-  4. fltmgr.lib. The driver links $(DDK_LIB_PATH)\\fltmgr.lib explicitly. The
+  2. HiddenLib and the pinned OutDir. HiddenCLI links HiddenLib. If that is a
+     ProjectReference, msbuild propagates the pinned OutDir/IntDir to it and
+     the link resolves. If instead the project names the .lib through
+     AdditionalDependencies with an explicit
+     $(SolutionDir)$(Platform)\\$(Configuration)\\ path, then pinning OutDir
+     moves the library out from under it and the link fails with LNK1104. The
+     fix in that case is to stop pinning OutDir for the CLI step only, and
+     adjust that artefact's path - never for the driver step, where the pin is
+     what keeps upstream's committed output directory out of the corpus.
+  3. fltmgr.lib. The driver links $(DDK_LIB_PATH)\\fltmgr.lib explicitly. The
      workflow's probe covers ntoskrnl.lib, hal.lib, wmilib.lib and netio.lib
-     but not fltmgr.lib; it is part of the same km lib directory and should be
-     present, but it has not been probed.
-  5. /INTEGRITYCHECK is in the driver's AdditionalOptions. It is a link-time
+     but not fltmgr.lib, and round 1 never reached a link step, so its
+     presence is still unconfirmed - the string does not appear anywhere in
+     that run's log. It is part of the same km lib directory and should be
+     there.
+  4. /INTEGRITYCHECK is in the driver's AdditionalOptions. It is a link-time
      flag that sets a PE characteristic requiring a signature at load time.
      It does not require signing to link, and nothing here loads the image.
 """
@@ -177,9 +211,13 @@ _MSBUILD_CLI = ('msbuild HiddenCLI\\HiddenCLI.vcxproj '
 # rather than chosen, and this records that rather than inventing a flag
 # list. If a build succeeds, the compile line in its log is what this string
 # should be rewritten from.
-_FLAGS = ("Release, for both Win32 and x64 - all five of the solution's "
-          "projects declare Debug and Release for both platforms and the "
-          "sources refuse neither. The driver is ConfigurationType Driver "
+_FLAGS = ("Release|x64. All five of the solution's projects declare Debug and "
+          "Release for both Win32 and x64 and the sources refuse neither, but "
+          "WDK 10.0.26100 does: WindowsDriver.common.targets rejects Win32 "
+          "for kernel-mode drivers outright, and the kit carries km import "
+          "libraries for x64 and ARM64 only, with no km\\x86 directory at "
+          "all. So the architecture is the toolchain's choice here, not the "
+          "project's. The driver is ConfigurationType Driver "
           "with DriverType WDM on the WindowsKernelModeDriver10.0 toolset, "
           "so ntoskrnl.lib, hal.lib and the /GS support library come from "
           "the WDK's property sheets; the project adds "
@@ -260,11 +298,18 @@ RECIPES = {
                      component="HiddenCLI.exe",
                      pdb="out\\HiddenCLI.pdb"),
         ],
-        # Both legs, unlike blackbonedrv.py. That recipe is x64-only because
-        # all eight of its configurations are x64 and its header refuses
-        # _M_IX86 outright; neither is true here. The x86 driver leg is the
-        # first open risk listed in the module docstring.
-        toolchains=["msvc_x86", "msvc_x64"],
+        # x64 only, and measured rather than inferred. Round 1 declared both
+        # legs - the project offers Win32 and x64 for all five of its projects
+        # and no source refuses x86 - and the x86 leg failed in the WDK's own
+        # architecture guard before a compiler ran: "'Win32' is not a valid
+        # architecture for Kernel mode drivers or UMDF drivers". WDK
+        # 10.0.26100 has km import libraries for x64 and ARM64 only. So this
+        # matches blackbonedrv.py's single leg for a different reason: that
+        # recipe is x64-only because the project is, this one because the kit
+        # is. The cost is the x86 HiddenCLI, which is user-mode and would
+        # probably have built - see the docstring on splitting it out once the
+        # user-mode half is known to build at all.
+        toolchains=["msvc_x64"],
         build_flags=_FLAGS,
         # Left at the default True. For HiddenCLI.exe it will do real work -
         # that is an ordinary user-mode C++ image linked against the ucrt,
