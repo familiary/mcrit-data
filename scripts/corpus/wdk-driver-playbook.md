@@ -358,6 +358,34 @@ Say in `notes` that the driver is linked and disassembled, never packaged,
 signed, installed or loaded. For unsigned kernel-mode code that is the honest
 and relevant fact.
 
+## A kernel+user-mode recipe needs two props files
+
+The moment a recipe builds both a driver and the user-mode programs that talk
+to it, one forced props file stops being enough, and the field that splits them
+is `RuntimeLibrary`.
+
+- **Driver: leave it alone.** A kernel driver has no ucrt to move out of the
+  image. `blackbonedrv.py` and `apicallproxy.py` both say so.
+- **User mode: force `MultiThreadedDLL`,** i.e. `/MD`. Projects routinely ship
+  `/MT`, which links the CRT and the STL statically, and that code then enters
+  the corpus under the project's name and duplicates `data/MSVC`, which is this
+  corpus's reference for exactly it.
+
+The cost of getting this wrong is large and quiet, because the build is green
+either way. `callobfuscator.py` records `/MT` putting 1947 of VX-API's 4219
+functions into that artefact as MSVC runtime. `hidden.py` measured the same
+thing: `HiddenCLI.exe` came back 952 functions at `/MT`, of which roughly 130
+were the project's - `std::num_put`, `__crt_strtox`, `__acrt_fltout` and the
+`__FrameHandler4` exception machinery made up the rest. At `/MD` the same
+binary is 525 functions with 147 its own. The compiler-runtime filter is not a
+substitute: it had already removed 6792 names from the `/MT` image and what it
+could not reach still outweighed the real code six to one.
+
+So write two files in the props step - `corpus-drv.props` and
+`corpus-um.props`, sharing the compile and link settings and differing in
+`RuntimeLibrary` (and in `AdditionalLibraryDirectories`, which only the
+user-mode side needs) - and point each msbuild step at the right one.
+
 ## Counting functions honestly
 
 A driver's reported function count will overstate its own code, and by a lot.
