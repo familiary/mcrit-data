@@ -151,6 +151,28 @@ Ben Herzog wrote a great [reverser's guide to Rust](https://research.checkpoint.
 | Rust RE-Tour | 2023-06-01 | Rosetta  | x86 / [x64](data/Rust/x64/smda/rust_re_tour_rosetta.7z)                                           |x86 / [x64](data/Rust/x64/mcrit/rust_re_tour_rosetta.mcrit)                                               |
 
 
+#### Rust crates (matchplate)<a id='rustcrates'></a>
+
+Reference code for the Rust standard library and commonly used crates.io crates, built with matchplate at the exact rustc version, target and release profile of real samples. Each crate is built through its **own test suite**, which instantiates its generics over concrete types — an `.rlib` retains only non-generic code. Every function is deduplicated on `(pic_hash, name)` and ingested per binary, so each crate keeps its own `lib.rust.<crate>` family and `lib.rust.std` is split out via a std donor.
+
+Names: `family=lib.rust.<crate>`, `version=<semver>`, `component=<rustc>-<triple>-<profile>`.
+
+**Pick the point that matches your sample** — rustc version first, then the `lto` axis. Exact-version reference data identified 43.9% more library code than one version off, while further distance costs under a point per version; the `lto` setting separates cleanly while `opt-level` barely does. As with Golang, loading many points at once inflates candidate clusters. A Rust binary usually names its compiler: panic paths embed `/rustc/<commit-hash>/library/...`, and the hash maps to a release in Rust's own channel manifests.
+
+Built with no Microsoft-licensed material (rust-lld, mingw-w64 import libraries, own CRT stubs).
+
+| Name | Date | Version | Compiler | MCRIT | SMDA |
+|------|------|---------|----------|-------|------|
+| Rust crates | 2023-04-20 | rustc 1.69.0 | x86_64-pc-windows-msvc, opt3-ltofat | [42 MB](data/Rust/x64/mcrit/rust-crates_1.69.0_x86_64-pc-windows-msvc_opt3-ltofat.mcrit) | [16 MB](data/Rust/x64/smda/rust-crates_1.69.0_x86_64-pc-windows-msvc_opt3-ltofat.7z) |
+| Rust crates | 2023-11-16 | rustc 1.74.0 | x86_64-unknown-linux-gnu, optz-ltofat | [16 MB](data/Rust/x64/mcrit/rust-crates_1.74.0_x86_64-unknown-linux-gnu_optz-ltofat.mcrit) | [7 MB](data/Rust/x64/smda/rust-crates_1.74.0_x86_64-unknown-linux-gnu_optz-ltofat.7z) |
+| Rust crates | 2024-06-13 | rustc 1.79.0 | x86_64-pc-windows-gnu, opt3-ltooff | [22 MB](data/Rust/x64/mcrit/rust-crates_1.79.0_x86_64-pc-windows-gnu_opt3-ltooff.mcrit) | [10 MB](data/Rust/x64/smda/rust-crates_1.79.0_x86_64-pc-windows-gnu_opt3-ltooff.7z) |
+| Rust crates | 2024-11-28 | rustc 1.83.0 | x86_64-pc-windows-msvc, opt3-ltooff | [30 MB](data/Rust/x64/mcrit/rust-crates_1.83.0_x86_64-pc-windows-msvc_opt3-ltooff.mcrit) | [11 MB](data/Rust/x64/smda/rust-crates_1.83.0_x86_64-pc-windows-msvc_opt3-ltooff.7z) |
+| Rust crates | 2025-05-15 | rustc 1.87.0 | x86_64-pc-windows-msvc, opts-ltooff | [44 MB](data/Rust/x64/mcrit/rust-crates_1.87.0_x86_64-pc-windows-msvc_opts-ltooff.mcrit) | [17 MB](data/Rust/x64/smda/rust-crates_1.87.0_x86_64-pc-windows-msvc_opts-ltooff.7z) |
+| Rust crates | 2026-03-05 | rustc 1.94.0 | i686-pc-windows-msvc, optz-ltofat | [37 MB](data/Rust/x86/mcrit/rust-crates_1.94.0_i686-pc-windows-msvc_optz-ltofat.mcrit) | [12 MB](data/Rust/x86/smda/rust-crates_1.94.0_i686-pc-windows-msvc_optz-ltofat.7z) |
+| Rust crates | 2026-04-16 | rustc 1.95.0 | x86_64-pc-windows-msvc, optz-ltooff | [74 MB](data/Rust/x64/mcrit/rust-crates_1.95.0_x86_64-pc-windows-msvc_optz-ltooff.mcrit) | [27 MB](data/Rust/x64/smda/rust-crates_1.95.0_x86_64-pc-windows-msvc_optz-ltooff.7z) |
+
+
+
 
 ## Libraries
 
