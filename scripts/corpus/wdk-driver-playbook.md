@@ -43,8 +43,27 @@ gh workflow run windows-reference-data.yml \
 
 or the equivalent `actions_run_trigger` / `run_workflow` MCP call with
 `inputs: {"recipes": "<Family>_<version>"}`. The scoping step then uploads only
-that family's data, which is exactly what the import wants. Use the full push
-run to confirm nothing else regressed, and dispatch runs to iterate.
+that family's data, which is exactly what the import wants.
+
+**Dispatch on a scratch branch, not on the branch you are pushing to.** The
+workflow declares
+
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+so a dispatch on the same ref **cancels the full run already building there**.
+That is easy to do by accident and the cancellation arrives as a check failure,
+which reads like a broken build until you look at the conclusion and see
+`cancelled`. It cost a completed 50-minute run here, including its uploaded
+artefacts.
+
+Push the recipe to a scratch branch and dispatch against that. The two runs then
+have different `github.ref`, so the single-recipe loop and the full-corpus run
+coexist instead of killing each other. Merge the branch once the recipe is
+green.
 
 This does not remove the need to be right before you push: a dispatch run still
 costs minutes, and the checks under "Open risks are part of the recipe" below
