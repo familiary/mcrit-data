@@ -185,10 +185,43 @@ A packaging project (`ConfigurationType=Utility`, `DriverType=Package`) runs
 often tell you to build it - that advice is for people installing the driver,
 not fingerprinting it. Skip it, and say in `notes` that you did.
 
-Static-library projects are worth skipping too: `.lib` is an archive, not a PE,
-and the pipeline wants PEs. Build an executable that links the library instead,
-and record in `notes` that a match on that executable may be a match on the
-library.
+### Check for a ProjectReference before assuming msbuild builds dependencies
+
+Static-library projects are not collected: `.lib` is an archive, not a PE, and
+the pipeline wants PEs. Build an executable that links the library instead, and
+record in `notes` that a match on that executable may be a match on the library.
+
+But "not collected" is not "not built", and conflating the two cost `hidden.py`
+a red round. Building `App.vcxproj` builds its dependency **only if the project
+declares a `ProjectReference`**. Many solutions do not: they name the import
+library as a bare linker input and rely on the solution's build order to have
+produced it. Build such a `.vcxproj` on its own and you get:
+
+```
+LINK : fatal error LNK1181: cannot open input file 'HiddenLib.lib'
+```
+
+after every translation unit has compiled perfectly. Note it is **LNK1181**
+("cannot open input file" - nothing ever produced it), not LNK1104, which is
+what you would see if the file existed somewhere the linker was not looking.
+The two point at different bugs and it is worth reading the number.
+
+So before writing the build steps, grep the consumer's `.vcxproj` for
+`ProjectReference`. If there is none, give the library its own msbuild step
+ahead of the consumer, into the same pinned `OutDir`, and add that directory to
+the linker's search path from the shared props file:
+
+```xml
+<AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+```
+
+Use `$(OutDir)`, not a literal path: a props file cannot see cmd's `%CD%`, and
+`OutDir` is pinned to the same place for every step anyway. Give the library its
+own `IntDir` so its compiler PDB does not collide with the consumer's - and note
+that a `StaticLibrary` target takes `<Lib>` rather than `<Link>`, so the props
+file's `<Link>` half is simply ignored for it. The `<ClCompile>` half still
+applies, which is the part that matters: it puts the library's debug information
+where the consumer's linker can fold it into the final PDB.
 
 ### Recipe fields
 

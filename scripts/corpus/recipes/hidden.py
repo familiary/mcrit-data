@@ -22,16 +22,31 @@ analyst will meet in samples, and a reference fingerprint is what lets it be
 named rather than re-reverse-engineered. It is disassembled, never loaded.
 
 Which projects are built, and which are not. Hidden.sln carries five
-projects. Two are built here:
+projects. Three are built here, in this order:
 
   Hidden/Hidden.vcxproj       ConfigurationType Driver, DriverType WDM,
                               PlatformToolset WindowsKernelModeDriver10.0
                               -> Hidden.sys
+  HiddenLib/HiddenLib.vcxproj ConfigurationType StaticLibrary, toolset v142
+                              -> HiddenLib.lib. Not collected as an artefact -
+                                 a .lib is an archive, not a PE - but it must
+                                 be built, because nothing else produces it.
   HiddenCLI/HiddenCLI.vcxproj ConfigurationType Application, toolset v142
-                              -> HiddenCLI.exe, statically linked against
-                                 HiddenLib.lib through a ProjectReference
+                              -> HiddenCLI.exe, with HiddenLib.lib linked in
 
-Three are not:
+The order matters, and round 1 is why this recipe has three msbuild steps
+rather than two. HiddenCLI names HiddenLib.lib as a bare linker input and
+carries no ProjectReference to the library project, so building HiddenCLI
+alone does not build HiddenLib, and msbuild has nothing to satisfy the input
+with. The first round assumed the opposite and the x64 CLI link failed:
+
+    LINK : fatal error LNK1181: cannot open input file 'HiddenLib.lib'
+
+all nine of the CLI's translation units having compiled cleanly first. So the
+library gets its own step, into the same pinned OutDir, and the props file
+adds $(OutDir) to AdditionalLibraryDirectories so the linker looks there.
+
+Two projects are not built:
 
   Hidden Package/             ConfigurationType Utility, DriverType Package.
                               Produces no binary at all - it runs Inf2Cat
@@ -41,9 +56,6 @@ Three are not:
                               advice would drag catalogue signing into CI for
                               zero additional functions. Skipped deliberately;
                               see "Not the package project" below.
-  HiddenLib/                  A static library, and .lib is an archive rather
-                              than a PE. Its code reaches the corpus anyway,
-                              linked into HiddenCLI.exe.
   HiddenTests/                A second consumer of the same HiddenLib, so it
                               would contribute the library's code twice under
                               two slugs and little else.
@@ -124,34 +136,38 @@ lines below are this recipe's construction, not upstream's.
 
 Settled by round 1 (run 36101417064), so not risks any more:
 
-  - The x86 driver leg fails, and cannot be made to pass. See "x64 only"
+  - The x86 driver leg fails and cannot be made to pass. See "x64 only"
     above. The recipe now declares msvc_x64 alone.
+  - The x64 driver builds. "Hidden.vcxproj -> out\\Hidden.sys", and the
+    project's own signability test reported no errors and no warnings. So
+    fltmgr.lib is present on the runner after all - the driver links it
+    explicitly and the link succeeded - and /INTEGRITYCHECK caused nothing.
+    Both were open risks and neither was real.
+  - The v142 -> v143 retarget on HiddenCLI works. All nine of its translation
+    units compiled under v143 with no MSB8020 and no toolset complaint; the
+    step got as far as the linker.
+  - The driver compiles with 21 C4996 deprecation warnings for
+    ExAllocatePoolWithTag and one for ExAllocatePoolWithQuotaTag, which is
+    exactly why the props file forces TreatWarningAsError false.
 
-Open risks, in the order they would bite. None of these has been tested yet:
-the driver step failed first on the only leg that ran, so nothing below has
-ever executed.
+Open risks, in the order they would bite. Round 2 has not run yet.
 
-  1. The v142 -> v143 retarget on HiddenCLI. blackbone.py does the same
-     retarget successfully, but that is a different codebase; C++ that built
-     under VS2019 can need a fix or two under v143.
-  2. HiddenLib and the pinned OutDir. HiddenCLI links HiddenLib. If that is a
-     ProjectReference, msbuild propagates the pinned OutDir/IntDir to it and
-     the link resolves. If instead the project names the .lib through
-     AdditionalDependencies with an explicit
-     $(SolutionDir)$(Platform)\\$(Configuration)\\ path, then pinning OutDir
-     moves the library out from under it and the link fails with LNK1104. The
-     fix in that case is to stop pinning OutDir for the CLI step only, and
-     adjust that artefact's path - never for the driver step, where the pin is
-     what keeps upstream's committed output directory out of the corpus.
-  3. fltmgr.lib. The driver links $(DDK_LIB_PATH)\\fltmgr.lib explicitly. The
-     workflow's probe covers ntoskrnl.lib, hal.lib, wmilib.lib and netio.lib
-     but not fltmgr.lib, and round 1 never reached a link step, so its
-     presence is still unconfirmed - the string does not appear anywhere in
-     that run's log. It is part of the same km lib directory and should be
-     there.
-  4. /INTEGRITYCHECK is in the driver's AdditionalOptions. It is a link-time
-     flag that sets a PE characteristic requiring a signature at load time.
-     It does not require signing to link, and nothing here loads the image.
+  1. Whether the new HiddenLib step actually satisfies the CLI link. The
+     library is built into the pinned OutDir and the props file adds
+     $(OutDir) to AdditionalLibraryDirectories, but a StaticLibrary target
+     takes <Lib> rather than <Link>, so if upstream's project pins its own
+     output name or location the .lib may still land somewhere the CLI does
+     not look. The "dir /s out" step at the end of the build exists to answer
+     this from the log.
+  2. Whether HiddenCLI.exe clears min_named_ratio. Its PDB is forced, but the
+     library half arrives through a .lib whose debug information lives in a
+     separate compiler PDB, and if the linker cannot find
+     obj\\lib\\HiddenLib.compiler.pdb those functions link in unnamed. A leg
+     under the 0.5 floor is a finding about the build to record, not a floor
+     to move.
+  3. How much of Hidden.sys is Zydis rather than this project. Not a build
+     risk - a reporting one. The count has to be broken down before it is
+     quoted, the way BlackBoneDrv's 321 became 144.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -176,6 +192,13 @@ _PROPS = (
     "'<OptimizeReferences>false</OptimizeReferences>'"
     "'<EnableCOMDATFolding>false</EnableCOMDATFolding>'"
     "'<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>'"
+    # HiddenCLI names HiddenLib.lib as a plain linker input and the project
+    # carries no ProjectReference to produce it, so the library is built by
+    # its own step below into the same pinned OutDir. $(OutDir) rather than a
+    # literal, because OutDir is pinned identically for all three steps and a
+    # props file cannot see cmd's %CD%.
+    "'<AdditionalLibraryDirectories>$(OutDir);"
+    "%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>'"
     "'<AdditionalOptions>%(AdditionalOptions) /Brepro /INCREMENTAL:NO"
     "</AdditionalOptions>'"
     "'</Link></ItemDefinitionGroup></Project>')"
@@ -195,10 +218,28 @@ _MSBUILD_DRV = ('msbuild Hidden\\Hidden.vcxproj '
                 '/p:ForceImportBeforeCppTargets=%CD%\\corpus-msvc.props '
                 '/m /v:minimal')
 
-# The user-mode client. PlatformToolset IS overridden here, v142 -> v143.
-# HiddenLib is built as a ProjectReference of this project and inherits these
-# global properties, which is what puts HiddenLib.lib in out\ too; the .lib
-# is not collected, its code arrives inside HiddenCLI.exe.
+# The static library, built in its own step because nothing else builds it.
+# Round 1 assumed HiddenCLI would pull it in through a ProjectReference; it
+# does not - it names HiddenLib.lib as a bare linker input - so the CLI link
+# died with LNK1181 (see the docstring). A StaticLibrary target ignores the
+# props file's <Link> group and uses <Lib>, which is harmless; what matters is
+# that the ClCompile half still applies, so the library's compiler PDB lands
+# at obj\lib\HiddenLib.compiler.pdb and its symbols reach HiddenCLI.pdb.
+_MSBUILD_LIB = ('msbuild HiddenLib\\HiddenLib.vcxproj '
+                '/p:Configuration=Release /p:Platform={msbuild_platform} '
+                '/p:PlatformToolset=v143 '
+                '/p:WholeProgramOptimization=false '
+                '/p:OutDir=%CD%\\out\\ /p:IntDir=%CD%\\obj\\lib\\ '
+                '/p:ForceImportBeforeCppTargets=%CD%\\corpus-msvc.props '
+                '/m /v:minimal')
+
+# The user-mode client. PlatformToolset IS overridden here, v142 -> v143, and
+# round 1 proved that works: all nine translation units compiled, and the only
+# failure was the missing library. It finds HiddenLib.lib through the
+# AdditionalLibraryDirectories entry the props file adds, pointing at the same
+# pinned OutDir the step above writes to. The .lib is not collected as an
+# artefact - it is an archive, not a PE - its code arrives inside
+# HiddenCLI.exe.
 _MSBUILD_CLI = ('msbuild HiddenCLI\\HiddenCLI.vcxproj '
                 '/p:Configuration=Release /p:Platform={msbuild_platform} '
                 '/p:PlatformToolset=v143 '
@@ -277,6 +318,9 @@ RECIPES = {
         build=[
             BuildStep(_PROPS),
             BuildStep(_MSBUILD_DRV),
+            # Must precede the CLI: it is the only thing that produces
+            # HiddenLib.lib, which the CLI links by name.
+            BuildStep(_MSBUILD_LIB),
             BuildStep(_MSBUILD_CLI),
             # build.py reports a missing artefact by the path it expected and
             # nothing else. /s because a WDK that ignores the pinned OutDir
