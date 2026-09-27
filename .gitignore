@@ -168,6 +168,7 @@ scripts/*
 !scripts/import_ci_artifacts.py
 !scripts/requirements.txt
 !scripts/corpus/
+!scripts/golang/
 
 # Working directory of scripts/build_corpus.py (downloads, source trees, logs).
 /build/
