@@ -1,0 +1,50 @@
+{
+  "BlackBoneDrv_2023-07-17_msvc143_x64_BlackBoneDrv10.sys": {
+    "architecture": "x64",
+    "build_flags": "Win10Release|x64, the Win10 one of the project's four Release configurations; it defines _WIN10_, which selects NativeStructs10.h and with it the Windows 10 EPROCESS, MMVAD and handle-table layouts. All eight of the project's configurations are x64 and it carries no Win32 or ARM configuration at all. ConfigurationType Driver with DriverType WDM on the WindowsKernelModeDriver10.0 toolset, so ntoskrnl.lib, hal.lib and the /GS support library come from the WDK's property sheets - the project declares no AdditionalDependencies in any configuration. Beyond CompileAs C and the _WIN10_ define the project states no ClCompile or Link settings, so optimization, warning level, runtime library and debug format are the toolset's defaults rather than anything upstream chose. This recipe forces /Zi (DebugInformationFormat ProgramDatabase) with separate compiler and linker PDBs, a full /DEBUG, /OPT:NOREF /OPT:NOICF, no whole-program optimization at either end (/p:WholeProgramOptimization=false plus LinkTimeCodeGeneration Default), /Brepro, /INCREMENTAL:NO, and TreatWarningAsError false; TargetVersion is pinned to Windows10 because the configuration leaves the element empty, signing is turned off with SignMode=Off and driver-package validation with SkipPackageVerification=true, neither of which reaches the compiler or the linker - the driver is linked and disassembled, never packaged, signed, installed or loaded. RuntimeLibrary is left alone: a kernel driver has no ucrt to move out of the image",
+    "built_artifact": "out/BlackBoneDrv10.sys",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "component": "BlackBoneDrv10.sys",
+    "family": "BlackBoneDrv",
+    "generated": "2026-09-23",
+    "is_blob": false,
+    "license": "MIT (Copyright (c) 2015 DarthTon) for the project; two pieces of the driver are not covered by it and both are in this artefact. src/BlackBoneDrv/ldrreloc.c is Windows Research Kernel source, \"Copyright (c) Microsoft Corporation. All rights reserved.\", usable only under the Windows Research Kernel Source Code License agreement, which it points at as \"License.txt\" - a file that does not exist anywhere in the repository; it contributes LdrRelocateImage, LdrRelocateImageWithBias, LdrProcessRelocationBlock and LdrProcessRelocationBlockLongLong. src/BlackBoneDrv/VadHelpers.c carries no copyright header but is the same kernel's Mm AVL code verbatim, comment blocks and COUNT_BALANCE_MAX macro included, contributing MiPromoteNode, MiRebalanceNode, MiRemoveNode and MiFindNodeOrParent. src/BlackBoneDrv/apiset.h is Microsoft's too (\"Copyright (c) 2008 Microsoft Corporation\") but declares structures only and contributes no code",
+    "mcrit": "data/BlackBoneDrv/x64/mcrit/BlackBoneDrv_2023-07-17_msvc143_x64_BlackBoneDrv10.sys.mcrit",
+    "notes": "The kernel half of BlackBone, in its own solution and sharing no code with the user-mode library recorded under the BlackBone family - that one is C++ linked against the ucrt, this is C compiled against ntifs.h. A WDM driver (DriverType WDM, not KMDF) that manually maps images into other processes, injects and queues APCs, remaps one process's memory into another, edits VAD nodes and PTEs to hide or reprotect regions, hooks the SSDT and patches handle-table entries, all reached from user mode through a single DeviceIoControl switch in Dispatch.c. 139 functions of its own across 13 translation units, counted in the source under _WIN10_: BlackBoneDrv.c 5, Dispatch.c 1, Inject.c 4, Loader.c 14, MMap.c 19, NotifyRoutine.c 1, Private.c 13, Remap.c 25, Routines.c 21, Utils.c 23, VadHelpers.c 4, VadRoutines.c 5, ldrreloc.c 4. The built artefact reports 321 functions, which overstates that: 58 are MSVC string-literal COMDAT symbols (??_C@_...) sitting in the code sections and disassembled as one- to six-instruction fragments rather than being code at all, and a further 112 are three instructions or fewer, almost all import thunks into ntoskrnl. The 144 functions of ten instructions or more are the driver's own code and agree with the 139 counted in the source, the excess being static helpers and AVL callbacks the file-by-file count does not reach. Judge coverage on those 144. Eight of the 139 are not this project's code and are present here under this family: ldrreloc.c's four Ldr* relocation routines are Windows Research Kernel source and say so in the file, and VadHelpers.c's MiPromoteNode, MiRebalanceNode, MiRemoveNode and MiFindNodeOrParent are the same kernel's Mm AVL code carried in without a copyright header - so a match on any of those eight is a match on Windows kernel source rather than on BlackBone. The build is Win10Release, which defines _WIN10_ and selects the Windows 10 structure layouts; the Win7, Win8 and Win8.1 configurations compile the same sources against different EPROCESS, MMVAD and handle-table definitions and are not built. The image also carries whatever kernel-mode runtime the WDK links in, and the compiler-runtime filter cannot recognise it because the baseline it measures against is a user-mode ucrt/vcruntime build; those functions are therefore filed under this family and are not this project's code. The driver is linked and disassembled, never loaded: it is unsigned, and loading it would put an unauthenticated kernel-mode primitive for cross-process memory remapping and SSDT hooking on the machine.",
+    "num_functions": 321,
+    "removed_runtime_functions": [
+      "ReadNoFence64",
+      "ReadPointerNoFence",
+      "RtlCaptureContext",
+      "__C_specific_handler",
+      "__GSHandlerCheck",
+      "__GSHandlerCheck_SEH",
+      "__castguard_check_failure_debugbreak",
+      "__castguard_check_failure_fastfail",
+      "__castguard_check_failure_nop",
+      "__castguard_compat_check",
+      "__castguard_slow_path_check_debugbreak",
+      "__castguard_slow_path_check_fastfail",
+      "__castguard_slow_path_check_nop",
+      "__castguard_slow_path_compat_check",
+      "__security_check_cookie",
+      "_guard_check_icall_nop",
+      "_guard_dispatch_icall_nop",
+      "_guard_icall_checks_enforced",
+      "_guard_rf_checks_enforced",
+      "_guard_xfg_dispatch_icall_nop",
+      "strcmp"
+    ],
+    "sha256": "380c9474adeefaaaa9b8eab71a4eddc7d082304609e60a911cafa198dea3bfa7",
+    "smda": "data/BlackBoneDrv/x64/smda/BlackBoneDrv_2023-07-17_msvc143_x64_BlackBoneDrv10.sys.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "5ede6ce50cd8ad34178bfa6cae05768ff6b3859b",
+      "git_ref": "5ede6ce50cd8ad34178bfa6cae05768ff6b3859b",
+      "git_url": "https://github.com/DarthTon/Blackbone.git"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://github.com/DarthTon/Blackbone",
+    "version": "2023-07-17"
+  }
+}

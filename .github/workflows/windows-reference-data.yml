@@ -1,0 +1,435 @@
+name: Windows reference data
+
+# Generates reference data that needs MSVC.
+#
+# Two kinds of recipe run here. VX-API needs ATL, BlackBone needs ATL and the
+# DIA SDK, and SysWhispers v1 emits MASM that neither nasm nor GAS will
+# assemble: those cannot be built with GCC at all. The library recipes whose
+# names end in _msvc can be built with GCC - data/ carries the MinGW artefacts
+# already - but the corpus wants the MSVC build of the same version beside it,
+# because that is the compiler behind most Windows sightings of sqlite3,
+# liblzma and lz4. The windows-2022 runner image carries Visual Studio 2022
+# with ATL and MFC, four Windows SDKs, ml/ml64, nmake, CMake and the WDK,
+# which covers all of them.
+#
+# Nothing below names a recipe or a family. The job asks
+# scripts/build_corpus.py which recipes declare the toolchain this leg has
+# (`list --toolchain msvc_<arch> --names-only`) and which corpus families
+# those recipes file into (`--families-only`), so adding a recipe under
+# scripts/corpus/recipes/ is the whole change: this file does not move. That
+# also keeps the one asymmetry honest without a special case - SysWhispers
+# declares toolchains=["msvc_x64"], so it appears in the x64 leg's list and
+# not in the x86 one, from the recipe's own declaration.
+#
+# The same scripts/build_corpus.py drives this as the Linux side; only the
+# toolchain differs. Results are uploaded as artifacts rather than committed,
+# so a maintainer reviews them before they enter the corpus.
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipes:
+        description: Recipes to build (space separated, or "all-msvc")
+        required: false
+        default: all-msvc
+  # push rather than pull_request: a pull_request path filter is evaluated
+  # against everything the PR changes, not against the push, so once one of
+  # these files is in the branch every later commit re-triggers the job and
+  # cancels the run that was already building. On push the filter means what
+  # it says.
+  push:
+    paths:
+      # The one place a literal list survives, because a path filter is
+      # evaluated before the checkout and so cannot ask Python anything. It is
+      # a whole-directory glob rather than the six recipe files it used to
+      # name, and rather than a tighter `*_msvc.py`, because those two are
+      # wrong in opposite directions and only one of the two failure modes is
+      # visible. Over-triggering costs runner minutes on a run that says
+      # exactly what it built; under-triggering means a newly added MSVC
+      # recipe merges with no Windows CI at all and nothing anywhere says so.
+      # It does mean editing a MinGW-only recipe (sqlite3.py, xz.py, lz4.py
+      # and the rest) now rebuilds the MSVC side, which the previous list
+      # deliberately avoided. If those minutes ever become the binding
+      # constraint, the tighter filter is
+      # `scripts/corpus/recipes/*_msvc.py` plus the MSVC-only families that
+      # do not carry that suffix - but that only holds while every MSVC
+      # recipe is named for the convention, which nothing enforces.
+      - scripts/corpus/recipes/**
+      - scripts/corpus/toolchain.py
+      - scripts/corpus/build.py
+      - scripts/corpus/pipeline.py
+      # These decide what the artefacts contain, not merely whether the build
+      # runs: baseline.py is the glue filter, smdaify.py the disassembly and
+      # symbol handling, recipe.py the naming. A change to any of them that
+      # did not rebuild the MSVC families would leave them describing a
+      # pipeline this branch no longer has.
+      - scripts/corpus/baseline.py
+      - scripts/corpus/smdaify.py
+      - scripts/corpus/recipe.py
+      # config.py is in this list for the same reason rather than as a
+      # catch-all: MIN_NAMED_SAMPLE_INSTRUCTIONS decides which functions the
+      # symbol-coverage gate counts, and MIN_USEFUL_FUNCTIONS and
+      # MIN_USEFUL_BLOB_INSTRUCTIONS decide whether an artefact is accepted
+      # at all. Moving one of those without rebuilding would leave the MSVC
+      # families admitted under a rule this branch no longer applies.
+      - scripts/corpus/config.py
+      # The recipe and family enumeration the job below depends on lives here.
+      - scripts/build_corpus.py
+      - .github/workflows/windows-reference-data.yml
+
+permissions:
+  contents: read
+
+# Each push supersedes the last, and these jobs take minutes of runner time
+# building real software. Without this, a quick succession of fixes leaves
+# several runs racing on commits nobody is waiting for any more.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-2022
+    strategy:
+      # One architecture failing should not hide the other's result.
+      fail-fast: false
+      matrix:
+        arch: [x86, x64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install analysis dependencies
+        run: python -m pip install --quiet -r scripts/requirements.txt
+
+      # Puts cl, link, ml/ml64, rc and msbuild on PATH for the chosen target.
+      # scripts/corpus/toolchain.py registers the MSVC toolchain from that.
+      - name: Set up MSVC (${{ matrix.arch }})
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch == 'x64' && 'amd64' || 'x86' }}
+
+      - name: Show detected toolchains
+        run: python scripts/build_corpus.py list
+
+      # Informational only, and deliberately the one step here that looks at
+      # what the image has installed rather than at what a recipe declares.
+      #
+      # Two statements in this repository disagree about the WDK: the header
+      # comment above says the windows-2022 image carries it, and
+      # scripts/corpus/README.md's "Targets investigated but not built" table
+      # gives "a separate solution needing the WDK" as the reason BlackBone's
+      # kernel driver is absent. Both cannot be right in the sense a reader
+      # takes them, and neither is worth "fixing" on speculation. This prints
+      # the answer, so the next round corrects whichever one is wrong and any
+      # kernel-mode recipe - MahmoudZohdy/APICallProxy is the one waiting on
+      # it, and BlackBone's driver would follow - is written against a
+      # measurement. The four things asked about are exactly what
+      # APICallProxy's Release|x64 link line needs: the KMDF platform toolset,
+      # the KMDF import libraries, $(DDK_LIB_PATH)'s ntoskrnl/hal/wmilib, and
+      # netio.lib for its WSK socket layer.
+      #
+      # continue-on-error so a missing path can never fail the leg; the paths
+      # are wildcarded so a different VS edition or SDK version still answers.
+      - name: Probe for a WDK and KMDF (informational, never fatal)
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          function Probe($label, $glob) {
+            $hits = @(Get-ChildItem -Path $glob -ErrorAction SilentlyContinue |
+                      Select-Object -First 6 -ExpandProperty FullName)
+            if ($hits) {
+              Write-Host "WDK-PROBE ${label}: PRESENT"
+              $hits | ForEach-Object { Write-Host "    $_" }
+            } else {
+              Write-Host "WDK-PROBE ${label}: ABSENT ($glob)"
+            }
+          }
+          $vs = "C:\Program Files*\Microsoft Visual Studio\2022\*\MSBuild\Microsoft\VC\*"
+          $kits = "C:\Program Files*\Windows Kits\10\Lib"
+          Probe "WindowsKernelModeDriver10.0 platform toolset" `
+                "$vs\Platforms\*\PlatformToolsets\WindowsKernelModeDriver10.0"
+          Probe "KMDF import libraries (path names the KMDF version)" `
+                "$kits\wdf\kmdf\*\*\WdfDriverEntry.lib"
+          Probe "DDK_LIB_PATH ntoskrnl.lib" "$kits\*\km\*\ntoskrnl.lib"
+          Probe "DDK_LIB_PATH hal.lib" "$kits\*\km\*\hal.lib"
+          Probe "DDK_LIB_PATH wmilib.lib" "$kits\*\km\*\wmilib.lib"
+          Probe "netio.lib (APICallProxy's WSK socket layer)" `
+                "$kits\*\km\*\netio.lib"
+
+      # Does NOT fail the job when a recipe fails. Everything this leg did
+      # build is still scoped, validated and uploaded by the steps below, and
+      # the job is failed at the very end instead - see "Fail the job if any
+      # recipe failed". With thirty recipes in a leg, one broken recipe
+      # throwing away the other twenty-nine costs a full cycle for everyone.
+      - name: Build
+        id: build
+        shell: pwsh
+        run: |
+          $requested = "${{ github.event.inputs.recipes }}"
+          if (-not $requested -or $requested -eq "all-msvc") {
+            # Asked of the recipe registry rather than listed here, and asked
+            # about what the recipes DECLARE rather than what this runner
+            # registered: an MSVC developer environment targets one
+            # architecture at a time, so msvc_x86 does not exist on the x64
+            # runner and a host-availability filter would come back empty.
+            $names = python scripts/build_corpus.py list `
+              --toolchain msvc_${{ matrix.arch }} --names-only
+            if ($LASTEXITCODE -ne 0) {
+              throw "could not enumerate the msvc_${{ matrix.arch }} recipes"
+            }
+            $recipes = @($names | ForEach-Object { $_.Trim() } |
+                         Where-Object { $_ })
+          } else {
+            $recipes = @($requested.Split(" ") | Where-Object { $_ })
+          }
+          if (-not $recipes) { throw "there are no recipes to build" }
+          Write-Host "building $($recipes.Count) recipe(s): $($recipes -join ', ')"
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          python scripts/build_corpus.py build $recipes 2>&1 |
+            Tee-Object -FilePath build/build-output.txt
+          $code = $LASTEXITCODE
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "exit-code=$code"
+          if ($code -ne 0) {
+            Write-Host ("::warning::build_corpus.py exited $code; the " +
+                        "artefacts that did build are still scoped and " +
+                        "uploaded, and this job is failed at the end of the run")
+          }
+          # The pwsh wrapper exits on whatever $LASTEXITCODE holds when the
+          # script ends, so a non-zero build would fail this step despite the
+          # above. Exiting explicitly is what defers the verdict.
+          exit 0
+
+      # What the job uploads has to be what the job built. data/ arrives from
+      # the checkout already holding the committed artefacts of both
+      # architectures, so without this the artifact is indistinguishable from
+      # a harvest of whatever happened to be committed - and provenance.json
+      # is per-family, not per-architecture, so unpacking both artifacts would
+      # leave one leg's records overwritten by the other's copy of the file.
+      #
+      # That matters more now that a partly failed build still uploads: the
+      # families this leg was SUPPOSED to build are pruned whether or not they
+      # produced anything, so a family whose every recipe failed is emptied
+      # rather than shipping the bytes the checkout carried, and only the
+      # families that still hold something this run produced are named to the
+      # upload and to Validate.
+      - name: Scope the artefacts to what this job produced
+        id: scope
+        if: success()
+        shell: pwsh
+        run: |
+          $families = python scripts/build_corpus.py list `
+            --toolchain msvc_${{ matrix.arch }} --families-only
+          if ($LASTEXITCODE -ne 0) {
+            throw "could not enumerate the msvc_${{ matrix.arch }} families"
+          }
+          $families = @($families | ForEach-Object { $_.Trim() } |
+                        Where-Object { $_ })
+          $py = @'
+          import json, os, re, sys
+
+          produced = set(re.findall(r"^OK\s+(\S+)",
+                                    open("build/build-output.txt",
+                                         encoding="utf-8", errors="replace").read(),
+                                    re.M))
+          if not produced:
+              sys.exit("the build reported no artefacts; nothing to upload")
+          print("produced this run: %s" % ", ".join(sorted(produced)))
+
+          arch = sys.argv[1]
+          # The families the recipes for this leg file into, from
+          # `build_corpus.py list --families-only`. Every one of them is
+          # pruned, including any that produced nothing, because an unpruned
+          # family would otherwise hand the upload the committed artefacts
+          # this job did not rebuild.
+          expected = sys.argv[2:]
+          if not expected:
+              sys.exit("no families were named; the recipe enumeration failed")
+          print("families this leg builds: %s" % ", ".join(expected))
+
+          # sqlite3, liblzma and lz4 also hold MinGW artefacts, which this
+          # loop prunes out of the working copy along with the other
+          # architecture's: what is uploaded has to be what this job built.
+          # The consequence for whoever imports the result is that
+          # provenance.<arch>.json for those families carries the MSVC
+          # records ONLY, so it must be merged into the committed
+          # provenance.json key by key - copying it over would delete the
+          # MinGW records this job never rebuilt.
+          kept = []
+          for family in expected:
+              root = os.path.join("data", family)
+              if not os.path.isdir(root):
+                  continue
+              path = os.path.join(root, "provenance.json")
+              records = {}
+              if os.path.exists(path):
+                  with open(path, encoding="utf-8") as handle:
+                      records = json.load(handle)
+              else:
+                  print("::warning::data/%s has no provenance.json; its "
+                        "provenance.%s.json will be empty" % (family, arch))
+              mine = {k: v for k, v in records.items() if k in produced}
+              # provenance.json stays, pruned, because Validate reads it - but
+              # it is not what gets uploaded. The artifact carries the
+              # architecture-named copy instead, so unpacking both artifacts
+              # cannot leave one leg's records overwritten by the other's.
+              for name in ("provenance.json", "provenance.%s.json" % arch):
+                  with open(os.path.join(root, name), "w",
+                            encoding="utf-8") as handle:
+                      json.dump(mine, handle, indent=2, sort_keys=True)
+                      handle.write("\n")
+              survivors = 0
+              for dirpath, _, names in os.walk(root):
+                  for name in names:
+                      stem = name.rsplit(".", 1)[0]
+                      if not name.endswith((".7z", ".mcrit")):
+                          continue
+                      if stem in produced:
+                          survivors += 1
+                      else:
+                          os.remove(os.path.join(dirpath, name))
+              if survivors:
+                  kept.append(family)
+              else:
+                  # Not an error on its own: SysWhispers builds nothing on
+                  # x86. It is also what a wholly failed family looks like,
+                  # and either way there is nothing here worth uploading.
+                  print("%s: nothing produced, left out of the upload" % family)
+
+          if not kept:
+              sys.exit("the build produced %d artefact(s) but none of them "
+                       "landed in %s; the recipes and the families they file "
+                       "into have gone out of step"
+                       % (len(produced), ", ".join(expected)))
+          print("uploading: %s" % ", ".join(kept))
+
+          out = os.environ.get("GITHUB_OUTPUT")
+          if out:
+              with open(out, "a", encoding="utf-8") as handle:
+                  handle.write("families=%s\n" % " ".join(kept))
+                  handle.write("upload-paths<<PATHS\n")
+                  for family in kept:
+                      handle.write("data/%s/**\n" % family)
+                  handle.write("!data/*/provenance.json\n")
+                  handle.write("PATHS\n")
+          '@
+          $py | python - "${{ matrix.arch }}" $families
+          if ($LASTEXITCODE -ne 0) { throw "scoping failed" }
+
+      # Scoped to the families this workflow produced, and now to the ones it
+      # actually produced on this leg. Validating all of data/ would also
+      # re-report the twelve known defects in the pre-existing MSVC entries,
+      # so the job could never go green on its own work. By this point the
+      # tree holds only what this job built, so this validates the run's own
+      # output rather than whatever the checkout carried.
+      - name: Validate
+        if: success()
+        shell: pwsh
+        run: |
+          $families = @("${{ steps.scope.outputs.families }}".Split(" ") |
+                        Where-Object { $_ })
+          if (-not $families) { throw "no reference data was produced" }
+          foreach ($family in $families) {
+            python scripts/build_corpus.py validate "data/$family"
+            if ($LASTEXITCODE -ne 0) { throw "validation failed for $family" }
+          }
+
+      # Only the files the scoping step left behind, and only the families it
+      # says hold something this run produced. An always() upload of a red run
+      # published the committed artefacts of whichever recipe had just failed,
+      # indistinguishable from freshly built ones - a maintainer harvesting
+      # that would have re-committed bytes nothing regenerated. That is still
+      # the rule; what changed is that the scoping step now deletes those
+      # bytes, so a partly failed run can upload the part that is real.
+      #
+      # The artifact name must keep ending in -x86/-x64:
+      # scripts/import_ci_artifacts.py reads the architecture off it and
+      # refuses any record that does not match.
+      - name: Upload reference data
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reference-data-${{ matrix.arch }}
+          path: ${{ steps.scope.outputs.upload-paths }}
+          if-no-files-found: error
+
+      # Build output goes to build/*.log rather than stdout, so a failure
+      # otherwise shows only which command failed and not why. Surfacing the
+      # tail of each log here is what makes a red run diagnosable from the
+      # job page alone. It runs on a partly failed build too, where no step
+      # has failed yet.
+      - name: Show build logs
+        if: ${{ !cancelled() && steps.build.conclusion != 'skipped'
+             && (failure() || steps.build.outputs.exit-code != '0') }}
+        shell: pwsh
+        run: |
+          Get-ChildItem build/*.log -ErrorAction SilentlyContinue | ForEach-Object {
+            Write-Host "::group::$($_.Name)"
+            Get-Content $_.FullName -Tail 60
+            Write-Host "::endgroup::"
+          }
+
+      # Uploaded on a green run too, which the step above deliberately is not.
+      # A recipe may now succeed while having built less than it meant to:
+      # nt_wrapper compiles its five exerciser translation units with
+      # allow_failure and links whatever objects resulted, so a degraded build
+      # reaches this point reporting OK, with the NTW-TU-FAILED lines and the
+      # object inventory that explain it sitting only in build/*.log. Showing
+      # every log on the job page would drown a thirty-recipe leg; keeping the
+      # logs as an artifact costs nothing and makes the degraded case
+      # diagnosable after the fact. The function count printed by the build
+      # step is what says a build is worth looking into.
+      - name: Upload build logs
+        if: ${{ !cancelled() && steps.build.conclusion != 'skipped' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ matrix.arch }}
+          path: build/*.log
+          if-no-files-found: ignore
+
+      # The verdict, deliberately the last step so the summary lands on the
+      # last screen of the log. Everything above is allowed to run on a
+      # partly failed build so the good artefacts survive; this is what stops
+      # that from reading as success. A green job hiding a broken recipe is
+      # worse than losing the artefacts, so the one thing this must never do
+      # is be skipped when a recipe failed.
+      - name: Fail the job if any recipe failed
+        if: ${{ !cancelled() && steps.build.conclusion != 'skipped'
+             && steps.build.outputs.exit-code != '0' }}
+        shell: pwsh
+        run: |
+          $code = "${{ steps.build.outputs.exit-code }}"
+          $uploaded = "${{ steps.scope.outputs.families }}"
+          $failed = @()
+          if (Test-Path build/build-output.txt) {
+            $failed = @(Get-Content build/build-output.txt |
+                        Where-Object { $_ -match '^FAILED\s' })
+          }
+          Write-Host "----- recipes that failed on ${{ matrix.arch }} -----"
+          if ($failed) {
+            foreach ($line in $failed) {
+              Write-Host $line
+              # A literal % in a compiler message is a workflow-command escape,
+              # so an unescaped one truncates the annotation it appears in.
+              Write-Host ("::error::" + ($line -replace '%', '%25'))
+            }
+          } else {
+            Write-Host ("::error::build_corpus.py exited '$code' without " +
+                        "naming a failed artefact; the Build step holds the " +
+                        "traceback")
+          }
+          if ($uploaded) {
+            Write-Host ("::notice::what did build was still uploaded, as " +
+                        "reference-data-${{ matrix.arch }}: $uploaded. " +
+                        "import_ci_artifacts.py refuses any run that did not " +
+                        "conclude success, so import it by downloading the " +
+                        "artifact from this run and passing --zip.")
+          } else {
+            Write-Host "::notice::nothing was uploaded from this leg"
+          }
+          throw ("this run built a broken recipe: " +
+                 "$($failed.Count) failure(s) named above, " +
+                 "build_corpus.py exit '$code'")

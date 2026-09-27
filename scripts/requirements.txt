@@ -1,0 +1,4 @@
+# Analysis dependencies for scripts/build_corpus.py.
+# Pinned to the versions the current reference data was generated with.
+smda==4.8.0
+mcrit==1.9.0

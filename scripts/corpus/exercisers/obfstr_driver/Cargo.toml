@@ -1,0 +1,33 @@
+# Driver crate for CasualX/obfstr, the Rust half of the string-obfuscator
+# coverage. See ../../recipes/obfstr.py.
+#
+# The recipe copies this directory into the fetched obfstr checkout, so the
+# path dependency below resolves to the pinned upstream source and nothing is
+# downloaded. Cargo.lock is therefore not committed: there is nothing to lock
+# but obfstr itself, which the recipe already pins by git ref.
+
+# Empty table on purpose: without it cargo walks upwards looking for a
+# workspace root and fails once this is copied inside another package.
+[workspace]
+
+[package]
+name = "obfstr_driver"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[lib]
+# A cdylib, not an rlib: SMDA cannot read a Rust static library, the same
+# reason every C and C++ recipe here builds a DLL.
+crate-type = ["cdylib"]
+
+[dependencies]
+obfstr = { path = ".." }
+
+# panic = "abort" in both profiles. The crate is #![no_std] and an unwinding
+# panic would need an eh_personality that core does not provide.
+[profile.release]
+panic = "abort"
+
+[profile.dev]
+panic = "abort"
