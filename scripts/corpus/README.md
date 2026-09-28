@@ -123,12 +123,13 @@ misattribution; it is not a collision fix, and the two numbers move for
 different reasons.
 
 **What remains is one finding.** `__scrt_common_main_seh`, the MSVC CRT's
-x64 entry-point wrapper, at 99 instructions in Lua, MemoryModule, bzip2 and
-RealBlindingEDR. It is unambiguously Microsoft's code and the baseline ought
-to catch it; it does catch every one of its neighbours - `__scrt_initialize_crt`,
-`__scrt_acquire_startup_lock`, `__scrt_fastfail` and eleven more are removed
+x64 entry-point wrapper, at 99 instructions in bzip2, Hidden, Lua,
+MemoryModule and RealBlindingEDR. It is unambiguously Microsoft's code and
+the baseline ought to catch it; it does catch every one of its neighbours -
+`__scrt_initialize_crt`, `__scrt_acquire_startup_lock`,
+`__scrt_fastfail` and eleven more are removed
 from 98 artefacts each. What is known: it is x64 only, absent from every x86
-EXE; it has two bodies in this corpus, 99 instructions in those four and 98
+EXE; it has two bodies in this corpus, 99 instructions in those five and 98
 in q3vm, which builds with whole-program optimisation; and the EXE probe
 emits neither, though it links and runs like every other. The cause needs
 MSVC in front of it, so it is recorded here rather than guessed at, and
@@ -194,12 +195,16 @@ counted here. A refilter round is a misattribution fix, not a collision
 fix, and the two are measured separately on purpose. What did move since
 this paragraph was last written is three hashes, all of them in the
 differing-names bucket. The leakage count did not: it is the same single
-`__scrt_common_main_seh`, now across Lua, MemoryModule, bzip2 and
-RealBlindingEDR, unchanged through the last imports and through 510
+`__scrt_common_main_seh`, unchanged through the last imports and through 510
 functions leaving 67 artefacts. RealBlindingEDR's five artefacts join it
 rather than adding a finding: same hash, `11855707620856894801`, same 99
 instructions, and one more `/MD` x64 EXE is exactly the shape the filter
-already misses.
+already misses. Five families carry it as of this writing - bzip2, Hidden,
+Lua, MemoryModule and RealBlindingEDR - where both passages here said three
+until now: Hidden was already one of them and neither sentence was updated
+when it landed. Read the list off `validate --deep` rather than off this
+file. The finding is one hash; the set of families sharing it grows with
+every `/MD` x64 EXE the corpus gains, and that growth is not a new finding.
 
 That last step is the useful control. It added six MSVC families and eight
 ELF artefacts, among them five separate implementations of the same WOW64
