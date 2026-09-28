@@ -85,7 +85,7 @@ def _props(private_namespace_on_win32):
         "'<ItemDefinitionGroup Condition=\\x22$(Platform)==Win32\\x22>'"
         "'<ClCompile><AdditionalOptions>/DJEMALLOC_NO_PRIVATE_NAMESPACE'"
         "'</AdditionalOptions></ClCompile></ItemDefinitionGroup>'"
-        if private_namespace_on_win32 else "''")
+        if private_namespace_on_win32 else "")
     return (
         'python -c "'
         "open('jemalloc-corpus.props','w').write("
