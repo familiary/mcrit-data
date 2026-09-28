@@ -44,10 +44,17 @@ _SH = ('"%AUTOTOOLS_BASH%" -lc '
 _TRIPLE = "--build=x86_64-pc-cygwin --host=x86_64-pc-cygwin"
 
 
-def _autogen(cxx):
+def _autogen(cxx, version, commit):
+    # --with-version because configure asks git, and cannot: under MSYS2's
+    # bash 5.3 its `test ! "${srcroot}" && cd "${srcroot}"` is an error
+    # ("./configure: line 8977: cd: null directory") where it is a no-op
+    # elsewhere, so it falls through to "Missing VERSION file, and unable to
+    # generate it; creating bogus VERSION" and the DLL would say
+    # 0.0.0-0-g000000missing_version_try_git_fetch_tags. This is what
+    # `git describe --long --abbrev=40` prints on the tagged commit.
     return BuildStep(
-        _SH + 'CC=cl sh ./autogen.sh %s%s"' % ("--disable-cxx " if cxx else "",
-                                               _TRIPLE),
+        _SH + 'CC=cl sh ./autogen.sh %s%s --with-version=%s-0-g%s"'
+        % ("--disable-cxx " if cxx else "", _TRIPLE, version, commit),
         env=_ENV, allow_failure=True)
 
 
@@ -66,23 +73,38 @@ _CHECK_HEADERS = (
 
 # Written from a step, not committed, and not part of upstream's tree beyond
 # being dropped next to the solution. See the docstring.
-_PROPS = (
-    'python -c "'
-    "open('jemalloc-corpus.props','w').write("
-    "'<Project><PropertyGroup><LinkIncremental>false</LinkIncremental>'"
-    "'</PropertyGroup><ItemDefinitionGroup><ClCompile>'"
-    "'<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>'"
-    "'<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>'"
-    "'<WholeProgramOptimization>false</WholeProgramOptimization>'"
-    "'</ClCompile><Link>'"
-    "'<GenerateDebugInformation>true</GenerateDebugInformation>'"
-    "'<ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>'"
-    "'<EnableCOMDATFolding>false</EnableCOMDATFolding>'"
-    "'<OptimizeReferences>false</OptimizeReferences>'"
-    "'<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>'"
-    "'<AdditionalOptions>/Brepro</AdditionalOptions>'"
-    "'</Link></ItemDefinitionGroup></Project>')"
-    '"')
+def _props(private_namespace_on_win32):
+    # The 5.x Release|x64 project defines JEMALLOC_NO_PRIVATE_NAMESPACE and
+    # Release|Win32 does not, so jemalloc_preamble.h includes
+    # jemalloc/internal/private_namespace.h on x86 only - a header make
+    # generates from the built objects, which this build never runs. Giving
+    # Win32 the define its x64 sibling already has is the smallest change.
+    # /D rather than PreprocessorDefinitions because that would need
+    # %(PreprocessorDefinitions), and cmd.exe reads a % as its own.
+    extra = (
+        "'<ItemDefinitionGroup Condition=\\x22$(Platform)==Win32\\x22>'"
+        "'<ClCompile><AdditionalOptions>/DJEMALLOC_NO_PRIVATE_NAMESPACE'"
+        "'</AdditionalOptions></ClCompile></ItemDefinitionGroup>'"
+        if private_namespace_on_win32 else "''")
+    return (
+        'python -c "'
+        "open('jemalloc-corpus.props','w').write("
+        "'<Project><PropertyGroup><LinkIncremental>false</LinkIncremental>'"
+        "'</PropertyGroup><ItemDefinitionGroup><ClCompile>'"
+        "'<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>'"
+        "'<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>'"
+        "'<WholeProgramOptimization>false</WholeProgramOptimization>'"
+        "'</ClCompile><Link>'"
+        "'<GenerateDebugInformation>true</GenerateDebugInformation>'"
+        "'<ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>'"
+        "'<EnableCOMDATFolding>false</EnableCOMDATFolding>'"
+        "'<OptimizeReferences>false</OptimizeReferences>'"
+        "'<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>'"
+        "'<AdditionalOptions>/Brepro</AdditionalOptions>'"
+        "'</Link></ItemDefinitionGroup>'" + extra +
+        "'</Project>')"
+        '"')
+
 
 _MSBUILD = ('msbuild msvc\\%s /t:jemalloc /p:Configuration=Release '
             '/p:Platform={arch} /p:PlatformToolset=v143 '
@@ -109,7 +131,7 @@ _FLAGS = ("/O2 /Oi /Gy /W3 /Zi (upstream Release); /MD, /Brepro, /INCREMENTAL:NO
           "retargeted to v143")
 
 
-def _jemalloc_msvc(version, sln, cxx, notes):
+def _jemalloc_msvc(version, commit, sln, is_5x, notes):
     return Recipe(
         family="jemalloc",
         version=version,
@@ -120,10 +142,10 @@ def _jemalloc_msvc(version, sln, cxx, notes):
                       git_ref=version),
         build=[
             BuildStep(_CHECK_BASH),
-            _autogen(cxx),
+            _autogen(is_5x, version, commit),
             _TAIL,
             BuildStep(_CHECK_HEADERS),
-            BuildStep(_PROPS),
+            BuildStep(_props(is_5x)),
             BuildStep(_MSBUILD % sln),
             BuildStep(_TLOGS, allow_failure=True),
             BuildStep("dumpbin /dependents " + _OUT + "jemalloc.dll",
@@ -141,11 +163,15 @@ def _jemalloc_msvc(version, sln, cxx, notes):
 
 RECIPES = {
     "jemalloc_4.5.0_msvc": _jemalloc_msvc(
-        "4.5.0", "jemalloc_vc2015.sln", False, "4.x extent generation."),
+        "4.5.0", "04380e79f1e2428bd0ad000bbc6e3d2dfc6b66a5",
+        "jemalloc_vc2015.sln", False, "4.x extent generation."),
     "jemalloc_5.2.1_msvc": _jemalloc_msvc(
-        "5.2.1", "jemalloc_vc2017.sln", True, "Pre-HPA 5.x."),
+        "5.2.1", "ea6b3e973b477b8061e0076bb257dbd7f3faa756",
+        "jemalloc_vc2017.sln", True, "Pre-HPA 5.x."),
     "jemalloc_5.3.0_msvc": _jemalloc_msvc(
-        "5.3.0", "jemalloc_vc2017.sln", True, "What most binaries carry."),
+        "5.3.0", "54eaed1d8b56b1aa528be3bdd1877e59c56fa90c",
+        "jemalloc_vc2017.sln", True, "What most binaries carry."),
     "jemalloc_5.4.0_msvc": _jemalloc_msvc(
-        "5.4.0", "jemalloc_vc2022.sln", True, "Current release."),
+        "5.4.0", "7a34f18502e7b222724097cdcd499b437d189acc",
+        "jemalloc_vc2022.sln", True, "Current release."),
 }
