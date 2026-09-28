@@ -54,7 +54,9 @@ Libraries
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [Boost](#boost)
+* [gperftools](#gperftools)
 * [Poco](#poco)
+* [monomorph](#monomorph)
 * [libstdc++](#libstdcxx)
 
 Runtimes
@@ -723,6 +725,19 @@ Generated with `scripts/build_corpus.py`; see `data/boost/provenance.json` for s
 | boost | 1.92.0 | MinGW-w64 GCC 13 | [x86 PE](data/boost/x86/mcrit/boost_1.92.0_mingw13_x86_boost_wserialization.dll.mcrit) / [x64 PE](data/boost/x64/mcrit/boost_1.92.0_mingw13_x64_boost_wserialization.dll.mcrit) | [x86 PE](data/boost/x86/smda/boost_1.92.0_mingw13_x86_boost_wserialization.dll.7z) / [x64 PE](data/boost/x64/smda/boost_1.92.0_mingw13_x64_boost_wserialization.dll.7z) |
 <!-- /generated -->
 
+### gperftools<a id='gperftools'></a>
+
+`tcmalloc_minimal`, the thread-caching allocator that has been embedded in Windows software for twenty years, and what issue #10's "tcmalloc" means: `google/tcmalloc` is Bazel-only and Linux-only and cannot produce a PE at all. Only the minimal variant builds for Windows - the heap checker, heap profiler and CPU profiler are Unix-only - and it is also the variant that gets embedded, being the allocator without the profiling machinery. Built shared, so libstdc++ and libgcc are imported rather than linked.  
+This was previously recorded as needing a source patch for MinGW. It does not. CMake probes for `nanosleep` in `time.h`, mingw-w64 declares it in `pthread_time.h`, and the failed probe made `src/windows/port.h` supply a colliding inline definition; pre-seeding the cache variable skips the probe. A second setting appends `-lsynchronization` last, because what references `WaitOnAddress` is libwinpthread and CMake does not fix its position relative to `-lsynchronization` on the link line.  
+
+Generated with `scripts/build_corpus.py`; see `data/gperftools/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: gperftools -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| gperftools | 2.18.1 | MinGW-w64 GCC 13 | [x86 PE](data/gperftools/x86/mcrit/gperftools_2.18.1_mingw13_x86_tcmalloc_minimal.dll.mcrit) / [x64 PE](data/gperftools/x64/mcrit/gperftools_2.18.1_mingw13_x64_tcmalloc_minimal.dll.mcrit) | [x86 PE](data/gperftools/x86/smda/gperftools_2.18.1_mingw13_x86_tcmalloc_minimal.dll.7z) / [x64 PE](data/gperftools/x64/smda/gperftools_2.18.1_mingw13_x64_tcmalloc_minimal.dll.7z) |
+<!-- /generated -->
+
 ### Poco<a id='poco'></a>
 
 The POCO C++ Libraries, every component that builds for Windows without an external dependency, in one DLL per architecture: Foundation, XML, JSON, Util, Net, Zip, Data with its SQLite connector, Encodings, MongoDB, Redis, Prometheus, ActiveRecord, CppParser, CodeGeneration and the five RemotingNG libraries.  
@@ -737,6 +752,20 @@ Generated with `scripts/build_corpus.py`; see `data/poco/provenance.json` for so
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | poco | 1.15.4 | MinGW-w64 GCC 13 | [x86 PE](data/poco/x86/mcrit/poco_1.15.4_mingw13_x86_poco.dll.mcrit) / [x64 PE](data/poco/x64/mcrit/poco_1.15.4_mingw13_x64_poco.dll.mcrit) | [x86 PE](data/poco/x86/smda/poco_1.15.4_mingw13_x86_poco.dll.7z) / [x64 PE](data/poco/x64/smda/poco_1.15.4_mingw13_x64_poco.dll.7z) |
+<!-- /generated -->
+
+### monomorph<a id='monomorph'></a>
+
+A self-modifying ELF loader: the binary carries a 4 MB array of MD5 collision blocks, decodes a payload out of them and inflates it over itself, so that many different payloads share one MD5. Four functions and that is the whole project - `get_bit`, `decode_buf` and `inflate_buf` are `static` and `main` is the entry point, in 96 lines of `loader/monomorph.c`; everything else in the repository is Python tooling for generating the collision blocks.  
+**Built without upstream's `-static`, and that is the point.** `loader/Makefile` links statically, which put 1397 function symbols in the image of which 1393 were glibc and zlib - this corpus has no glibc baseline to subtract them with, so they would have entered under monomorph's name and duplicated [libzlib](#libzlib). Dropping `-static` leaves glibc and zlib imported, and what remains is the four functions plus ELF start glue the measured Linux baseline drops. Upstream does ship a statically linked binary, so a copy met in the wild carries glibc and zlib around these four bodies; the four still match.  
+What actually distinguishes the project is the collision-block array, which is data rather than code - upstream's own advice is to identify it with a collision detector. The reference value here is the loader around it.  
+
+Generated with `scripts/build_corpus.py`; see `data/monomorph/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: monomorph -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| monomorph | 2022-09-30 | GCC 13 (Linux, glibc) | [x64 ELF](data/monomorph/x64/mcrit/monomorph_2022-09-30_gcc13_x64_monomorph.mcrit) | [x64 ELF](data/monomorph/x64/smda/monomorph_2022-09-30_gcc13_x64_monomorph.7z) |
 <!-- /generated -->
 
 ### libstdc++<a id='libstdcxx'></a>
