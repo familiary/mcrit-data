@@ -112,6 +112,63 @@ jobs:
         with:
           arch: ${{ matrix.arch == 'x64' && 'amd64' || 'x86' }}
 
+      # nasm, for the recipes whose upstream assembly is NASM syntax and which
+      # ml64 therefore cannot assemble - Cronos today. The windows-2022 image
+      # does not ship it; openssl_msvc.py's docstring records that its toolset
+      # manifest does not list NASM.
+      #
+      # It is installed and deliberately NOT put on PATH. That is the whole
+      # point of this step's shape, and it protects the most valuable family in
+      # the corpus, so it is worth spelling out.
+      #
+      # OpenSSL's Configurations/10-main.conf picks its assembler in
+      # vc_win64a_info, and the branch order was read at both pinned tags
+      # (openssl-3.5.8 and OpenSSL_1_1_1w) rather than assumed:
+      #
+      #   if (`nasm -v` =~ /NASM version .../) { AS => nasm,  perlasm nasm }
+      #   elsif ($disabled{asm})               { AS => ml64,  perlasm masm }
+      #   else                                 { die "NASM not found" }
+      #
+      # The nasm probe comes FIRST and is not guarded by $disabled{asm}. So a
+      # nasm on PATH would be selected even though openssl_msvc.py passes
+      # no-asm, and the ml64 branch's own comment - "assembler is still used to
+      # compile uplink shim" - says an assembler really is invoked in a no-asm
+      # build. Putting nasm on PATH would therefore switch OpenSSL's uplink
+      # shim from ml64/masm to nasm/nasm, silently changing (or breaking) the
+      # highest-value artefacts here. Exposing it as $env:NASM instead leaves
+      # `nasm -v` failing exactly as it does today, so every existing recipe
+      # builds bit for bit as before, by construction rather than by hope.
+      #
+      # The two assertions are not decoration. If a future chocolatey package
+      # starts writing the machine PATH in a way the runner picks up, the leak
+      # would be invisible and OpenSSL would quietly change assembler, so this
+      # fails the job and says what to do instead.
+      - name: Install nasm (off PATH, exposed as $env:NASM)
+        shell: pwsh
+        run: |
+          choco install nasm -y --no-progress
+          if ($LASTEXITCODE -ne 0) { throw "choco install nasm failed ($LASTEXITCODE)" }
+
+          $nasm = Get-ChildItem -Path "C:\Program Files*\NASM\nasm.exe" `
+                                -ErrorAction SilentlyContinue |
+                  Select-Object -First 1 -ExpandProperty FullName
+          if (-not $nasm) { throw "nasm installed but nasm.exe was not found under C:\Program Files*\NASM" }
+
+          & $nasm -v
+          if ($LASTEXITCODE -ne 0) { throw "$nasm did not answer -v" }
+
+          if (Get-Command nasm -ErrorAction SilentlyContinue) {
+            throw ('nasm is resolvable on PATH, which this step exists to ' +
+                   'prevent: OpenSSL Configure picks nasm over its ml64 ' +
+                   'no-asm branch whenever "nasm -v" answers, so the OpenSSL ' +
+                   'artefacts would change. Keep nasm off PATH and reference ' +
+                   'it through the NASM environment variable, or re-verify ' +
+                   'every OpenSSL artefact before allowing it on PATH.')
+          }
+
+          Add-Content -Path $env:GITHUB_ENV -Value "NASM=$nasm"
+          Write-Host "NASM=$nasm (not on PATH, by design)"
+
       - name: Show detected toolchains
         run: python scripts/build_corpus.py list
 
