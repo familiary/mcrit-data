@@ -571,10 +571,21 @@ three are equivalent:
   census floor, so the family's whole matchable contribution is `EkkoObf` -
   one 236-instruction body carrying six memcpy'd `CONTEXT` structures and the
   register assignments that turn each into a call frame.
-* **Cronos** is 7, and the reusable part is not the timer code but
-  `findGadget`, `findInModule`, `findPattern` and `bCompare` - an
-  `EnumProcessModules` walk and a masked signature scan, a shape that
-  propagates into other tooling far more often than the sleep technique does.
+* **Cronos** is 7, and every one of the seven clears the ten-instruction
+  census floor, which neither of the other two manages. The reusable part is
+  not the timer code but `findGadget`, `findInModule`, `findPattern` and
+  `bCompare` - an `EnumProcessModules` walk and a masked signature scan, a
+  shape that propagates into other tooling far more often than the sleep
+  technique does. It is the one of the three built against the wrong
+  compiler, and knowingly: upstream's makefile drives `cl`, but
+  `src/asm/rop.asm` is NASM syntax, `ml64` will not assemble it, and nasm is
+  absent from the `windows-2022` image - as the OpenSSL section above already
+  records. Translating the assembly would mean patching upstream, so the
+  artefact is a GCC build and an MSVC counterpart waits on nasm being added
+  to the Windows workflow. That is a change to shared CI affecting every
+  family and is deliberately left for its own review; until it lands, this
+  family matches real sightings, which are MSVC, more weakly than the
+  MSVC-native families here.
 * **Foliage** is the cleanest artefact of the three and the muddiest
   provenance. All 10 functions in its image are the project's own - 7 C
   bodies plus 3 assembly routines, no CRT and no import thunks at all, since

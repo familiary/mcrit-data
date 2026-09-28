@@ -1013,6 +1013,21 @@ Generated with `scripts/build_corpus.py`; see `data/Ekko/provenance.json` for so
 | Ekko | 2022-08-24 | MinGW-w64 GCC 13 | [x64 PE](data/Ekko/x64/mcrit/Ekko_2022-08-24_mingw13_x64_Ekko.x64.exe.mcrit) | [x64 PE](data/Ekko/x64/smda/Ekko_2022-08-24_mingw13_x64_Ekko.x64.exe.7z) |
 <!-- /generated -->
 
+### Cronos<a id='cronos'></a>
+
+Seven functions, the whole project, and the strongest reference data of the three: every one of the seven clears the ten-instruction census floor, from `main` at 21 to `CronosSleep` at 385. `min_functions=7`, the same count `Obfuscator4g3nt47` is admitted at. `InitializeTimerMs` is a macro rather than a function, and the `end` label inside `QuadSleep` is a two-instruction `add rsp, 0x28; ret` tail - a branch target below the floor - so neither is counted. The artefact is 35 functions: those 7, two named `K32*` import thunks, 24 one-instruction thunks, and libgcc's `___chkstk_ms`.  
+The reusable part is not the timer code. `CronosSleep` is the technique, but `findGadget` (104 instructions) and its helpers are a pattern scanner - an `EnumProcessModules` walk, a first-section-header parse, and a masked scan for `pop rcx; ret`, `pop rdx; ret` and `add rsp, 0x20; pop rdi; ret` - and `bCompare`/`findPattern` are the classic masked-signature-scan pair. That shape propagates into other tooling far more often than the sleep trick does.  
+**Built with MinGW although upstream builds with `cl`, which is the one caveat to read before trusting this artefact.** `src/asm/rop.asm` is NASM syntax, `ml64` will not assemble it, and nasm is absent from the `windows-2022` image - `openssl_msvc.py` already records that "windows-2022's toolset manifest does not list NASM". Translating the assembly to MASM would mean patching upstream source, which this corpus refuses, so the choice was a GCC build now or an MSVC build after adding nasm to the Windows workflow - a change to shared CI affecting every family, which belongs in its own review. An MSVC counterpart is a follow-up, and until it exists this family matches real (MSVC-built) sightings more weakly than the MSVC-native families here. The C compiles unmodified under mingw-w64 GCC 13 with no warnings at `-O0`, which is upstream's own state since its makefile passes no optimisation switch - and is also what keeps `bCompare` from folding into `findPattern`.  
+GPL-3.0, and the only one of the three sleep-obfuscation families that ships a licence at all.  
+
+Generated with `scripts/build_corpus.py`; see `data/Cronos/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Cronos -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Cronos | 2023-09-26 | MinGW-w64 GCC 13 | [x64 PE](data/Cronos/x64/mcrit/Cronos_2023-09-26_mingw13_x64_Cronos.exe.mcrit) | [x64 PE](data/Cronos/x64/smda/Cronos_2023-09-26_mingw13_x64_Cronos.exe.7z) |
+<!-- /generated -->
+
 ### Foliage<a id='foliage'></a>
 
 The cleanest artefact of the three and the muddiest provenance. Every one of the 10 functions in its image is the project's own - 7 C bodies plus 3 assembly routines, with no CRT body and no import thunk at all, because it is `-nostdlib` and resolves APIs by hash at run time. `min_functions=9`, the count in the source; `-flto` inlines `ObfuscateSleep` and `HashString` into `Start`, which is why that one body is 864 instructions and why the function that *is* the sleep technique has no separate body here.  
