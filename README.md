@@ -658,13 +658,20 @@ Generated with `scripts/build_corpus.py`; see `data/protobuf/provenance.json` fo
 ### jemalloc<a id='jemalloc'></a>
 
 jemalloc has a real, if niche, Windows presence: Firefox-derived code, and some game and anti-cheat stacks. The C++ wrapper is disabled, because it adds libstdc++ surface without adding allocator code.  
+Five releases, chosen where the allocator was rebuilt rather than by recency, and the function counts track that: 3.6.0 is 387 functions on x64 and 5.4.0 is 1314. **3.6.0** is the last of the 3.x line and the generation Firefox carried for years - chunk-and-run internals (`arena_run_t`, `arena_chunk_t`, a bitmap per run) that the 4.x extent rewrite replaced wholesale, so below the public entry points it shares almost nothing with what follows. **4.5.0** is the last of 4.x: extents, but not the 5.x background thread, arena decay or rtree rewrite. **5.2.1** is what a great deal of shipped software links, Rust's allocator and Redis among them. **5.3.0** and **5.4.0** are the current line, kept as a pair because 5.3 is still what most binaries in the field carry.  
+3.6.0 needs one cross-compilation setting: its configure determines the page size by running a test program, which a cross build cannot do, so `je_cv_static_page_shift` is primed in the autoconf cache with 12 - 4 KiB, the page size on Windows for both architectures. Later releases derive it without running anything.  
+**MSVC is still absent, and that is a runner-image question rather than a preference.** `msvc/ReadMe.txt` requires `sh -c "CC=cl ./autogen.sh"` before the solution can be opened, and `include/jemalloc/` holds only `.h.in` templates until autoconf and configure have run. That was rechecked against the release tarball in case it shipped a generated `configure` the way many autotools projects do - `jemalloc-5.3.0.tar.bz2` ships `configure.ac` and `autogen.sh` and no `configure` either. An MSVC jemalloc therefore needs autoconf and a POSIX shell on windows-2022.  
 
 Generated with `scripts/build_corpus.py`; see `data/jemalloc/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: jemalloc -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| jemalloc | 3.6.0 | MinGW-w64 GCC 13 | [x86 PE](data/jemalloc/x86/mcrit/jemalloc_3.6.0_mingw13_x86_jemalloc.dll.mcrit) / [x64 PE](data/jemalloc/x64/mcrit/jemalloc_3.6.0_mingw13_x64_jemalloc.dll.mcrit) | [x86 PE](data/jemalloc/x86/smda/jemalloc_3.6.0_mingw13_x86_jemalloc.dll.7z) / [x64 PE](data/jemalloc/x64/smda/jemalloc_3.6.0_mingw13_x64_jemalloc.dll.7z) |
+| jemalloc | 4.5.0 | MinGW-w64 GCC 13 | [x86 PE](data/jemalloc/x86/mcrit/jemalloc_4.5.0_mingw13_x86_jemalloc.dll.mcrit) / [x64 PE](data/jemalloc/x64/mcrit/jemalloc_4.5.0_mingw13_x64_jemalloc.dll.mcrit) | [x86 PE](data/jemalloc/x86/smda/jemalloc_4.5.0_mingw13_x86_jemalloc.dll.7z) / [x64 PE](data/jemalloc/x64/smda/jemalloc_4.5.0_mingw13_x64_jemalloc.dll.7z) |
+| jemalloc | 5.2.1 | MinGW-w64 GCC 13 | [x86 PE](data/jemalloc/x86/mcrit/jemalloc_5.2.1_mingw13_x86_jemalloc.dll.mcrit) / [x64 PE](data/jemalloc/x64/mcrit/jemalloc_5.2.1_mingw13_x64_jemalloc.dll.mcrit) | [x86 PE](data/jemalloc/x86/smda/jemalloc_5.2.1_mingw13_x86_jemalloc.dll.7z) / [x64 PE](data/jemalloc/x64/smda/jemalloc_5.2.1_mingw13_x64_jemalloc.dll.7z) |
 | jemalloc | 5.3.0 | MinGW-w64 GCC 13 | [x86 PE](data/jemalloc/x86/mcrit/jemalloc_5.3.0_mingw13_x86_jemalloc.dll.mcrit) / [x64 PE](data/jemalloc/x64/mcrit/jemalloc_5.3.0_mingw13_x64_jemalloc.dll.mcrit) | [x86 PE](data/jemalloc/x86/smda/jemalloc_5.3.0_mingw13_x86_jemalloc.dll.7z) / [x64 PE](data/jemalloc/x64/smda/jemalloc_5.3.0_mingw13_x64_jemalloc.dll.7z) |
+| jemalloc | 5.4.0 | MinGW-w64 GCC 13 | [x86 PE](data/jemalloc/x86/mcrit/jemalloc_5.4.0_mingw13_x86_jemalloc.dll.mcrit) / [x64 PE](data/jemalloc/x64/mcrit/jemalloc_5.4.0_mingw13_x64_jemalloc.dll.mcrit) | [x86 PE](data/jemalloc/x86/smda/jemalloc_5.4.0_mingw13_x86_jemalloc.dll.7z) / [x64 PE](data/jemalloc/x64/smda/jemalloc_5.4.0_mingw13_x64_jemalloc.dll.7z) |
 <!-- /generated -->
 
 ### Boost<a id='boost'></a>
