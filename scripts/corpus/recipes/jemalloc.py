@@ -21,17 +21,13 @@ one that can be addressed here: it was a single version.
   * **5.3.0** and **5.4.0** are the current line, kept as a pair because
     5.4.0 is recent enough that most binaries in the field are still 5.3.
 
-MSVC is still absent and the reason is not a preference. ``msvc/ReadMe.txt``
-step 5 requires ``sh -c "CC=cl ./autogen.sh"`` before the solution can be
-opened, and ``include/jemalloc/`` holds only ``.h.in`` templates until
-autoconf and configure have run - the vcxproj includes headers that do not
-exist yet. ``scripts/corpus/msvc-coverage-survey.md`` records this, and it was
-rechecked here against the release tarball rather than the git tag, in case
-the tarball shipped a generated ``configure`` the way many autotools projects
-do: ``jemalloc-5.3.0.tar.bz2`` ships ``configure.ac`` and ``autogen.sh`` and
-no ``configure`` either. So an MSVC jemalloc needs autoconf and a POSIX shell
-on windows-2022, which is a runner-image change of the same class as the nasm
-step, for a family that survey rates low-medium value.
+The MSVC builds are in jemalloc_msvc.py. They were deferred because
+``msvc/ReadMe.txt`` step 5 requires ``sh -c "CC=cl ./autogen.sh"`` before the
+solution can be opened and ``include/jemalloc/`` holds only ``.h.in``
+templates until autoconf and configure have run; neither the git tag nor
+``jemalloc-5.3.0.tar.bz2`` ships a generated ``configure``. The workflow now
+installs autoconf for it, which is what that recipe's docstring records.
+3.6.0 has no MSVC counterpart: no 3.x tag has an msvc/ directory.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
