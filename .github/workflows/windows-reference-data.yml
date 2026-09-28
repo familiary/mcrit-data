@@ -160,6 +160,164 @@ jobs:
           Probe "netio.lib (APICallProxy's WSK socket layer)" `
                 "$kits\*\km\*\netio.lib"
 
+      # autoconf, for jemalloc_msvc.py. jemalloc's msvc/ReadMe.txt wants
+      # `sh -c "CC=cl ./autogen.sh"` before the solution opens, because
+      # include/jemalloc/ holds only .h.in templates until autoconf and
+      # configure have run, and neither the git tag nor the release tarball
+      # ships a generated configure. The image has MSYS2 at C:\msys64 ("not
+      # added to PATH", in the image's own readme) but not autoconf, so this
+      # installs autoconf-wrapper with its pacman and nothing else; m4, perl and
+      # the autoconf releases arrive as its dependencies.
+      #
+      # It is installed and deliberately NOT put on PATH, exposed only as
+      # $env:AUTOTOOLS_BASH, which jemalloc_msvc.py invokes by full name. A
+      # POSIX userland on PATH is not additive, it replaces things:
+      #
+      #   * C:\msys64\usr\bin holds perl. openssl_msvc.py needs the Windows one
+      #     - Configure dies with "This perl implementation doesn't produce
+      #     Windows like paths" under an MSYS perl - and PATH order decides
+      #     which of the two `perl` resolves to.
+      #   * it holds link.exe, coreutils' hard-link tool, which cl.exe would
+      #     find ahead of MSVC's linker ("link: extra operand '/OUT:...'"), and
+      #     find.exe and sort.exe, which shadow the Windows tools of the same
+      #     name for anything that runs them from a cmd.exe step.
+      #   * an sh.exe on PATH is the classic CMake trap. CMake's MinGW Makefiles
+      #     generator refuses outright when it finds one ("sh.exe was found in
+      #     your PATH ... For MinGW make to work correctly sh.exe must NOT be in
+      #     your path"), and every other generator changes how it spawns
+      #     commands. No MSVC recipe names that generator today (the ones that
+      #     name any use NMake Makefiles), so nothing would notice until one
+      #     did, and it would fail on a step nobody had touched.
+      #
+      # None of those can be argued away recipe by recipe across 54 recipes, so
+      # what matters is that PATH is what it was. The step after this one
+      # asserts exactly that, and asserts it against a snapshot taken before
+      # the install rather than against a list of what somebody expected:
+      # PATH byte for byte, the whole environment apart from the new variable,
+      # where sh, bash, perl, link, find, sort and the rest resolve, and that
+      # autoconf, m4 and pacman resolve to nothing. It prints all of it, so the
+      # log of any run says what the recipes after it were given.
+      #
+      # jemalloc's recipe runs the login shell with MSYS2_PATH_TYPE=inherit and
+      # puts the directory of cl.exe first inside that one process; the MSYS
+      # tools are visible there and nowhere else.
+      - name: Install autoconf (MSYS2, off PATH, exposed as $env:AUTOTOOLS_BASH)
+        shell: pwsh
+        run: |
+          $probe = 'sh','bash','perl','link','find','sort','make','awk','sed',
+                   'grep','cmake','autoconf','autoheader','automake','m4','pacman'
+          function Resolve-All($name) {
+            @(Get-Command $name -All -CommandType Application `
+                          -ErrorAction SilentlyContinue |
+              ForEach-Object { $_.Source })
+          }
+          $snap = [ordered]@{}
+          foreach ($n in $probe) { $snap[$n] = @(Resolve-All $n) }
+          $snap | ConvertTo-Json -Depth 3 |
+            Set-Content -Path "$env:RUNNER_TEMP\resolve-before.json"
+          Set-Content -NoNewline -Path "$env:RUNNER_TEMP\path-before.txt" `
+                      -Value $env:PATH
+          Get-ChildItem env: | Sort-Object Name |
+            ForEach-Object { "$($_.Name)=$($_.Value)" } |
+            Set-Content -Path "$env:RUNNER_TEMP\env-before.txt"
+
+          $bash = 'C:\msys64\usr\bin\bash.exe'
+          if (-not (Test-Path $bash)) {
+            throw "$bash is not there; the image no longer ships MSYS2 where its readme says"
+          }
+          & $bash --version | Select-Object -First 1
+
+          # -Sy because the image's sync database is from the day the image
+          # was built, and a mirror drops superseded packages.
+          & $bash -lc 'pacman -Sy --noconfirm --needed autoconf-wrapper'
+          if ($LASTEXITCODE -ne 0) { throw "pacman could not install autoconf-wrapper ($LASTEXITCODE)" }
+
+          & $bash -lc 'autoconf --version | head -n 1'
+          if ($LASTEXITCODE -ne 0) { throw "autoconf does not run under $bash" }
+          & $bash -lc 'WANT_AUTOCONF=2.71 autoconf --version | head -n 1'
+          & $bash -lc 'command -v autoconf m4 perl sh'
+
+          Add-Content -Path $env:GITHUB_ENV -Value "AUTOTOOLS_BASH=$bash"
+          Write-Host "AUTOTOOLS_BASH=$bash (not on PATH, by design)"
+
+      - name: Assert the autoconf install left PATH and the environment alone
+        shell: pwsh
+        run: |
+          $fail = @()
+          $before = Get-Content -Raw -Path "$env:RUNNER_TEMP\path-before.txt"
+          Write-Host "----- PATH now, one entry per line -----"
+          $env:PATH.Split(';') | Where-Object { $_ } | ForEach-Object { Write-Host "  $_" }
+          if ($env:PATH -cne $before) {
+            $fail += "PATH differs from the snapshot taken before the install"
+          }
+          $onPath = @($env:PATH.Split(';') | Where-Object { $_ -match '(?i)\\msys(64|32)?(\\|$)' })
+          if ($onPath) { $fail += "an MSYS2 directory is on PATH: $($onPath -join ', ')" }
+
+          # The whole environment, minus the variables the runner rewrites for
+          # every step (file paths with a per-step name, action inputs).
+          $skip = '^(GITHUB_(ENV|OUTPUT|PATH|STATE|STEP_SUMMARY|ACTION.*)|INPUT_.*|STATE_.*)$'
+          function Env-Map($lines) {
+            $m = @{}
+            foreach ($l in $lines) {
+              $i = $l.IndexOf('=')
+              if ($i -gt 0 -and $l.Substring(0, $i) -notmatch $skip) {
+                $m[$l.Substring(0, $i)] = $l.Substring($i + 1)
+              }
+            }
+            $m
+          }
+          $b = Env-Map (Get-Content "$env:RUNNER_TEMP\env-before.txt")
+          $a = Env-Map (Get-ChildItem env: | ForEach-Object { "$($_.Name)=$($_.Value)" })
+          $changes = @()
+          foreach ($k in (@($a.Keys) + @($b.Keys) | Sort-Object -Unique)) {
+            if (-not $b.ContainsKey($k))      { $changes += "+ $k=$($a[$k])" }
+            elseif (-not $a.ContainsKey($k))  { $changes += "- $k" }
+            elseif ($a[$k] -cne $b[$k])       { $changes += "~ $k" }
+          }
+          Write-Host "----- environment differences against the pre-install snapshot -----"
+          $changes | ForEach-Object { Write-Host "  $_" }
+          $expected = "+ AUTOTOOLS_BASH=C:\msys64\usr\bin\bash.exe"
+          $unexpected = @($changes | Where-Object { $_ -cne $expected })
+          if ($unexpected) { $fail += "environment changed beyond AUTOTOOLS_BASH: $($unexpected -join '; ')" }
+          if ($env:AUTOTOOLS_BASH -cne 'C:\msys64\usr\bin\bash.exe') {
+            $fail += "AUTOTOOLS_BASH is not set to the MSYS2 bash"
+          }
+
+          $was = Get-Content -Raw "$env:RUNNER_TEMP\resolve-before.json" | ConvertFrom-Json
+          Write-Host "----- where each command resolves (before -> now) -----"
+          foreach ($n in 'sh','bash','perl','link','find','sort','make','awk','sed',
+                         'grep','cmake','autoconf','autoheader','automake','m4','pacman') {
+            $now = @(Get-Command $n -All -CommandType Application `
+                                 -ErrorAction SilentlyContinue |
+                     ForEach-Object { $_.Source })
+            $old = @($was.$n)
+            Write-Host ("  {0,-10} {1}" -f $n, $(if ($now) { $now -join '  |  ' } else { '(nothing)' }))
+            if (($now -join ';') -cne ($old -join ';')) {
+              $fail += "$n resolves differently from before: was [$($old -join ';')], now [$($now -join ';')]"
+            }
+            if ($now | Where-Object { $_ -match '(?i)^C:\\msys' }) {
+              $fail += "$n resolves into MSYS2"
+            }
+          }
+          # Nothing the image had before this job should answer to these, so
+          # a hit means the install put them on PATH.
+          foreach ($n in 'autoconf','autoheader','automake','m4','pacman') {
+            if (Get-Command $n -ErrorAction SilentlyContinue) {
+              $fail += "$n is resolvable on PATH"
+            }
+          }
+
+          if ($fail) {
+            $fail | ForEach-Object { Write-Host "::error::$_" }
+            throw ('the autoconf install is visible to every recipe, which ' +
+                   'this step exists to prevent: an MSYS2 perl, link.exe or ' +
+                   'sh.exe ahead of the Windows ones changes how OpenSSL ' +
+                   'configures, how cl links and how CMake picks a generator. ' +
+                   'Keep C:\msys64 off PATH and reach it through ' +
+                   'AUTOTOOLS_BASH, or re-verify every recipe before allowing it.')
+          }
+          Write-Host "PATH and the environment are unchanged; AUTOTOOLS_BASH is the only addition"
+
       # Does NOT fail the job when a recipe fails. Everything this leg did
       # build is still scoped, validated and uploaded by the steps below, and
       # the job is failed at the very end instead - see "Fail the job if any
