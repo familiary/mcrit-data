@@ -20,8 +20,34 @@ with the same PicHash at both tags. But the removed line was inside
 ``#ifndef _MSC_VER`` / ``#else``, and what the MSVC half lost is
 ``__stosb((LPBYTE)hs, 0, sizeof(hde32s))`` in favour of ``memset``. So the
 length disassembler - one of the two parts a vendored copy freezes hardest -
-genuinely differs between these two tags when cl compiles it and does not
-when GCC does.
+genuinely differs between these two tags when cl compiles it, on both
+architectures, and differs only on x86 when GCC does. Measured on the
+artefacts: ``hde32_disasm`` 488 -> 490 instructions and ``hde64_disasm``
+500 -> 502, both with a changed PicHash, against a byte-identical GCC
+``hde64_disasm``.
+
+What the MSVC artefacts contain, measured, with the partition summing to the
+report total:
+
+    1.3.3 x86   48 = 32 MinHook + 1 HDE + 15 import thunks
+    1.3.4 x86   48 = 32 MinHook + 1 HDE + 15 import thunks
+    1.3.3 x64   46 = 29 MinHook + 1 HDE + 16 import thunks
+    1.3.4 x64   47 = 30 MinHook + 1 HDE + 16 import thunks
+
+Two things in that table are worth reading. There is no compiler-runtime row
+at all - not one CRT body survives into these images, which is what /MD plus
+the project's own /NOENTRY buys and is the difference between this and the
+static-CRT build that put 1947 Microsoft functions into VX-API. And every
+import thunk is one instruction, well under the census floor. There are also
+zero unnamed functions in all four, because the PDB names every body; the
+MinGW artefacts carry unnamed compiler glue that no name-matching filter can
+reach, and these carry none.
+
+MSVC keeps more of the project than GCC does: 32 bodies on x86 against
+MinGW's 25, because /O1 /Ob2 inlines less of this code than -O2 does. The x64
+pair differs between the tags by one body - ``ProcessThreadIPs`` is inlined at
+1.3.3 and emitted at 1.3.4 - which is why that column reads 29 and then 30.
+Eight bodies change PicHash between the tags on x86 and seven on x64.
 
 Upstream's own solution is used rather than CMake. CMake is the easier route
 and would give /MD and /INCREMENTAL:NO for free, but it only exists from
@@ -206,7 +232,18 @@ def _minhook_msvc(version, git_ref, vc_dir):
               "libMinHook.vcxproj builds from the five translation units - "
               "so the .sln is built rather than either project, and the DLL "
               "is the artefact because SMDA cannot read the static archive "
-              "the same build also produces. One upstream difference is "
+              "the same build also produces. Measured contents, summing to "
+              "the report total: 48 functions on x86 at both tags (32 "
+              "MinHook, 1 HDE, 15 one-instruction import thunks) and 46 at "
+              "v1.3.3 / 47 at v1.3.4 on x64 (29 and 30 MinHook, 1 HDE, 16 "
+              "thunks) - the extra x64 body at v1.3.4 is ProcessThreadIPs, "
+              "inlined at v1.3.3 and emitted at v1.3.4. No compiler-runtime "
+              "body survives into any of the four and no function is "
+              "unnamed: /MD plus the project's own /NOENTRY keeps the CRT "
+              "imported rather than linked, and the PDB names every body. "
+              "MSVC keeps more of the project than GCC does - 32 bodies on "
+              "x86 against the MinGW build's 25 - because upstream's Release "
+              "is /O1 /Ob2 rather than -O2. One upstream difference is "
               "MSVC-only and worth knowing: the HDE change between these two "
               "tags sits under #ifndef _MSC_VER/#else, so cl loses "
               "__stosb in favour of memset at v1.3.4 while GCC's "
