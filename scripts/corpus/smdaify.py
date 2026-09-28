@@ -253,7 +253,9 @@ def assert_not_incrementally_linked(report, binary_path):
     reports carry 265 - but scattered through the image rather than packed.
     Over all 392 generated reports the longest such run outside an
     incrementally linked image is 18 and the shortest inside one is 70; see
-    ``MAX_INCREMENTAL_THUNK_RUN`` for the full split.
+    ``MAX_INCREMENTAL_THUNK_RUN`` for the full split. A run of 32 or more is
+    then still admitted if it is provably a GCC landing-pad island, which is
+    what mingw-w64 libgrpc.dll on x86 has; see ``_is_landing_pad_island``.
 
     Kept unconditional now that the corpus has ELF artefacts as well, rather
     than narrowed to a PE: there is no /INCREMENTAL on ld, so it can only
@@ -264,7 +266,7 @@ def assert_not_incrementally_linked(report, binary_path):
     _is_direct_target rejects it; the eight ELF artefacts in this corpus
     carry no unnamed direct-jump function at all, so their longest run is 0.
     """
-    thunks = []
+    thunks = {}
     for function in report.getFunctions():
         if function.num_instructions != 1 or function.function_name:
             continue
@@ -273,14 +275,27 @@ def assert_not_incrementally_linked(report, binary_path):
         # "dword ptr [...]"; those are ordinary and are not what this is for.
         if instruction.mnemonic != "jmp" or not _is_direct_target(instruction):
             continue
-        thunks.append(function.offset)
+        thunks[function.offset] = _jump_target(instruction)
 
-    run = longest = 1 if thunks else 0
-    thunks.sort()
-    for previous, offset in zip(thunks, thunks[1:]):
-        run = run + 1 if offset - previous == _ILT_ENTRY_SIZE else 1
-        longest = max(longest, run)
+    runs = []
+    current = []
+    for offset in sorted(thunks):
+        if current and offset - current[-1] != _ILT_ENTRY_SIZE:
+            runs.append(current)
+            current = []
+        current.append(offset)
+    if current:
+        runs.append(current)
+    longest = max((len(run) for run in runs), default=0)
     if longest < config.MAX_INCREMENTAL_THUNK_RUN:
+        return
+
+    entries = set(function.offset for function in report.getFunctions())
+    long_runs = [run for run in runs
+                 if len(run) >= config.MAX_INCREMENTAL_THUNK_RUN]
+    if all(_is_landing_pad_island([thunks[offset] for offset in run], entries,
+                                  len(thunks), report.num_functions)
+           for run in long_runs):
         return
     raise DisassemblyError(
         "%s: %d unnamed one-instruction jumps, %d of them consecutive at a "
@@ -290,6 +305,51 @@ def assert_not_incrementally_linked(report, binary_path):
         "reached through that table, so its call graph and function count "
         "describe the table rather than the library."
         % (binary_path, len(thunks), longest, _ILT_ENTRY_SIZE))
+
+
+def _jump_target(instruction):
+    """The address a direct jump names, or None when it does not parse."""
+    try:
+        return int(instruction.operands, 0)
+    except (TypeError, ValueError):
+        return None
+
+
+def _is_landing_pad_island(targets, entries, thunk_count, function_count):
+    """True for a run of exception landing-pad stubs, which is not a table.
+
+    GCC splits a function it expects to fault rarely into a hot part and a
+    ``.cold`` part (``-freorder-blocks-and-partition``, on at -O2). The
+    LSDA call-site table of a 32-bit DWARF-unwound function names each landing
+    pad as an offset from the start of the hot part, and a landing pad whose
+    code was moved to the cold part is emitted in the hot part as
+    ``jmp <cold label>``. The stubs are packed after the function's last
+    ``ret``. One function
+    with 69 cleanups makes a run of 69 five-byte jumps that nothing calls and
+    the linker's symbol table does not name. mingw-w64 libgrpc.dll on x86 has
+    exactly that: the run is the tail of
+    ``GlobalSubchannelPool::UnregisterSubchannel``, its 69 stubs are 69 of the
+    69 distinct landing pads in that function's LSDA, and every one of them
+    jumps into the function's own ``.cold`` part. The x64 build of the same
+    source has no such run; its longest is 5.
+
+    Two measurements tell it from a link table, and both must hold so that an
+    image has to be misread twice to pass. An incremental link table exists
+    to give each function a fixed address, so every entry jumps to the
+    *entry* of a function; a landing-pad stub jumps into the middle of one
+    (or into cold code SMDA did not make a function of). And a link table
+    is roughly half of what SMDA counts as functions, where the stubs were
+    5.1 percent of the 25818 in libgrpc.dll. A target that does not parse
+    counts as a function entry, so the doubt goes to refusing.
+
+    ``config.MAX_LANDING_PAD_ENTRY_FRACTION`` and
+    ``config.MAX_LANDING_PAD_THUNK_SHARE`` say where the two cut off.
+    """
+    at_entries = sum(1 for target in targets
+                     if target is None or target in entries)
+    if at_entries > config.MAX_LANDING_PAD_ENTRY_FRACTION * len(targets):
+        return False
+    return thunk_count <= config.MAX_LANDING_PAD_THUNK_SHARE * function_count
 
 
 # E9 rel32, on x86 and x64 alike, which is what an incremental link table is

@@ -150,6 +150,27 @@ MIN_NAMED_SAMPLE_INSTRUCTIONS = 3
 # the count.
 MAX_INCREMENTAL_THUNK_RUN = 32
 
+# A run that long is still not a link table if it is a GCC exception
+# landing-pad island; see smdaify._is_landing_pad_island for what that is.
+# It has to pass both of these, so an image would have to be misread twice.
+#
+# The one image that has such a run is mingw-w64 gRPC 1.76.0 libgrpc.dll on
+# x86: 69 jumps in the tail of one function, none of their targets a
+# function entry (0 of 69), and 1318 unnamed one-instruction jumps in all
+# among 25818 functions, 5.1 percent. Of the 614 reports committed when this
+# was measured, the longest run in any other is 25 (poco 1.15.4 x86), and
+# that one's targets are not function entries either.
+#
+# The other side of each cut-off is not a measurement of a committed report,
+# because the incrementally linked images were refused and never committed.
+# It is what an incremental link table is: each entry is the only way into
+# one function, so its target is a function entry by construction, and the
+# seven recipes that produced them are recorded as putting roughly half of
+# the image in thunks (nlohmann_json 3.11.3 x86, 2936 of 5205). 10 percent
+# sits between 5.1 and that on one axis and between 0 and 100 on the other.
+MAX_LANDING_PAD_ENTRY_FRACTION = 0.10
+MAX_LANDING_PAD_THUNK_SHARE = 0.10
+
 
 def ensure_dirs():
     for path in (DOWNLOAD_DIR, SOURCE_DIR, ARTIFACT_DIR, REPORT_DIR):
