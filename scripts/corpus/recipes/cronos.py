@@ -31,23 +31,21 @@ pattern-scanner shape that propagates into other tooling far more often than
 the sleep trick does. ``bCompare`` and ``findPattern`` are the classic
 masked-signature-scan pair.
 
-**Built with MinGW although upstream builds with cl, and that deviation is
-the one thing to read before trusting this artefact.** Upstream's makefile
-drives ``cl``, so an MSVC artefact is what a sighting of this project would
-most likely match. It is not built that way here because it cannot be, on
-this repository's own runner: ``src/asm/rop.asm`` is NASM syntax
-(``[BITS 64]``, ``[SECTION .text]``, ``GLOBAL``), ml64 will not assemble it,
-and nasm is absent from the windows-2022 image - openssl_msvc.py already
-records that "windows-2022's toolset manifest does not list NASM", and
-syswhispers.py records the mirror-image problem, that MASM syntax is
-"rejected by both nasm and GAS". Translating rop.asm to MASM would mean
-patching upstream source, which this corpus refuses outright. So the options
-were a GCC build now or an MSVC build after adding nasm to
-`.github/workflows/windows-reference-data.yml`, and the second is a change to
-shared CI that affects every family and belongs in its own review. The MinGW
-artefact is what exists; an MSVC counterpart is a follow-up, and until it
-exists this family's coverage of real sightings is weaker than the other
-MSVC-native families here.
+This is the MinGW half of the family; cronos_msvc.py is the MSVC half, and
+that one matches most real sightings better because upstream's makefile drives
+``cl``. Both now exist, so this recipe is no longer a compromise - it is the
+GCC point of a two-compiler pair, the same arrangement MinHook and the other
+``*_msvc`` families here have.
+
+Getting the MSVC half took a workflow change worth knowing about, because
+``src/asm/rop.asm`` is NASM syntax (``[BITS 64]``, ``[SECTION .text]``,
+``GLOBAL``) that ml64 will not assemble, and nasm was absent from the
+windows-2022 image. Translating the assembly would have meant patching
+upstream source, which this corpus refuses outright, so the workflow installs
+nasm instead - deliberately **off PATH**, exposed as ``$env:NASM``, because
+OpenSSL's Configure probes ``nasm -v`` before its ``$disabled{asm}`` branch
+and would otherwise switch its uplink shim away from ml64 despite ``no-asm``.
+cronos_msvc.py's docstring carries the detail.
 
 The C compiles unmodified under mingw-w64 GCC 13 - no warnings at -O0 - and
 all six C functions plus the assembly routine survive into the image.
@@ -137,19 +135,19 @@ RECIPES = {
               "rdi/ret - bCompare and findPattern are the classic "
               "masked-signature-scan pair, and that shape propagates into "
               "other tooling far more often than the sleep trick does. "
-              "IMPORTANT DEVIATION: upstream's makefile drives cl, so an "
-              "MSVC build is what a real sighting would most likely match, "
-              "and this artefact is GCC. It is not built with MSVC because "
-              "it cannot be on this repository's runner - src/asm/rop.asm is "
-              "NASM syntax, ml64 will not assemble it, and nasm is absent "
-              "from the windows-2022 image, as openssl_msvc.py already "
-              "records. Translating the assembly to MASM would mean patching "
-              "upstream source, which this corpus refuses. An MSVC "
-              "counterpart needs nasm added to the Windows workflow and is a "
-              "follow-up; until then this family's coverage of real "
-              "sightings is weaker than the MSVC-native families here. The C "
-              "compiles unmodified under mingw-w64 GCC 13 with no warnings "
-              "at -O0, and all seven functions survive into the image. Built "
+              "This is the MinGW half of a two-compiler pair: "
+              "cronos_msvc.py builds the same commit with cl, which is what "
+              "upstream's own makefile drives and what a real sighting most "
+              "likely matches. The MSVC half needed nasm on the Windows "
+              "runner, because src/asm/rop.asm is NASM syntax that ml64 will "
+              "not assemble and translating it would mean patching upstream "
+              "source, which this corpus refuses; the workflow now installs "
+              "nasm deliberately OFF PATH and exposes it as %NASM%, so "
+              "OpenSSL's Configure - which probes nasm before its "
+              "$disabled{asm} branch - keeps taking its ml64 no-asm route "
+              "unchanged. The C compiles unmodified under mingw-w64 GCC 13 "
+              "with no warnings at -O0, and all seven functions survive into "
+              "the image. Built "
               "at -O0 because upstream passes no optimisation switch at all. "
               "x64 only, as upstream is: rop.asm is win64 and src/Cronos.c "
               "assigns to Rsp, Rip, Rcx, Rdx, R8 and R9, which exist only in "

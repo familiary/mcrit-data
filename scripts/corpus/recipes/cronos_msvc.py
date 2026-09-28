@@ -45,6 +45,49 @@ recipe's because it is a property of the source rather than of the compiler:
 macro, not a function, and the ``end`` label inside ``QuadSleep`` is a
 two-instruction ``add rsp, 0x28; ret`` tail - a branch target below the
 ten-instruction census floor. Neither is counted.
+
+What the artefact contains, measured, with the partition summing to the report
+total::
+
+    18 = 7 MinHook-style own bodies
+       + 7 one-instruction import thunks (CreateWaitableTimerW,
+         GetModuleHandleA, K32EnumProcessModules, K32GetModuleFileNameExA,
+         LoadLibraryA, SetWaitableTimer, SleepEx)
+       + 3 MSVC CRT bodies (printf 19, _vfprintf_l 15,
+         __scrt_common_main_seh 99)
+       + 1 unnamed 2-instruction body
+
+Against the MinGW build's 35, and the difference is almost entirely thunks:
+MinGW carries 24 one-instruction import thunks and libgcc's ``___chkstk_ms``
+where this carries 7. All seven own bodies are present in both and all clear
+the census floor: ``CronosSleep`` 355 against MinGW's 385, ``findGadget`` 89
+against 104, ``findInModule`` 35 against 44, ``main`` 19 against 21,
+``bCompare`` 32 against 28, ``findPattern`` 32 in both, ``QuadSleep`` 39 in
+both.
+
+``QuadSleep`` is worth one sentence: its PicHash is **identical** in the two
+artefacts. That is not a coincidence to be explained away - it is a
+hand-written assembly routine assembled by the same ``nasm -f win64`` from the
+same source in both recipes, so which C compiler linked it around cannot
+change its bytes. It means one of this family's seven bodies is shared between
+its own two artefacts, which is an intra-family duplicate rather than a
+cross-family collision, and it is a useful check that the assembler path
+behaves identically on both sides.
+
+Two of the three CRT bodies are the MSVC analogue of a case
+``scripts/corpus/README.md`` already documents for MinGW: the UCRT headers
+define ``printf`` as an inline wrapper over ``_vfprintf_l``, so both are
+compiled into every translation unit that calls them rather than imported, and
+the name-matching baseline does not reach them here.
+
+The third is the corpus's one standing leakage finding, and this artefact joins
+it rather than introducing it. ``__scrt_common_main_seh`` at 99 instructions is
+the MSVC CRT's x64 entry-point wrapper, already recorded in
+``scripts/corpus/README.md`` as present in Lua, MemoryModule and bzip2 while
+every one of its neighbours is dropped from 98 artefacts. Cronos is now the
+fourth MSVC EXE carrying it, which is one more artefact against the same
+unresolved finding rather than a new one - the leakage count counts hashes, and
+the hash is the same. The README's family list is updated accordingly.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -199,7 +242,27 @@ RECIPES = {
               "separate and keeps this artefact comparable with the MinGW one "
               "built at -O0. Built against the DLL runtime, so the MSVC C "
               "runtime is imported rather than linked in and stays "
-              "attributed to data/MSVC. x64 only, as upstream is: rop.asm is "
+              "attributed to data/MSVC. Measured contents, summing to the "
+              "report total: 18 functions = 7 own + 7 one-instruction import "
+              "thunks + 3 MSVC CRT bodies (printf 19, _vfprintf_l 15, "
+              "__scrt_common_main_seh 99) + 1 unnamed 2-instruction body, "
+              "against the MinGW build's 35 - the difference being almost "
+              "entirely thunks, since MinGW carries 24 plus libgcc's "
+              "___chkstk_ms. All seven own bodies appear in both and all "
+              "clear the ten-instruction census floor: CronosSleep 355 "
+              "against MinGW's 385, findGadget 89 against 104, findInModule "
+              "35 against 44, main 19 against 21, bCompare 32 against 28, "
+              "findPattern 32 in both, QuadSleep 39 in both - and QuadSleep's "
+              "PicHash is identical in the two artefacts, because a "
+              "hand-written assembly routine assembled by the same nasm "
+              "cannot depend on which C compiler linked it. printf and "
+              "_vfprintf_l are UCRT header inline wrappers, the MSVC analogue "
+              "of a MinGW case the pipeline README documents. "
+              "__scrt_common_main_seh is the corpus's one standing leakage "
+              "finding: this is the fourth MSVC EXE to carry it after Lua, "
+              "MemoryModule and bzip2, which is one more artefact against the "
+              "same unresolved hash rather than a new finding. x64 only, as "
+              "upstream is: rop.asm is "
               "win64 and src/Cronos.c assigns to Rsp, Rip, Rcx, Rdx, R8 and "
               "R9, which exist only in the 64-bit CONTEXT. Nothing in the "
               "tree is prebuilt and nothing is vendored.",

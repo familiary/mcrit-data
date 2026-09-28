@@ -123,12 +123,13 @@ misattribution; it is not a collision fix, and the two numbers move for
 different reasons.
 
 **What remains is one finding.** `__scrt_common_main_seh`, the MSVC CRT's
-x64 entry-point wrapper, at 99 instructions in Lua, MemoryModule and bzip2.
-It is unambiguously Microsoft's code and the baseline ought to catch it; it
+x64 entry-point wrapper, at 99 instructions in Lua, MemoryModule, bzip2 and -
+since the MSVC Cronos artefact arrived - Cronos. It is unambiguously
+Microsoft's code and the baseline ought to catch it; it
 does catch every one of its neighbours - `__scrt_initialize_crt`,
 `__scrt_acquire_startup_lock`, `__scrt_fastfail` and eleven more are removed
 from 98 artefacts each. What is known: it is x64 only, absent from every x86
-EXE; it has two bodies in this corpus, 99 instructions in those three and 98
+EXE; it has two bodies in this corpus, 99 instructions in those four and 98
 in q3vm, which builds with whole-program optimisation; and the EXE probe
 emits neither, though it links and runs like every other. The cause needs
 MSVC in front of it, so it is recorded here rather than guessed at, and
@@ -194,8 +195,12 @@ counted here. A refilter round is a misattribution fix, not a collision
 fix, and the two are measured separately on purpose. What did move since
 this paragraph was last written is three hashes, all of them in the
 differing-names bucket. The leakage count did not: it is the same single
-`__scrt_common_main_seh` across Lua, MemoryModule and bzip2, unchanged
-through the last imports and through 510 functions leaving 67 artefacts.
+`__scrt_common_main_seh`, unchanged through the last imports and through 510
+functions leaving 67 artefacts - though the family list it spans has since
+grown from Lua, MemoryModule and bzip2 to include Cronos, which is the fourth
+MSVC EXE here and behaves exactly like the other three. That is one more
+artefact carrying the same single unresolved finding rather than a new
+finding, and it does not move the leakage count, which counts hashes.
 
 That last step is the useful control. It added six MSVC families and eight
 ELF artefacts, among them five separate implementations of the same WOW64
@@ -576,16 +581,20 @@ three are equivalent:
   not the timer code but `findGadget`, `findInModule`, `findPattern` and
   `bCompare` - an `EnumProcessModules` walk and a masked signature scan, a
   shape that propagates into other tooling far more often than the sleep
-  technique does. It is the one of the three built against the wrong
-  compiler, and knowingly: upstream's makefile drives `cl`, but
-  `src/asm/rop.asm` is NASM syntax, `ml64` will not assemble it, and nasm is
-  absent from the `windows-2022` image - as the OpenSSL section above already
-  records. Translating the assembly would mean patching upstream, so the
-  artefact is a GCC build and an MSVC counterpart waits on nasm being added
-  to the Windows workflow. That is a change to shared CI affecting every
-  family and is deliberately left for its own review; until it lands, this
-  family matches real sightings, which are MSVC, more weakly than the
-  MSVC-native families here.
+  technique does. It is now the only one of the three with both compilers:
+  upstream's makefile drives `cl`, and `src/asm/rop.asm` is NASM syntax that
+  `ml64` will not assemble, so the MSVC artefact waited on nasm reaching the
+  `windows-2022` image - which it now does, installed by the workflow and
+  deliberately kept **off PATH**, exposed as `$env:NASM`. That shape is not
+  fussiness: OpenSSL's `vc_win64a_info` probes `nasm -v` *before* its
+  `$disabled{asm}` branch, so a nasm on PATH would be chosen despite
+  `openssl_msvc.py` passing `no-asm`, switching its uplink shim from
+  ml64/masm to nasm/nasm. Keeping nasm unreachable by name leaves every
+  existing recipe configuring exactly as before, and the workflow asserts it
+  rather than trusting it. The MSVC artefact is 18 functions against the
+  MinGW build's 35, all seven own bodies present in both; `QuadSleep` has the
+  same PicHash in both, because a hand-written assembly routine assembled by
+  the same nasm cannot depend on which C compiler linked it.
 * **Foliage** is the cleanest artefact of the three and the muddiest
   provenance. All 10 functions in its image are the project's own - 7 C
   bodies plus 3 assembly routines, no CRT and no import thunks at all, since
