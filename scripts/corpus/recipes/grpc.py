@@ -41,7 +41,11 @@ The build has three stages and the first is native:
   1. ``protoc`` and ``grpc_cpp_plugin`` are built for the *host*, because gRPC
      generates its own protos during the build and a cross-built protoc cannot
      run. This is why the whole thing is expensive: it compiles the vendored
-     protobuf twice, once for the host and once for the target.
+     protobuf twice, once for the host and once for the target. The native
+     compiler has to be named explicitly here, because
+     ``toolchain.build_env`` exports ``CC`` and ``CXX`` as the cross
+     compilers and CMake would otherwise configure the host stage with
+     mingw.
   2. The target is configured with ``gRPC_BUILD_CODEGEN=OFF``, so the plugins
      are not built again for Windows, and pointed at the host protoc.
   3. Only ``grpc`` and ``grpc++`` are built, rather than everything. That is
@@ -58,10 +62,15 @@ The build has three stages and the first is native:
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
-# Stage 1, host. No cross flags: this compiler output runs here, never on the
-# target. Only the C++ plugin is wanted, so the other language plugins are
-# off.
+# Stage 1, host. The native compiler is named explicitly and that is not
+# redundant: toolchain.build_env exports CC and CXX as the cross compilers, so
+# without this CMake configures the host stage with mingw, try_compile emits a
+# Windows .exe and check_type_size fails on "Cannot copy output executable ''"
+# in third_party/zlib before anything is built. This stage's output runs on
+# the build machine, never on the target. Only the C++ plugin is wanted, so
+# the other language plugins are off.
 _HOST_CMAKE = ("cmake -S . -B build-host -DCMAKE_BUILD_TYPE=Release "
+               "-DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ "
                "-DgRPC_BUILD_TESTS=OFF "
                "-DgRPC_BUILD_GRPC_CSHARP_PLUGIN=OFF "
                "-DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF "
