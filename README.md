@@ -54,6 +54,7 @@ Libraries
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [Boost](#boost)
+* [gRPC](#grpc)
 * [gperftools](#gperftools)
 * [Poco](#poco)
 * [monomorph](#monomorph)
@@ -723,6 +724,25 @@ Generated with `scripts/build_corpus.py`; see `data/boost/provenance.json` for s
 | boost | 1.92.0 | MinGW-w64 GCC 13 | [x86 PE](data/boost/x86/mcrit/boost_1.92.0_mingw13_x86_boost_url.dll.mcrit) / [x64 PE](data/boost/x64/mcrit/boost_1.92.0_mingw13_x64_boost_url.dll.mcrit) | [x86 PE](data/boost/x86/smda/boost_1.92.0_mingw13_x86_boost_url.dll.7z) / [x64 PE](data/boost/x64/smda/boost_1.92.0_mingw13_x64_boost_url.dll.7z) |
 | boost | 1.92.0 | MinGW-w64 GCC 13 | [x86 PE](data/boost/x86/mcrit/boost_1.92.0_mingw13_x86_boost_wave.dll.mcrit) / [x64 PE](data/boost/x64/mcrit/boost_1.92.0_mingw13_x64_boost_wave.dll.mcrit) | [x86 PE](data/boost/x86/smda/boost_1.92.0_mingw13_x86_boost_wave.dll.7z) / [x64 PE](data/boost/x64/smda/boost_1.92.0_mingw13_x64_boost_wave.dll.7z) |
 | boost | 1.92.0 | MinGW-w64 GCC 13 | [x86 PE](data/boost/x86/mcrit/boost_1.92.0_mingw13_x86_boost_wserialization.dll.mcrit) / [x64 PE](data/boost/x64/mcrit/boost_1.92.0_mingw13_x64_boost_wserialization.dll.mcrit) | [x86 PE](data/boost/x86/smda/boost_1.92.0_mingw13_x86_boost_wserialization.dll.7z) / [x64 PE](data/boost/x64/smda/boost_1.92.0_mingw13_x64_boost_wserialization.dll.7z) |
+<!-- /generated -->
+
+### gRPC<a id='grpc'></a>
+
+The C core, the C++ layer over it, the portability layer and the RFC 6724 address sorter - 19106 functions across seven artefacts, 13649 of them above the ten-instruction census floor. `libgrpc.dll` alone is 15017 functions on x64.  
+**Everything gRPC vendors is imported rather than absorbed, which is what makes these worth having.** gRPC carries abseil, protobuf, re2, zlib, c-ares and upb in its tree, and five of those are families of their own here. With `BUILD_SHARED_LIBS=ON` each becomes its own DLL and `libgrpc.dll` links against them - its import table names `libabsl_*`, `libupb_*`, `libgpr` and `libaddress_sorting`. Of its 10525 text symbols 8787 carry a grpc name; the 1555 `absl` ones are inline and template code instantiated into gRPC's own translation units, the accepted case [protobuf](#protobuf) already documents rather than linked-in object code, and the 153 `EVP_`/`X509_`/`SSL_` entries are one-instruction import thunks into boringssl.  
+**boringssl is built here and deliberately not recorded.** It has no family in this corpus and would be a valuable one, but not as built for this: `OPENSSL_NO_ASM` is required, because boringssl's x86-64 assembly is not assembled for mingw and the link dies on `fiat_p256_adx_mul`. With the assembly off, the field arithmetic, AES and the hashes are C fallbacks rather than what a real boringssl carries, so recording them would put bodies in the corpus that no Chrome or Android binary contains. It deserves its own recipe, with its assembly.  
+`libgrpc.dll` is recorded on x64 only. The x86 image trips the incremental-link-table check in `scripts/corpus/smdaify.py` with a run of 69 unnamed one-instruction `jmp rel32` functions at a five-byte stride and nothing else inside the run's span. That check's own docstring says it can only ever pass on an ld-linked binary, so this is a pattern it was not written for, and 69 sits between the longest benign run measured across the corpus (18) and the shortest malign one (70). Against that, its intent does not fit either: the images it was written for were roughly half thunk, where this one is 1321 of 25818 functions, 5.1 per cent. What emits the run has not been identified, so the artefact is left out rather than the check relaxed - x86 keeps `grpc++`, `gpr` and `address_sorting`.  
+This is the most expensive recipe here, because `protoc` and `grpc_cpp_plugin` have to be built for the host first - gRPC generates its own protos during the build - so the vendored protobuf is compiled twice per architecture. Only the `grpc` and `grpc++` targets are built: building everything also fails on re2's `testing` target, whose `util/pcre.cc` does not compile under GCC 13, and on `grpc_unsecure`, and neither is needed here.  
+
+Generated with `scripts/build_corpus.py`; see `data/grpc/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: grpc -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| grpc | 1.76.0 | MinGW-w64 GCC 13 | [x86 PE](data/grpc/x86/mcrit/grpc_1.76.0_mingw13_x86_address_sorting.dll.mcrit) / [x64 PE](data/grpc/x64/mcrit/grpc_1.76.0_mingw13_x64_address_sorting.dll.mcrit) | [x86 PE](data/grpc/x86/smda/grpc_1.76.0_mingw13_x86_address_sorting.dll.7z) / [x64 PE](data/grpc/x64/smda/grpc_1.76.0_mingw13_x64_address_sorting.dll.7z) |
+| grpc | 1.76.0 | MinGW-w64 GCC 13 | [x86 PE](data/grpc/x86/mcrit/grpc_1.76.0_mingw13_x86_gpr.dll.mcrit) / [x64 PE](data/grpc/x64/mcrit/grpc_1.76.0_mingw13_x64_gpr.dll.mcrit) | [x86 PE](data/grpc/x86/smda/grpc_1.76.0_mingw13_x86_gpr.dll.7z) / [x64 PE](data/grpc/x64/smda/grpc_1.76.0_mingw13_x64_gpr.dll.7z) |
+| grpc | 1.76.0 | MinGW-w64 GCC 13 | [x86 PE](data/grpc/x86/mcrit/grpc_1.76.0_mingw13_x86_grpc++.dll.mcrit) / [x64 PE](data/grpc/x64/mcrit/grpc_1.76.0_mingw13_x64_grpc++.dll.mcrit) | [x86 PE](data/grpc/x86/smda/grpc_1.76.0_mingw13_x86_grpc++.dll.7z) / [x64 PE](data/grpc/x64/smda/grpc_1.76.0_mingw13_x64_grpc++.dll.7z) |
+| grpc | 1.76.0 | MinGW-w64 GCC 13 | [x64 PE](data/grpc/x64/mcrit/grpc_1.76.0_mingw13_x64_grpc.dll.mcrit) | [x64 PE](data/grpc/x64/smda/grpc_1.76.0_mingw13_x64_grpc.dll.7z) |
 <!-- /generated -->
 
 ### gperftools<a id='gperftools'></a>

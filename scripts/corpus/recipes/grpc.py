@@ -6,7 +6,7 @@
 architectures". All of that is true and the build is still the most expensive
 in this corpus, but none of it is a blocker, so it is built.
 
-Four artefacts per architecture, all of them gRPC's own code:
+Four artefacts on x64 and three on x86, all of them gRPC's own code:
 
     libgrpc.dll             10525 text symbols - the C core
     libgrpc++.dll            1345 - the C++ layer over it
@@ -99,59 +99,78 @@ _CMAKE = ("cmake -S . -B build-{arch} -DCMAKE_SYSTEM_NAME=Windows "
           "protobuf/protoc-31.1.0")
 
 
-RECIPES = {
-    "grpc_1.76.0": Recipe(
+_BUILD = [
+    BuildStep(_HOST_CMAKE),
+    BuildStep("cmake --build build-host -j$(nproc) "
+              "--target protoc grpc_cpp_plugin"),
+    BuildStep(_CMAKE),
+    # gpr and address_sorting come along as dependencies of these two.
+    BuildStep("cmake --build build-{arch} -j$(nproc) --target grpc grpc++"),
+]
+
+_FLAGS = ("-O3 -DNDEBUG (CMake Release, GNU default), shared build so the "
+          "vendored abseil, protobuf, re2, zlib, c-ares and upb are imported "
+          "rather than linked in; OPENSSL_NO_ASM because boringssl's x86-64 "
+          "assembly is not assembled for mingw; gRPC_BUILD_CODEGEN=OFF with a "
+          "host-built protoc")
+
+_NOTES = (
+    "The C core, the C++ layer, the portability layer and the address sorter "
+    "- all gRPC's own code. gRPC vendors abseil, protobuf, re2, zlib, c-ares "
+    "and upb, five of which are families of their own here, and the shared "
+    "build keeps every one of them out: libgrpc.dll imports libabsl_*, "
+    "libupb_*, libgpr and libaddress_sorting rather than absorbing them. Of "
+    "its 10525 text symbols 8787 carry a grpc name; the 1555 absl ones are "
+    "inline and template code instantiated into gRPC's own translation "
+    "units, the same accepted case protobuf_31.1 records, and the 153 "
+    "EVP_/X509_/SSL_ entries are one-instruction import thunks into "
+    "boringssl. boringssl itself is built here but deliberately not "
+    "recorded: it needs OPENSSL_NO_ASM to link at all under mingw, which "
+    "replaces every primitive that matters with a C fallback, so its bodies "
+    "would match no real boringssl. protoc and grpc_cpp_plugin are built for "
+    "the host first because gRPC generates its own protos during the build, "
+    "which is what makes this the most expensive recipe here. Only the grpc "
+    "and grpc++ targets are built: building everything also fails on re2's "
+    "testing target, whose util/pcre.cc does not compile under GCC 13, and "
+    "on grpc_unsecure, and neither is needed for these artefacts.")
+
+_GRPC = Artifact(path="build-{arch}/libgrpc.dll", component="grpc.dll")
+_REST = [
+    Artifact(path="build-{arch}/libgrpc++.dll", component="grpc++.dll"),
+    Artifact(path="build-{arch}/libgpr.dll", component="gpr.dll"),
+    Artifact(path="build-{arch}/libaddress_sorting.dll",
+             component="address_sorting.dll"),
+]
+
+
+def _recipe(toolchains, artifacts, extra=""):
+    return Recipe(
         family="grpc",
         version="1.76.0",
         upstream="https://github.com/grpc/grpc",
         license="Apache-2.0",
         source=Source(git_url="https://github.com/grpc/grpc.git",
                       git_ref="v1.76.0"),
-        build=[
-            BuildStep(_HOST_CMAKE),
-            BuildStep("cmake --build build-host -j$(nproc) "
-                      "--target protoc grpc_cpp_plugin"),
-            BuildStep(_CMAKE),
-            # gpr and address_sorting come along as dependencies of these two.
-            BuildStep("cmake --build build-{arch} -j$(nproc) "
-                      "--target grpc grpc++"),
-        ],
-        artifacts=[
-            Artifact(path="build-{arch}/libgrpc.dll", component="grpc.dll"),
-            Artifact(path="build-{arch}/libgrpc++.dll",
-                     component="grpc++.dll"),
-            Artifact(path="build-{arch}/libgpr.dll", component="gpr.dll"),
-            Artifact(path="build-{arch}/libaddress_sorting.dll",
-                     component="address_sorting.dll"),
-        ],
-        toolchains=["mingw_x86", "mingw_x64"],
+        build=_BUILD,
+        artifacts=artifacts,
+        toolchains=toolchains,
         # Go is needed by boringssl's build, which generates sources with it.
         requires=["go"],
-        build_flags="-O3 -DNDEBUG (CMake Release, GNU default), shared build "
-                    "so the vendored abseil, protobuf, re2, zlib, c-ares and "
-                    "upb are imported rather than linked in; OPENSSL_NO_ASM "
-                    "because boringssl's x86-64 assembly is not assembled for "
-                    "mingw; gRPC_BUILD_CODEGEN=OFF with a host-built protoc",
-        notes="The C core, the C++ layer, the portability layer and the "
-              "address sorter - all four gRPC's own code. gRPC vendors "
-              "abseil, protobuf, re2, zlib, c-ares and upb, five of which are "
-              "families of their own here, and the shared build keeps every "
-              "one of them out: libgrpc.dll imports libabsl_*, libupb_*, "
-              "libgpr and libaddress_sorting rather than absorbing them. Of "
-              "its 10525 text symbols 8787 carry a grpc name; the 1555 absl "
-              "ones are inline and template code instantiated into gRPC's own "
-              "translation units, the same accepted case protobuf_31.1 "
-              "records, and the 153 EVP_/X509_/SSL_ entries are "
-              "one-instruction import thunks into boringssl. boringssl itself "
-              "is built here but deliberately not recorded: it needs "
-              "OPENSSL_NO_ASM to link at all under mingw, which replaces "
-              "every primitive that matters with a C fallback, so its bodies "
-              "would match no real boringssl. protoc and grpc_cpp_plugin are "
-              "built for the host first because gRPC generates its own protos "
-              "during the build, which is what makes this the most expensive "
-              "recipe here. Only the grpc and grpc++ targets are built: "
-              "building everything also fails on re2's testing target, whose "
-              "util/pcre.cc does not compile under GCC 13, and on "
-              "grpc_unsecure, and neither is needed for these artefacts.",
-    ),
+        build_flags=_FLAGS,
+        notes=_NOTES + extra,
+    )
+
+
+# Split by architecture for one reason only: libgrpc.dll is recorded on x64
+# and not on x86. See the module docstring for what the x86 image does and why
+# it is left out rather than forced through.
+RECIPES = {
+    "grpc_1.76.0": _recipe(["mingw_x64"], [_GRPC] + _REST),
+    "grpc_1.76.0_x86": _recipe(
+        ["mingw_x86"], list(_REST),
+        extra=" libgrpc.dll is not recorded on x86: its image trips the "
+              "incremental-link-table check with a 69-entry run of unnamed "
+              "one-instruction jumps, a pattern that check was not written "
+              "for and that has not been identified, so the artefact is left "
+              "out rather than the check relaxed."),
 }
