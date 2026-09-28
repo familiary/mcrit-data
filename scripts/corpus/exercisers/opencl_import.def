@@ -1,0 +1,48 @@
+; Import stub for the system OpenCL.dll, for gpudecryptshellcode.py.
+;
+; This file contributes no code to any artefact. dlltool turns it into an
+; import library so a mingw link can resolve the OpenCL entry points, and what
+; lands in the image is one jump thunk per symbol - the implementations live in
+; the OpenCL.dll a GPU driver installs, exactly as they do for a binary built
+; against the vendor SDK.
+;
+; It exists because mingw-w64 ships no OpenCL import library and the corpus
+; will not link the real one: KhronosGroup/OpenCL-ICD-Loader builds a static
+; libOpenCL.a, and linking that would put the ICD loader's own several hundred
+; functions into the sample under GpuDecryptShellcode's family name - the
+; misattribution this corpus exists to prevent. OpenCL-ICD-Loader was also
+; already ruled out as a family for the related reason that OpenCL.lib is an
+; import library and the code never lands in a sample.
+;
+; The 21 names below are exactly the entry points GpuDecryptShellcode.cpp
+; references, obtained from `nm -u` over its object file rather than copied
+; from a header, so this list cannot drift wider than what the program calls.
+; If upstream ever calls a new one the link fails with an undefined reference
+; naming it, which is the failure mode to want.
+;
+; x64 only, so no stdcall decoration: CL_API_CALL is __stdcall on 32-bit
+; Windows and the default convention on x64, and this recipe builds x64.
+
+LIBRARY OpenCL.dll
+EXPORTS
+clBuildProgram
+clCreateBuffer
+clCreateCommandQueueWithProperties
+clCreateContext
+clCreateKernel
+clCreateProgramWithSource
+clEnqueueNDRangeKernel
+clEnqueueReadBuffer
+clGetDeviceIDs
+clGetDeviceInfo
+clGetPlatformIDs
+clGetPlatformInfo
+clGetProgramBuildInfo
+clReleaseCommandQueue
+clReleaseContext
+clReleaseDevice
+clReleaseKernel
+clReleaseMemObject
+clReleaseProgram
+clRetainDevice
+clSetKernelArg
