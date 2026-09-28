@@ -964,6 +964,10 @@ The project carries no licence of any kind - no LICENSE or COPYING file and no c
 Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Hidden -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_Hidden.sys.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_Hidden.sys.7z) |
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.7z) |
 <!-- /generated -->
 
 ## String obfuscation
