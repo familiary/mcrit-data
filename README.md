@@ -844,6 +844,28 @@ Generated with `scripts/build_corpus.py`; see `data/NTTITONHeavensGate/provenanc
 | NTTITONHeavensGate | 2017-06-16 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/NTTITONHeavensGate/x86/mcrit/NTTITONHeavensGate_2017-06-16_msvc143_x86_HeavensGate.exe.mcrit) | [x86 PE](data/NTTITONHeavensGate/x86/smda/NTTITONHeavensGate_2017-06-16_msvc143_x86_HeavensGate.exe.7z) |
 <!-- /generated -->
 
+## Function hooking
+
+Libraries that redirect a function by patching its first instructions and relocating them into a trampoline. They are general-purpose instrumentation - debuggers, profilers and game modding use them as much as anything else - and they are here because they are vendored into a great deal of offensive tooling in exactly the form recorded.
+
+### MinHook<a id='minhook'></a>
+
+The canonical Windows inline hooking library, and in practice a vendored copy rather than a linked dependency: the five source files are dropped into a consumer's tree and compiled with the consumer's own flags, so what an analyst meets is whichever release the vendoring froze. Two releases are pinned for that reason, on dates rather than taste - v1.3.3 is 2017-01-07 and was the only release in existence for eight years, so it is what the overwhelming majority of vendored copies carry, while v1.3.4 is 2025-03-28 and is what a copy made today carries. The pin is justified by measurement: comparing the two MinGW builds body by body, 7 of 29 named functions differ on x86 and 6 of 29 on x64, `Freeze` most of all at 122 against 175 instructions.  
+The project's own count is 38 functions per architecture - `hook.c` 27, `buffer.c` 8, `trampoline.c` 2 and one HDE translation unit 1 - and it is 38 at both tags: the function inventory does not move between them, only the signatures (`void` to `VOID`, `VOID` to `BOOL` or `MH_STATUS`) and the bodies do, which is why the two-release pin is justified on measured PicHashes rather than on a count. Only one HDE unit compiles per architecture, because `hde32.c` and `hde64.c` each wrap their whole body in an `_M_IX86`/`_M_X64` guard and the other object comes out empty. One of the 38 is not MinHook's: `hde32_disasm`/`hde64_disasm` is the Hacker Disassembler Engine, Copyright (c) 2008-2009 Vyacheslav Patkov, vendored into `src/hde/`, so the honest partition is 37 MinHook plus 1 HDE. It is kept rather than dropped because a vendored copy genuinely carries it and MinHook is where most analysts will meet it.  
+At `-O2` twelve small statics inline away and 26 bodies survive per MinGW artefact (25 MinHook plus HDE, out of 31 functions on x86 and 59 on x64 - the rest being import thunks and mingw glue). MSVC keeps more, because upstream's own Release is `/O1 /Ob2` rather than `-O2`: 48 functions on x86 of which 32 are MinHook's, and 46 (v1.3.3) or 47 (v1.3.4) on x64 of which 29 and 30 are. Those four carry no compiler-runtime body at all and no unnamed function at all - `/MD` plus the project's own `/NOENTRY` keeps the CRT imported rather than linked, and the PDB names every body - where the MinGW artefacts carry mingw startup glue the name-matching filter cannot always reach. The DLL is the artefact rather than the static library the same builds also produce, because SMDA has no COFF/`ar` loader.  
+One upstream change is MSVC-only and is the opposite of what the diff suggests. Both HDE units change between the two tags, but for GCC all four edits are semantic no-ops - the two added `break` statements each terminate the final case of their switch, and `&` already binds tighter than `&&` - and `hde64_disasm` comes out byte-identical at 665 instructions. The line that was removed sat under `#ifndef _MSC_VER`, so the MSVC half loses `__stosb` in favour of `memset`: measured, `hde32_disasm` goes 488 to 490 instructions and `hde64_disasm` 500 to 502, both with a changed PicHash. So the length disassembler differs between these tags for cl on both architectures and for GCC only on x86.  
+
+Generated with `scripts/build_corpus.py`; see `data/MinHook/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: MinHook -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| MinHook | 1.3.3 | MinGW-w64 GCC 13 | [x86 PE](data/MinHook/x86/mcrit/MinHook_1.3.3_mingw13_x86_MinHook.dll.mcrit) / [x64 PE](data/MinHook/x64/mcrit/MinHook_1.3.3_mingw13_x64_MinHook.dll.mcrit) | [x86 PE](data/MinHook/x86/smda/MinHook_1.3.3_mingw13_x86_MinHook.dll.7z) / [x64 PE](data/MinHook/x64/smda/MinHook_1.3.3_mingw13_x64_MinHook.dll.7z) |
+| MinHook | 1.3.3 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/MinHook/x86/mcrit/MinHook_1.3.3_msvc143_x86_MinHook.dll.mcrit) / [x64 PE](data/MinHook/x64/mcrit/MinHook_1.3.3_msvc143_x64_MinHook.dll.mcrit) | [x86 PE](data/MinHook/x86/smda/MinHook_1.3.3_msvc143_x86_MinHook.dll.7z) / [x64 PE](data/MinHook/x64/smda/MinHook_1.3.3_msvc143_x64_MinHook.dll.7z) |
+| MinHook | 1.3.4 | MinGW-w64 GCC 13 | [x86 PE](data/MinHook/x86/mcrit/MinHook_1.3.4_mingw13_x86_MinHook.dll.mcrit) / [x64 PE](data/MinHook/x64/mcrit/MinHook_1.3.4_mingw13_x64_MinHook.dll.mcrit) | [x86 PE](data/MinHook/x86/smda/MinHook_1.3.4_mingw13_x86_MinHook.dll.7z) / [x64 PE](data/MinHook/x64/smda/MinHook_1.3.4_mingw13_x64_MinHook.dll.7z) |
+| MinHook | 1.3.4 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/MinHook/x86/mcrit/MinHook_1.3.4_msvc143_x86_MinHook.dll.mcrit) / [x64 PE](data/MinHook/x64/mcrit/MinHook_1.3.4_msvc143_x64_MinHook.dll.mcrit) | [x86 PE](data/MinHook/x86/smda/MinHook_1.3.4_msvc143_x86_MinHook.dll.7z) / [x64 PE](data/MinHook/x64/smda/MinHook_1.3.4_msvc143_x64_MinHook.dll.7z) |
+<!-- /generated -->
+
 ## WinAPI obfuscation
 
 Projects that hide which Windows APIs a binary calls - by resolving imports from hashes at run time, or by rewriting the import table so a call appears to target something else.
@@ -964,6 +986,81 @@ The project carries no licence of any kind - no LICENSE or COPYING file and no c
 Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Hidden -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_Hidden.sys.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_Hidden.sys.7z) |
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.7z) |
+<!-- /generated -->
+
+## Sleep obfuscation
+
+The three proof-of-concept implementations CoffeeLoader's sleep obfuscation is named after: Ekko (timer queues), Cronos (waitable timers) and Foliage (queued APCs). All three do the same thing by different means - capture a thread `CONTEXT`, clone it into a chain of frames whose `Rip` points at `VirtualProtect`, `SystemFunction032` and a wait in turn, then drive the chain through `NtContinue` so the thread sleeps with its own image encrypted and non-executable.
+
+All three sit below this corpus's eight-function floor on an honest count - Ekko is 2 functions, Cronos 7, Foliage 9 - and each recipe therefore sets `min_functions` to the count that was measured rather than to what the build emitted. That field exists for a project that genuinely contains that few functions; the floor has not moved, and the three are deliberately **not** combined into one family, because a hash matching Ekko reported under a name that also claimed the other two is precisely the misattribution this corpus exists to prevent.
+
+What they are worth is uneven, and worth stating plainly. None of them is a substitute for detecting the technique: what an analyst actually meets is an API sequence - `CreateTimerQueueTimer` or `SetWaitableTimer` or `NtQueueApcThread` around `NtContinue` and `SystemFunction032` - and that is a behavioural signature for a YARA rule or a sandbox trace, not something code similarity finds. Cronos ships its own `Cronos.yara` for exactly that. The reference value here is the surrounding code rather than the trick.
+
+### Ekko<a id='ekko'></a>
+
+Two functions, and that is the entire repository: `EkkoObf` in `Src/Ekko.c` (112 lines) and `main` in `Src/Main.c` (14 lines). `min_functions=2`. Both survive as separate bodies at upstream's `-Os`, but `main` is a 7-instruction `do { EkkoObf(4000); } while (TRUE)` loop and sits below the ten-instruction census floor - so the family's whole matchable contribution is `EkkoObf`, a single 236-instruction body carrying six memcpy'd `CONTEXT` structures and the thirty-odd register assignments that turn each into a call frame. The artefact is 24 functions: those 2, 21 one-instruction import thunks, and libgcc's `___chkstk_ms`.  
+x64 only, and not by this recipe's choice - `Src/Ekko.c` assigns to `Rsp`, `Rip`, `Rcx`, `Rdx`, `R8` and `R9`, which exist only in the 64-bit `CONTEXT`, and upstream's makefile defines `CCX86` and never uses it. Built at upstream's own `-Os` rather than `-O2`: unlike a vendored library compiled at a consumer's optimisation level, this is a self-contained proof of concept people build as it stands. Upstream's `-s` and `-Wl,-s` are dropped so the COFF symbol table survives. No licence of any kind.  
+
+Generated with `scripts/build_corpus.py`; see `data/Ekko/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Ekko -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Ekko | 2022-08-24 | MinGW-w64 GCC 13 | [x64 PE](data/Ekko/x64/mcrit/Ekko_2022-08-24_mingw13_x64_Ekko.x64.exe.mcrit) | [x64 PE](data/Ekko/x64/smda/Ekko_2022-08-24_mingw13_x64_Ekko.x64.exe.7z) |
+<!-- /generated -->
+
+### Cronos<a id='cronos'></a>
+
+Seven functions, the whole project, and the strongest reference data of the three: every one of the seven clears the ten-instruction census floor, from `main` at 21 to `CronosSleep` at 385. `min_functions=7`, the same count `Obfuscator4g3nt47` is admitted at. `InitializeTimerMs` is a macro rather than a function, and the `end` label inside `QuadSleep` is a two-instruction `add rsp, 0x28; ret` tail - a branch target below the floor - so neither is counted. The artefact is 35 functions: those 7, two named `K32*` import thunks, 24 one-instruction thunks, and libgcc's `___chkstk_ms`.  
+The reusable part is not the timer code. `CronosSleep` is the technique, but `findGadget` (104 instructions) and its helpers are a pattern scanner - an `EnumProcessModules` walk, a first-section-header parse, and a masked scan for `pop rcx; ret`, `pop rdx; ret` and `add rsp, 0x20; pop rdi; ret` - and `bCompare`/`findPattern` are the classic masked-signature-scan pair. That shape propagates into other tooling far more often than the sleep trick does.  
+**Built with both compilers**, which upstream's own makefile makes the right shape: it drives `cl`, so the MSVC artefact is what most real sightings match, and the MinGW one is the GCC point of the pair. The MSVC half is 18 functions against MinGW's 35 - the gap is almost entirely import thunks, since MinGW carries 24 one-instruction thunks plus libgcc's `___chkstk_ms` where MSVC carries 7. All seven own bodies appear in both and all clear the census floor: `CronosSleep` 355 against 385, `findGadget` 89 against 104, `findInModule` 35 against 44, `main` 19 against 21, `bCompare` 32 against 28, `findPattern` 32 in both, `QuadSleep` 39 in both — and `QuadSleep`'s PicHash is *identical* across the two, because a hand-written assembly routine assembled by the same `nasm -f win64` cannot depend on which C compiler linked it.  
+Getting the MSVC half needed nasm on the runner, since `src/asm/rop.asm` is NASM syntax `ml64` will not assemble and translating it would mean patching upstream — which this corpus refuses. The workflow installs nasm **off `PATH`**, exposed as `$env:NASM`, and that is deliberate: OpenSSL's `vc_win64a_info` probes `nasm -v` *before* its `$disabled{asm}` branch, so a nasm on `PATH` would be chosen despite `openssl_msvc.py` passing `no-asm` and would switch its uplink shim from ml64/masm to nasm/nasm. Keeping nasm unreachable by name leaves every existing recipe configuring exactly as before, and the workflow asserts that rather than trusting it. Both halves are built at their compiler's no-optimisation default (`-O0` / `/Od`), matching upstream, which is also what keeps `bCompare` from folding into `findPattern`.  
+The MSVC artefact carries the corpus's one standing leakage finding, `__scrt_common_main_seh` at 99 instructions, making it the fourth MSVC EXE to do so after Lua, MemoryModule and bzip2 — one more artefact against the same unresolved hash rather than a new finding. Its `printf` (19) and `_vfprintf_l` (15) are UCRT header inline wrappers, the MSVC analogue of a MinGW case the pipeline README documents.  
+GPL-3.0, and the only one of the three sleep-obfuscation families that ships a licence at all.  
+
+Generated with `scripts/build_corpus.py`; see `data/Cronos/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Cronos -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Cronos | 2023-09-26 | MinGW-w64 GCC 13 | [x64 PE](data/Cronos/x64/mcrit/Cronos_2023-09-26_mingw13_x64_Cronos.exe.mcrit) | [x64 PE](data/Cronos/x64/smda/Cronos_2023-09-26_mingw13_x64_Cronos.exe.7z) |
+| Cronos | 2023-09-26 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Cronos/x64/mcrit/Cronos_2023-09-26_msvc143_x64_Cronos.exe.mcrit) | [x64 PE](data/Cronos/x64/smda/Cronos_2023-09-26_msvc143_x64_Cronos.exe.7z) |
+<!-- /generated -->
+
+### Foliage<a id='foliage'></a>
+
+The cleanest artefact of the three and the muddiest provenance. Every one of the 10 functions in its image is the project's own - 7 C bodies plus 3 assembly routines, with no CRT body and no import thunk at all, because it is `-nostdlib` and resolves APIs by hash at run time. `min_functions=9`, the count in the source; `-flto` inlines `ObfuscateSleep` and `HashString` into `Start`, which is why that one body is 864 instructions and why the function that *is* the sleep technique has no separate body here.  
+Three things about it are recorded rather than glossed. The upstream the technique is named for, `SecIdiot/FOLIAGE`, is a 404 today (the account was renamed), so what is built is the `y11en` mirror - the in-tree copyright headers still read Austin Hudson and GuidePoint Security LLC, so this is the original author's code carried by a third party rather than a rewrite, but these bytes come from a mirror and no upstream release exists to compare them against. There is no licence file of any kind. And the project is not a sleep-obfuscation library: its own headers call it a "dns over http(s) persistence stager", and only `ObfuscateAddFn` and `ObfuscateSleep` are the technique - the other seven functions are ordinary PIC-stager furniture (API hashing, a PEB walk, an export-table parse, heap wrappers) whose shape is common to a whole genre of loaders, so a match on `PebGetModule` is not evidence of Foliage specifically.  
+Built with `-D_WIN32_WINNT=0x0600`, without which the tree does not compile at all against current mingw-w64 headers: `tebpeb.h` redefines `struct _PROCESSOR_NUMBER` and `apidef.h` declares `SetProcessValidCallTargets` with a different return type - four hard errors. That is a command-line define, not a source patch. `--image-base=0` is added because `scripts/linker.ld` replaces `SECTIONS` wholesale and gives `.text` no address, so it lands below mingw's default image base and SMDA refuses the result outright (measured: 0 functions, status `error`, against 10 and `ok` once the base is 0).  
+
+Generated with `scripts/build_corpus.py`; see `data/Foliage/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Foliage -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Foliage | 2021-03-14 | MinGW-w64 GCC 13 | [x64 PE](data/Foliage/x64/mcrit/Foliage_2021-03-14_mingw13_x64_FOLIAGE.x64.exe.mcrit) | [x64 PE](data/Foliage/x64/smda/Foliage_2021-03-14_mingw13_x64_FOLIAGE.x64.exe.7z) |
+<!-- /generated -->
+
+## GPU-assisted decryption
+
+### GpuDecryptShellcode<a id='gpudecryptshellcode'></a>
+
+Decrypts a payload on the GPU with an OpenCL kernel, so a memory scanner watching the host process never sees the decryption loop. Two functions are the whole project - `getErrorString` and `main`, in one 193-line translation unit - so `min_functions=2`.
+
+**This is the weakest reference data in the corpus, and the entry says so rather than leaving it to be discovered.** Three reasons, none of them the function count. The technique is not native code at all: the GPU kernel is a C string literal handed to `clCreateProgramWithSource` and compiled by the driver at run time, so it can never appear in any artefact this pipeline produces - what is recorded is the host-side plumbing. One of the two functions is not really this project's: `getErrorString` is a 64-case OpenCL error-code-to-string switch, the ubiquitous copy-pasted helper whose `// run-time and JIT compiler errors` comment is verbatim from the version circulated for a decade, so a hit on it means somebody used OpenCL and pasted the usual table rather than that this project is present - and it is the obvious candidate to collide with any future OpenCL family here. What remains is `main`, which is OpenCL host boilerplate, though at 721 instructions it is a substantial body because `-O2` inlines the CLHPP wrappers and the iostream and string use into it.  
+The artefact is 66 functions, and the partition is worth reading because only 2 of them are this family's: 2 project bodies (`getErrorString` 149 instructions, `main` 721), 2 CLHPP header bodies (`Wrapper<>::release`, 4 and 6 instructions, both under the census floor), 21 one-instruction OpenCL import thunks, 18 libstdc++ entries, 6 C++ static-init and EH glue bodies, 16 unnamed (15 thunks plus libgcc's `___chkstk_ms`), and one `printf` constprop clone the name-matching baseline does not reach. Of the 18 libstdc++ entries, 15 are one-instruction imports because libstdc++ is linked dynamically; **3 are real bodies above the ten-instruction floor** - `std::endl` at 44, and `std::vector<cl::Platform>::_M_default_append` and `std::vector<cl::Device>::_M_default_append` at 104 and 150 - which are standard-library template instantiations compiled into this translation unit. That is the accepted case rather than leakage, for the reason the pipeline README gives: claiming libstdc++ header code cannot appear in a binary that uses libstdc++ would be the wrong call, and `explain_collisions.py` classifies `_M_default_append` as standard-library code because it is an internal `std::vector` member.  
+Linked `-shared-libgcc` and deliberately **not** `-static-libstdc++`, which would pull roughly thirteen thousand libstdc++ and libgcc bodies into a two-function family. Built with MinGW although upstream ships only a `.sln`: the project file hardcodes one developer's absolute include paths (`C:\Users\jdoe\source\OpenCL-CLHPP\include`) and `$(INTELOCLSDKROOT)\lib\x64`, so the MSVC route needs its paths replaced before it builds anywhere either, and both compilers need the Khronos headers supplied externally - they are pinned as `extra_sources` at `v2026.05.29`. mingw-w64 ships no OpenCL import library, so one is generated with `dlltool` from `scripts/corpus/exercisers/opencl_import.def`, listing exactly the 21 entry points the program references; the real OpenCL-ICD-Loader is deliberately not linked, because its static library would file several hundred of its own functions under this family. No licence of any kind.  
+
+Generated with `scripts/build_corpus.py`; see `data/GpuDecryptShellcode/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: GpuDecryptShellcode -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| GpuDecryptShellcode | 2025-05-22 | MinGW-w64 GCC 13 | [x64 PE](data/GpuDecryptShellcode/x64/mcrit/GpuDecryptShellcode_2025-05-22_mingw13_x64_GpuDecryptShellcode.exe.mcrit) | [x64 PE](data/GpuDecryptShellcode/x64/smda/GpuDecryptShellcode_2025-05-22_mingw13_x64_GpuDecryptShellcode.exe.7z) |
 <!-- /generated -->
 
 ## String obfuscation
