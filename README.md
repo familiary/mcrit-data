@@ -85,6 +85,7 @@ Offensive tooling
 * [BlackBoneDrv](#blackbonedrv)
 * [SysWhispers](#syswhispers)
 * [Hidden](#hidden)
+* [RealBlindingEDR](#realblindingedr)
 
 String obfuscation
 * [Obfuscate](#obfuscate)
@@ -900,7 +901,7 @@ Generated with `scripts/build_corpus.py`; see `data/CallObfuscator/provenance.js
 
 ## Offensive tooling
 
-Public offensive-tooling code bases that are copied into implants more or less verbatim. Every one of them needs Visual Studio - ATL, the DIA SDK, MASM, or in the two kernel drivers' case a WDK - and they are built on a windows-2022 runner by `.github/workflows/windows-reference-data.yml` rather than approximated with GCC.
+Public offensive-tooling code bases that are copied into implants more or less verbatim. All of them are built on a windows-2022 runner by `.github/workflows/windows-reference-data.yml` rather than approximated with GCC. For most of them that is forced: they need ATL, the DIA SDK, MASM, or in the two kernel drivers' case a WDK. RealBlindingEDR is the one exception and its reason is narrower - nothing in its tree links an import library by name, so a cross build is not obviously blocked, but it has not been measured and no claim is made either way.
 ### VX-API<a id='vx-api'></a>
 
 A collection of Win32 API-abuse routines. Upstream ships no static-library or DLL configuration, so the sources are compiled into one and linked with `/OPT:NOREF`, which keeps routines nothing calls - the point here is coverage, not a minimal binary. A small number of sources need ATL or `__try`/`__except` and are skipped.  
@@ -964,6 +965,31 @@ The project carries no licence of any kind - no LICENSE or COPYING file and no c
 Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Hidden -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_Hidden.sys.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_Hidden.sys.7z) |
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.7z) |
+<!-- /generated -->
+
+### RealBlindingEDR<a id='realblindingedr'></a>
+
+A ring-3 EDR blinder. It loads a signed third-party driver and, through that driver's arbitrary kernel read and write, walks and clears the callback arrays security products register: the process, thread and image-load notify routine arrays, the object-manager callbacks behind `ObRegisterCallbacks`, the registry callbacks behind `CmRegisterCallback`, and the minifilter instance lists. Reference data for it exists so that a copy of these bodies met inside a sample is named rather than read as novel code, which is the same job [VX-API](#vx-api), [CallObfuscator](#callobfuscator) and [Hidden](#hidden) already do here.  
+Unusually for this corpus the reported count and the honest count are nearly the same, because nothing in the tree is vendored - no submodule, no third-party source file. The 40 functions at V1.0 through V1.2, and the 45 from V1.2.1, partition exactly: 15 (19 from V1.2.1) are one-instruction import thunks, 2 are Microsoft's - the ucrt's inline `printf` wrapper and `__scrt_common_main_seh` - and the remaining **23** (**24** from V1.2.1) are the project's own. Judge coverage on those, and note that they agree with the 23 and 24 function definitions counted in the source rather than being an estimate.  
+Five artefacts for seven tags. Two tags are not distinct source states - V1.5 is byte-identical to V1.2.1 over both source files and V1.5.1 to V1.5.2 - so building them would file identical images under different version numbers and teach MCRIT that a match is ambiguous between versions that are in fact the same code. What the five that are built do carry, measured by PicHash over the own-code functions: V1.1 changes 3 bodies against V1.0, V1.2 changes 14 against V1.1, V1.2.1 changes 4 and adds `GenerateRandomName`, and V1.5.2 changes exactly one, `ClearMiniFilterCallback`. That is 46 distinct bodies across the five artefacts' 117 own-code slots, so version coverage here is mostly the same bodies repeated and the V1.5.2 artefact earns its place on a single function. The five sha256s are all different; the near-duplication is in the code, not in the files.  
+x64 only, and measured rather than assumed. The solution offers Win32 and that configuration may well compile, but every address this program handles is a 64-bit kernel address and both drivers it is written around are x86-64 images, so a Win32 build would be a program that cannot do what it is for, and its function bodies would be shapes no real sample can contain.  
+Built `/MD` where upstream asks for `/MT`, so the MSVC runtime is imported and stays attributed to `data/MSVC` instead of entering the corpus under this name - on a 24-function program the static CRT would have made the family almost entirely Microsoft's code, which is the lesson `HiddenCLI.exe` taught and `scripts/corpus/wdk-driver-playbook.md` records. Whole-program optimization, `/OPT:REF` and `/OPT:ICF` are turned off, which on a program made of small helpers is what keeps `DellRead`, `DellWrite`, `IsEDR` and `AddEDRIntance` from being inlined away or folded together; it also means these images are not byte-comparable with a binary built the way upstream configures it. They are reproducible in themselves: `/Brepro` gave V1.2.1 the same sha256 in two runs six hours apart on different runners.  
+The two prebuilt `.sys` files in the repository root are deliberately not artefacts. They are third-party signed kernel drivers carried in the tree as data, with no line of source anywhere in it, and filing another vendor's driver under this project's name would be the same misattribution CallObfuscator's recipe refuses when it declines to record the PE that tool writes.  
+
+Generated with `scripts/build_corpus.py`; see `data/RealBlindingEDR/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: RealBlindingEDR -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| RealBlindingEDR | 1.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/RealBlindingEDR/x64/mcrit/RealBlindingEDR_1.0_msvc143_x64_RealBlindingEDR.exe.mcrit) | [x64 PE](data/RealBlindingEDR/x64/smda/RealBlindingEDR_1.0_msvc143_x64_RealBlindingEDR.exe.7z) |
+| RealBlindingEDR | 1.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/RealBlindingEDR/x64/mcrit/RealBlindingEDR_1.1_msvc143_x64_RealBlindingEDR.exe.mcrit) | [x64 PE](data/RealBlindingEDR/x64/smda/RealBlindingEDR_1.1_msvc143_x64_RealBlindingEDR.exe.7z) |
+| RealBlindingEDR | 1.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/RealBlindingEDR/x64/mcrit/RealBlindingEDR_1.2_msvc143_x64_RealBlindingEDR.exe.mcrit) | [x64 PE](data/RealBlindingEDR/x64/smda/RealBlindingEDR_1.2_msvc143_x64_RealBlindingEDR.exe.7z) |
+| RealBlindingEDR | 1.2.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/RealBlindingEDR/x64/mcrit/RealBlindingEDR_1.2.1_msvc143_x64_RealBlindingEDR.exe.mcrit) | [x64 PE](data/RealBlindingEDR/x64/smda/RealBlindingEDR_1.2.1_msvc143_x64_RealBlindingEDR.exe.7z) |
+| RealBlindingEDR | 1.5.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/RealBlindingEDR/x64/mcrit/RealBlindingEDR_1.5.2_msvc143_x64_RealBlindingEDR.exe.mcrit) | [x64 PE](data/RealBlindingEDR/x64/smda/RealBlindingEDR_1.5.2_msvc143_x64_RealBlindingEDR.exe.7z) |
 <!-- /generated -->
 
 ## String obfuscation
