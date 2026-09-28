@@ -992,6 +992,41 @@ Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for 
 | Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.7z) |
 <!-- /generated -->
 
+## Sleep obfuscation
+
+The three proof-of-concept implementations CoffeeLoader's sleep obfuscation is named after: Ekko (timer queues), Cronos (waitable timers) and Foliage (queued APCs). All three do the same thing by different means - capture a thread `CONTEXT`, clone it into a chain of frames whose `Rip` points at `VirtualProtect`, `SystemFunction032` and a wait in turn, then drive the chain through `NtContinue` so the thread sleeps with its own image encrypted and non-executable.
+
+All three sit below this corpus's eight-function floor on an honest count - Ekko is 2 functions, Cronos 7, Foliage 9 - and each recipe therefore sets `min_functions` to the count that was measured rather than to what the build emitted. That field exists for a project that genuinely contains that few functions; the floor has not moved, and the three are deliberately **not** combined into one family, because a hash matching Ekko reported under a name that also claimed the other two is precisely the misattribution this corpus exists to prevent.
+
+What they are worth is uneven, and worth stating plainly. None of them is a substitute for detecting the technique: what an analyst actually meets is an API sequence - `CreateTimerQueueTimer` or `SetWaitableTimer` or `NtQueueApcThread` around `NtContinue` and `SystemFunction032` - and that is a behavioural signature for a YARA rule or a sandbox trace, not something code similarity finds. Cronos ships its own `Cronos.yara` for exactly that. The reference value here is the surrounding code rather than the trick.
+
+### Ekko<a id='ekko'></a>
+
+Two functions, and that is the entire repository: `EkkoObf` in `Src/Ekko.c` (112 lines) and `main` in `Src/Main.c` (14 lines). `min_functions=2`. Both survive as separate bodies at upstream's `-Os`, but `main` is a 7-instruction `do { EkkoObf(4000); } while (TRUE)` loop and sits below the ten-instruction census floor - so the family's whole matchable contribution is `EkkoObf`, a single 236-instruction body carrying six memcpy'd `CONTEXT` structures and the thirty-odd register assignments that turn each into a call frame. The artefact is 24 functions: those 2, 21 one-instruction import thunks, and libgcc's `___chkstk_ms`.  
+x64 only, and not by this recipe's choice - `Src/Ekko.c` assigns to `Rsp`, `Rip`, `Rcx`, `Rdx`, `R8` and `R9`, which exist only in the 64-bit `CONTEXT`, and upstream's makefile defines `CCX86` and never uses it. Built at upstream's own `-Os` rather than `-O2`: unlike a vendored library compiled at a consumer's optimisation level, this is a self-contained proof of concept people build as it stands. Upstream's `-s` and `-Wl,-s` are dropped so the COFF symbol table survives. No licence of any kind.  
+
+Generated with `scripts/build_corpus.py`; see `data/Ekko/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Ekko -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Ekko | 2022-08-24 | MinGW-w64 GCC 13 | [x64 PE](data/Ekko/x64/mcrit/Ekko_2022-08-24_mingw13_x64_Ekko.x64.exe.mcrit) | [x64 PE](data/Ekko/x64/smda/Ekko_2022-08-24_mingw13_x64_Ekko.x64.exe.7z) |
+<!-- /generated -->
+
+### Foliage<a id='foliage'></a>
+
+The cleanest artefact of the three and the muddiest provenance. Every one of the 10 functions in its image is the project's own - 7 C bodies plus 3 assembly routines, with no CRT body and no import thunk at all, because it is `-nostdlib` and resolves APIs by hash at run time. `min_functions=9`, the count in the source; `-flto` inlines `ObfuscateSleep` and `HashString` into `Start`, which is why that one body is 864 instructions and why the function that *is* the sleep technique has no separate body here.  
+Three things about it are recorded rather than glossed. The upstream the technique is named for, `SecIdiot/FOLIAGE`, is a 404 today (the account was renamed), so what is built is the `y11en` mirror - the in-tree copyright headers still read Austin Hudson and GuidePoint Security LLC, so this is the original author's code carried by a third party rather than a rewrite, but these bytes come from a mirror and no upstream release exists to compare them against. There is no licence file of any kind. And the project is not a sleep-obfuscation library: its own headers call it a "dns over http(s) persistence stager", and only `ObfuscateAddFn` and `ObfuscateSleep` are the technique - the other seven functions are ordinary PIC-stager furniture (API hashing, a PEB walk, an export-table parse, heap wrappers) whose shape is common to a whole genre of loaders, so a match on `PebGetModule` is not evidence of Foliage specifically.  
+Built with `-D_WIN32_WINNT=0x0600`, without which the tree does not compile at all against current mingw-w64 headers: `tebpeb.h` redefines `struct _PROCESSOR_NUMBER` and `apidef.h` declares `SetProcessValidCallTargets` with a different return type - four hard errors. That is a command-line define, not a source patch. `--image-base=0` is added because `scripts/linker.ld` replaces `SECTIONS` wholesale and gives `.text` no address, so it lands below mingw's default image base and SMDA refuses the result outright (measured: 0 functions, status `error`, against 10 and `ok` once the base is 0).  
+
+Generated with `scripts/build_corpus.py`; see `data/Foliage/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Foliage -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Foliage | 2021-03-14 | MinGW-w64 GCC 13 | [x64 PE](data/Foliage/x64/mcrit/Foliage_2021-03-14_mingw13_x64_FOLIAGE.x64.exe.mcrit) | [x64 PE](data/Foliage/x64/smda/Foliage_2021-03-14_mingw13_x64_FOLIAGE.x64.exe.7z) |
+<!-- /generated -->
+
 ## String obfuscation
 
 Four compile-time string obfuscators, which hide literals by encrypting them during compilation and decrypting on first use, and one post-build patcher that does the same job from outside the compiler. None of the four exists in a binary until something uses it - the C++ ones are header-only and almost entirely `constexpr`, and the Rust one encodes in `const` context - so the reference data comes from an exerciser or driver that uses the library; the functions recorded are the library's own.

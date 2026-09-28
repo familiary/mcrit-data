@@ -549,33 +549,49 @@ Recorded here so the analysis is not repeated:
 | gperftools (tcmalloc) | #10 | its Windows port targets MSVC; `src/windows/port.h` clashes with mingw's `nanosleep` linkage and needs a source patch |
 | google/tcmalloc | #10 | Bazel-only and Linux-only - it cannot produce a PE at all. Issue #10's "tcmalloc" is almost certainly gperftools |
 | gRPC | #10 | cross-building needs a full native build first to obtain `protoc` and `grpc_cpp_plugin`, plus boringssl (which needs Go); 45-90 minutes for two architectures, and its statically-linked-into-Windows-malware rate is close to zero |
-| Cracked5pider/Ekko | - | two functions, `EkkoObf` and `main`, and that is the whole repository: `Src/Ekko.c` is 112 lines and `Src/Main.c` is 14. Against a floor of eight there is nothing to weigh. Its makefile also builds x64 only, strips with `-s`, and compiles at `-Os` with `-falign-functions=1` |
-| Idov31/Cronos | - | seven functions: `main`, `CronosSleep`, `bCompare`, `findPattern`, `findInModule`, `findGadget` and the NASM routine `QuadSleep`. One short of the floor, and the shortfall is not a technicality worth arguing - `InitializeTimerMs` is a macro, and the `end` label inside `QuadSleep` is a two-instruction `add rsp, 0x28; ret` tail that sits below the ten-instruction minhash floor even if SMDA recovers it as a function of its own |
-| Foliage | - | the upstream this technique is named for, `SecIdiot/FOLIAGE`, is gone (404, the account renamed), which is the `sc4cpp` situation above. The surviving `y11en/FOLIAGE` is a third-party reproduction, so filing it as "Foliage" would attribute a reproducer's code to the technique's author. It is also not a sleep-obfuscation library: its own headers call it a "dns over http(s) persistence stager", and of its nine `D_SEC` functions only `ObfuscateAddFn` and `ObfuscateSleep` are the technique - `HashString`, `PebGetModule`, `PeGetFuncEat`, `NtMemAlloc`, `NtMemFree`, `Start` and `Leave` are generic position-independent stager boilerplate. It ships no licence file of any kind, and its makefile is `-s -flto -nostdlib` against a custom linker script, so the symbol table the pipeline needs is stripped and the function boundaries are inlined away by design |
 | DavidBuchanan314/monomorph | [lib2smda#1](https://github.com/familiary/lib2smda/issues/1) | Linux x86-64 ELF only. That alone is no longer the obstacle it was when this row was written - `linux_x86` and `linux_x64` exist now - but the reason that mattered does not move: its own code is four functions, `get_bit`, `decode_buf`, `inflate_buf` and `main`, 679 bytes between them, against a floor of eight. The committed artefact carries 1397 function symbols, but 1393 of them are statically linked glibc and zlib, and with no glibc baseline to subtract them they would enter under monomorph's name and duplicate `data/libzlib`. What is distinctive about the project is the 4 MB array of MD5 collision blocks, which is data rather than code; upstream points at a collision detector for identifying it |
 
-The three sleep-obfuscation rows above were investigated together, because
-CoffeeLoader's sleep obfuscation is named after that family of techniques, and
-they fail together for one reason: a sleep-obfuscation proof of concept is a
-*technique*, and the technique is one function. Ekko is 2 functions, Cronos 7,
-and Foliage's own contribution 2 of the 9 its surviving mirror carries. None
-of them reaches eight, and the floor is not lowered to admit them - it exists
-precisely so that a two-function proof of concept does not become a family.
+Ekko, Cronos and Foliage were on this list and are not any more, and they are
+the entry here that left on a maintainer decision rather than because the
+projects changed. All three are below the eight-function floor on an honest
+count - Ekko is 2, Cronos 7, Foliage 9 of which only 2 are the technique - and
+all three are now built, each with `min_functions` set to the count that was
+measured. That is what `Recipe.min_functions` is for: a project that genuinely
+contains that few functions, as opposed to a build that produced too few. The
+floor itself has not moved, and none of the three was combined with the others
+to clear it, which would have been an arithmetic trick - a hash matching Ekko
+reported under a family name that also claimed Cronos and Foliage is exactly
+the misattribution this corpus exists to avoid.
 
-Nor are they combined into one. Three separate projects by three authors,
-sharing an idea rather than any code, would clear the floor only as an
-arithmetic trick: a hash matching Ekko would be reported under a family name
-that also claims Cronos and Foliage, which is the misattribution this corpus
-is built to avoid. The right unit here is the project, and each project is
-too small.
+What each is worth is uneven, and the recipes say so rather than implying the
+three are equivalent:
 
-What the technique does leave behind is not code at all but an API sequence -
-`CreateTimerQueueTimer` or `SetWaitableTimer` or `NtQueueApcThread`, driving
-`NtContinue` over a captured `CONTEXT` with `SystemFunction032` in the middle
-of it. That is a behavioural signature and belongs in a YARA rule or a
-sandbox trace, not in a code-similarity corpus; Cronos ships its own
-`Cronos.yara` for exactly that. Recording two functions here would not help
-an analyst who met them.
+* **Ekko** is 2 functions and that is the entire repository. `main` is a
+  7-instruction loop around one call and sits below the ten-instruction
+  census floor, so the family's whole matchable contribution is `EkkoObf` -
+  one 236-instruction body carrying six memcpy'd `CONTEXT` structures and the
+  register assignments that turn each into a call frame.
+* **Cronos** is 7, and the reusable part is not the timer code but
+  `findGadget`, `findInModule`, `findPattern` and `bCompare` - an
+  `EnumProcessModules` walk and a masked signature scan, a shape that
+  propagates into other tooling far more often than the sleep technique does.
+* **Foliage** is the cleanest artefact of the three and the muddiest
+  provenance. All 10 functions in its image are the project's own - 7 C
+  bodies plus 3 assembly routines, no CRT and no import thunks at all, since
+  it is `-nostdlib` and resolves APIs by hash. But the upstream the technique
+  is named for, `SecIdiot/FOLIAGE`, is a 404 today, so what is built is the
+  `y11en` mirror; there is no licence file of any kind; and the project is a
+  DNS-over-HTTPS persistence stager whose sleep routine is one part, so 7 of
+  its 9 functions are generic PIC-stager furniture rather than the technique.
+  `foliage.py` records all three facts.
+
+None of this makes the three a substitute for detecting the technique. What an
+analyst meets is an API sequence - `CreateTimerQueueTimer` or
+`SetWaitableTimer` or `NtQueueApcThread`, driving `NtContinue` over a captured
+`CONTEXT` with `SystemFunction032` in the middle - and that is a behavioural
+signature for a YARA rule or a sandbox trace rather than something code
+similarity finds. Cronos ships its own `Cronos.yara` for exactly that. The
+reference value here is the surrounding code, not the trick.
 
 VX-API (#4), BlackBone (#8) and SysWhispers v1 (#9) were on this list and are
 not any more: they need ATL, the DIA SDK or MASM, none of which exists for

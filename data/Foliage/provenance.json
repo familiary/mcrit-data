@@ -1,0 +1,27 @@
+{
+  "Foliage_2021-03-14_mingw13_x64_FOLIAGE.x64.exe": {
+    "architecture": "x64",
+    "build_flags": "-Os -flto -nostdlib -fno-asynchronous-unwind-tables -fno-ident -Qn -fno-builtin-memcpy -fpack-struct=8 -falign-functions=1 -falign-jumps=1 -falign-labels=1 -falign-loops=1, linked -Wl,--no-seh,--enable-stdcall-fixup,-Tscripts/linker.ld,--image-base=0 with nasm -f win64 for source/asm/start.asm; upstream's -s and -Wl,-s are dropped so the symbol table survives, and -D_WIN32_WINNT=0x0600 is added because without it tebpeb.h and apidef.h collide with current mingw-w64 headers and the tree does not compile",
+    "built_artifact": "FOLIAGE.x64.exe",
+    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "FOLIAGE.x64.exe",
+    "family": "Foliage",
+    "generated": "2026-09-28",
+    "is_blob": false,
+    "license": "none",
+    "mcrit": "data/Foliage/x64/mcrit/Foliage_2021-03-14_mingw13_x64_FOLIAGE.x64.exe.mcrit",
+    "notes": "Sleep obfuscation via queued APCs and NtContinue - the third of the three techniques CoffeeLoader's sleep obfuscation is named after, beside Ekko and Cronos. Three provenance facts matter here. First, this is not the original repository: SecIdiot/FOLIAGE and its owning account both 404 today, and what is built is the y11en mirror, which describes itself as an experiment in reproducing Obfuscate & Sleep. The in-tree copyright headers still read Austin Hudson and GuidePoint Security LLC, so the code is the original author's as carried by a third party rather than a rewrite - but these bytes come from a mirror and no upstream release exists to compare them against. Second, there is no licence of any kind: no LICENSE or COPYING file anywhere, and the per-file headers name a holder without granting terms. Third, the project is not a sleep-obfuscation library - its own headers call it a 'dns over http(s) persistence stager' - and of its nine functions only ObfuscateAddFn and ObfuscateSleep are the technique, the other seven being ordinary PIC-stager furniture (API hashing, a PEB walk, an export-table parse, heap wrappers) whose shape is common to a whole genre of loaders, so a match on PebGetModule is not evidence of Foliage specifically. Built with -D_WIN32_WINNT=0x0600, without which the tree does not compile at all against current mingw-w64 headers: tebpeb.h redefines struct _PROCESSOR_NUMBER and apidef.h declares SetProcessValidCallTargets with a different return type, four hard errors. That is a command-line define, not a source patch. Upstream's -flto is kept, which inlines ObfuscateSleep and HashString into their callers - so the function that is the technique has no separate body in this artefact and lives inside Start. x64 only, as upstream's makefile and its win64 assembly are. The PE is recorded rather than the FOLIAGE.x64.bin that scripts/pedump.py carves out of it, since SMDA reads a PE image directly.",
+    "num_functions": 10,
+    "sha256": "21b1e8048551944f7ddc4690556b80f394c4087d69438fda4f3fb0126129803d",
+    "smda": "data/Foliage/x64/smda/Foliage_2021-03-14_mingw13_x64_FOLIAGE.x64.exe.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "32a2da05282f38d8859b091312708ee9f2840297",
+      "git_ref": "32a2da05282f38d8859b091312708ee9f2840297",
+      "git_url": "https://github.com/y11en/FOLIAGE.git"
+    },
+    "toolchain": "mingw13_x64",
+    "upstream": "https://github.com/y11en/FOLIAGE",
+    "version": "2021-03-14"
+  }
+}
