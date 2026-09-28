@@ -128,6 +128,15 @@ def _compiler_label(entry):
         # The blob was compiled by whoever committed it, not by the toolchain
         # that happened to run the extraction.
         return "MSVC (as committed upstream)"
+    if "clang" in (entry.get("toolchain") or ""):
+        # "Ubuntu clang version 18.1.3 (1ubuntu1)" - the parenthesised part
+        # is the distribution's packaging string and would make this column
+        # differ between two hosts running the same compiler, so only the
+        # version is kept. The sysroot is named because that is what the row
+        # is: clang's code generator against mingw-w64's headers and import
+        # libraries, which is not the MSVC ABI a reader may assume of clang.
+        version = re.search(r"version (\d+)", compiler)
+        return "Clang %s (mingw-w64 sysroot)" % (version.group(1) if version else "?")
     if "mingw" in (entry.get("toolchain") or ""):
         version = compiler.split("(GCC)")[-1].strip().split("-")[0] if "(GCC)" in compiler else "?"
         return "MinGW-w64 GCC %s" % version

@@ -12,6 +12,16 @@ gcc is on PATH and (for the 32-bit half) the -m32 multilib is installed. It
 is the only one here that does not produce a PE, and it exists because the
 portable half of this corpus - the header-only string obfuscators, obfstr -
 is used on Linux too, and a PE-only corpus cannot recognise it there.
+
+A fourth was added for one project and is deliberately narrow: clang driving
+the same mingw-w64 sysroot the cross compilers use. It exists because sc4cpp
+refuses to compile under anything else - its header opens with `#error
+"sc4cpp only supports Clang on windows"` and then uses __declspec(code_seg)
+and MSVC-style __asm blocks, none of which GCC has - while clang-cl proper
+needs a Windows SDK that a Linux checkout does not have. It is registered
+only where both clang and the mingw-w64 sysroot are present, which is a
+Linux checkout and not a windows-2022 runner, and no other recipe declares
+it.
 """
 
 import os
@@ -104,7 +114,14 @@ class Toolchain:
             # of this corpus was filtered against.
             return ([compiler, self.arch_flag, "-O2", "-fPIC", "-o", target,
                      source] + (["-shared"] if shared else []))
-        return [compiler, "-O2", "-o", target, source] + (["-shared"] if shared else [])
+        # arch_flag is "" for the mingw-w64 cross compilers, which target
+        # exactly one ABI, so this is byte for byte the command line the
+        # committed MinGW baseline was measured with. It is spliced in for
+        # the clang toolchain, whose driver targets the host unless told
+        # otherwise - without it a probe would be a Linux ELF measured
+        # against PE artefacts.
+        return ([compiler] + ([self.arch_flag] if self.arch_flag else [])
+                + ["-O2", "-o", target, source] + (["-shared"] if shared else []))
 
     def probe_pdb(self, target):
         """Where probe_command puts the PDB, or "" when there is not one."""
@@ -252,6 +269,78 @@ def _gcc(arch, bitness, gcc_major):
     )
 
 
+def _clang_mingw(arch, bitness, triple, clang_major):
+    """Clang aimed at the mingw-w64 sysroot, for source GCC will not compile.
+
+    One project needs this and the docstring at the top of this file says
+    which. What matters here is that it is the *same* sysroot the MinGW cross
+    compilers use - the headers, the import libraries and the linker are
+    mingw-w64's - and only the code generator differs. So it produces a PE
+    like the other Windows toolchains and its artefacts sit beside theirs;
+    what it does not produce is MSVC-ABI code, which is what clang-cl would
+    give and what a recipe using this has to say it is not getting.
+
+    The target triple travels in ``arch_flag`` and in ``env``, not in ``cc``.
+    ``cc`` has to stay a bare binary name because pipeline._prepare_toolchain
+    resolves it with shutil.which and Toolchain.version runs it as argv[0];
+    but a build system reading CC out of the environment must get the triple
+    with it, or it compiles for Linux. ``env`` is applied last by build_env,
+    which is exactly the hook for that.
+    """
+    target = "%s-windows-gnu" % triple.rsplit("-", 1)[0]
+    return Toolchain(
+        id="clang%s_%s" % (clang_major, arch),
+        short_id="clang%s" % clang_major,
+        arch=arch,
+        bitness=bitness,
+        prefix="%s-" % triple,
+        cc="clang",
+        cxx="clang++",
+        # Resource compilation and stripping have no LLVM equivalent worth
+        # preferring here, and the mingw-w64 binutils are already installed
+        # alongside the sysroot this targets.
+        windres="%s-windres" % triple,
+        strip="%s-strip" % triple,
+        ar="llvm-ar",
+        ranlib="llvm-ranlib",
+        cflags="-O2 --target=%s" % target,
+        env={"CC": "clang --target=%s" % target,
+             "CXX": "clang++ --target=%s" % target},
+        kind="mingw",
+        arch_flag="--target=%s" % target,
+    )
+
+
+def _detect_clang_major():
+    if shutil.which("clang") is None:
+        return None
+    out = subprocess.run(["clang", "-dumpversion"], capture_output=True, text=True)
+    match = re.match(r"(\d+)", out.stdout.strip())
+    return match.group(1) if match else None
+
+
+def _register_clang_mingw():
+    """Register clang-with-mingw, per architecture, where both halves exist.
+
+    Gated on the mingw-w64 sysroot rather than on clang alone. clang finds
+    that sysroot by the triple and cannot build a PE without it, and the gate
+    is also what keeps this toolchain off a windows-2022 runner, where clang
+    ships with Visual Studio, targets the MSVC ABI and has no mingw-w64
+    anywhere - registering it there would name a toolchain that cannot build
+    what its id claims.
+    """
+    clang_major = _detect_clang_major()
+    if clang_major is None:
+        return
+    for arch, bitness, triple in (("x86", 32, "i686-w64-mingw32"),
+                                  ("x64", 64, "x86_64-w64-mingw32")):
+        if _detect_mingw_major(triple) is None:
+            continue
+        toolchain = _clang_mingw(arch, bitness, triple, clang_major)
+        _TOOLCHAINS[toolchain.id] = toolchain
+        _TOOLCHAINS["clang_%s" % arch] = toolchain
+
+
 def _detect_gcc_major():
     cc = "gcc"
     if shutil.which(cc) is None:
@@ -381,6 +470,7 @@ def _register_gcc():
 
 
 _register_mingw()
+_register_clang_mingw()
 _register_msvc()
 _register_gcc()
 

@@ -1,0 +1,52 @@
+{
+  "sc4cpp_2021-08-29_clang18_x64_example": {
+    "architecture": "x64",
+    "build_flags": "-Os -fno-stack-protector -mstack-probe-size=1048576 -mno-sse -fno-exceptions -ffunction-sections -std=c++17 -fms-extensions -fasm-blocks -include utility, linked -nostdlib --no-insert-timestamp with upstream's /ENTRY:SCBegin and /SUBSYSTEM:WINDOWS; upstream's own /O2 /Os /MT /GS- /Gs1048576 -mno-sse in the GNU driver's spelling, built by clang against the mingw-w64 sysroot rather than by clang-cl against the MSVC one",
+    "built_artifact": "sc4cpp_x64.exe",
+    "compiler": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "component": "example",
+    "family": "sc4cpp",
+    "generated": "2026-09-28",
+    "is_blob": false,
+    "license": "MIT",
+    "mcrit": "data/sc4cpp/x64/mcrit/sc4cpp_2021-08-29_clang18_x64_example.mcrit",
+    "notes": "The example translation unit src/sc4cpp.cpp, which is the only thing in the repository that compiles to code: include/sc4cpp.h is macros and force-inlined templates and has no body of its own. 76% of the recorded SCMain is framework macro expansion rather than the example - a translation unit that resolves one API and calls it already yields 161 of these 213 instructions - so what matches here is the PEB walk, the FNV-1a module and export hash loops and the LoadLibraryA/GetProcAddress pair that every program written with this header contains. That is a fuzzy match and not an exact one: the header is entirely force-inlined, so the framework block and the user's code become one body and two different sc4cpp programs share no SCMain PicHash. Measured against an unrelated program built with the same header, the only exact matches are the 3-instruction SCBegin and the two one-instruction markers, while the SCMain bodies agree on 59% of their minhash. This family identifies the framework, not a program. Built with clang targeting mingw-w64, not clang-cl: upstream's header refuses to compile under anything but clang, and a *-pc-windows-msvc target needs a Windows SDK a Linux runner does not have. Against upstream's own committed build the x86 image is the same 1619 bytes with SCMain and WorkerThread at the same offsets, and the x64 SCBegin is a PicHash match; the two large bodies differ in register allocation, being a much later clang. The prebuilt test/*.sc blobs and runsc_*.exe are not recorded - Recipe.slug would label a blob msvc and these are clang-cl output, and they are a test fixture rather than anything sc4cpp ships. Source recovered from Software Heritage; the upstream repository and its owning account are both 404.",
+    "num_functions": 5,
+    "sha256": "5113cbbb60e62ea18e2372eefd18261920d4011d37228e6433da8c23fb5012d2",
+    "smda": "data/sc4cpp/x64/smda/sc4cpp_2021-08-29_clang18_x64_example.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "raw",
+      "sha256": "f4b0e8ab911e7853835b17e16a751d70cc489eb9eb461f4ba79087c574f47b80",
+      "url": "https://archive.softwareheritage.org/api/1/vault/flat/swh:1:dir:d469e55b226b153ab9c380c8783ed78621b45b2d/raw"
+    },
+    "toolchain": "clang18_x64",
+    "upstream": "https://github.com/windpiaoxue/sc4cpp (deleted; recovered from Software Heritage snapshot e5e82503dcaf40a924c035289ff15cda663f7ab9, revision e252d9a55228303f3a8565b6a347c6d386dbb5d3, directory d469e55b226b153ab9c380c8783ed78621b45b2d)",
+    "version": "2021-08-29"
+  },
+  "sc4cpp_2021-08-29_clang18_x86_example": {
+    "architecture": "x86",
+    "build_flags": "-Os -fno-stack-protector -mstack-probe-size=1048576 -mno-sse -fno-exceptions -ffunction-sections -std=c++17 -fms-extensions -fasm-blocks -include utility, linked -nostdlib --no-insert-timestamp with upstream's /ENTRY:SCBegin and /SUBSYSTEM:WINDOWS; upstream's own /O2 /Os /MT /GS- /Gs1048576 -mno-sse in the GNU driver's spelling, built by clang against the mingw-w64 sysroot rather than by clang-cl against the MSVC one",
+    "built_artifact": "sc4cpp_x86.exe",
+    "compiler": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+    "component": "example",
+    "family": "sc4cpp",
+    "generated": "2026-09-28",
+    "is_blob": false,
+    "license": "MIT",
+    "mcrit": "data/sc4cpp/x86/mcrit/sc4cpp_2021-08-29_clang18_x86_example.mcrit",
+    "notes": "The example translation unit src/sc4cpp.cpp, which is the only thing in the repository that compiles to code: include/sc4cpp.h is macros and force-inlined templates and has no body of its own. 76% of the recorded SCMain is framework macro expansion rather than the example - a translation unit that resolves one API and calls it already yields 161 of these 213 instructions - so what matches here is the PEB walk, the FNV-1a module and export hash loops and the LoadLibraryA/GetProcAddress pair that every program written with this header contains. That is a fuzzy match and not an exact one: the header is entirely force-inlined, so the framework block and the user's code become one body and two different sc4cpp programs share no SCMain PicHash. Measured against an unrelated program built with the same header, the only exact matches are the 3-instruction SCBegin and the two one-instruction markers, while the SCMain bodies agree on 59% of their minhash. This family identifies the framework, not a program. Built with clang targeting mingw-w64, not clang-cl: upstream's header refuses to compile under anything but clang, and a *-pc-windows-msvc target needs a Windows SDK a Linux runner does not have. Against upstream's own committed build the x86 image is the same 1619 bytes with SCMain and WorkerThread at the same offsets, and the x64 SCBegin is a PicHash match; the two large bodies differ in register allocation, being a much later clang. The prebuilt test/*.sc blobs and runsc_*.exe are not recorded - Recipe.slug would label a blob msvc and these are clang-cl output, and they are a test fixture rather than anything sc4cpp ships. Source recovered from Software Heritage; the upstream repository and its owning account are both 404.",
+    "num_functions": 9,
+    "sha256": "31876a768c450c9aa33d618bf625df84c319685eedbba6dfbe1b9b5064757e2a",
+    "smda": "data/sc4cpp/x86/smda/sc4cpp_2021-08-29_clang18_x86_example.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "raw",
+      "sha256": "f4b0e8ab911e7853835b17e16a751d70cc489eb9eb461f4ba79087c574f47b80",
+      "url": "https://archive.softwareheritage.org/api/1/vault/flat/swh:1:dir:d469e55b226b153ab9c380c8783ed78621b45b2d/raw"
+    },
+    "toolchain": "clang18_x86",
+    "upstream": "https://github.com/windpiaoxue/sc4cpp (deleted; recovered from Software Heritage snapshot e5e82503dcaf40a924c035289ff15cda663f7ab9, revision e252d9a55228303f3a8565b6a347c6d386dbb5d3, directory d469e55b226b153ab9c380c8783ed78621b45b2d)",
+    "version": "2021-08-29"
+  }
+}
