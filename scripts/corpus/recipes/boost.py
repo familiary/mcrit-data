@@ -75,6 +75,32 @@ rescues one library and leaves the other forty-three as they were. It is a
 link flag rather than a Jamfile edit because this corpus does not patch
 upstream.
 
+Two acceptance thresholds are overridden, both from counts measured across
+all 44 artefacts on both architectures rather than from a guess.
+
+``min_functions=1``, because one floor across this recipe is meaningless: it
+spans libraries from one function to 1783. The extreme is real and worth
+knowing about - **Boost.DateTime's compiled library is a stub.** Its only
+named body is ``boost::gregorian::date_time_dummy_exported_function()``, one
+instruction long, and the name is upstream's own. The library exists so there
+is something to link against; the real Boost.DateTime is headers. Its x64
+artefact is that one function plus nine 1-instruction import thunks and one
+15-instruction unnamed body, and its x86 artefact keeps 5 functions in total.
+It is recorded anyway, but nothing will ever match it: at one instruction the
+only named body sits far below the ten-instruction census floor. An analyst
+wondering why a date_time hit never appears has the answer here.
+
+``min_named_ratio=0.05``, lowered from the default 0.5 for three x64 artefacts
+- date_time at 0.09, stacktrace_dump at 0.27 and stacktrace_noop at 0.44.
+That check exists to catch a build that stripped its symbols, and this is not
+one: the other 39 x64 artefacts sit at 0.57 or above, every x86 artefact at
+0.60 or above, and stacktrace_noop's own eight bodies are all named. What
+drags those three down is that they are small, so the unnamed 1-instruction
+import thunks MinGW x64 emits in quantity - which the COFF symbol table does
+not name, as MinHook's mingw x64 artefacts already show - outnumber the code.
+The threshold is lowered rather than switched off, so a genuinely stripped
+artefact with no names at all still fails.
+
 ``threadapi=win32`` is b2's default for ``target-os=windows`` and is kept:
 Boost.Thread then uses the Win32 primitives directly, which is what a Boost
 built on Windows by any toolchain does. The compiler is still the
@@ -175,6 +201,11 @@ RECIPES = {
             for name in _WRAPPED
         ],
         toolchains=["mingw_x86", "mingw_x64"],
+        # Both measured across all 44 artefacts on both architectures; see the
+        # module docstring for the counts and for why neither is a build
+        # accident.
+        min_functions=1,
+        min_named_ratio=0.05,
         build_flags="-std=c++20 -O3 -finline-functions -Wno-inline -Wall "
                     "-fvisibility=hidden -fvisibility-inlines-hidden "
                     "-DBOOST_ALL_NO_LIB=1 -DNDEBUG plus a per-library "
@@ -184,8 +215,16 @@ RECIPES = {
                     "exception and test_exec_monitor archives are linked "
                     "around",
         notes="The compiled half of Boost, one artefact per library b2 "
-              "stages. Header-only Boost is absent by nature: it exists in a "
+              "stages: 14865 functions across the x64 set and 18619 across "
+              "the x86 one after compiler runtime is dropped, per library "
+              "from 11 (date_time) to 1783 (log_setup). Header-only Boost is "
+              "absent by nature: it exists in a "
               "sample only as template code instantiated into the consumer. "
+              "date_time is a special case worth knowing: its compiled "
+              "library is a stub whose one named body is upstream's own "
+              "date_time_dummy_exported_function, one instruction long, so "
+              "the artefact exists for completeness and cannot match "
+              "anything. "
               "libstdc++ and libgcc are imported rather than linked, so no "
               "standard-library body is filed under this name, and the "
               "libraries import from each other rather than absorbing each "
