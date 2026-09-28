@@ -844,6 +844,25 @@ Generated with `scripts/build_corpus.py`; see `data/NTTITONHeavensGate/provenanc
 | NTTITONHeavensGate | 2017-06-16 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/NTTITONHeavensGate/x86/mcrit/NTTITONHeavensGate_2017-06-16_msvc143_x86_HeavensGate.exe.mcrit) | [x86 PE](data/NTTITONHeavensGate/x86/smda/NTTITONHeavensGate_2017-06-16_msvc143_x86_HeavensGate.exe.7z) |
 <!-- /generated -->
 
+## Function hooking
+
+Libraries that redirect a function by patching its first instructions and relocating them into a trampoline. They are general-purpose instrumentation - debuggers, profilers and game modding use them as much as anything else - and they are here because they are vendored into a great deal of offensive tooling in exactly the form recorded.
+
+### MinHook<a id='minhook'></a>
+
+The canonical Windows inline hooking library, and in practice a vendored copy rather than a linked dependency: the five source files are dropped into a consumer's tree and compiled with the consumer's own flags, so what an analyst meets is whichever release the vendoring froze. Two releases are pinned for that reason, on dates rather than taste - v1.3.3 is 2017-01-07 and was the only release in existence for eight years, so it is what the overwhelming majority of vendored copies carry, while v1.3.4 is 2025-03-28 and is what a copy made today carries. The pin is justified by measurement: comparing the two MinGW builds body by body, 7 of 29 named functions differ on x86 and 6 of 29 on x64, `Freeze` most of all at 122 against 175 instructions.  
+The project's own count is 38 functions per architecture - `hook.c` 27, `buffer.c` 8, `trampoline.c` 2 and one HDE translation unit 1 - and it is 38 at both tags: the function inventory does not move between them, only the signatures (`void` to `VOID`, `VOID` to `BOOL` or `MH_STATUS`) and the bodies do, which is why the two-release pin is justified on measured PicHashes rather than on a count. Only one HDE unit compiles per architecture, because `hde32.c` and `hde64.c` each wrap their whole body in an `_M_IX86`/`_M_X64` guard and the other object comes out empty. One of the 38 is not MinHook's: `hde32_disasm`/`hde64_disasm` is the Hacker Disassembler Engine, Copyright (c) 2008-2009 Vyacheslav Patkov, vendored into `src/hde/`, so the honest partition is 37 MinHook plus 1 HDE. It is kept rather than dropped because a vendored copy genuinely carries it and MinHook is where most analysts will meet it.  
+At `-O2` twelve small statics inline away and 26 bodies survive, which is what these artefacts contain; the MSVC artefacts are built at upstream's own `/O1 /Ob2` Release setting. The DLL is the artefact rather than the static library the same builds also produce, because SMDA has no COFF/`ar` loader. One upstream change is MSVC-only and is the opposite of what the diff suggests: both HDE units change between the two tags, but for GCC all four edits are semantic no-ops and `hde64_disasm` is byte-identical across them, while the line that was removed sat under `#ifndef _MSC_VER` and cost the MSVC half its `__stosb` in favour of `memset`.  
+
+Generated with `scripts/build_corpus.py`; see `data/MinHook/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: MinHook -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| MinHook | 1.3.3 | MinGW-w64 GCC 13 | [x86 PE](data/MinHook/x86/mcrit/MinHook_1.3.3_mingw13_x86_MinHook.dll.mcrit) / [x64 PE](data/MinHook/x64/mcrit/MinHook_1.3.3_mingw13_x64_MinHook.dll.mcrit) | [x86 PE](data/MinHook/x86/smda/MinHook_1.3.3_mingw13_x86_MinHook.dll.7z) / [x64 PE](data/MinHook/x64/smda/MinHook_1.3.3_mingw13_x64_MinHook.dll.7z) |
+| MinHook | 1.3.4 | MinGW-w64 GCC 13 | [x86 PE](data/MinHook/x86/mcrit/MinHook_1.3.4_mingw13_x86_MinHook.dll.mcrit) / [x64 PE](data/MinHook/x64/mcrit/MinHook_1.3.4_mingw13_x64_MinHook.dll.mcrit) | [x86 PE](data/MinHook/x86/smda/MinHook_1.3.4_mingw13_x86_MinHook.dll.7z) / [x64 PE](data/MinHook/x64/smda/MinHook_1.3.4_mingw13_x64_MinHook.dll.7z) |
+<!-- /generated -->
+
 ## WinAPI obfuscation
 
 Projects that hide which Windows APIs a binary calls - by resolving imports from hashes at run time, or by rewriting the import table so a call appears to target something else.
@@ -964,6 +983,10 @@ The project carries no licence of any kind - no LICENSE or COPYING file and no c
 Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Hidden -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_Hidden.sys.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_Hidden.sys.7z) |
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.7z) |
 <!-- /generated -->
 
 ## String obfuscation
