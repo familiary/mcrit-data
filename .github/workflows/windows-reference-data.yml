@@ -185,9 +185,14 @@ jobs:
       #     generator refuses outright when it finds one ("sh.exe was found in
       #     your PATH ... For MinGW make to work correctly sh.exe must NOT be in
       #     your path"), and every other generator changes how it spawns
-      #     commands. No MSVC recipe names that generator today (the ones that
-      #     name any use NMake Makefiles), so nothing would notice until one
-      #     did, and it would fail on a step nobody had touched.
+      #     commands. The image already has one, measured on the first run of
+      #     this step: Git for Windows' usr\bin is on PATH near the very end,
+      #     so sh, bash, perl, link, find and sort each also resolve to Git's
+      #     copy, but behind Strawberry, MSVC and System32 respectively. That
+      #     ordering is why nothing has noticed, and it is the baseline the
+      #     assertion holds to: this step may neither add a second POSIX
+      #     userland nor move one. No MSVC recipe names the MinGW Makefiles
+      #     generator today (the ones that name any use NMake Makefiles).
       #
       # None of those can be argued away recipe by recipe across 54 recipes, so
       # what matters is that PATH is what it was. The step after this one
@@ -255,7 +260,7 @@ jobs:
 
           # The whole environment, minus the variables the runner rewrites for
           # every step (file paths with a per-step name, action inputs).
-          $skip = '^(GITHUB_(ENV|OUTPUT|PATH|STATE|STEP_SUMMARY|ACTION.*)|INPUT_.*|STATE_.*)$'
+          $skip = '^(GITHUB_(ENV|OUTPUT|PATH|STATE|STEP_SUMMARY|ACTION.*|ARTIFACTS(_LIST)?)|INPUT_.*|STATE_.*)$'
           function Env-Map($lines) {
             $m = @{}
             foreach ($l in $lines) {
