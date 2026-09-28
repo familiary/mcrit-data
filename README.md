@@ -54,6 +54,7 @@ Libraries
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [Boost](#boost)
+* [Poco](#poco)
 * [libstdc++](#libstdcxx)
 
 Runtimes
@@ -720,6 +721,22 @@ Generated with `scripts/build_corpus.py`; see `data/boost/provenance.json` for s
 | boost | 1.92.0 | MinGW-w64 GCC 13 | [x86 PE](data/boost/x86/mcrit/boost_1.92.0_mingw13_x86_boost_url.dll.mcrit) / [x64 PE](data/boost/x64/mcrit/boost_1.92.0_mingw13_x64_boost_url.dll.mcrit) | [x86 PE](data/boost/x86/smda/boost_1.92.0_mingw13_x86_boost_url.dll.7z) / [x64 PE](data/boost/x64/smda/boost_1.92.0_mingw13_x64_boost_url.dll.7z) |
 | boost | 1.92.0 | MinGW-w64 GCC 13 | [x86 PE](data/boost/x86/mcrit/boost_1.92.0_mingw13_x86_boost_wave.dll.mcrit) / [x64 PE](data/boost/x64/mcrit/boost_1.92.0_mingw13_x64_boost_wave.dll.mcrit) | [x86 PE](data/boost/x86/smda/boost_1.92.0_mingw13_x86_boost_wave.dll.7z) / [x64 PE](data/boost/x64/smda/boost_1.92.0_mingw13_x64_boost_wave.dll.7z) |
 | boost | 1.92.0 | MinGW-w64 GCC 13 | [x86 PE](data/boost/x86/mcrit/boost_1.92.0_mingw13_x86_boost_wserialization.dll.mcrit) / [x64 PE](data/boost/x64/mcrit/boost_1.92.0_mingw13_x64_boost_wserialization.dll.mcrit) | [x86 PE](data/boost/x86/smda/boost_1.92.0_mingw13_x86_boost_wserialization.dll.7z) / [x64 PE](data/boost/x64/smda/boost_1.92.0_mingw13_x64_boost_wserialization.dll.7z) |
+<!-- /generated -->
+
+### Poco<a id='poco'></a>
+
+The POCO C++ Libraries, every component that builds for Windows without an external dependency, in one DLL per architecture: Foundation, XML, JSON, Util, Net, Zip, Data with its SQLite connector, Encodings, MongoDB, Redis, Prometheus, ActiveRecord, CppParser, CodeGeneration and the five RemotingNG libraries.  
+**One image rather than one per component, and that is forced rather than chosen.** Poco explicitly instantiates `Poco::Dynamic::Struct`, `Poco::BasicUnbufferedStreamBuf` and `Poco::BasicBufferedStreamBuf` in Foundation and marks them `Foundation_API`, so a consumer references their vtables and typeinfo as `dllimport` - but GCC does not export an explicit instantiation's vtable from a DLL the way MSVC does, and `PocoFoundation.dll` never provides them. With `BUILD_SHARED_LIBS=ON` that breaks the link for JSON, Zip and Net, and Util sits behind JSON while MongoDB, Redis, Prometheus and PageCompiler sit behind Net, so a shared build yields 9 components of 21. The static build yields all 21 with no failures, and the archives are linked into one image with `--whole-archive` as [abseil](#abseil) and [cryptopp](#cryptopp) are. The cost is that the component name can no longer say which library a match landed in; only the symbol name can.  
+Read the counts with the thunks subtracted. 30140 functions on x86 and 17630 on x64, of which 2491 and 766 are one-instruction import thunks; what clears the ten-instruction census floor is **16175 on x86 and 12584 on x64**. Named Poco bodies are 15532 and 13317. The two architectures differ more sharply than elsewhere in this corpus - the x86 image carries 10681 unnamed bodies against x64's 483 - which is measured here and not explained, so no claim is made about the cause.  
+**1122 functions on x64 are not Poco's**, and four of the projects they come from are families of their own here: sqlite3 705, pcre2 108, expat 88, zlib 67, double-conversion 120, utf8proc 32, tessil 2. They are present because a real Poco binary contains them - Poco vendors these under `dependencies/` and compiles `RegularExpression`, the deflating streams, the XML parser and the SQLite connector against those copies rather than a system library, exactly as [BlackBone](#blackbone) carries its vendored AsmJit. `POCO_UNBUNDLED=ON` would avoid it but needs mingw builds of zlib, pcre2, expat and sqlite3, none of which is packaged for this toolchain. Judge a match landing in those symbols as a match on the vendored project, not on Poco.  
+Not built: `PDF` and `SevenZip`, whose bundled libharu/libpng and LZMA SDK payloads would file hundreds of functions of two existing families under this name; `Crypto`, `NetSSL_OpenSSL` and `JWT`, which need OpenSSL for the target, and Data's MySQL, ODBC and PostgreSQL connectors, which need their client libraries; and `FastLogger`, on by default, which pulls in the bundled quill and fmtquill - 269 symbols of a separate logging project.  
+
+Generated with `scripts/build_corpus.py`; see `data/poco/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: poco -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| poco | 1.15.4 | MinGW-w64 GCC 13 | [x86 PE](data/poco/x86/mcrit/poco_1.15.4_mingw13_x86_poco.dll.mcrit) / [x64 PE](data/poco/x64/mcrit/poco_1.15.4_mingw13_x64_poco.dll.mcrit) | [x86 PE](data/poco/x86/smda/poco_1.15.4_mingw13_x86_poco.dll.7z) / [x64 PE](data/poco/x64/smda/poco_1.15.4_mingw13_x64_poco.dll.7z) |
 <!-- /generated -->
 
 ### libstdc++<a id='libstdcxx'></a>

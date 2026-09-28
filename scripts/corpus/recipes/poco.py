@@ -27,6 +27,13 @@ What that costs is granularity: one artefact means the component field cannot
 say which library a match landed in, and only the symbol name does. That is
 the trade taken, and it is the same one abseil makes.
 
+Two different counts appear below and they are not in conflict. The link
+produces 21878 *text symbols* on x64, which is what ``nm`` reports over the
+image; SMDA then recovers 17630 *functions* from it after this corpus drops
+compiler runtime glue, and 12584 of those clear the ten-instruction census
+floor. The symbol partition is the one that says where the code came from, so
+it is given first; the artefact partition is in ``notes``.
+
 The partition of the x64 image, 21878 text symbols, counted by symbol rather
 than estimated:
 
@@ -166,7 +173,13 @@ RECIPES = {
               "here, and they are present because a real Poco binary contains "
               "them - Poco vendors them under dependencies/ and compiles "
               "RegularExpression, the deflating streams, the XML parser and "
-              "the SQLite connector against those copies. POCO_UNBUNDLED would "
+              "the SQLite connector against those copies. As SMDA recovers "
+              "them the artefacts hold 17630 functions on x64 and 30140 on "
+              "x86, of which 12584 and 16175 clear the ten-instruction census "
+              "floor; named Poco bodies are 13317 and 15532, bundled "
+              "third-party 1122 and 1136. The x86 image carries 10681 unnamed "
+              "bodies against x64's 483, which is measured and not yet "
+              "explained. POCO_UNBUNDLED would "
               "need mingw builds of all four and none is packaged. PDF and "
               "SevenZip are not built, because their bundled libharu/libpng "
               "and LZMA SDK payloads would file hundreds of functions of two "
