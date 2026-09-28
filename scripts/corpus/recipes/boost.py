@@ -88,6 +88,19 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 
 # b2 is built with the host compiler and only ever runs on the host. It is a
 # build tool, never an artefact.
+#
+# B2_DONT_EMBED_MANIFEST is not optional here, and the reason is this corpus
+# rather than Boost. toolchain.build_env exports WINDRES pointing at the cross
+# resource compiler, for the autotools builds that need it. Boost's
+# tools/build/src/engine/build.sh only sets WINDRES itself when the host
+# compiler's -dumpmachine says Windows, but it then tests `[ -n "${WINDRES}" ]`
+# - which an inherited value satisfies - and compiles res.rc into a PE object
+# that it links into the native b2. ld rejects that with "dangerous
+# relocation: R_AMD64_IMAGEBASE with __ImageBase undefined" and bootstrap
+# fails before any Boost code is compiled. This switch is build.sh's own, it
+# skips the manifest for a tool that has no use for one, and it leaves WINDRES
+# alone for the libraries that follow.
+_BOOTSTRAP_ENV = {"B2_DONT_EMBED_MANIFEST": "1"}
 _BOOTSTRAP = "./bootstrap.sh --with-toolset=gcc"
 
 # b2 picks a cross compiler through a named toolset in user-config.jam rather
@@ -147,7 +160,7 @@ RECIPES = {
             sha256="5c1d40cb8e19adbf740a4ec2da35b3e58f3f5804b1dce44deb53df"
                    "72193cbc6c"),
         build=[
-            BuildStep(_BOOTSTRAP),
+            BuildStep(_BOOTSTRAP, env=_BOOTSTRAP_ENV),
             BuildStep(_CONFIG),
             BuildStep(_B2),
             BuildStep(_ANCHOR),
