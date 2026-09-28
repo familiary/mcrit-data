@@ -58,13 +58,21 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 # compile split from the link so the two PDBs stay separate files.
 _MKDIR = "if not exist bin mkdir bin"
 
-# %NASM% rather than nasm, and a guard rather than Recipe.requires; see the
-# docstring. The guard is a separate statement so the log names the problem
-# instead of showing cmd choking on an empty program name.
-_ASM = ('if not defined NASM '
-        '(echo NASM is not set - the workflow step that installs nasm and '
-        'exports it did not run & exit /b 1) '
-        '&& "%NASM%" -f win64 src/asm/rop.asm -o bin/rop.obj')
+# %NASM% rather than nasm, and a guard step rather than Recipe.requires; see
+# the docstring.
+#
+# The guard is its OWN build step, and that is a correctness fix rather than a
+# tidying. Written as one line - "if not defined NASM (echo ... & exit /b 1) &&
+# "%NASM%" -f win64 ..." - cmd skips the parenthesised body when NASM *is*
+# defined and then does not run the right-hand side of the && either, so nasm
+# never executed, the step still exited 0, and the failure surfaced two steps
+# later as "LINK : fatal error LNK1181: cannot open input file 'bin\\rop.obj'".
+# Measured on run 36405142992. Two steps cannot do that: a guard that is a
+# no-op when the variable is set, then the assembler on its own.
+_GUARD = ('if not defined NASM (echo NASM is not set - the workflow step that '
+          'installs nasm and exports it did not run & exit /b 1)')
+
+_ASM = '"%NASM%" -f win64 src\\asm\\rop.asm -o bin\\rop.obj'
 
 # /MD, against cl's default. With no /M switch cl links the static release CRT,
 # and that is what put 1947 of VX-API's 4219 functions into that artefact as
@@ -136,6 +144,7 @@ RECIPES = {
             git_ref="474954c90afee6fe7da191fd9a5dc677ef46ccf0"),
         build=[
             BuildStep(_MKDIR),
+            BuildStep(_GUARD),
             BuildStep(_ASM),
             BuildStep(_COMPILE),
             BuildStep(_LINK),
