@@ -11,7 +11,7 @@
     "license": "MPL-2.0",
     "mcrit": "data/MemoryModule/x64/mcrit/MemoryModule_0.0.4_mingw13_x64_DllLoader.exe.mcrit",
     "notes": "Upstream's makefiles compile MemoryModule.c with g++, so static helpers carry C++ mangling; this does not affect code matching.",
-    "num_functions": 51,
+    "num_functions": 50,
     "removed_runtime_functions": [
       "WinMainCRTStartup",
       "_FindPESection",
@@ -141,7 +141,8 @@
       "wcrtomb",
       "wcslen",
       "wcsnlen",
-      "wcsrtombs"
+      "wcsrtombs",
+      "wcstombs"
     ],
     "sha256": "c0b77e8b737bf02662a1d1443a376ebbf2963b4d3dfb36658f34254c60641e7a",
     "smda": "data/MemoryModule/x64/smda/MemoryModule_0.0.4_mingw13_x64_DllLoader.exe.7z",
@@ -167,7 +168,7 @@
     "license": "MPL-2.0",
     "mcrit": "data/MemoryModule/x86/mcrit/MemoryModule_0.0.4_mingw13_x86_DllLoader.exe.mcrit",
     "notes": "Upstream's makefiles compile MemoryModule.c with g++, so static helpers carry C++ mangling; this does not affect code matching.",
-    "num_functions": 22,
+    "num_functions": 21,
     "removed_runtime_functions": [
       "__FindPESection",
       "__FindPESectionByName",
@@ -301,7 +302,8 @@
       "_wcrtomb",
       "_wcslen",
       "_wcsnlen",
-      "_wcsrtombs"
+      "_wcsrtombs",
+      "_wcstombs"
     ],
     "sha256": "15de43bd8e97795774d1cccd2bd2d22418cf63d44f775b91ed19f365a7288316",
     "smda": "data/MemoryModule/x86/smda/MemoryModule_0.0.4_mingw13_x86_DllLoader.exe.7z",
@@ -327,7 +329,7 @@
     "license": "MPL-2.0",
     "mcrit": "data/MemoryModule/x64/mcrit/MemoryModule_2019-02-24_mingw13_x64_DllLoader.exe.mcrit",
     "notes": "Upstream's makefiles compile MemoryModule.c with g++, so static helpers carry C++ mangling; this does not affect code matching.",
-    "num_functions": 67,
+    "num_functions": 66,
     "removed_runtime_functions": [
       "WinMainCRTStartup",
       "_FindPESection",
@@ -460,7 +462,8 @@
       "wcrtomb",
       "wcslen",
       "wcsnlen",
-      "wcsrtombs"
+      "wcsrtombs",
+      "wcstombs"
     ],
     "sha256": "bcf4ef7eba777757725a4ecc4e4829b54d758dd3848a03424bb83fd1e01de725",
     "smda": "data/MemoryModule/x64/smda/MemoryModule_2019-02-24_mingw13_x64_DllLoader.exe.7z",
@@ -486,7 +489,7 @@
     "license": "MPL-2.0",
     "mcrit": "data/MemoryModule/x86/mcrit/MemoryModule_2019-02-24_mingw13_x86_DllLoader.exe.mcrit",
     "notes": "Upstream's makefiles compile MemoryModule.c with g++, so static helpers carry C++ mangling; this does not affect code matching.",
-    "num_functions": 35,
+    "num_functions": 34,
     "removed_runtime_functions": [
       "__FindPESection",
       "__FindPESectionByName",
@@ -623,7 +626,8 @@
       "_wcrtomb",
       "_wcslen",
       "_wcsnlen",
-      "_wcsrtombs"
+      "_wcsrtombs",
+      "_wcstombs"
     ],
     "sha256": "5da6eddafd8e0ada319e48bc2511f0728bf73d6d5b88863e0d59560e05fd468f",
     "smda": "data/MemoryModule/x86/smda/MemoryModule_2019-02-24_mingw13_x86_DllLoader.exe.7z",

@@ -10,7 +10,7 @@
     "is_blob": false,
     "license": "zlib",
     "mcrit": "data/libzlib/x64/mcrit/libzlib_1.2.11_mingw13_x64_zlib1.dll.mcrit",
-    "num_functions": 139,
+    "num_functions": 138,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -121,6 +121,7 @@
       "wcslen",
       "wcsnlen",
       "wcsrtombs",
+      "wcstombs",
       "write"
     ],
     "sha256": "73a8f41128d7de216775a9f51dd0db955d9d03ef9d918ea9f7f933b8b5d3eee7",
@@ -146,7 +147,7 @@
     "is_blob": false,
     "license": "zlib",
     "mcrit": "data/libzlib/x86/mcrit/libzlib_1.2.11_mingw13_x86_zlib1.dll.mcrit",
-    "num_functions": 127,
+    "num_functions": 126,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -262,6 +263,7 @@
       "_wcslen",
       "_wcsnlen",
       "_wcsrtombs",
+      "_wcstombs",
       "_write"
     ],
     "sha256": "eefc26a629ee86b029243edacc792ed65c0a06b9bc8bab8ba2a5ae3dc85957f8",
@@ -287,7 +289,7 @@
     "is_blob": false,
     "license": "zlib",
     "mcrit": "data/libzlib/x64/mcrit/libzlib_1.2.13_mingw13_x64_zlib1.dll.mcrit",
-    "num_functions": 138,
+    "num_functions": 137,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -400,6 +402,7 @@
       "wcslen",
       "wcsnlen",
       "wcsrtombs",
+      "wcstombs",
       "write"
     ],
     "sha256": "1781a1600dfc3ee6138ba7de2eb8cf124a219990684d0402942bc371255814b8",
@@ -425,7 +428,7 @@
     "is_blob": false,
     "license": "zlib",
     "mcrit": "data/libzlib/x86/mcrit/libzlib_1.2.13_mingw13_x86_zlib1.dll.mcrit",
-    "num_functions": 127,
+    "num_functions": 126,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -543,6 +546,7 @@
       "_wcslen",
       "_wcsnlen",
       "_wcsrtombs",
+      "_wcstombs",
       "_write"
     ],
     "sha256": "75b8c0b3c5665f044cfd25cb0c13161b2eae77876d1560491c81c8d39ebb1bf6",
@@ -890,7 +894,7 @@
     "is_blob": false,
     "license": "zlib",
     "mcrit": "data/libzlib/x64/mcrit/libzlib_1.2.8_mingw13_x64_zlib1.dll.mcrit",
-    "num_functions": 126,
+    "num_functions": 125,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -1002,6 +1006,7 @@
       "wcslen",
       "wcsnlen",
       "wcsrtombs",
+      "wcstombs",
       "write"
     ],
     "sha256": "7aa8b27a7eaec3345d8820eb597c230811198c3b925e494e578ee831676c5602",
@@ -1027,7 +1032,7 @@
     "is_blob": false,
     "license": "zlib",
     "mcrit": "data/libzlib/x86/mcrit/libzlib_1.2.8_mingw13_x86_zlib1.dll.mcrit",
-    "num_functions": 115,
+    "num_functions": 114,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -1144,6 +1149,7 @@
       "_wcslen",
       "_wcsnlen",
       "_wcsrtombs",
+      "_wcstombs",
       "_write"
     ],
     "sha256": "04b72185b2d22c2e4fb3a7466d3f5c01a3aa8b4787453b177c8a41941269722c",
@@ -1169,7 +1175,7 @@
     "is_blob": false,
     "license": "zlib",
     "mcrit": "data/libzlib/x64/mcrit/libzlib_1.3.1_mingw13_x64_zlib1.dll.mcrit",
-    "num_functions": 140,
+    "num_functions": 139,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -1282,6 +1288,7 @@
       "wcslen",
       "wcsnlen",
       "wcsrtombs",
+      "wcstombs",
       "write"
     ],
     "sha256": "e9c869bb1a1820371400a69f3bb02f3dd0a7956f99065a4c79881fc6803343b8",
@@ -1307,7 +1314,7 @@
     "is_blob": false,
     "license": "zlib",
     "mcrit": "data/libzlib/x86/mcrit/libzlib_1.3.1_mingw13_x86_zlib1.dll.mcrit",
-    "num_functions": 129,
+    "num_functions": 128,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -1425,6 +1432,7 @@
       "_wcslen",
       "_wcsnlen",
       "_wcsrtombs",
+      "_wcstombs",
       "_write"
     ],
     "sha256": "1dcc4256c525126a3df0a4e9adb55c1a09bbf7d0d2315a29c28909dae72bf504",
