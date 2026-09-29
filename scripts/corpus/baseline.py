@@ -285,12 +285,23 @@ _PROBE_EXE = _PROBE_DLL.replace(
 # this file: that probe already works, and a probe that fails to build does
 # not fail the family being built - it silently shrinks the baseline.
 _PROBE_STDIO = """\
+/* winsock2.h before windows.h, or windows.h pulls in winsock.h and the two
+   headers redeclare the same structures. ws2tcpip.h is here for
+   gai_strerrorA and gai_strerrorW only, which mingw-w64 defines as static
+   __inline wrappers over FormatMessage: they are compiled into every
+   translation unit that calls them, so any library resolving a getaddrinfo
+   error carries a body for them under its own name. OpenSSL, libevent and
+   boringssl all did. No -lws2_32 is needed, because nothing here calls a
+   function that is actually in the import library. */
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <windows.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 /* Read through a volatile pointer so the format is not a constant the
    optimiser can specialise the wrapper on. See the note above. */
@@ -417,6 +428,18 @@ __declspec(dllexport) size_t probe_stdio_strings(char *destination,
     if (copy)
         free(copy);
     return strlen(destination);
+}
+
+/* Read through a volatile so the error code is not a constant the optimiser
+   could fold the wrapper on, the same reason probe_stdio_format is volatile. */
+static volatile int probe_stdio_gai_error = WSAHOST_NOT_FOUND;
+
+__declspec(dllexport) size_t probe_stdio_gai(void)
+{
+    const char *narrow = gai_strerrorA(probe_stdio_gai_error);
+    const wchar_t *wide = gai_strerrorW(probe_stdio_gai_error);
+
+    return strlen(narrow) + wcslen(wide);
 }
 
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
@@ -2800,11 +2823,20 @@ def crt_glue(toolchain_id):
             # optimisation level, and Obfuscator is the one recipe here that
             # builds at -O0. crt_glue maps a name to a *set* of PicHashes,
             # so a second flavour only ever adds members to that set.
+            # -lws2_32 is for gai_strerrorA/W and is not optional: mingw-w64
+            # does not inline them, it ships them as compiled objects inside
+            # libws2_32.a, so the probe has to link that archive to get a body
+            # for them the way OpenSSL, libevent and boringssl do. Without it
+            # the probe does not build at all, which probe_failures reports
+            # and which would otherwise have quietly dropped the whole stdio
+            # surface out of this baseline.
             probes += [
-                (toolchain.cc, "probe_stdio.c", _PROBE_STDIO, ["-shared"]),
-                (toolchain.cc, "probe_stdio_exe.c", _PROBE_STDIO_EXE, []),
+                (toolchain.cc, "probe_stdio.c", _PROBE_STDIO,
+                 ["-shared", "-lws2_32"]),
+                (toolchain.cc, "probe_stdio_exe.c", _PROBE_STDIO_EXE,
+                 ["-lws2_32"]),
                 (toolchain.cc, "probe_stdio_exe_o0.c", _PROBE_STDIO_EXE,
-                 ["-O0"]),
+                 ["-O0", "-lws2_32"]),
             ]
     glue = {}
     # Set before the loop, so that a toolchain whose probes all built is

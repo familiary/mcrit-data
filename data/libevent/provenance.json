@@ -10,7 +10,7 @@
     "is_blob": false,
     "license": "BSD-3-Clause",
     "mcrit": "data/libevent/x64/mcrit/libevent_2.1.12_mingw13_x64_libevent_core.dll.mcrit",
-    "num_functions": 655,
+    "num_functions": 652,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -129,6 +129,8 @@
       "fputc",
       "free",
       "fwrite",
+      "gai_strerrorA",
+      "gai_strerrorW",
       "getc",
       "getenv",
       "in_ch",
@@ -170,7 +172,8 @@
       "wcrtomb",
       "wcslen",
       "wcsnlen",
-      "wcsrtombs"
+      "wcsrtombs",
+      "wcstombs"
     ],
     "sha256": "527cf8ef78d79a5e5b5e88d5a43b075afcf95bae188d9e2118c7813b45e81a15",
     "smda": "data/libevent/x64/smda/libevent_2.1.12_mingw13_x64_libevent_core.dll.7z",
@@ -195,7 +198,7 @@
     "is_blob": false,
     "license": "BSD-3-Clause",
     "mcrit": "data/libevent/x64/mcrit/libevent_2.1.12_mingw13_x64_libevent_extra.dll.mcrit",
-    "num_functions": 445,
+    "num_functions": 442,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -282,6 +285,8 @@
       "dtoa_lock_cleanup",
       "free",
       "fwrite",
+      "gai_strerrorA",
+      "gai_strerrorW",
       "getc",
       "in_ch",
       "isspace",
@@ -311,7 +316,8 @@
       "strtoull",
       "tolower",
       "ungetc",
-      "vfprintf"
+      "vfprintf",
+      "wcstombs"
     ],
     "sha256": "321d2cc6a03e9cb3f39f051d9ef005217ab2640534bceec468ccb7b5fe63dc37",
     "smda": "data/libevent/x64/smda/libevent_2.1.12_mingw13_x64_libevent_extra.dll.7z",
@@ -336,7 +342,7 @@
     "is_blob": false,
     "license": "BSD-3-Clause",
     "mcrit": "data/libevent/x86/mcrit/libevent_2.1.12_mingw13_x86_libevent_core.dll.mcrit",
-    "num_functions": 568,
+    "num_functions": 565,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -465,6 +471,8 @@
       "_fputc",
       "_free",
       "_fwrite",
+      "_gai_strerrorA",
+      "_gai_strerrorW",
       "_getc",
       "_getenv",
       "_in_ch",
@@ -511,7 +519,8 @@
       "_wcrtomb",
       "_wcslen",
       "_wcsnlen",
-      "_wcsrtombs"
+      "_wcsrtombs",
+      "_wcstombs"
     ],
     "sha256": "33e5e55537d334dc5cf041db5796946e08007fd808335c5c78fa5b99edc2382f",
     "smda": "data/libevent/x86/smda/libevent_2.1.12_mingw13_x86_libevent_core.dll.7z",
@@ -536,7 +545,7 @@
     "is_blob": false,
     "license": "BSD-3-Clause",
     "mcrit": "data/libevent/x86/mcrit/libevent_2.1.12_mingw13_x86_libevent_extra.dll.mcrit",
-    "num_functions": 414,
+    "num_functions": 411,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -622,6 +631,8 @@
       "_dtoa_lock_cleanup",
       "_free",
       "_fwrite",
+      "_gai_strerrorA",
+      "_gai_strerrorW",
       "_getc",
       "_in_ch",
       "_init_codepage_func",
@@ -656,7 +667,8 @@
       "_strtoull",
       "_tolower",
       "_ungetc",
-      "_vfprintf"
+      "_vfprintf",
+      "_wcstombs"
     ],
     "sha256": "edb3fdcf4f17e86aeafef8a9d1e07df9f1ea1143e9046c1abafbcd05dcd0aa27",
     "smda": "data/libevent/x86/smda/libevent_2.1.12_mingw13_x86_libevent_extra.dll.7z",
