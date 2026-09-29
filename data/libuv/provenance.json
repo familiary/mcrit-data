@@ -10,7 +10,7 @@
     "is_blob": false,
     "license": "MIT",
     "mcrit": "data/libuv/x64/mcrit/libuv_1.44.2_mingw13_x64_libuv.dll.mcrit",
-    "num_functions": 750,
+    "num_functions": 749,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -71,7 +71,8 @@
       "strncmp",
       "vfprintf",
       "wcscpy",
-      "wcslen"
+      "wcslen",
+      "wcstombs"
     ],
     "sha256": "d53663121d7270996a66111d47d47b077b43caa3d7efbb6a09e6070658dfb3f6",
     "smda": "data/libuv/x64/smda/libuv_1.44.2_mingw13_x64_libuv.dll.7z",
@@ -96,7 +97,7 @@
     "is_blob": false,
     "license": "MIT",
     "mcrit": "data/libuv/x86/mcrit/libuv_1.44.2_mingw13_x86_libuv.dll.mcrit",
-    "num_functions": 557,
+    "num_functions": 556,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -169,7 +170,8 @@
       "_strncmp",
       "_vfprintf",
       "_wcscpy",
-      "_wcslen"
+      "_wcslen",
+      "_wcstombs"
     ],
     "sha256": "d50815e1a5f97b3bb239ed87e9faa1e6c0678dad3f1827951f0637db916d7cf1",
     "smda": "data/libuv/x86/smda/libuv_1.44.2_mingw13_x86_libuv.dll.7z",
@@ -665,7 +667,7 @@
     "is_blob": false,
     "license": "MIT",
     "mcrit": "data/libuv/x64/mcrit/libuv_1.52.1_mingw13_x64_libuv.dll.mcrit",
-    "num_functions": 798,
+    "num_functions": 797,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -784,7 +786,8 @@
       "wcscpy",
       "wcslen",
       "wcsnlen",
-      "wcsrtombs"
+      "wcsrtombs",
+      "wcstombs"
     ],
     "sha256": "0ce83a874e613b91a6ad1ca8dc9e3e6706e72ea67154bc69063b25cc9c5205b3",
     "smda": "data/libuv/x64/smda/libuv_1.52.1_mingw13_x64_libuv.dll.7z",
@@ -809,7 +812,7 @@
     "is_blob": false,
     "license": "MIT",
     "mcrit": "data/libuv/x86/mcrit/libuv_1.52.1_mingw13_x86_libuv.dll.mcrit",
-    "num_functions": 594,
+    "num_functions": 593,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -937,7 +940,8 @@
       "_wcscpy",
       "_wcslen",
       "_wcsnlen",
-      "_wcsrtombs"
+      "_wcsrtombs",
+      "_wcstombs"
     ],
     "sha256": "2fd3b58e8a36e4ee0a2bd3d1c3c22ee305cfe9bcd41378047c0b67c5a5278b92",
     "smda": "data/libuv/x86/smda/libuv_1.52.1_mingw13_x86_libuv.dll.7z",

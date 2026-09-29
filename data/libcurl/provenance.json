@@ -11,7 +11,7 @@
     "license": "curl (MIT-like)",
     "mcrit": "data/libcurl/x64/mcrit/libcurl_8.15.0_mingw13_x64_libcurl.dll.mcrit",
     "notes": "A second build against OpenSSL would be a genuinely different code shape and is worth adding once OpenSSL is in the corpus.",
-    "num_functions": 1573,
+    "num_functions": 1572,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -146,7 +146,8 @@
       "wcscpy",
       "wcslen",
       "wcsnlen",
-      "wcsrtombs"
+      "wcsrtombs",
+      "wcstombs"
     ],
     "sha256": "0b030431101c8346030de5e3bedbb54a609caefab8289ec228eed94b8a03a773",
     "smda": "data/libcurl/x64/smda/libcurl_8.15.0_mingw13_x64_libcurl.dll.7z",
@@ -172,7 +173,7 @@
     "license": "curl (MIT-like)",
     "mcrit": "data/libcurl/x86/mcrit/libcurl_8.15.0_mingw13_x86_libcurl.dll.mcrit",
     "notes": "A second build against OpenSSL would be a genuinely different code shape and is worth adding once OpenSSL is in the corpus.",
-    "num_functions": 1454,
+    "num_functions": 1453,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -315,7 +316,8 @@
       "_wcscpy",
       "_wcslen",
       "_wcsnlen",
-      "_wcsrtombs"
+      "_wcsrtombs",
+      "_wcstombs"
     ],
     "sha256": "fb33be645136c6982d9c2312beb488749d6886bcd8303357f449f175198bb056",
     "smda": "data/libcurl/x86/smda/libcurl_8.15.0_mingw13_x86_libcurl.dll.7z",
@@ -788,7 +790,7 @@
     "license": "curl (MIT-like)",
     "mcrit": "data/libcurl/x64/mcrit/libcurl_8.4.0_mingw13_x64_libcurl.dll.mcrit",
     "notes": "A second build against OpenSSL would be a genuinely different code shape and is worth adding once OpenSSL is in the corpus.",
-    "num_functions": 1216,
+    "num_functions": 1215,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -959,6 +961,7 @@
       "wcslen",
       "wcsnlen",
       "wcsrtombs",
+      "wcstombs",
       "write"
     ],
     "sha256": "d2ae049add039426ba4178cdb22d58d5a24ec402fc545c992c962e482a88724d",
@@ -985,7 +988,7 @@
     "license": "curl (MIT-like)",
     "mcrit": "data/libcurl/x86/mcrit/libcurl_8.4.0_mingw13_x86_libcurl.dll.mcrit",
     "notes": "A second build against OpenSSL would be a genuinely different code shape and is worth adding once OpenSSL is in the corpus.",
-    "num_functions": 1097,
+    "num_functions": 1096,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -1164,6 +1167,7 @@
       "_wcslen",
       "_wcsnlen",
       "_wcsrtombs",
+      "_wcstombs",
       "_write"
     ],
     "sha256": "6f5cad312d0842fc9288f8cc3fd40eff1e420edbb0e10e76bf93b857f735d36c",

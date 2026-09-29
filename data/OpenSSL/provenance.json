@@ -11,7 +11,7 @@
     "license": "OpenSSL / SSLeay",
     "mcrit": "data/OpenSSL/x64/mcrit/OpenSSL_1.1.1w_mingw13_x64_libcrypto.mcrit",
     "notes": "perlasm generates GAS assembly, so no nasm is needed for the mingw targets.",
-    "num_functions": 6536,
+    "num_functions": 6535,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMainCRTStartup",
@@ -136,6 +136,7 @@
       "fseek",
       "ftell",
       "fwrite",
+      "gai_strerrorW",
       "getc",
       "getenv",
       "in_ch",
@@ -350,7 +351,7 @@
     "license": "OpenSSL / SSLeay",
     "mcrit": "data/OpenSSL/x86/mcrit/OpenSSL_1.1.1w_mingw13_x86_libcrypto.mcrit",
     "notes": "perlasm generates GAS assembly, so no nasm is needed for the mingw targets.",
-    "num_functions": 6299,
+    "num_functions": 6298,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMainCRTStartup@12",
@@ -478,6 +479,7 @@
       "_fseek",
       "_ftell",
       "_fwrite",
+      "_gai_strerrorW",
       "_getc",
       "_getenv",
       "_in_ch",
@@ -1497,7 +1499,7 @@
     "license": "Apache-2.0",
     "mcrit": "data/OpenSSL/x64/mcrit/OpenSSL_3.0.15_mingw13_x64_libcrypto.mcrit",
     "notes": "perlasm generates GAS assembly, so no nasm is needed for the mingw targets.",
-    "num_functions": 10934,
+    "num_functions": 10931,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMainCRTStartup",
@@ -1622,6 +1624,8 @@
       "fseek",
       "ftell",
       "fwrite",
+      "gai_strerrorA",
+      "gai_strerrorW",
       "getc",
       "getenv",
       "in_ch",
@@ -1671,7 +1675,8 @@
       "wcscpy",
       "wcslen",
       "wcsnlen",
-      "wcsrtombs"
+      "wcsrtombs",
+      "wcstombs"
     ],
     "sha256": "a4e6c6aae8a380f741ea04cb56b0b94f30a4018fbe01f1c10d95dcf76cac13ea",
     "smda": "data/OpenSSL/x64/smda/OpenSSL_3.0.15_mingw13_x64_libcrypto.7z",
@@ -1838,7 +1843,7 @@
     "license": "Apache-2.0",
     "mcrit": "data/OpenSSL/x86/mcrit/OpenSSL_3.0.15_mingw13_x86_libcrypto.mcrit",
     "notes": "perlasm generates GAS assembly, so no nasm is needed for the mingw targets.",
-    "num_functions": 10639,
+    "num_functions": 10636,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMainCRTStartup@12",
@@ -1966,6 +1971,8 @@
       "_fseek",
       "_ftell",
       "_fwrite",
+      "_gai_strerrorA",
+      "_gai_strerrorW",
       "_getc",
       "_getenv",
       "_in_ch",
@@ -2019,7 +2026,8 @@
       "_wcscpy",
       "_wcslen",
       "_wcsnlen",
-      "_wcsrtombs"
+      "_wcsrtombs",
+      "_wcstombs"
     ],
     "sha256": "4172f6bc5ec7db86a0750b5171adaa1a8d983b3e705b092eb315f021ba4b7587",
     "smda": "data/OpenSSL/x86/smda/OpenSSL_3.0.15_mingw13_x86_libcrypto.7z",
@@ -2191,7 +2199,7 @@
     "license": "Apache-2.0",
     "mcrit": "data/OpenSSL/x64/mcrit/OpenSSL_3.5.8_mingw13_x64_libcrypto.mcrit",
     "notes": "perlasm generates GAS assembly, so no nasm is needed for the mingw targets.",
-    "num_functions": 13198,
+    "num_functions": 13195,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMainCRTStartup",
@@ -2315,6 +2323,8 @@
       "fseek",
       "ftell",
       "fwrite",
+      "gai_strerrorA",
+      "gai_strerrorW",
       "getc",
       "getenv",
       "in_ch",
@@ -2360,7 +2370,8 @@
       "wcscpy",
       "wcslen",
       "wcsnlen",
-      "wcsrtombs"
+      "wcsrtombs",
+      "wcstombs"
     ],
     "sha256": "129676e4c31cd300cb59343653ae3bc1a5c1c3a8037d7f61eb03e092dfe3f895",
     "smda": "data/OpenSSL/x64/smda/OpenSSL_3.5.8_mingw13_x64_libcrypto.7z",
@@ -2473,7 +2484,7 @@
     "license": "Apache-2.0",
     "mcrit": "data/OpenSSL/x86/mcrit/OpenSSL_3.5.8_mingw13_x86_libcrypto.mcrit",
     "notes": "perlasm generates GAS assembly, so no nasm is needed for the mingw targets.",
-    "num_functions": 12868,
+    "num_functions": 12865,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMainCRTStartup@12",
@@ -2601,6 +2612,8 @@
       "_fseek",
       "_ftell",
       "_fwrite",
+      "_gai_strerrorA",
+      "_gai_strerrorW",
       "_getc",
       "_getenv",
       "_in_ch",
@@ -2650,7 +2663,8 @@
       "_wcscpy",
       "_wcslen",
       "_wcsnlen",
-      "_wcsrtombs"
+      "_wcsrtombs",
+      "_wcstombs"
     ],
     "sha256": "09757288802d52a56a99ccf28f9bd4327a6db3c90df7fbe830fec5c61c8150ed",
     "smda": "data/OpenSSL/x86/smda/OpenSSL_3.5.8_mingw13_x86_libcrypto.7z",
