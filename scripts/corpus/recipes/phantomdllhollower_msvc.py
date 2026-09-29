@@ -259,26 +259,47 @@ harder but two code generators.
 ------------------------------------------
 
 Both x64 artefacts carry ``__scrt_common_main_seh`` at 99 instructions, and
-that PicHash is the corpus's one standing leakage finding, already present in
-bzip2 x64, Lua 5.1.5 x64, Lua 5.4.8 x64, MemoryModule x64 and Hidden x64 -
-verified against the committed exports rather than assumed. These two are more
-artefacts against the same unresolved hash, not a new finding: the leakage
-count counts hashes and the hash has not moved. The x86 pair does not carry it
-at all, which is consistent with what ``scripts/corpus/README.md`` already
-records - it is x64 only, absent from every x86 EXE. No build flag here was
-chosen to suppress it.
+that PicHash is the corpus's one standing leakage finding. Swept over every
+committed ``.mcrit`` rather than assumed, the hash currently appears in four
+families - bzip2, Lua (5.1.5 and 5.4.8), MemoryModule and Hidden - all on x64
+and all naming it ``__scrt_common_main_seh``, and, tellingly, **not** in
+``data/MSVC``, which is the corpus's reference for exactly this code and is
+what would have let the filter drop it. These two artefacts are two more
+sightings of that hash, not a new finding: the leakage count counts hashes and
+the hash has not moved. The x86 pair does not carry it at all, which confirms
+again what ``scripts/corpus/README.md`` records - it is x64 only, absent from
+every x86 EXE; what the x86 pair has in its place is
+``__scrt_wide_argv_policy::configure_argv`` at 5 instructions. No build flag
+here was chosen to suppress any of it.
 
 ``printf`` survives the filter in all four, and for the MSVC reason rather
 than the MinGW one. In the MinGW artefacts it is a filter gap: the baseline
 holds that exact PicHash under the name ``printf`` and g++ emits the body as
 ``_Z6printfPKcz``, so the name-keyed lookup misses. Here the name is plainly
-``printf`` and the baseline simply does not hold the body: the UCRT headers
+``printf`` and the baseline simply does not hold the body - the UCRT headers
 define it as an inline wrapper over ``__stdio_common_vfprintf``, compiled into
 every translation unit that calls it. ``cronos_msvc.py`` records the same case.
-Both of these hashes are already in the corpus too - 25 instructions on x64 in
-MemoryModule, q3vm 1.3.1, q3vm 2026-03-06 and protobuf 21.12, and 20 on x86 in
-q3vm 2026-03-06 - so, like the wrapper above, these artefacts join an existing
-shared hash rather than introducing one.
+The same sweep says these two hashes are well established in the corpus
+already, and classify differently from the wrapper above: the 25-instruction
+x64 body is in LuaJIT, MSVC, MemoryModule, libxml2, mbedTLS, protobuf and
+q3vm, and the 20-instruction x86 body in MSVC and q3vm - and because
+``data/MSVC`` carries it under ``printf`` and ``wprintf`` while LuaJIT's PDB
+names the identical body ``printf``, ``printf_s``, ``wprintf``, ``wprintf_s``,
+``_printf_p`` and ``_wprintf_p``, the set of names is not one name repeated
+and so it is a differing-names collision rather than leakage. Either way,
+these artefacts join an existing shared hash and introduce nothing.
+
+Reproducibility, measured
+-------------------------
+
+``/Brepro`` does what it is there for. The four binaries were built twice, in
+runs 36560200508 and 36562628973 on separate runner instances, and all four
+sha256s are identical across the two - 74570fd5 and 9a2e383b on x64, acd0838c
+and c0f94538 on x86. That is the MSVC half of the claim
+``scripts/corpus/README.md`` makes, and it is worth having a second
+measurement of it beside the MinGW counter-example the sibling recipe found:
+two MinGW builds of this very commit differ in two bytes, both the COFF
+``TimeDateStamp`` GNU ld writes.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -447,16 +468,22 @@ _NOTES = (
     "GetContainerSectHdr 47 to 55 on x86, MemSweep's wmain 397 to 243, "
     "ShowRecords 134 to 296 on x86), which is what recording a second "
     "compiler is for. Two runtime bodies survive the glue filter in all four "
-    "artefacts and neither is new to the corpus: printf, a UCRT header inline "
-    "wrapper over __stdio_common_vfprintf compiled into every translation unit "
-    "that calls it, at 25 instructions on x64 and 20 on x86 - the same hashes "
-    "MemoryModule, q3vm and protobuf already carry - and, in the two x64 "
-    "artefacts only, __scrt_common_main_seh at 99 instructions, which is the "
-    "corpus's one standing leakage finding, already recorded in bzip2, Lua, "
-    "MemoryModule and Hidden on x64 and absent from every x86 EXE. These are "
-    "further artefacts against the same unresolved hashes rather than new "
-    "findings. Nothing in the tree is prebuilt and nothing is vendored, so the "
-    "vendored-third-party bucket is zero in all four."
+    "artefacts and, swept against every committed export, neither hash is new "
+    "to the corpus: printf, a UCRT header inline wrapper over "
+    "__stdio_common_vfprintf compiled into every translation unit that calls "
+    "it, at 25 instructions on x64 - a hash LuaJIT, MSVC, MemoryModule, "
+    "libxml2, mbedTLS, protobuf and q3vm already carry, under six different "
+    "names in LuaJIT alone, so it classifies as a differing-names collision "
+    "rather than leakage - and 20 on x86, in MSVC and q3vm; and, in the two "
+    "x64 artefacts only, __scrt_common_main_seh at 99 instructions, which is "
+    "the corpus's one standing leakage finding, present in bzip2, Lua, "
+    "MemoryModule and Hidden on x64, absent from every x86 EXE and absent from "
+    "data/MSVC itself, which is why the filter cannot reach it. These are "
+    "further sightings of the same unresolved hashes rather than new findings. "
+    "/Brepro holds: the four binaries were built twice on separate runners and "
+    "all four sha256s are identical across the two runs. Nothing in the tree "
+    "is prebuilt and nothing is vendored, so the vendored-third-party bucket "
+    "is zero in all four."
 )
 
 
