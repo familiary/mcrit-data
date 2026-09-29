@@ -66,6 +66,9 @@ Loaders and shellcode
 * [pe_to_shellcode](#pe_to_shellcode)
 * [sRDI](#srdi)
 
+Image-backed injection
+* [PhantomDllHollower](#phantomdllhollower)
+
 Heaven's Gate and WOW64 transitions
 * [wow64pp](#wow64pp)
 * [RtlWow64](#rtlwow64)
@@ -779,6 +782,29 @@ Generated with `scripts/build_corpus.py`; see `data/sRDI/provenance.json` for so
 | sRDI | 2022-06-17 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2022-06-17_msvc_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2022-06-17_msvc_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2022-06-17_msvc_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2022-06-17_msvc_x64_ShellcodeRDI_x64.7z) |
 <!-- /generated -->
 
+## Image-backed injection
+
+Module stomping and its variants: making injected code live inside what looks to an analyst like a legitimately mapped module rather than in private memory.
+
+### PhantomDllHollower<a id='phantomdllhollower'></a>
+
+Forrest Orr's proof of concept for phantom DLL hollowing, the module-stomping variant that removes the artefact the classic one leaves behind. Classic hollowing maps a real system DLL as a `SEC_IMAGE` section and then writes the payload through the mapping, which turns the touched pages private and copy-on-write; the phantom variant opens the DLL inside an NTFS transaction with `CreateFileTransactedW`, writes the payload into the *transacted* file contents, and creates the section from that handle. The transaction is never committed, so the file on disk is untouched and the region an analyst sees is a clean `MEM_IMAGE` mapping of a legitimate module that happens to contain the payload.  
+**Be precise about what this family matches.** `HollowDLL` is the technique and is the only function that is - 428 instructions on x64, 491 on x86, with both paths inside it selected by a bool - but what identifies the technique is the call sequence (`NtCreateTransaction`, `CreateFileTransactedW`, `WriteFile` into the transacted contents, `NtCreateSection` with `SEC_IMAGE`, `NtMapViewOfSection`) and not this body. Mandiant's PRIVATELOG loader cites this repository and performs that same sequence in its own independently written code, so it will not match `HollowDLL` and this family will not name it. The other three functions are PE-parsing furniture: `GetContainerSectHdr` and `GetPAFromRVA` are the section walk and RVA-to-file-offset conversion every PE parser contains, and `CheckRelocRange` exists for a phantom-specific reason - the payload has to land in a relocation-free range of `.text` - but is 45 instructions of generic `IMAGE_BASE_RELOCATION` walking. A hit on any of the three is not evidence of this project.  
+`MemSweep.exe` is the repository's other project and its defensive half: a `VirtualQueryEx` enumerator and a per-type, per-protection tally of a process's regions, which is what the write-up uses to *show* the difference between a hollowed image and a private allocation. It is recorded to name the scanner, not a technique.  
+Two translation units are the whole repository, with no project headers, no submodules, no vendored code and nothing statically linked, so everything in these artefacts that is not compiler runtime is this project's: 5 functions of 44 on x64 and 5 of 16 on x86 for the hollower, 5 of 50 and 13 of 42 for MemSweep. GPL-3.0-only, a verbatim GPLv3 `LICENSE` plus per-file headers. Cross-built with two command-line settings and no source patch: an `-I` directory holding forwarding `Windows.h` and `Tlhelp32.h` headers, because the sources use MSVC's capitalisation and mingw-w64 ships those lowercase, and `-municode`, without which the link fails on an undefined `WinMain` because mingw-w64 does not infer the wide entry point from `wmain`. Upstream builds MSVC v142 `/O2 /GL /MT`, so both compilers are recorded and the MSVC pair is the build a real sighting of this PoC is likely to be.  
+The MSVC artefacts are the same commit built from upstream's own projects with `/MT` replaced by `/MD`, `/GL`, `/LTCG`, `/OPT:REF` and `/OPT:ICF` turned off, a PDB forced on and the toolset retargeted to v143; no upstream file is modified. They are 5 own functions of 21 on both architectures for the hollower, and 6 own bodies of 56 on x64 and 47 on x86 for MemSweep - six rather than five because `MemoryPermissionRecord`'s in-class constructor takes its `std::list` by value and `/O2 /Ob2` emits it out of line where `-O2` inlines it into `wmain`. **Every one of the twenty comparable bodies has a different PicHash from its MinGW counterpart**, including `GetPAFromRVA` on x86, which is 57 instructions under both compilers: a MinGW-only reference would have matched an MSVC-built copy of this project on nothing. The x86-versus-x64 count difference in MemSweep is not inlining under either compiler - GCC splits three throw paths into `.text.unlikely` on x86 only, and MSVC emits fourteen x64 EH unwind funclets that its x86 frame-based model keeps inside the parent body - so the number to judge coverage on is five bodies per architecture under GCC and six under MSVC.  
+Both x64 MSVC artefacts carry `__scrt_common_main_seh` at 99 instructions, joining the standing leakage finding that `scripts/corpus/README.md` records; the x86 pair does not. That is two more artefacts against one already-known hash rather than a new finding.  
+Generated with `scripts/build_corpus.py`; see `data/PhantomDllHollower/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: PhantomDllHollower -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| PhantomDllHollower | 2020-07-17 | MinGW-w64 GCC 13 | [x86 PE](data/PhantomDllHollower/x86/mcrit/PhantomDllHollower_2020-07-17_mingw13_x86_MemSweep.exe.mcrit) / [x64 PE](data/PhantomDllHollower/x64/mcrit/PhantomDllHollower_2020-07-17_mingw13_x64_MemSweep.exe.mcrit) | [x86 PE](data/PhantomDllHollower/x86/smda/PhantomDllHollower_2020-07-17_mingw13_x86_MemSweep.exe.7z) / [x64 PE](data/PhantomDllHollower/x64/smda/PhantomDllHollower_2020-07-17_mingw13_x64_MemSweep.exe.7z) |
+| PhantomDllHollower | 2020-07-17 | MinGW-w64 GCC 13 | [x86 PE](data/PhantomDllHollower/x86/mcrit/PhantomDllHollower_2020-07-17_mingw13_x86_PhantomDllHollower.exe.mcrit) / [x64 PE](data/PhantomDllHollower/x64/mcrit/PhantomDllHollower_2020-07-17_mingw13_x64_PhantomDllHollower.exe.mcrit) | [x86 PE](data/PhantomDllHollower/x86/smda/PhantomDllHollower_2020-07-17_mingw13_x86_PhantomDllHollower.exe.7z) / [x64 PE](data/PhantomDllHollower/x64/smda/PhantomDllHollower_2020-07-17_mingw13_x64_PhantomDllHollower.exe.7z) |
+| PhantomDllHollower | 2020-07-17 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/PhantomDllHollower/x86/mcrit/PhantomDllHollower_2020-07-17_msvc143_x86_MemSweep.exe.mcrit) / [x64 PE](data/PhantomDllHollower/x64/mcrit/PhantomDllHollower_2020-07-17_msvc143_x64_MemSweep.exe.mcrit) | [x86 PE](data/PhantomDllHollower/x86/smda/PhantomDllHollower_2020-07-17_msvc143_x86_MemSweep.exe.7z) / [x64 PE](data/PhantomDllHollower/x64/smda/PhantomDllHollower_2020-07-17_msvc143_x64_MemSweep.exe.7z) |
+| PhantomDllHollower | 2020-07-17 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/PhantomDllHollower/x86/mcrit/PhantomDllHollower_2020-07-17_msvc143_x86_PhantomDllHollower.exe.mcrit) / [x64 PE](data/PhantomDllHollower/x64/mcrit/PhantomDllHollower_2020-07-17_msvc143_x64_PhantomDllHollower.exe.mcrit) | [x86 PE](data/PhantomDllHollower/x86/smda/PhantomDllHollower_2020-07-17_msvc143_x86_PhantomDllHollower.exe.7z) / [x64 PE](data/PhantomDllHollower/x64/smda/PhantomDllHollower_2020-07-17_msvc143_x64_PhantomDllHollower.exe.7z) |
+<!-- /generated -->
+
 ## Heaven's Gate and WOW64 transitions
 
 Implementations of the WOW64 transition: reaching 64-bit code, and the 64-bit ntdll, from a 32-bit process. Every one of them is x86 by construction rather than by choice - they truncate pointers to `uint32_t`, read `CONTEXT.Ebx`, or use inline assembly that x64 MSVC does not implement - so each is built for x86 only.
@@ -964,6 +990,10 @@ The project carries no licence of any kind - no LICENSE or COPYING file and no c
 Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Hidden -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_Hidden.sys.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_Hidden.sys.7z) |
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.7z) |
 <!-- /generated -->
 
 ## String obfuscation

@@ -101,6 +101,31 @@ follows the optimisation level (25 instructions at `-O0`, 19 at `-O2`, 18 at
 `-Os` for x64 `printf`). The baselines went from 3101 to 3126 symbols on x86
 and 2900 to 2926 on x64.
 
+**A sixth round, and the gap it leaves is a name rather than a body.**
+`gai_strerrorA` and `gai_strerrorW` were never measured, so every library that
+formats a `getaddrinfo` error carried them under its own name - OpenSSL and
+libevent since their data landed, invisibly, because the deep check only
+reports a PicHash shared by three or more families and boringssl was the
+third. mingw-w64 declares them in `ws2tcpip.h` and ships compiled objects in
+`libws2_32.a`, so `_PROBE_STDIO` links `-lws2_32` to get a body for them; the
+flag is not optional, and without it the probe does not build at all, which
+would silently drop the whole stdio surface out of this baseline while looking
+like it added to it. `wcstombs` came with them. Three names per architecture,
+2926 to 2929 on x64 and 3126 to 3129 on x86, and `refilter` took 52 functions
+out of 36 artefacts - `wcstombs` the wider of the two by far, in libzlib,
+cryptopp, libcurl, libuv and MemoryModule.
+
+**What that round did not fix, measured and left alone.** `printf` survives
+the filter in every artefact of `phantomdllhollower.py`, and the baseline
+already holds that exact PicHash. `is_glue` matches on the symbol name as well
+as the hash; the probes are C and those artefacts are C++, and from a C++
+translation unit g++ emits mingw's `printf` inline as `_Z6printfPKcz`, which
+SMDA demangles to `printf(char const*, ...)`. Same code, same hash, different
+name, so the lookup misses. That is not one family's problem but every C++
+MinGW family calling a mingw stdio inline, and the cheap fix is to key those
+entries on the demangled C++ spelling as well as the C one rather than to add
+a C++ probe that would only re-measure identical code.
+
 `refilter --dry-run` over the committed corpus with that baseline reports
 **67 artefacts in 14 families, 510 functions**: mbedTLS 14, OpenSSL 9, Lua
 and LuaJIT 6 each, abseil, libcurl, libtiff and libxml2 4 each, q3vm 4,
@@ -123,16 +148,27 @@ misattribution; it is not a collision fix, and the two numbers move for
 different reasons.
 
 **What remains is one finding.** `__scrt_common_main_seh`, the MSVC CRT's
-x64 entry-point wrapper, at 99 instructions in Lua, MemoryModule and bzip2.
+x64 entry-point wrapper, at 99 instructions in Lua, MemoryModule, bzip2,
+Hidden and PhantomDllHollower. Read the current list off `validate --deep`
+rather than off this sentence: it grows with every `/MD` x64 EXE the corpus
+gains, and it has been short here twice for exactly that reason.
 It is unambiguously Microsoft's code and the baseline ought to catch it; it
 does catch every one of its neighbours - `__scrt_initialize_crt`,
 `__scrt_acquire_startup_lock`, `__scrt_fastfail` and eleven more are removed
 from 98 artefacts each. What is known: it is x64 only, absent from every x86
-EXE; it has two bodies in this corpus, 99 instructions in those three and 98
+EXE; it has two bodies in this corpus, 99 instructions in those and 98
 in q3vm, which builds with whole-program optimisation; and the EXE probe
-emits neither, though it links and runs like every other. The cause needs
-MSVC in front of it, so it is recorded here rather than guessed at, and
-`validate --deep` fails on it as it should.
+emits neither, though it links and runs like every other.
+
+PhantomDllHollower narrows the cause without needing MSVC in front of it.
+The hash is **absent from `data/MSVC`**, which is why a filter keyed on name
+and hash cannot reach it - the gap is in what the reference contains, not in
+`is_glue`. `data/MSVC` does hold the 4-instruction
+`wmainCRTStartup`/`mainCRTStartup` body those same artefacts share, so the
+reference covers the entry point and misses the wrapper behind it. The
+x64-only property shows up again in the same family: its x86 pair carries
+`__scrt_wide_argv_policy::configure_argv` where the x64 pair carries the
+wrapper. `validate --deep` fails on it as it should.
 
 The deep check fails on one kind of collision only - the kind every round
 above was found by, one symbol name repeated across every family sharing the
@@ -194,8 +230,9 @@ counted here. A refilter round is a misattribution fix, not a collision
 fix, and the two are measured separately on purpose. What did move since
 this paragraph was last written is three hashes, all of them in the
 differing-names bucket. The leakage count did not: it is the same single
-`__scrt_common_main_seh` across Lua, MemoryModule and bzip2, unchanged
-through the last imports and through 510 functions leaving 67 artefacts.
+`__scrt_common_main_seh`, now across five families and seven x64 EXEs,
+unchanged through the last imports and through 510 functions leaving 67
+artefacts.
 
 That last step is the useful control. It added six MSVC families and eight
 ELF artefacts, among them five separate implementations of the same WOW64
@@ -336,6 +373,19 @@ this claim is the narrow one:
 So: the *binaries* are reproducible and their recorded digests are stable,
 which is what provenance rests on. The files around them are not
 byte-stable, and a regeneration of unchanged data still shows up as a diff.
+
+That claim holds for the MSVC half and is narrower than it reads for the
+MinGW one. Two builds of the same commit with the same cross compiler differ
+in exactly two bytes - measured on `phantom-dll-hollower-poc`, at file
+offsets 137 and 217 - and both are the COFF `TimeDateStamp` GNU ld writes.
+The MSVC binaries are byte-stable because of `/Brepro`; no recipe here passes
+`-Wl,--no-insert-timestamp`, which is what would give the MinGW side the same
+property. Nothing depends on it today, because `provenance.json` records the
+digest of the binary that was actually built and `validate` checks that the
+provenance, the report and the `.mcrit` sample entry agree on it - a rebuild
+produces a different digest, not an inconsistent one. Worth fixing in one
+pass rather than per recipe, since it would change every MinGW digest in the
+corpus.
 
 ## The MSVC half
 
@@ -533,6 +583,23 @@ changes every key, every mangled name and every function body while leaving
 the function count exactly as the provenance record says - nothing fails and
 nothing notices. Compare the recovered symbol names of a rebuild against the
 committed report, not just the counts, whenever an exerciser is edited.
+
+**MSVC include capitalisation is not a reason to patch.** MSVC-oriented
+sources routinely write `#include <Windows.h>`, `<Tlhelp32.h>` or
+`<WinSock2.h>` with capitals, and mingw-w64 ships those headers lowercase, so
+a cross build stops at the first line of the file. `callobfuscator.py` records
+the problem and describes the remedy as correcting the include case, which
+would be a source patch and is therefore not available here.
+`phantomdllhollower.py` does it on the command line instead: a build step
+writes a directory of forwarding headers - a `Windows.h` whose whole content
+is `#include <windows.h>` - and the compile line adds `-I` for it. The names
+differ from the real headers on a case-sensitive filesystem, so there is no
+recursion and the compiler reads mingw-w64's own header; the fetched tree is
+untouched, which `git status` inside the checkout confirms. A future recipe
+meeting the same wall should reach for this rather than for an edit. The MSVC
+half of the same project needs none of it - `cl` resolves `<Windows.h>` and
+`<Tlhelp32.h>` as written - which is what makes the `-I` directory a property
+of the cross build rather than of the source.
 
 ## Targets investigated but not built
 
