@@ -88,26 +88,33 @@ libdecrepit and libpki are ``jmp [__imp_...]`` into libcrypto.dll, one per
 API function called, named after it.
 
     x64            total   CRT  thunks  libstdc++  fiat  unnamed    own
-    libcrypto       4635   127      52         13     8       88   4347
+    libcrypto       4635   130      52         13     8       88   4344
     libssl          1778   113     407         28     0        5   1225
     libdecrepit      207    52      85          0     0        1     69
     libpki           740   110     138        116     0        8    368
 
     x86            total   CRT  thunks  libstdc++  fiat  unnamed    own
-    libcrypto       4465   135      16         13     9       45   4247
+    libcrypto       4465   138      16         13     9       45   4244
     libssl          2314   120     396         28     0      339   1431
     libdecrepit      208    52      78          0     0        6     72
     libpki          1019   116     127        121     0      205    450
 
 Every row sums exactly. What is recorded is the total less the CRT column.
-Two of the "own" bodies in each libcrypto are not boringssl's:
-``gai_strerrorA`` and ``gai_strerrorW`` are ``static inline`` in mingw-w64's
-``ws2tcpip.h`` and are compiled into any translation unit that includes it,
-here through boringssl's socket code. The baseline probe does not call them, so
-the glue filter keeps them, and they are what ``validate --deep`` fails on
-for this family: 4 leakage findings (15 and 18 instructions on x64, 13 and 16
-on x86), the same bodies also sitting in OpenSSL and libevent. Own is 4345
-on x64 and 4245 on x86 once they are taken out.
+
+The CRT column for libcrypto is three higher than it was when this recipe was
+first written, and that is this family's doing. ``gai_strerrorA`` and
+``gai_strerrorW`` reach it through boringssl's socket code, and the glue
+baseline did not know them, so they sat in the "own" column under boringssl's
+name - as they had been sitting under OpenSSL's and libevent's since those
+families landed. The deep check only reports a PicHash shared by three or more
+families, so this family arriving is what made a long-standing leak visible.
+An earlier draft of this docstring called them ``static inline`` in
+mingw-w64's ``ws2tcpip.h``; they are not. That header only declares them, and
+``libws2_32.a`` carries compiled objects for both, so anything linking
+-lws2_32 and calling them absorbs a body - the same class as libgcc's
+``__udivmoddi4``. The baseline now measures them, and ``wcstombs`` came with
+them, which is why the column moves by three rather than two: the earlier
+draft counted two non-boringssl bodies here and there were three.
 The unnamed column is SMDA's: it names from exported and global symbols and
 not from local ones, so in x64 libcrypto 73 of the 88 are the perlasm
 internal helpers (``_aesni_ctr32_6x``, ``_vpaes_encrypt_core``,
@@ -207,11 +214,17 @@ RECIPES = {
               "functions in the x64 libcrypto and 43 in x86, all present in "
               "the images. Four libraries, one artefact each: libcrypto, "
               "libssl, libdecrepit and libpki. Function counts as SMDA "
-              "recovers them, x64 (x86): libcrypto 4635 (4465) of which 127 "
-              "(135) are MinGW runtime removed by the glue filter, 52 (16) "
+              "recovers them, x64 (x86): libcrypto 4635 (4465) of which 130 "
+              "(138) are MinGW runtime removed by the glue filter, 52 (16) "
               "import thunks, 13 (13) libstdc++ instantiations, 8 (9) "
               "vendored fiat-crypto, 88 (45) unnamed, mostly local labels in "
-              "the assembly, and 4347 (4247) boringssl's own, two of each being mingw-w64's inline gai_strerrorA/W; libssl 1778 "
+              "the assembly, and 4344 (4244) boringssl's own. The CRT column "
+              "includes gai_strerrorA, gai_strerrorW and wcstombs, which this "
+              "family is what made visible: the glue baseline did not know "
+              "them, so they had been sitting under OpenSSL's and libevent's "
+              "names too, and the deep check only reports a hash shared by "
+              "three or more families. mingw-w64 ships the first two as "
+              "objects in libws2_32.a rather than as header inlines. libssl 1778 "
               "(2314) with 407 (396) one-instruction thunks into libcrypto "
               "and 28 (28) libstdc++; libdecrepit 207 (208) with 85 (78) "
               "thunks; libpki 740 (1019) with 138 (127) thunks and 116 (121) "
