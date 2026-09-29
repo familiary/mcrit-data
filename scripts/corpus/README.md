@@ -101,6 +101,31 @@ follows the optimisation level (25 instructions at `-O0`, 19 at `-O2`, 18 at
 `-Os` for x64 `printf`). The baselines went from 3101 to 3126 symbols on x86
 and 2900 to 2926 on x64.
 
+**A sixth round, and the gap it leaves is a name rather than a body.**
+`gai_strerrorA` and `gai_strerrorW` were never measured, so every library that
+formats a `getaddrinfo` error carried them under its own name - OpenSSL and
+libevent since their data landed, invisibly, because the deep check only
+reports a PicHash shared by three or more families and boringssl was the
+third. mingw-w64 declares them in `ws2tcpip.h` and ships compiled objects in
+`libws2_32.a`, so `_PROBE_STDIO` links `-lws2_32` to get a body for them; the
+flag is not optional, and without it the probe does not build at all, which
+would silently drop the whole stdio surface out of this baseline while looking
+like it added to it. `wcstombs` came with them. Three names per architecture,
+2926 to 2929 on x64 and 3126 to 3129 on x86, and `refilter` took 52 functions
+out of 36 artefacts - `wcstombs` the wider of the two by far, in libzlib,
+cryptopp, libcurl, libuv and MemoryModule.
+
+**What that round did not fix, measured and left alone.** `printf` survives
+the filter in every artefact of `phantomdllhollower.py`, and the baseline
+already holds that exact PicHash. `is_glue` matches on the symbol name as well
+as the hash; the probes are C and those artefacts are C++, and from a C++
+translation unit g++ emits mingw's `printf` inline as `_Z6printfPKcz`, which
+SMDA demangles to `printf(char const*, ...)`. Same code, same hash, different
+name, so the lookup misses. That is not one family's problem but every C++
+MinGW family calling a mingw stdio inline, and the cheap fix is to key those
+entries on the demangled C++ spelling as well as the C one rather than to add
+a C++ probe that would only re-measure identical code.
+
 `refilter --dry-run` over the committed corpus with that baseline reports
 **67 artefacts in 14 families, 510 functions**: mbedTLS 14, OpenSSL 9, Lua
 and LuaJIT 6 each, abseil, libcurl, libtiff and libxml2 4 each, q3vm 4,
@@ -337,6 +362,19 @@ So: the *binaries* are reproducible and their recorded digests are stable,
 which is what provenance rests on. The files around them are not
 byte-stable, and a regeneration of unchanged data still shows up as a diff.
 
+That claim holds for the MSVC half and is narrower than it reads for the
+MinGW one. Two builds of the same commit with the same cross compiler differ
+in exactly two bytes - measured on `phantom-dll-hollower-poc`, at file
+offsets 137 and 217 - and both are the COFF `TimeDateStamp` GNU ld writes.
+The MSVC binaries are byte-stable because of `/Brepro`; no recipe here passes
+`-Wl,--no-insert-timestamp`, which is what would give the MinGW side the same
+property. Nothing depends on it today, because `provenance.json` records the
+digest of the binary that was actually built and `validate` checks that the
+provenance, the report and the `.mcrit` sample entry agree on it - a rebuild
+produces a different digest, not an inconsistent one. Worth fixing in one
+pass rather than per recipe, since it would change every MinGW digest in the
+corpus.
+
 ## The MSVC half
 
 31 families and 96 artefacts are built by
@@ -533,6 +571,20 @@ changes every key, every mangled name and every function body while leaving
 the function count exactly as the provenance record says - nothing fails and
 nothing notices. Compare the recovered symbol names of a rebuild against the
 committed report, not just the counts, whenever an exerciser is edited.
+
+**MSVC include capitalisation is not a reason to patch.** MSVC-oriented
+sources routinely write `#include <Windows.h>`, `<Tlhelp32.h>` or
+`<WinSock2.h>` with capitals, and mingw-w64 ships those headers lowercase, so
+a cross build stops at the first line of the file. `callobfuscator.py` records
+the problem and describes the remedy as correcting the include case, which
+would be a source patch and is therefore not available here.
+`phantomdllhollower.py` does it on the command line instead: a build step
+writes a directory of forwarding headers - a `Windows.h` whose whole content
+is `#include <windows.h>` - and the compile line adds `-I` for it. The names
+differ from the real headers on a case-sensitive filesystem, so there is no
+recursion and the compiler reads mingw-w64's own header; the fetched tree is
+untouched, which `git status` inside the checkout confirms. A future recipe
+meeting the same wall should reach for this rather than for an edit.
 
 ## Targets investigated but not built
 
