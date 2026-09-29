@@ -423,9 +423,26 @@ altogether, SysWhispers passes no `/DEBUG` so nothing is implied, and
 its recipe deliberately does not touch (`CPP/Build.mak:133`). The
 unaffected artefacts are not free of unnamed direct-jump functions - 7-Zip's
 MinGW x86 reports carry 265, cryptopp's MinGW x64 241 - but they are
-scattered rather than packed, and the longest consecutive five-byte run
-anywhere outside an incrementally linked image is 18, against a threshold
-of 32. The one-instruction jumps those artefacts carry are mostly named,
+scattered rather than packed, and when that boundary was measured the
+longest consecutive five-byte run anywhere outside an incrementally linked
+image was 18, against a threshold of 32. Over the 614 reports committed
+since, that benign maximum is 25 (poco 1.15.4 x86), still under the
+threshold. One artefact does exceed it without being an incremental link:
+gRPC 1.76.0's x86 `libgrpc.dll` has a run of 69, which is GCC exception
+landing-pad stubs rather than a table. GCC splits a function into hot and
+cold parts under `-freorder-blocks-and-partition`, and on 32-bit DWARF
+unwinding a landing pad whose code went to the cold part is emitted in the
+hot part as `jmp <cold label>`; those 69 are the 69 landing pads in
+`GlobalSubchannelPool::UnregisterSubchannel`'s LSDA. Two measurements
+separate that from a link table and both must hold: at most 10% of the run's
+targets are function entries (0 of 69 here, where a link table's are all
+entries by construction, since each entry exists to be the one fixed way
+into a function), and unnamed direct jumps are at most 10% of the image's
+functions (5.1% here, where a link table is roughly half). The threshold of
+32 is unchanged, and a target that does not parse counts as a function entry
+so that doubt refuses. `-fno-reorder-blocks-and-partition` also removes the
+run, but it changes the code generated for the artefact and was not used.
+The one-instruction jumps those artefacts carry are mostly named,
 and are import thunks jumping through the IAT or ordinary tail calls - 185
 in VX-API x64, 211 in abseil x64, 149 in libcurl 8.15.0 x64, of which 1, 68
 and 14 respectively
