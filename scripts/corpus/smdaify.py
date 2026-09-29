@@ -251,9 +251,13 @@ def assert_not_incrementally_linked(report, binary_path):
     The run, not the count, is what separates it. Plenty of artefacts carry
     unnamed direct-jump functions without having a table - 7-Zip's MinGW x86
     reports carry 265 - but scattered through the image rather than packed.
-    Over all 392 generated reports the longest such run outside an
-    incrementally linked image is 18 and the shortest inside one is 70; see
-    ``MAX_INCREMENTAL_THUNK_RUN`` for the full split. A run of 32 or more is
+    Over the 392 generated reports this was first measured on, the longest
+    such run outside an incrementally linked image was 18 and the shortest
+    inside one 70; see ``MAX_INCREMENTAL_THUNK_RUN`` for the full split. The
+    benign figure has since moved: over the 614 reports committed when the
+    landing-pad case below was measured, the longest run outside an
+    incrementally linked image is 25 (poco 1.15.4 x86, whose targets are not
+    function entries either). A run of 32 or more is
     then still admitted if it is provably a GCC landing-pad island, which is
     what mingw-w64 libgrpc.dll on x86 has; see ``_is_landing_pad_island``.
 
