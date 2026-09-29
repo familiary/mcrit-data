@@ -45,6 +45,7 @@ Libraries
 * [libtiff](#libtiff)
 * [wolfSSL](#wolfssl)
 * [OpenSSL](#openssl)
+* [boringssl](#boringssl)
 * [Crypto++](#cryptopp)
 * [7-Zip](#7-zip)
 * [PCRE](#pcre)
@@ -543,6 +544,23 @@ Generated with `scripts/build_corpus.py`; see `data/OpenSSL/provenance.json` for
 | OpenSSL | 3.5.8 | MinGW-w64 GCC 13 | [x86 PE](data/OpenSSL/x86/mcrit/OpenSSL_3.5.8_mingw13_x86_libssl.mcrit) / [x64 PE](data/OpenSSL/x64/mcrit/OpenSSL_3.5.8_mingw13_x64_libssl.mcrit) | [x86 PE](data/OpenSSL/x86/smda/OpenSSL_3.5.8_mingw13_x86_libssl.7z) / [x64 PE](data/OpenSSL/x64/smda/OpenSSL_3.5.8_mingw13_x64_libssl.7z) |
 <!-- /generated -->
 
+### boringssl<a id='boringssl'></a>
+
+Google's OpenSSL fork, `0.20260903.0` (commit `0ce57bbf`, the newest dated release tag), built standalone as four shared libraries per architecture: `libcrypto`, `libssl`, `libdecrepit` and `libpki`. One version only - boringssl has no release series to sample, and what it does have is a moving `main` that Chrome and Android pin by commit.  
+**The assembly is in these images.** `OPENSSL_NO_ASM` is off and boringssl's NASM output is assembled: 113 hand-written functions in the x64 `libcrypto` and 43 in x86 - `aes_hw_*`, `aesni_gcm_*`, `gcm_ghash_vpclmulqdq_*`, `sha256_block_data_order_hw`, `ecp_nistz256_*_adx`, `chacha20_poly1305_*_avx2`. Built with `OPENSSL_NO_ASM=ON` instead, the x64 `libcrypto` loses 219 symbols and 170560 bytes of `.text` and gains 28 C bodies in their place. That matters because the C fallbacks are not what any real boringssl carries, which is why the copy inside [gRPC](#grpc) is not recorded as this family: it needs `OPENSSL_NO_ASM` to link under mingw. The `fiat_p256_adx_*` routines that stops it are ELF/Apple-only in this tree, so a Windows boringssl does not contain them at all.  
+Function counts, x64 (x86): `libcrypto` 4635 (4465), of which 127 (135) are MinGW runtime removed by the glue filter, 52 (16) import thunks, 13 (13) libstdc++ instantiations, 8 (9) vendored fiat-crypto, 88 (45) unnamed - mostly local labels in the assembly - and 4347 (4247) boringssl's own, two of each being mingw-w64's inline `gai_strerrorA`/`W`. `libssl` 1778 (2314) has 407 (396) one-instruction thunks into `libcrypto.dll`; `libpki` 740 (1019) has 138 (127) and 116 (121) libstdc++ instantiations; `libdecrepit` is 207 (208).  
+**52 (x64) and 70 (x86) of `libcrypto`'s PicHashes are shared with [OpenSSL](#openssl)**, nearly all under the same symbol name - `ASN1_TYPE_cmp`, `bn_mul_comba4`, `DES_encrypt3`. That is fork ancestry rather than misattribution, and a match that could be either is the truth about a fork. `validate --deep` does not report it, since it counts hashes shared by three or more families.  
+Generated with `scripts/build_corpus.py`; see `data/boringssl/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: boringssl -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| boringssl | 0.20260903.0 | MinGW-w64 GCC 13 | [x86 PE](data/boringssl/x86/mcrit/boringssl_0.20260903.0_mingw13_x86_crypto.dll.mcrit) / [x64 PE](data/boringssl/x64/mcrit/boringssl_0.20260903.0_mingw13_x64_crypto.dll.mcrit) | [x86 PE](data/boringssl/x86/smda/boringssl_0.20260903.0_mingw13_x86_crypto.dll.7z) / [x64 PE](data/boringssl/x64/smda/boringssl_0.20260903.0_mingw13_x64_crypto.dll.7z) |
+| boringssl | 0.20260903.0 | MinGW-w64 GCC 13 | [x86 PE](data/boringssl/x86/mcrit/boringssl_0.20260903.0_mingw13_x86_decrepit.dll.mcrit) / [x64 PE](data/boringssl/x64/mcrit/boringssl_0.20260903.0_mingw13_x64_decrepit.dll.mcrit) | [x86 PE](data/boringssl/x86/smda/boringssl_0.20260903.0_mingw13_x86_decrepit.dll.7z) / [x64 PE](data/boringssl/x64/smda/boringssl_0.20260903.0_mingw13_x64_decrepit.dll.7z) |
+| boringssl | 0.20260903.0 | MinGW-w64 GCC 13 | [x86 PE](data/boringssl/x86/mcrit/boringssl_0.20260903.0_mingw13_x86_pki.dll.mcrit) / [x64 PE](data/boringssl/x64/mcrit/boringssl_0.20260903.0_mingw13_x64_pki.dll.mcrit) | [x86 PE](data/boringssl/x86/smda/boringssl_0.20260903.0_mingw13_x86_pki.dll.7z) / [x64 PE](data/boringssl/x64/smda/boringssl_0.20260903.0_mingw13_x64_pki.dll.7z) |
+| boringssl | 0.20260903.0 | MinGW-w64 GCC 13 | [x86 PE](data/boringssl/x86/mcrit/boringssl_0.20260903.0_mingw13_x86_ssl.dll.mcrit) / [x64 PE](data/boringssl/x64/mcrit/boringssl_0.20260903.0_mingw13_x64_ssl.dll.mcrit) | [x86 PE](data/boringssl/x86/smda/boringssl_0.20260903.0_mingw13_x86_ssl.dll.7z) / [x64 PE](data/boringssl/x64/smda/boringssl_0.20260903.0_mingw13_x64_ssl.dll.7z) |
+<!-- /generated -->
+
 ### Crypto++<a id='cryptopp'></a>
 
 Crypto++ is a C++ crypto toolkit and a regular guest in malware. The three releases are picked where the library was restructured: 5.6.5 is the last of the 5.6 line and predates the C++11 move of 6.0, 7.0.0 follows the split of the SIMD implementations into their own translation units, and 8.9.0 is current. Any two of them overlap far less than their version numbers suggest.  
@@ -964,6 +982,10 @@ The project carries no licence of any kind - no LICENSE or COPYING file and no c
 Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Hidden -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_Hidden.sys.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_Hidden.sys.7z) |
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.7z) |
 <!-- /generated -->
 
 ## String obfuscation
