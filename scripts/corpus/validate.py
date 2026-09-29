@@ -431,6 +431,73 @@ def describe_collisions(grouped, min_instructions=None):
                len(grouped[UNNAMED]))]
 
 
+def find_sample_subtraction_failures(root=None, min_instructions=None):
+    """PicHashes a sample-derived family shares with a build-derived one.
+
+    The two tracks make opposite claims about a shared body. Between two
+    build-derived families it is leakage: one of them absorbed code belonging
+    to the other, and classify_collision sorts out which kind. Between a
+    sample-derived family and a build-derived one it is not leakage at all -
+    it is ``corpus.residue`` having failed to do its job. The build-derived
+    side compiled that body from known source, so it is that family's; the
+    sample-derived side should have subtracted it before admitting anything,
+    and did not.
+
+    Reported separately rather than folded into the four kinds for two
+    reasons. The signal is a *pair* of families, where the leakage gate only
+    fires at three or more, so it would be invisible there. And the remedy is
+    different in kind: leakage means a recipe needs its dependency untangled,
+    this means an already-ingested artefact contains bodies that are not its
+    family's and has to be re-ingested against a wider ``subtract``.
+
+    Returns {pichash: Collision}, empty whenever the corpus holds no
+    sample-derived data - which is every corpus that has only ever run
+    recipes, so this costs one extra walk and changes nothing for them.
+    """
+    from .sample import PRODUCER
+
+    if min_instructions is None:
+        min_instructions = config.MIN_CROSS_FAMILY_INSTRUCTIONS
+    tracks = {}
+    sizes = {}
+    names = {}
+    families = {}
+    decompress_decode = None
+    for path in _iter_data_files(".mcrit", root):
+        track = PRODUCER if _producer(path) == PRODUCER else "build"
+        with open(path, encoding="utf-8") as handle:
+            try:
+                export = json.load(handle)
+            except ValueError:
+                continue
+        compressed = export.get("content", {}).get("is_compressed")
+        for sha256, blob in export.get("function_entries", {}).items():
+            family = export.get("sample_entries", {}).get(sha256, {}).get(
+                "family") or "(unknown)"
+            if compressed:
+                if decompress_decode is None:
+                    from mcrit.libs.utility import decompress_decode
+                entries = json.loads(decompress_decode(blob))
+            else:
+                entries = blob
+            for entry in entries.values():
+                pichash = entry.get("pichash")
+                if not pichash:
+                    continue
+                instructions = entry.get("num_instructions") or 0
+                if instructions < min_instructions:
+                    continue
+                tracks.setdefault(pichash, set()).add(track)
+                sizes[pichash] = instructions
+                families.setdefault(pichash, set()).add(family)
+                if entry.get("function_name"):
+                    names.setdefault(pichash, set()).add(entry["function_name"])
+    return {pichash: Collision(sorted(families[pichash]), sizes[pichash],
+                               sorted(names.get(pichash) or []))
+            for pichash, seen in tracks.items()
+            if len(seen) > 1}
+
+
 def _counterpart(path, from_kind, to_kind, from_suffix, to_suffix):
     """Map data/<fam>/<arch>/smda/<slug>.7z to its .mcrit sibling, or back."""
     directory, filename = os.path.split(path)
@@ -776,6 +843,20 @@ def validate_all(root=None, check_size=True, deep=False, min_instructions=None,
             record(message, None if any(is_generated_family(family)
                                         for family in collision.families)
                    else os.path.join(config.DATA_DIR, collision.families[0]))
+        # Sample-derived data admitted a body the corpus had already compiled
+        # from source. See find_sample_subtraction_failures: this is a failed
+        # subtraction rather than leakage, and it always fails - the build-
+        # derived side is the one with a provenance chain, so the sample-
+        # derived artefact is what needs re-ingesting.
+        for pichash, collision in sorted(
+                find_sample_subtraction_failures(root, min_instructions).items()):
+            record("PicHash %s (%d instructions) is in both a sample-derived "
+                   "and a build-derived family (%s): corpus.residue should "
+                   "have subtracted it, so the sample-derived artefact carries "
+                   "code that is not its family's"
+                   % (pichash, collision.num_instructions,
+                      ", ".join(collision.families)),
+                   os.path.join(config.DATA_DIR, collision.families[0]))
         if notes is not None:
             notes.extend(describe_collisions(grouped, min_instructions))
     # Only when the whole corpus is being checked: a run scoped to one family

@@ -266,6 +266,79 @@ compiler, build flags, and any functions removed - is recorded in
 `data/<Family>/provenance.json`, so an artefact stays traceable to the exact
 upstream source it came from.
 
+## Two tracks, and why only one of them exists so far
+
+Everything in `data/` today was compiled here from pinned source. That is what
+makes this corpus's central claim cheap: when a report says a body is
+`inflate` from libzlib 1.3, it is, because we fetched 1.3 and built it. The
+family label is true by construction and nobody has to be trusted.
+
+Some families cannot be reached that way - the code only exists as shipped
+binaries, with no source to pin and no build to run. `corpus/sample.py` and
+`corpus/residue.py` describe how such a family *would* be admitted, and
+`corpus/sample-ingestion.md` is the scoping note behind them. Nothing uses
+them yet: no sample-derived family is recorded here, and adding the first one
+needs a maintainer decision this tooling cannot make (see below).
+
+The distinction has to stay loud, because the two tracks support different
+claims:
+
+* **Build-derived** - we compiled it. The body *is* that project's code at
+  that version, and the provenance records the commit, compiler and flags that
+  produced it.
+* **Sample-derived** - somebody published an analysis attributing a binary to
+  a family, and these are the bodies in that binary which the corpus could not
+  explain as anything else. That is weaker, and it fails differently: a
+  mislabelled sample makes MCRIT name the wrong family confidently, in every
+  future investigation that touches those bodies.
+
+So the track is visible everywhere rather than recorded once. The producer
+slot in the filename says `sample` - the slot where blobs already say `msvc`,
+because `Recipe.slug` refuses to name the toolchain that merely ran an
+extraction - and `provenance.json` carries `"derived_from": "sample"` while
+omitting `compiler`, `toolchain`, `build_flags` and `source` rather than
+filling them with placeholders. Their absence is the record; a placeholder
+would read as knowledge.
+
+Three rules are enforced in code, not left to review:
+
+* **The attribution cites something checkable.** `SampleSource` requires
+  `attribution` and an `attribution_source` URL, and refuses a recipe without
+  them.
+* **Subtraction is mandatory.** A shipped binary is mostly not the project -
+  statically linked runtime, vendored libraries, glue - and `baseline.py`
+  cannot subtract it, because that machinery needs a known toolchain. Instead
+  the corpus subtracts against itself: a body whose PicHash is already filed
+  under a build-verified family is, by construction, not the candidate's.
+  `SampleRecipe.subtract` may not be empty.
+* **An image the corpus cannot mostly explain is refused.** `residue.py` fails
+  below `ACCOUNTED_FLOOR` (50% of functions of at least 10 instructions). A
+  low matched share means the subtraction did not work, not that the sample is
+  unusually original - PicHash equality is exact, so a dependency compiled
+  with other flags simply will not match. What survives is a candidate set for
+  a human, never a verdict: a body that matches nothing may just be a library
+  this corpus does not carry.
+
+`validate --deep` knows the difference. Between two build-derived families a
+shared PicHash is leakage, sorted into the four kinds `classify_collision`
+describes. Between a sample-derived family and a build-derived one it is the
+opposite - the build-derived side has the provenance chain, so the shared body
+belongs to it and the sample-derived artefact should have subtracted it.
+`find_sample_subtraction_failures` reports that separately and always fails,
+because the remedy differs: not a recipe untangling its dependencies, but an
+artefact to re-ingest against a wider `subtract`.
+
+Two things this tooling deliberately does not decide. It does not acquire
+samples - the binary is a local file the maintainer already holds, verified
+against the digest in the recipe, because reaching into a malware repository
+is a credentialed, audited act and a build script is the wrong place for it.
+And it does not settle whether derived disassembly of an unlicensed binary can
+be published here: an SMDA report is a near-complete reconstruction of the
+code, the families recorded so far are MIT, BSD or Apache, and a sample
+usually carries no licence at all. That is a maintainer question, and it is
+why the first sample-derived family has not been added.
+
+
 ## What this pipeline can and cannot do
 
 SMDA has no COFF/`ar` loader, so static `.lib`/`.a` archives remain out of
