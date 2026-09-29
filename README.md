@@ -65,6 +65,7 @@ Loaders and shellcode
 * [MemoryModule](#memorymodule)
 * [pe_to_shellcode](#pe_to_shellcode)
 * [sRDI](#srdi)
+* [sc4cpp](#sc4cpp)
 
 Heaven's Gate and WOW64 transitions
 * [wow64pp](#wow64pp)
@@ -779,6 +780,21 @@ Generated with `scripts/build_corpus.py`; see `data/sRDI/provenance.json` for so
 | sRDI | 2022-06-17 | MSVC (as committed upstream) | [x86 code](data/sRDI/x86/mcrit/sRDI_2022-06-17_msvc_x86_ShellcodeRDI_x86.mcrit) / [x64 code](data/sRDI/x64/mcrit/sRDI_2022-06-17_msvc_x64_ShellcodeRDI_x64.mcrit) | [x86 code](data/sRDI/x86/smda/sRDI_2022-06-17_msvc_x86_ShellcodeRDI_x86.7z) / [x64 code](data/sRDI/x64/smda/sRDI_2022-06-17_msvc_x64_ShellcodeRDI_x64.7z) |
 <!-- /generated -->
 
+### sc4cpp<a id='sc4cpp'></a>
+
+A framework for writing position-independent Windows shellcode as ordinary C++. `SC_MAIN_BEGIN`/`SC_MAIN_END` wrap the user's entry point in exported `SCBegin` and `SCEnd` markers, `__declspec(code_seg(".code$..."))` sorts the emitted functions into one contiguous run between them, `SC_IMPORT_API_BATCH` resolves imports at run time by walking the PEB loader list and comparing FNV-1a hashes of module and export names, and `SC_PISTRINGA`/`SC_PISTRINGW` build string literals on the stack so nothing lands in `.rdata`. A Python script then reads the built PE and writes out the bytes between the two markers.  
+**The header has no compiled body of its own**, being macros and force-inlined templates, so what is recorded is the example translation unit - the only thing in the repository that compiles. 76% of that is the framework rather than the example: a translation unit that resolves one API and calls it already yields 161 of `SCMain`'s 213 instructions, and those are the PEB walk, the two hash loops and the `LoadLibraryA`/`GetProcAddress` pair that every program written with this header contains.  
+**This is a fuzzy match and not an exact one.** Being force-inlined is what makes the framework ubiquitous and also what stops it being a fixed body: the macro expansion and the user's code end up in one function, so two different sc4cpp programs share no `SCMain` PicHash. Measured against an unrelated program built with the same header, the only exact matches are the three-instruction `SCBegin` and the two one-instruction markers, while the `SCMain` bodies agree on 59% of their minhash. A hit here says "written with sc4cpp", not "is this program" - which is the only claim available for a framework nobody distributes as a binary.  
+**Upstream is gone** - the repository and the owning GitHub account are both 404 - and the source comes from the one Software Heritage visit of the origin, snapshot `e5e82503`, revision `e252d9a5`, root directory `d469e55b`, pinned by the digest of the vault's tarball of that directory. It is MIT licensed. Built with clang against the mingw-w64 sysroot, because the header refuses to compile under anything but clang and a `*-pc-windows-msvc` target needs a Windows SDK a Linux runner does not have; against upstream's own committed build the x86 image is the same 1619 bytes with the same function offsets and the x64 `SCBegin` is a PicHash match.  
+The prebuilt `.sc` blobs upstream commits under `test/` are not recorded, unlike [donut](#donut)'s and [sRDI](#srdi)'s: they are clang-cl output that this corpus's filenames would label MSVC, and they are a test fixture rather than anything the project ships.  
+Generated with `scripts/build_corpus.py`; see `data/sc4cpp/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: sc4cpp -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| sc4cpp | 2021-08-29 | Clang 18 (mingw-w64 sysroot) | [x86 PE](data/sc4cpp/x86/mcrit/sc4cpp_2021-08-29_clang18_x86_example.mcrit) / [x64 PE](data/sc4cpp/x64/mcrit/sc4cpp_2021-08-29_clang18_x64_example.mcrit) | [x86 PE](data/sc4cpp/x86/smda/sc4cpp_2021-08-29_clang18_x86_example.7z) / [x64 PE](data/sc4cpp/x64/smda/sc4cpp_2021-08-29_clang18_x64_example.7z) |
+<!-- /generated -->
+
 ## Heaven's Gate and WOW64 transitions
 
 Implementations of the WOW64 transition: reaching 64-bit code, and the 64-bit ntdll, from a 32-bit process. Every one of them is x86 by construction rather than by choice - they truncate pointers to `uint32_t`, read `CONTEXT.Ebx`, or use inline assembly that x64 MSVC does not implement - so each is built for x86 only.
@@ -964,6 +980,10 @@ The project carries no licence of any kind - no LICENSE or COPYING file and no c
 Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Hidden -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_Hidden.sys.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_Hidden.sys.7z) |
+| Hidden | 2022-07-14 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Hidden/x64/mcrit/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.mcrit) | [x64 PE](data/Hidden/x64/smda/Hidden_2022-07-14_msvc143_x64_HiddenCLI.exe.7z) |
 <!-- /generated -->
 
 ## String obfuscation
