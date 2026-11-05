@@ -33,9 +33,9 @@ Build decisions:
     -std=gnu90. Nothing patched.
 
 Counts (smda 5.0.2, mcrit 1.16.0): the DLL holds 211 functions on x86 and 230
-on x64; the glue baseline removes 62 and 64 (MinGW startup, stdio and heap
-imports), leaving 149 and 166 - 148 and 149 of them named. Kept plus removed
-equals the image total exactly. 130 and 122 carry ten or more instructions.
+on x64; the glue baseline removes 62 and 66 (MinGW startup, stdio, heap and
+_wstat64 imports), leaving 149 and 164 - 148 and 147 of them named. Kept plus removed
+equals the image total exactly. 130 and 121 carry ten or more instructions.
 The 17 unnamed x64 functions are one-instruction thunks and one 15-instruction
 stub. The DLL is bin/libminiz.dll, not under the CMake build directory, which
 is why the artefact path is not build-{arch}/.

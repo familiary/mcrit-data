@@ -11,7 +11,7 @@
     "license": "MIT",
     "mcrit": "data/miniz/x64/mcrit/miniz_3.1.0_mingw13_x64_libminiz.dll.mcrit",
     "notes": "Shared build of upstream CMake: miniz.c, miniz_zip.c, miniz_tinfl.c and miniz_tdef.c; the whole API is exported.",
-    "num_functions": 166,
+    "num_functions": 164,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -54,6 +54,8 @@
       "_pei386_runtime_relocator",
       "_register_onexit_function",
       "_unlock",
+      "_wstat64",
+      "_wstat64i32",
       "abort",
       "atexit",
       "calloc",
