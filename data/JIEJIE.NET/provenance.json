@@ -1,0 +1,52 @@
+{
+  "JIEJIE.NET_2026-01-01_dotnet8_cil_console_debug": {
+    "architecture": "cil",
+    "build_flags": "dotnet build JIEJIENETForCore.Console.csproj -c Debug (upstream's configuration: DefineConstants TRACE;DOTNETCORE, AllowUnsafeBlocks, Optimize=false), netcoreapp3.1, -p:ContinuousIntegrationBuild=true -p:PathMap=<checkout>=/_/",
+    "built_artifact": "source/corpus-out/Debug/JIEJIENETForCore.Console.dll",
+    "compiler": "dotnet SDK 8.0.133, csc 4.8.0-7.25569.25 (38896ab4)",
+    "component": "console_debug",
+    "family": "JIEJIE.NET",
+    "generated": "2026-11-05",
+    "is_blob": false,
+    "license": "GPL-2.0",
+    "mcrit": "data/JIEJIE.NET/cil/mcrit/JIEJIE.NET_2026-01-01_dotnet8_cil_console_debug.mcrit",
+    "notes": "The obfuscator's own code, not its output. FortiGuard Labs (2026-08-04) says the generation-2 FDMTP loader Microsoft.ServiceHosting.Tools.dll in the QuickFox supply-chain attack 'is obfuscated using the JieJie .NET Protector tool'; that sentence is the only evidence, no code comparison is shown, and nothing here was checked against that sample. A protected assembly does not contain this engine, so this family recognises JIEJIE.NET itself. 59 of the 858 methods are namespace __DC20211119 (JIEJIEHelper, JIEJIEPerformanceCounter), the C# source of the helpers the tool injects into protected assemblies as IL text; whether they match the injected copies was not measured. Upstream's committed binaries are Debug builds, so both configurations are built. Pinned to f28e1d2, the last commit touching source/; the version the attackers used is unknown. The .NET Framework projects are not built: the console project file is committed E-SafeNet-encrypted and the GUI needs full-Framework MSBuild.",
+    "num_functions": 858,
+    "sha256": "9d476fd833b83dc3b04767769ce6615026a4fda3cfa080a03b10de79002c6281",
+    "smda": "data/JIEJIE.NET/cil/smda/JIEJIE.NET_2026-01-01_dotnet8_cil_console_debug.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "f28e1d2ad78da7160a00197725f8bd42783b9f8c",
+      "git_ref": "f28e1d2ad78da7160a00197725f8bd42783b9f8c",
+      "git_url": "https://github.com/dcsoft-yyf/JIEJIE.NET.git"
+    },
+    "toolchain": "dotnet8_cil",
+    "upstream": "https://github.com/dcsoft-yyf/JIEJIE.NET",
+    "version": "2026-01-01"
+  },
+  "JIEJIE.NET_2026-01-01_dotnet8_cil_console_release": {
+    "architecture": "cil",
+    "build_flags": "dotnet build JIEJIENETForCore.Console.csproj -c Release (upstream's configuration: DefineConstants TRACE;DOTNETCORE, AllowUnsafeBlocks, Optimize=true), netcoreapp3.1, -p:ContinuousIntegrationBuild=true -p:PathMap=<checkout>=/_/",
+    "built_artifact": "source/corpus-out/Release/JIEJIENETForCore.Console.dll",
+    "compiler": "dotnet SDK 8.0.133, csc 4.8.0-7.25569.25 (38896ab4)",
+    "component": "console_release",
+    "family": "JIEJIE.NET",
+    "generated": "2026-11-05",
+    "is_blob": false,
+    "license": "GPL-2.0",
+    "mcrit": "data/JIEJIE.NET/cil/mcrit/JIEJIE.NET_2026-01-01_dotnet8_cil_console_release.mcrit",
+    "notes": "The obfuscator's own code, not its output. FortiGuard Labs (2026-08-04) says the generation-2 FDMTP loader Microsoft.ServiceHosting.Tools.dll in the QuickFox supply-chain attack 'is obfuscated using the JieJie .NET Protector tool'; that sentence is the only evidence, no code comparison is shown, and nothing here was checked against that sample. A protected assembly does not contain this engine, so this family recognises JIEJIE.NET itself. 59 of the 858 methods are namespace __DC20211119 (JIEJIEHelper, JIEJIEPerformanceCounter), the C# source of the helpers the tool injects into protected assemblies as IL text; whether they match the injected copies was not measured. Upstream's committed binaries are Debug builds, so both configurations are built. Pinned to f28e1d2, the last commit touching source/; the version the attackers used is unknown. The .NET Framework projects are not built: the console project file is committed E-SafeNet-encrypted and the GUI needs full-Framework MSBuild.",
+    "num_functions": 858,
+    "sha256": "2842a975a8b85a8a49bb94a700136da7ee13447f9b1841c09a3999a464199a63",
+    "smda": "data/JIEJIE.NET/cil/smda/JIEJIE.NET_2026-01-01_dotnet8_cil_console_release.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "f28e1d2ad78da7160a00197725f8bd42783b9f8c",
+      "git_ref": "f28e1d2ad78da7160a00197725f8bd42783b9f8c",
+      "git_url": "https://github.com/dcsoft-yyf/JIEJIE.NET.git"
+    },
+    "toolchain": "dotnet8_cil",
+    "upstream": "https://github.com/dcsoft-yyf/JIEJIE.NET",
+    "version": "2026-01-01"
+  }
+}

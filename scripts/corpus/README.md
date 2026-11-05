@@ -568,11 +568,15 @@ compiler emits of its own - `<PrivateImplementationDetails>` helpers such as
 does not exist yet. A recipe here sets `drop_crt_glue=False` and states,
 measured, which compiler-emitted methods its assembly carries.
 
-Roslyn is deterministic by default, but the PDB path in the PE debug
-directory is absolute. Pass `-p:PathMap={source_root}=/_/` on the build line
-or the sha256 depends on the directory the build ran in - measured, two
-checkouts of one commit gave two digests without it and one with it.
-`ContinuousIntegrationBuild=true` alone does not map that path.
+Roslyn is deterministic by default, but two absolute paths reach the
+assembly's bytes. The PDB path in the PE debug directory is one;
+`-p:PathMap={source_root}=/_/` maps it, and `ContinuousIntegrationBuild=true`
+alone does not. The other is SourceLink, which the SDK enables by default:
+finding the pipeline checkout's `.git`, it writes the checkout's absolute
+root into the PDB, and the PDB's content hash becomes the assembly's MVID,
+COFF timestamp and debug-directory id. `-p:ContinuousIntegrationBuild=true`
+maps that root to `/_/`. Measured on JIEJIE.NET: two pipeline runs in two
+work directories gave two digests with PathMap alone and one with both.
 
 ## Adding a recipe
 
@@ -603,6 +607,7 @@ Recorded here so the analysis is not repeated:
 | gperftools (tcmalloc) | #10 | its Windows port targets MSVC; `src/windows/port.h` clashes with mingw's `nanosleep` linkage and needs a source patch |
 | google/tcmalloc | #10 | Bazel-only and Linux-only - it cannot produce a PE at all. Issue #10's "tcmalloc" is almost certainly gperftools |
 | gRPC | #10 | cross-building needs a full native build first to obtain `protoc` and `grpc_cpp_plugin`, plus boringssl (which needs Go); 45-90 minutes for two architectures, and its statically-linked-into-Windows-malware rate is close to zero |
+| JIEJIE.NET .NET Framework console and GUI | QuickFox (FortiGuard) | the Core console is built (`recipes/jiejie.py`). `JIEJIE.NET.Console.csproj` has been committed E-SafeNet-encrypted since 2f81218 and cannot be built without writing a project file. `JIEJIE.NET.GUI.csproj` (net40, WinForms) is intact, but its resx holds System.Drawing bitmaps that the .NET SDK's MSBuild refuses (MSB3822/MSB3823), so it needs full-Framework MSBuild on Windows plus v4.0 reference assemblies (`Microsoft.NETFramework.ReferenceAssemblies.net40` 1.0.3 via `FrameworkPathOverride` is the untested route). Measured on upstream's prebuilts, the Framework console shares 641 of its 685 ten-instruction-plus PicHashes with the Core Debug artefact |
 | DavidBuchanan314/monomorph | [lib2smda#1](https://github.com/familiary/lib2smda/issues/1) | Linux x86-64 ELF only. That alone is no longer the obstacle it was when this row was written - `linux_x86` and `linux_x64` exist now - but the reason that mattered does not move: its own code is four functions, `get_bit`, `decode_buf`, `inflate_buf` and `main`, 679 bytes between them, against a floor of eight. The committed artefact carries 1397 function symbols, but 1393 of them are statically linked glibc and zlib, and with no glibc baseline to subtract them they would enter under monomorph's name and duplicate `data/libzlib`. What is distinctive about the project is the 4 MB array of MD5 collision blocks, which is data rather than code; upstream points at a collision detector for identifying it |
 
 VX-API (#4), BlackBone (#8) and SysWhispers v1 (#9) were on this list and are
