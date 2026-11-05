@@ -285,12 +285,23 @@ _PROBE_EXE = _PROBE_DLL.replace(
 # this file: that probe already works, and a probe that fails to build does
 # not fail the family being built - it silently shrinks the baseline.
 _PROBE_STDIO = """\
+/* winsock2.h before windows.h, or windows.h pulls in winsock.h and the two
+   headers redeclare the same structures. ws2tcpip.h is here for
+   gai_strerrorA and gai_strerrorW only, which mingw-w64 defines as static
+   __inline wrappers over FormatMessage: they are compiled into every
+   translation unit that calls them, so any library resolving a getaddrinfo
+   error carries a body for them under its own name. OpenSSL, libevent and
+   boringssl all did. No -lws2_32 is needed, because nothing here calls a
+   function that is actually in the import library. */
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <windows.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 /* Read through a volatile pointer so the format is not a constant the
    optimiser can specialise the wrapper on. See the note above. */
@@ -419,6 +430,18 @@ __declspec(dllexport) size_t probe_stdio_strings(char *destination,
     return strlen(destination);
 }
 
+/* Read through a volatile so the error code is not a constant the optimiser
+   could fold the wrapper on, the same reason probe_stdio_format is volatile. */
+static volatile int probe_stdio_gai_error = WSAHOST_NOT_FOUND;
+
+__declspec(dllexport) size_t probe_stdio_gai(void)
+{
+    const char *narrow = gai_strerrorA(probe_stdio_gai_error);
+    const wchar_t *wide = gai_strerrorW(probe_stdio_gai_error);
+
+    return strlen(narrow) + wcslen(wide);
+}
+
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 """
 
@@ -437,6 +460,153 @@ _PROBE_STDIO_EXE = _PROBE_STDIO.replace(
     "           + probe_stdio_convert(argv[0])\n"
     "           + (int)probe_stdio_strings(buffer, argv[0]);\n"
     "}")
+
+# MinGW only: libmingwex and msvcrt entry points that neither probe above
+# reaches, each found wearing a library's family name in committed data or in
+# a family waiting to be published.
+#
+#   * stat() is not an msvcrt import on mingw-w64. The CRT wraps it (and
+#     _wstat64i32 on x64, _stat on x86) with a path fix-up in front of the
+#     real call, and the wrapper is 145-167 instructions: protobuf, libxml2
+#     and miniz all carried it. The 64-bit-time variants and _stat32 (x86
+#     only; there is no such import on x64, and a probe that fails to link
+#     measures nothing) are plain import thunks, measured for completeness.
+#   * gettimeofday is libmingwex's mingw_gettimeofday under a second name,
+#     and drags in getntptimeofday. libevent, the x86 libstdc++ sample and
+#     Jansson all carry the pair.
+#   * cbrt and log2 are libmingwex bodies like the floor and sin of
+#     _PROBE_DLL, and are reached through a volatile pointer for the reason
+#     given there: GCC knows both as builtins. Duktape and abseil carry them.
+#   * setjmp is a macro over msvcrt's _setjmp (x64) or _setjmp3 (x86); only
+#     the import thunk is in the image. Lua, libpng and cryptopp carry it.
+#
+# Nothing here is compiled from this translation unit, so the bodies do not
+# depend on the optimisation level and one -O2 build measures them. A separate
+# source on the standing rule in this file: the probes above already work.
+_PROBE_LIBC = """\
+#include <windows.h>
+#include <math.h>
+#include <setjmp.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <wchar.h>
+
+static jmp_buf probe_libc_jump;
+
+__declspec(dllexport) int probe_libc_files(const char *path, const wchar_t *wide)
+{
+    struct stat plain;
+    struct _stat64i32 mixed;
+    struct _stat64 wide64;
+    int total = 0;
+
+    total += stat(path, &plain);
+    total += _stat64i32(path, &mixed);
+    total += _wstat64i32(wide, &mixed);
+    total += _stat64(path, &wide64);
+    total += _wstat64(wide, &wide64);
+#ifndef _WIN64
+    {
+        struct _stat32 narrow;
+        total += _stat32(path, &narrow);
+    }
+#endif
+    return total;
+}
+
+__declspec(dllexport) int probe_libc_misc(double value)
+{
+    volatile double (*const dd[])(double) = {cbrt, log2};
+    struct timeval now;
+    double accumulated = 0.0;
+    size_t index;
+
+    for (index = 0; index < sizeof(dd) / sizeof(dd[0]); index++)
+        accumulated += dd[index](value);
+    if (gettimeofday(&now, NULL) != 0)
+        return -1;
+    if (setjmp(probe_libc_jump))
+        return 1;
+    return (int)accumulated + (int)now.tv_usec;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# MinGW only, and the header wrappers _PROBE_STDIO cannot produce because of
+# how it calls them. snprintf, sprintf and sscanf are static inline in
+# mingw-w64's stdio.h, so their body is compiled in whatever translation unit
+# calls them and GCC shapes it by the call sites it can see:
+#
+#   * every call passing the same constant argument gives a clone,
+#     sprintf.constprop.0, with that argument folded in;
+#   * any call passing a value it cannot see gives the plain body, sprintf.
+#
+# One translation unit gets one or the other per function, never both, and
+# _PROBE_DLL and _PROBE_STDIO between them only ever produced the clone for
+# snprintf and sscanf and only the plain body for sprintf. That is why plain
+# snprintf sat in 26 libuv, libxml2 and libzlib artefacts, sscanf in OpenSSL
+# and libxml2, and sprintf.constprop.0 in Lua, LuaJIT, OpenSSL, libcurl and
+# libtiff. So this source is registered twice, with and without
+# PROBE_STDIO_FMT_CONSTANT.
+#
+# And twice more at -Os, because the wrapper's shape follows the optimisation
+# level as _PROBE_STDIO's note says, and Duktape builds at upstream's -Os: on
+# x86 its snprintf, sprintf and sscanf.constprop.0 match none of the -O2
+# bodies. -O3, which every CMake Release recipe here actually compiles at, was
+# measured as well and gives the -O2 bodies exactly, so it is not registered.
+#
+# And once with __USE_MINGW_ANSI_STDIO=0, which is what a library gets when it
+# asks for msvcrt's own printf: sprintf and sscanf are then not wrappers but
+# msvcrt imports, and only their one-instruction thunks are in the image -
+# OpenSSL, cJSON, libuv and libxml2 carry them. snprintf stays a wrapper in
+# that mode, over _vsnprintf, and comes out with the same PicHash as the -O2
+# build, so that registration adds only the thunks.
+#
+# The clone is per call site, not per function: snprintf.constprop.0 has a
+# dozen distinct bodies in the committed data, one for each combination of
+# arguments a library happens to fold. Only the one with constant size and
+# format is reproduced here - it is what libtiff carries - and the rest stay
+# where they are; a probe cannot guess a library's call sites.
+_PROBE_STDIO_FMT = """\
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+
+#ifdef PROBE_STDIO_FMT_CONSTANT
+__declspec(dllexport) int probe_stdio_fmt(char *destination, const char *text,
+                                          int number)
+{
+    char scanned[64];
+    int total = 0;
+
+    total += snprintf(destination, 32, "%d", number);
+    total += sprintf(destination, "%d", number);
+    total += sscanf(text, "%63s", scanned);
+    return total;
+}
+#else
+/* Volatile for the reason probe_stdio_format is: a size or format the
+   optimiser can see is one it will fold into a clone. */
+static volatile const char *probe_stdio_fmt_format = "%s %d";
+static volatile size_t probe_stdio_fmt_size = 64;
+
+__declspec(dllexport) int probe_stdio_fmt(char *destination, const char *text,
+                                          int number)
+{
+    const char *format = (const char *)probe_stdio_fmt_format;
+    char scanned[64];
+    int total = 0;
+
+    total += snprintf(destination, probe_stdio_fmt_size, format, text, number);
+    total += sprintf(destination, format, text, number);
+    total += sscanf(text, format, scanned, &number);
+    return total;
+}
+#endif
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
 
 # Anything linked with g++ drags in libstdc++ and the GCC unwinder, which are
 # far larger than the C runtime and belong to the compiler just the same.
@@ -2800,11 +2970,34 @@ def crt_glue(toolchain_id):
             # optimisation level, and Obfuscator is the one recipe here that
             # builds at -O0. crt_glue maps a name to a *set* of PicHashes,
             # so a second flavour only ever adds members to that set.
+            # -lws2_32 is for gai_strerrorA/W and is not optional: mingw-w64
+            # does not inline them, it ships them as compiled objects inside
+            # libws2_32.a, so the probe has to link that archive to get a body
+            # for them the way OpenSSL, libevent and boringssl do. Without it
+            # the probe does not build at all, which probe_failures reports
+            # and which would otherwise have quietly dropped the whole stdio
+            # surface out of this baseline.
             probes += [
-                (toolchain.cc, "probe_stdio.c", _PROBE_STDIO, ["-shared"]),
-                (toolchain.cc, "probe_stdio_exe.c", _PROBE_STDIO_EXE, []),
+                (toolchain.cc, "probe_stdio.c", _PROBE_STDIO,
+                 ["-shared", "-lws2_32"]),
+                (toolchain.cc, "probe_stdio_exe.c", _PROBE_STDIO_EXE,
+                 ["-lws2_32"]),
                 (toolchain.cc, "probe_stdio_exe_o0.c", _PROBE_STDIO_EXE,
-                 ["-O0"]),
+                 ["-O0", "-lws2_32"]),
+                (toolchain.cc, "probe_libc.c", _PROBE_LIBC, ["-shared"]),
+                # Plain and cloned header wrappers, at -O2 and at -Os, and
+                # msvcrt's own; see the note above _PROBE_STDIO_FMT for why
+                # all five.
+                (toolchain.cc, "probe_stdio_fmt.c", _PROBE_STDIO_FMT,
+                 ["-shared"]),
+                (toolchain.cc, "probe_stdio_fmt_const.c", _PROBE_STDIO_FMT,
+                 ["-shared", "-DPROBE_STDIO_FMT_CONSTANT"]),
+                (toolchain.cc, "probe_stdio_fmt_os.c", _PROBE_STDIO_FMT,
+                 ["-shared", "-Os"]),
+                (toolchain.cc, "probe_stdio_fmt_const_os.c", _PROBE_STDIO_FMT,
+                 ["-shared", "-Os", "-DPROBE_STDIO_FMT_CONSTANT"]),
+                (toolchain.cc, "probe_stdio_fmt_msvcrt.c", _PROBE_STDIO_FMT,
+                 ["-shared", "-D__USE_MINGW_ANSI_STDIO=0"]),
             ]
     glue = {}
     # Set before the loop, so that a toolchain whose probes all built is
@@ -2872,11 +3065,12 @@ def crt_glue(toolchain_id):
     # helpers and classes of their own, and a hand-kept list is exactly the
     # kind that acquires a gap - the one name that is forgotten becomes a
     # function this repository starts deleting out of somebody's library.
-    # All but one of these prefixes cannot reach a MinGW baseline at all:
+    # All but two of these prefixes cannot reach a MinGW baseline at all:
     # the sources that define them are only ever compiled by cl.
     #
-    # probe_stdio_ is the exception, and is a prefix from the start rather
-    # than a list for the reason the note above gives: GCC does emit
+    # probe_stdio_ and probe_libc_ are the exceptions, and are prefixes from
+    # the start rather than a list for the reason the note above gives: GCC
+    # does emit
     # `probe_stdio_forward.constprop.0` and `.cold` partitions, and a list
     # would miss them the way it misses probe_vscprintf's today.
     #
@@ -2888,6 +3082,7 @@ def crt_glue(toolchain_id):
     for name in [name for name in glue
                  if name.startswith(("probe_atl_", "_probe_atl_",
                                      "probe_stdio_", "_probe_stdio_",
+                                     "probe_libc_", "_probe_libc_",
                                      "probe_msvcrt_", "_probe_msvcrt_",
                                      "probe_stl_", "_probe_stl_",
                                      "probe_linux_", "_probe_linux_",
