@@ -2036,5 +2036,144 @@ class ElfReadmeRowTest(unittest.TestCase):
             "MinGW-w64 GCC 13.2.0")
 
 
+class _ArchReport(object):
+    def __init__(self, architecture, bitness):
+        self.architecture = architecture
+        self.bitness = bitness
+
+
+def _toolchains(**kinds):
+    """Register throwaway toolchains, by id and kind, for one test."""
+    from corpus import toolchain
+
+    registered = {}
+    for toolchain_id, kind in kinds.items():
+        registered[toolchain_id] = toolchain.Toolchain(
+            id=toolchain_id, short_id=toolchain_id.split("_")[0],
+            arch=toolchain_id.split("_")[-1], bitness=0, prefix="", cc="cc",
+            cxx="cxx", windres="", strip="", ar="", ranlib="", kind=kind)
+    return mock.patch.dict(toolchain._TOOLCHAINS, registered)
+
+
+class ManagedArchitectureTest(TempCase):
+    """A managed assembly is filed as cil, never by its PE32 header.
+
+    SMDA reports bitness 32 for an AnyCPU assembly because that is what its
+    PE header says; the pipeline used to turn that straight into "x86".
+    """
+
+    def test_a_cil_report_is_filed_as_cil_whatever_its_bitness(self):
+        from corpus.smdaify import architecture_label
+
+        self.assertEqual(architecture_label(_ArchReport("cil", 32)), "cil")
+        self.assertEqual(architecture_label(_ArchReport("cil", 64)), "cil")
+
+    def test_native_reports_are_unchanged(self):
+        from corpus.smdaify import architecture_label
+
+        self.assertEqual(architecture_label(_ArchReport("intel", 32)), "x86")
+        self.assertEqual(architecture_label(_ArchReport("intel", 64)), "x64")
+
+    def test_a_native_image_from_the_dotnet_toolchain_is_refused(self):
+        """The apphost sits beside the assembly and is an easy wrong pick."""
+        from corpus.smdaify import DisassemblyError, assert_architecture_matches
+
+        with _toolchains(dotnet8_cil="dotnet"):
+            with self.assertRaises(DisassemblyError) as caught:
+                assert_architecture_matches(_ArchReport("intel", 64), "x",
+                                            "dotnet8_cil")
+        self.assertIn("apphost", str(caught.exception))
+
+    def test_a_cil_report_from_a_native_toolchain_is_refused(self):
+        """A mixed-mode image would lose its native half without a word."""
+        from corpus.smdaify import DisassemblyError, assert_architecture_matches
+
+        with _toolchains(msvc143_x64="msvc"):
+            with self.assertRaises(DisassemblyError) as caught:
+                assert_architecture_matches(_ArchReport("cil", 32), "x",
+                                            "msvc143_x64")
+        self.assertIn("mixed-mode", str(caught.exception))
+
+    def test_a_native_report_from_a_native_toolchain_passes(self):
+        from corpus.smdaify import assert_architecture_matches
+
+        with _toolchains(mingw13_x86="mingw"):
+            assert_architecture_matches(_ArchReport("intel", 32), "x",
+                                        "mingw13_x86")
+
+    def _assembly(self):
+        return self.write(os.path.join(self.tmp, "a.dll"), "MZ")
+
+    def test_a_readytorun_assembly_is_refused(self):
+        from smda.utility.PeFileLoader import PeFileLoader
+        from corpus.smdaify import DisassemblyError, assert_architecture_matches
+
+        path = self._assembly()
+        with _toolchains(dotnet8_cil="dotnet"), mock.patch.object(
+                PeFileLoader, "getReadyToRunArchitecture", return_value="intel"):
+            with self.assertRaises(DisassemblyError) as caught:
+                assert_architecture_matches(_ArchReport("cil", 32), path,
+                                            "dotnet8_cil")
+        self.assertIn("ReadyToRun", str(caught.exception))
+
+    def test_a_pure_il_assembly_passes(self):
+        from smda.utility.PeFileLoader import PeFileLoader
+        from corpus.smdaify import assert_architecture_matches
+
+        path = self._assembly()
+        with _toolchains(dotnet8_cil="dotnet"), mock.patch.object(
+                PeFileLoader, "getReadyToRunArchitecture", return_value=""):
+            assert_architecture_matches(_ArchReport("cil", 32), path,
+                                        "dotnet8_cil")
+
+    def test_the_glue_baseline_refuses_managed_code(self):
+        """C probes handed to the dotnet driver would fail without a reason."""
+        from corpus import baseline
+
+        with _toolchains(dotnet8_cil="dotnet"):
+            with self.assertRaises(ValueError) as caught:
+                baseline.crt_glue.__wrapped__("dotnet8_cil")
+        self.assertIn("drop_crt_glue=False", str(caught.exception))
+
+    def test_a_cil_slug_reads_as_the_dotnet_alias(self):
+        import refresh_provenance
+        from corpus import validate
+
+        slug = "JIEJIE.NET_2026-01-01_dotnet8_cil_JIEJIENETForCore.Console.dll"
+        self.assertEqual(refresh_provenance._toolchain_of(
+            slug, "JIEJIE.NET", "2026-01-01"), "dotnet_cil")
+        self.assertEqual(validate._producer(
+            "data/JIEJIE.NET/cil/mcrit/%s.mcrit" % slug), "dotnet8")
+
+    def test_the_container_of_a_managed_assembly_is_still_a_pe(self):
+        from corpus.toolchain import canonical_alias, image_format
+
+        self.assertEqual(canonical_alias("dotnet8_cil"), "dotnet_cil")
+        self.assertEqual(image_format("dotnet8_cil"), "PE")
+
+    def test_a_cil_row_carries_its_links(self):
+        """Iterating x86 and x64 only rendered a managed row with none."""
+        from corpus import readme
+
+        record = {"toolchain": "dotnet8_cil", "version": "1.0",
+                  "compiler": "dotnet SDK 8.0.133, csc 4.8.0", "component": "a.dll",
+                  "architecture": "cil", "mcrit": "data/F/cil/mcrit/a.mcrit",
+                  "smda": "data/F/cil/smda/a.7z"}
+        self.write(os.path.join(self.data, "F", "provenance.json"),
+                   json.dumps({"a": record}))
+        table = readme.render_family("F")
+        self.assertIn("[cil PE](data/F/cil/mcrit/a.mcrit)", table)
+        self.assertIn("[cil PE](data/F/cil/smda/a.7z)", table)
+        self.assertIn("dotnet SDK 8.0.133, csc 4.8.0", table)
+
+    def test_the_dotnet_environment_exports_no_compiler(self):
+        from corpus.toolchain import _dotnet
+
+        environment = _dotnet("8").build_env()
+        self.assertNotIn("CC", environment)
+        self.assertNotIn("CFLAGS", environment)
+        self.assertEqual(environment["DOTNET_CLI_TELEMETRY_OPTOUT"], "1")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

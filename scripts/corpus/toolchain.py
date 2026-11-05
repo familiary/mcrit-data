@@ -12,6 +12,10 @@ gcc is on PATH and (for the 32-bit half) the -m32 multilib is installed. It
 is the only one here that does not produce a PE, and it exists because the
 portable half of this corpus - the header-only string obfuscators, obfstr -
 is used on Linux too, and a PE-only corpus cannot recognise it there.
+
+The fourth is the .NET SDK, registered when ``dotnet --version`` answers. It
+is the only one that emits no native code at all: its output is a managed
+assembly, filed under the architecture "cil" rather than x86 or x64.
 """
 
 import os
@@ -39,7 +43,7 @@ class Toolchain:
     ranlib: str
     cflags: str = "-O2"
     env: Dict[str, str] = field(default_factory=dict)
-    # "mingw", "msvc" or "linux"; selects how probes and compiler flags are
+    # "mingw", "msvc", "linux" or "dotnet"; selects how probes and compiler flags are
     # spelled, and which container the artefacts come out in.
     #
     # "linux" is a third value rather than a reuse of "mingw", even though
@@ -70,6 +74,8 @@ class Toolchain:
         if self.kind == "msvc":
             out = subprocess.run([self.cc], capture_output=True, text=True)
             text = out.stderr or out.stdout
+        elif self.kind == "dotnet":
+            return _dotnet_banner(self.cc)
         else:
             out = subprocess.run([self.cc, "--version"], capture_output=True,
                                  text=True, check=True)
@@ -112,9 +118,11 @@ class Toolchain:
 
     def build_env(self):
         """Environment variables recipes can rely on for autotools/cmake."""
-        if self.kind == "msvc":
+        if self.kind in ("msvc", "dotnet"):
             # The developer environment already exports everything cl, link,
             # ml64 and MSBuild need; overriding CC/AR here would break them.
+            # The dotnet SDK needs no compiler variables at all, and an
+            # exported CC or CFLAGS would be read by nothing.
             return dict(self.env)
         if self.kind == "linux":
             # No WINDRES: there is no resource compiler on this side, and
@@ -320,7 +328,97 @@ def _detect_msvc():
     return toolset, arch
 
 
+def _dotnet(sdk_major):
+    """The .NET SDK, producing managed (CIL) assemblies.
+
+    There is one of these rather than one per architecture: C# compiles to
+    CIL, and an AnyCPU assembly is the same bytes whichever host runs it, so
+    the architecture is "cil" (see config.ARCHITECTURES). ``bitness`` is 0
+    because no instruction-set width applies; SMDA still reports the PE32
+    header's 32, and pipeline.py files the artefact by its architecture, not
+    by that. No C compiler is involved, so cc is the SDK driver - which is
+    what _prepare_toolchain checks is still on PATH - and the probe and
+    environment fields are inert: crt_glue refuses this kind outright.
+    """
+    return Toolchain(
+        id="dotnet%s_cil" % sdk_major,
+        short_id="dotnet%s" % sdk_major,
+        arch="cil",
+        bitness=0,
+        prefix="",
+        cc="dotnet",
+        cxx="dotnet",
+        windres="",
+        strip="",
+        ar="",
+        ranlib="",
+        cflags="",
+        # No first-run banner, telemetry or update check in a build log.
+        env={"DOTNET_CLI_TELEMETRY_OPTOUT": "1", "DOTNET_NOLOGO": "1",
+             "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1"},
+        kind="dotnet",
+    )
+
+
+def _detect_dotnet_sdk():
+    """The SDK version ``dotnet --version`` selects, or None without an SDK.
+
+    A host with only the runtime has a ``dotnet`` that cannot build anything
+    and answers --version with an error, which is "absent" here rather than
+    a toolchain registered to fail.
+    """
+    if shutil.which("dotnet") is None:
+        return None
+    out = subprocess.run(["dotnet", "--version"], capture_output=True,
+                         text=True, env=dict(os.environ, DOTNET_NOLOGO="1"))
+    version = out.stdout.strip()
+    if out.returncode != 0 or not re.match(r"\d+\.\d+\.\d+", version):
+        return None
+    return version
+
+
+def _dotnet_banner(driver):
+    """Provenance line for the SDK: its version and the C# compiler's.
+
+    The SDK version alone does determine the compiler, but a reader matching
+    a binary wants the compiler, and Roslyn's own version is what its
+    deterministic output depends on. It is read off the csc.dll the SDK
+    ships, by asking it; if that cannot be found or run the SDK line stands
+    alone rather than naming a compiler nobody asked.
+    """
+    environment = dict(os.environ, DOTNET_NOLOGO="1")
+    sdk = subprocess.run([driver, "--version"], capture_output=True, text=True,
+                         check=True, env=environment).stdout.strip()
+    banner = "dotnet SDK %s" % sdk
+    listing = subprocess.run([driver, "--list-sdks"], capture_output=True,
+                             text=True, env=environment).stdout
+    for line in listing.splitlines():
+        # "8.0.133 [/usr/lib/dotnet/sdk]"
+        match = re.match(r"(\S+) \[(.+)\]$", line.strip())
+        if not match or match.group(1) != sdk:
+            continue
+        csc = os.path.join(match.group(2), sdk, "Roslyn", "bincore", "csc.dll")
+        if not os.path.isfile(csc):
+            break
+        out = subprocess.run([driver, csc, "-version"], capture_output=True,
+                             text=True, env=environment)
+        version = out.stdout.strip().splitlines()[0] if out.stdout.strip() else ""
+        if out.returncode == 0 and version:
+            banner += ", csc %s" % version
+        break
+    return banner
+
+
 _TOOLCHAINS = {}
+
+
+def _register_dotnet():
+    sdk = _detect_dotnet_sdk()
+    if sdk is None:
+        return
+    toolchain = _dotnet(sdk.split(".")[0])
+    _TOOLCHAINS[toolchain.id] = toolchain
+    _TOOLCHAINS["dotnet_cil"] = toolchain
 
 
 def _register_msvc():
@@ -383,6 +481,7 @@ def _register_gcc():
 _register_mingw()
 _register_msvc()
 _register_gcc()
+_register_dotnet()
 
 
 # Alias prefixes that name the same toolchain as a versioned id's prefix, for

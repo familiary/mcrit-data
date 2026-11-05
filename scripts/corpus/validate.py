@@ -575,7 +575,7 @@ def _producer(path):
     """
     parts = os.path.basename(path).split("_")
     for index, part in enumerate(parts):
-        if index >= 2 and part in ("x86", "x64"):
+        if index >= 2 and part in config.ARCHITECTURES:
             return parts[index - 1]
     return None
 

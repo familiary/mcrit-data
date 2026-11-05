@@ -151,6 +151,17 @@ MIN_NAMED_SAMPLE_INSTRUCTIONS = 3
 MAX_INCREMENTAL_THUNK_RUN = 32
 
 
+# The architecture directory names under data/<family>/, which are also the
+# architecture segment of every generated filename. "cil" is a managed .NET
+# assembly: SMDA disassembles its method bodies as CIL rather than as x86, and
+# the PE32 or PE32+ header around them says nothing about an instruction set -
+# an AnyCPU assembly is a PE32 that runs as 64-bit code on a 64-bit host - so
+# filing one under x86 because its header says 32 would be a label that lies.
+# Kept here rather than in toolchain.py because validate.py reads it, and
+# importing toolchain.py runs compiler detection.
+ARCHITECTURES = ("x86", "x64", "cil")
+
+
 def ensure_dirs():
     for path in (DOWNLOAD_DIR, SOURCE_DIR, ARTIFACT_DIR, REPORT_DIR):
         os.makedirs(path, exist_ok=True)
