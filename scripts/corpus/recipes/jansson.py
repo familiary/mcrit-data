@@ -16,15 +16,18 @@ shows. (It is the version Ubuntu 22.04 and Debian 12 ship as well, but that
 was not measured here.)
 
 Overlap was measured, not guessed, over functions of at least 10
-instructions, by PicHash, after the glue filter ran:
+instructions, by PicHash, after the glue filter ran (the 2.13.1 : 2.15.1
+row was re-measured after the MinGW libc baseline dropped gettimeofday and
+its two helpers from every artefact; the 2.14 rows predate that and the
+candidate was not kept, so they could not be re-run):
 
                     x86                      x64
     2.13.1 : 2.14   98 of 120 / 125          91 of 113 / 118
     2.14   : 2.15.1 101 of 125 / 142         93 of 118 / 136
-    2.13.1 : 2.15.1 85 of 120 / 142          77 of 113 / 136
+    2.13.1 : 2.15.1 83 of 118 / 140          75 of 111 / 134
 
-So 2.13.1 shares 71% (x86) and 68% (x64) of its functions with 2.15.1, and
-2.15.1 shares 60% and 57% of its own. 2.14, built as a candidate and not
+So 2.13.1 shares 70% (x86) and 68% (x64) of its functions with 2.15.1, and
+2.15.1 shares 59% and 56% of its own. 2.14, built as a candidate and not
 kept, would have sat in between and added little: it shares 81% and 79% of
 its functions with 2.15.1. And 2.13.1 and 2.15.1 differ where it counts:
 the largest bodies of the parser and dumper, do_dump (do_dump.constprop.0 1250 and do_dump 672 instructions at 2.13.1 against
