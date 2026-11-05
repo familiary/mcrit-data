@@ -11,7 +11,7 @@
     "license": "MIT",
     "mcrit": "data/LuaJIT/x64/mcrit/LuaJIT_2.0.5_mingw13_x64_lua51.dll.mcrit",
     "notes": "The interpreter core is hand-written DynASM assembly and is unaffected by CFLAGS, so no optimization sweep is worthwhile.",
-    "num_functions": 1036,
+    "num_functions": 1035,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -172,6 +172,7 @@
       "setvbuf",
       "sinh",
       "sprintf",
+      "sprintf.constprop.0",
       "strchr",
       "strcmp",
       "strerror",
