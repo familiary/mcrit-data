@@ -520,6 +520,60 @@ The filter matches on symbol *and* PicHash deliberately, which is what stops
 it deleting a project's own `strlen`, so these stay. The x64 artefacts have
 no such problem and their glue is removed in full.
 
+## Managed (.NET) assemblies
+
+The `dotnet_cil` toolchain is the .NET SDK, registered when `dotnet
+--version` answers. What it builds is CIL, and SMDA disassembles a managed
+assembly with its CIL backend rather than as x86, so these artefacts are
+filed under `data/<family>/cil/` and named `..._dotnet8_cil_...`. The PE
+header is not the architecture: an AnyCPU assembly is a PE32, SMDA reports
+`bitness: 32` for it, and that field is left as SMDA wrote it, but the
+directory and the filename say `cil`. The README row reads `cil PE`.
+
+What SMDA's CIL backend produces, measured on SMDA 5.0.2:
+
+* **One function per MethodDef that has an IL body**, abstract and P/Invoke
+  methods excluded, so the function count is the assembly's own method count
+  and can be checked against its metadata exactly.
+* **Every function is named**, from the MethodDef table - but by its bare
+  method name (`Dispose`, `.ctor`), not by `Namespace.Type::Method`. Names
+  repeat within an assembly, so a name is not a key; the namespace split a
+  recipe reports comes from reading the metadata, not from the report.
+* **Offsets are file offsets of the method header**, not virtual addresses,
+  and the first instruction sits 1 or 12 bytes after it. SMDA logs "has no
+  entry block; skipping root-dependent analysis" for every CIL function for
+  that reason; the SCC and nesting figures are skipped, the PicHash and the
+  minhash are not affected.
+* **PicHash is structural.** The escaper wildcards the row of every metadata
+  token and keeps the table it points into, keeps branch offsets (they are
+  relative in CIL) and keeps constants. Two methods with the same opcodes
+  calling different methods of the same kind hash alike, which is what makes
+  a match across assemblies possible at all - tokens are never the same in
+  two of them - and also why a three-instruction getter hashes alike in
+  every assembly there is. The ten-instruction floor `validate --deep` uses
+  applies here as it does to native code.
+* **MCRIT minhashes CIL**: the export's minhash and shingler config hashes
+  are the corpus's, and functions above MCRIT's ten-instruction floor get a
+  minhash as native ones do. A CIL function will only ever match CIL.
+
+Three gates are specific to this side. `smdaify` refuses a native image from
+the .NET toolchain (the apphost sitting beside the assembly is the easy
+wrong pick), a CIL report from a native toolchain (a mixed-mode C++/CLI
+image, whose native half the CIL backend never sees), and a ReadyToRun
+assembly (whose precompiled native code is likewise not in a CIL report).
+And `crt_glue` refuses the toolchain outright: there is no C runtime in a
+managed assembly, the C probes cannot be built with it, and what the C#
+compiler emits of its own - `<PrivateImplementationDetails>` helpers such as
+`ComputeStringHash`, embedded attribute types - would need a C# probe that
+does not exist yet. A recipe here sets `drop_crt_glue=False` and states,
+measured, which compiler-emitted methods its assembly carries.
+
+Roslyn is deterministic by default, but the PDB path in the PE debug
+directory is absolute. Pass `-p:PathMap={source_root}=/_/` on the build line
+or the sha256 depends on the directory the build ran in - measured, two
+checkouts of one commit gave two digests without it and one with it.
+`ContinuousIntegrationBuild=true` alone does not map that path.
+
 ## Adding a recipe
 
 Recipes are declarative (`corpus/recipes/*.py`) and carry no logic, so every

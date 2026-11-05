@@ -292,6 +292,58 @@ def assert_not_incrementally_linked(report, binary_path):
         % (binary_path, len(thunks), longest, _ILT_ENTRY_SIZE))
 
 
+def architecture_label(report):
+    """The data/<family>/<arch>/ directory a report is filed under.
+
+    A managed assembly is "cil" whatever its PE header says. SMDA reports
+    bitness 32 for one, because an AnyCPU assembly is a PE32, but that is the
+    container's field and not an instruction set: filing it under x86 would
+    put CIL method bodies beside 32-bit x86 code and claim they are the same
+    kind of thing. The report's own ``bitness`` is left as SMDA wrote it.
+    """
+    if report.architecture == "cil":
+        return "cil"
+    return "x86" if report.bitness == 32 else "x64"
+
+
+def assert_architecture_matches(report, binary_path, toolchain_id):
+    """Refuse a report whose instruction set the toolchain cannot have made.
+
+    Both directions lose code without saying so. A native image out of the
+    .NET toolchain is the apphost or a ReadyToRun build picked up in place of
+    the assembly. A CIL report out of a native toolchain is a mixed-mode
+    C++/CLI image: SMDA routes anything with a CLR header to its CIL backend,
+    and the native half of the image is then never analysed at all.
+
+    A ReadyToRun assembly is refused as well, for the same reason from the
+    other side: it carries precompiled native code beside its CIL, and the
+    CIL report this pipeline asks for describes only the latter.
+    """
+    from .toolchain import get_toolchain
+
+    managed_toolchain = get_toolchain(toolchain_id).kind == "dotnet"
+    managed_report = report.architecture == "cil"
+    if managed_toolchain and not managed_report:
+        raise DisassemblyError(
+            "%s: toolchain %s builds managed assemblies, but SMDA read this as "
+            "%s code - the apphost or a ReadyToRun image was picked up instead "
+            "of the IL assembly" % (binary_path, toolchain_id, report.architecture))
+    if managed_report and not managed_toolchain:
+        raise DisassemblyError(
+            "%s: SMDA read this as a managed (CIL) assembly, which toolchain %s "
+            "does not build; a mixed-mode image would lose its native half "
+            "here" % (binary_path, toolchain_id))
+    if managed_report:
+        from smda.utility.PeFileLoader import PeFileLoader
+
+        with open(binary_path, "rb") as handle:
+            content = handle.read()
+        if PeFileLoader.getReadyToRunArchitecture(content):
+            raise DisassemblyError(
+                "%s: a ReadyToRun image; its precompiled native code would not "
+                "be in a CIL report" % binary_path)
+
+
 # E9 rel32, on x86 and x64 alike, which is what an incremental link table is
 # made of.
 _ILT_ENTRY_SIZE = 5
@@ -327,6 +379,8 @@ def smdaify(binary_path, family, version, component, is_library=True,
         raise DisassemblyError("SMDA did not finish cleanly for %s: %s"
                                % (binary_path, report.message))
 
+    if toolchain_id and not is_blob:
+        assert_architecture_matches(report, binary_path, toolchain_id)
     assert_symbols_survived(report, binary_path, min_named_ratio)
     # Not for a blob: a raw code buffer was never linked at all, so there is
     # no link line to be wrong and no PE for a table to sit at the front of.

@@ -110,12 +110,15 @@ def render_family(family):
         # toolchain.image_format.
         label = ("code" if any(e.get("is_blob") for e in by_arch.values())
                  else image_format(first.get("toolchain")))
+        # config.ARCHITECTURES rather than x86 and x64 alone: a managed
+        # assembly is filed under "cil", and a row iterating only the native
+        # two rendered it with no links at all.
         mcrit_links = " / ".join(
             _link("%s %s" % (arch, label), by_arch[arch]["mcrit"])
-            for arch in ("x86", "x64") if arch in by_arch)
+            for arch in config.ARCHITECTURES if arch in by_arch)
         smda_links = " / ".join(
             _link("%s %s" % (arch, label), by_arch[arch]["smda"])
-            for arch in ("x86", "x64") if arch in by_arch)
+            for arch in config.ARCHITECTURES if arch in by_arch)
         compiler = _compiler_label(first)
         rows.append("| %s | %s | %s | %s | %s |" % (family, version, compiler, mcrit_links, smda_links))
     return "\n".join([HEADER] + rows)

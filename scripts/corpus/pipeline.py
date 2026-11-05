@@ -10,7 +10,7 @@ from . import config, package
 from .build import BuildError, check_requirements, run_build
 from .export import export_reports
 from .fetch import fetch_dependency, fetch_source
-from .smdaify import smdaify
+from .smdaify import architecture_label, smdaify
 from .toolchain import get_toolchain
 
 
@@ -141,7 +141,7 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                     base_addr=artifact.base_addr,
                     pdb_path=pdb_path,
                 )
-                arch = "x86" if report.bitness == 32 else "x64"
+                arch = architecture_label(report)
                 slug = recipe.slug(toolchain_id, artifact, arch)
                 export_path = os.path.join(config.WORK_DIR, "%s.mcrit" % slug)
                 export_reports([report], export_path)

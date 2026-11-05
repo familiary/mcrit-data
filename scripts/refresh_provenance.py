@@ -103,7 +103,7 @@ def _toolchain_of(slug, family, version):
     if not version or not slug.startswith(prefix):
         return None
     rest = slug[len(prefix):].split("_")
-    if len(rest) < 2 or rest[1] not in ("x86", "x64"):
+    if len(rest) < 2 or rest[1] not in config.ARCHITECTURES:
         return None
     return canonical_alias("%s_%s" % (re.sub(r"\d+$", "", rest[0]), rest[1]))
 

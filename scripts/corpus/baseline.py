@@ -2742,6 +2742,20 @@ def crt_glue(toolchain_id):
     from .smdaify import disassemble
 
     toolchain = get_toolchain(toolchain_id)
+    if toolchain.kind == "dotnet":
+        # Refused rather than measured as nothing. Every probe below is C or
+        # C++, and handed to the dotnet driver each would fail to build, which
+        # fails the run through probe_failures without saying why. More to the
+        # point there is no C runtime in a managed assembly to subtract: what
+        # the C# compiler can emit of its own - <PrivateImplementationDetails>
+        # helpers such as ComputeStringHash, embedded attribute types - would
+        # need a C# probe, and none exists yet. A recipe on this toolchain
+        # sets drop_crt_glue=False and states what compiler-emitted code its
+        # artefact carries, measured, instead.
+        raise ValueError(
+            "%s builds managed code, and no glue baseline is defined for it; "
+            "set drop_crt_glue=False on the recipe and record what "
+            "compiler-emitted methods the assembly carries" % toolchain_id)
     if toolchain.kind == "linux":
         # A separate list rather than the four below plus extras: every one
         # of those four is #include <windows.h> with a __declspec entry point
