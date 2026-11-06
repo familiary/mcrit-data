@@ -1,0 +1,52 @@
+{
+  "DiskCryptorDrv_1.1.846.118_msvc143_x64_dcrypt.sys": {
+    "architecture": "x64",
+    "build_flags": "Original 1.1.846.118 Release x64, WDK 10.0.26100.0, /O2 /MD /Zi /GL- /DEBUG /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO; SignMode=Off; /I corpus-inc (stub suppress.h), WDK 10 km, km\\crt and shared",
+    "built_artifact": "out/dcrypt.sys",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "dcrypt.sys",
+    "family": "DiskCryptorDrv",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "GPL-3.0 (original archive license.txt)",
+    "mcrit": "data/DiskCryptorDrv/x64/mcrit/DiskCryptorDrv_1.1.846.118_msvc143_x64_dcrypt.sys.mcrit",
+    "notes": "Original driver, separate from user-mode DiskCryptor; no kernel image is rebuilt from modern fork source. WDK 10.0.26100.0 has no x86 kernel target. Kernel glue and import thunks may survive the user-mode baseline. Whole-program optimization and signing disabled. The driver is linked and disassembled only, never loaded or installed. Build-only fix: the generated corpus-inc/suppress.h is not upstream source.",
+    "num_functions": 356,
+    "removed_runtime_functions": [
+      "InitializeSListHead",
+      "ReadNoFence64",
+      "ReadPointerNoFence",
+      "__C_specific_handler",
+      "__castguard_check_failure_debugbreak",
+      "__castguard_check_failure_fastfail",
+      "__castguard_check_failure_nop",
+      "__castguard_compat_check",
+      "__castguard_slow_path_check_debugbreak",
+      "__castguard_slow_path_check_fastfail",
+      "__castguard_slow_path_check_nop",
+      "__castguard_slow_path_compat_check",
+      "_guard_check_icall_nop",
+      "_guard_dispatch_icall_nop",
+      "_guard_icall_checks_enforced",
+      "_guard_rf_checks_enforced",
+      "_guard_xfg_dispatch_icall_nop",
+      "_wcsicmp",
+      "_wcsnicmp",
+      "memcmp",
+      "strlen",
+      "wcslen",
+      "wcsncmp"
+    ],
+    "sha256": "582261bb8ae681e0a86ebca3e0ea8e2bb697cdefae0c4d27339f9cc2a260bef4",
+    "smda": "data/DiskCryptorDrv/x64/smda/DiskCryptorDrv_1.1.846.118_msvc143_x64_dcrypt.sys.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "dcrypt_1.1.846.118_src.zip",
+      "sha256": "5720eb2725d67803ef585ed5bd155c439489dd606f8b62ff0e89ddfc60da2f32",
+      "url": "https://raw.githubusercontent.com/DavidXanatos/DiskCryptor/b9e8463bc73cde0fd906cea8c483e290a7eb53ed/ntldr/1.1.846.118/dcrypt_1.1.846.118_src.zip"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://github.com/DavidXanatos/DiskCryptor/tree/b9e8463bc73cde0fd906cea8c483e290a7eb53ed/ntldr/1.1.846.118",
+    "version": "1.1.846.118"
+  }
+}

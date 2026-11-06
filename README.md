@@ -1111,6 +1111,9 @@ Original 1.1.846.118 source preserved as an archive by the maintained fork. The 
 The 1.1.846.118 filter driver from the same archive as DiskCryptor, built for x64 only with WDK 10.0.26100.0. Upstream source is not patched; a generated stub suppress.h is supplied by include path. The driver image is linked and disassembled only, never signed, installed or loaded.
 
 <!-- generated: DiskCryptorDrv -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| DiskCryptorDrv | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/DiskCryptorDrv/x64/mcrit/DiskCryptorDrv_1.1.846.118_msvc143_x64_dcrypt.sys.mcrit) | [x64 PE](data/DiskCryptorDrv/x64/smda/DiskCryptorDrv_1.1.846.118_msvc143_x64_dcrypt.sys.7z) |
 <!-- /generated -->
 
 ### WinPmem<a id='winpmem'></a>
