@@ -35,6 +35,8 @@ Libraries
 * [liblzma](#liblzma)
 * [libsodium](#libsodium)
 * [libtomcrypt](#libtomcrypt)
+* [ed25519-donna](#ed25519-donna)
+* [curve25519-donna](#curve25519-donna)
 * [libuv](#libuv)
 * [libxml2](#libxml2)
 * [lz4](#lz4)
@@ -391,6 +393,32 @@ Generated with `scripts/build_corpus.py`; see `data/libtomcrypt/provenance.json`
 |----------|---------|----------|-------|------|
 | libtomcrypt | 1.18.2 | MinGW-w64 GCC 13 | [x86 PE](data/libtomcrypt/x86/mcrit/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.mcrit) / [x64 PE](data/libtomcrypt/x64/mcrit/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.mcrit) | [x86 PE](data/libtomcrypt/x86/smda/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.7z) / [x64 PE](data/libtomcrypt/x64/smda/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.7z) |
 | libtomcrypt | 1.18.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libtomcrypt/x86/mcrit/libtomcrypt_1.18.2_msvc143_x86_libtomcrypt.dll.mcrit) / [x64 PE](data/libtomcrypt/x64/mcrit/libtomcrypt_1.18.2_msvc143_x64_libtomcrypt.dll.mcrit) | [x86 PE](data/libtomcrypt/x86/smda/libtomcrypt_1.18.2_msvc143_x86_libtomcrypt.dll.7z) / [x64 PE](data/libtomcrypt/x64/smda/libtomcrypt_1.18.2_msvc143_x64_libtomcrypt.dll.7z) |
+<!-- /generated -->
+
+### ed25519-donna<a id='ed25519-donna'></a>
+
+Andrew Moon's portable Ed25519, and the signature core of Tor under a renamed symbol set (`ED25519_SUFFIX`). Built as the plain portable code and with `-DED25519_SSE2`, for MinGW and for Linux ELF, with upstream's reference SHA-512; Crypto++ carries a port of part of this code, which is why its field and scalar functions match here.  
+Generated with `scripts/build_corpus.py`; see `data/ed25519-donna/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: ed25519-donna -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| ed25519-donna | 2015-03-16 | GCC 13 (Linux, glibc) | [x86 ELF](data/ed25519-donna/x86/mcrit/ed25519-donna_2015-03-16_gcc13_x86_ed25519-donna-sse2.so.mcrit) / [x64 ELF](data/ed25519-donna/x64/mcrit/ed25519-donna_2015-03-16_gcc13_x64_ed25519-donna-sse2.so.mcrit) | [x86 ELF](data/ed25519-donna/x86/smda/ed25519-donna_2015-03-16_gcc13_x86_ed25519-donna-sse2.so.7z) / [x64 ELF](data/ed25519-donna/x64/smda/ed25519-donna_2015-03-16_gcc13_x64_ed25519-donna-sse2.so.7z) |
+| ed25519-donna | 2015-03-16 | GCC 13 (Linux, glibc) | [x86 ELF](data/ed25519-donna/x86/mcrit/ed25519-donna_2015-03-16_gcc13_x86_ed25519-donna.so.mcrit) / [x64 ELF](data/ed25519-donna/x64/mcrit/ed25519-donna_2015-03-16_gcc13_x64_ed25519-donna.so.mcrit) | [x86 ELF](data/ed25519-donna/x86/smda/ed25519-donna_2015-03-16_gcc13_x86_ed25519-donna.so.7z) / [x64 ELF](data/ed25519-donna/x64/smda/ed25519-donna_2015-03-16_gcc13_x64_ed25519-donna.so.7z) |
+| ed25519-donna | 2015-03-16 | MinGW-w64 GCC 13 | [x86 PE](data/ed25519-donna/x86/mcrit/ed25519-donna_2015-03-16_mingw13_x86_ed25519-donna-sse2.dll.mcrit) / [x64 PE](data/ed25519-donna/x64/mcrit/ed25519-donna_2015-03-16_mingw13_x64_ed25519-donna-sse2.dll.mcrit) | [x86 PE](data/ed25519-donna/x86/smda/ed25519-donna_2015-03-16_mingw13_x86_ed25519-donna-sse2.dll.7z) / [x64 PE](data/ed25519-donna/x64/smda/ed25519-donna_2015-03-16_mingw13_x64_ed25519-donna-sse2.dll.7z) |
+| ed25519-donna | 2015-03-16 | MinGW-w64 GCC 13 | [x86 PE](data/ed25519-donna/x86/mcrit/ed25519-donna_2015-03-16_mingw13_x86_ed25519-donna.dll.mcrit) / [x64 PE](data/ed25519-donna/x64/mcrit/ed25519-donna_2015-03-16_mingw13_x64_ed25519-donna.dll.mcrit) | [x86 PE](data/ed25519-donna/x86/smda/ed25519-donna_2015-03-16_mingw13_x86_ed25519-donna.dll.7z) / [x64 PE](data/ed25519-donna/x64/smda/ed25519-donna_2015-03-16_mingw13_x64_ed25519-donna.dll.7z) |
+<!-- /generated -->
+
+### curve25519-donna<a id='curve25519-donna'></a>
+
+Adam Langley's curve25519-donna, the 32-bit `curve25519-donna.c`. Thin: six or seven functions of its own, because the compiler folds most of the field arithmetic into `curve25519_donna`. The 64-bit `-c64.c` variant is not built; see the table of targets investigated in `scripts/corpus/README.md`.  
+Generated with `scripts/build_corpus.py`; see `data/curve25519-donna/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: curve25519-donna -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| curve25519-donna | 1.3 | GCC 13 (Linux, glibc) | [x86 ELF](data/curve25519-donna/x86/mcrit/curve25519-donna_1.3_gcc13_x86_curve25519-donna.so.mcrit) / [x64 ELF](data/curve25519-donna/x64/mcrit/curve25519-donna_1.3_gcc13_x64_curve25519-donna.so.mcrit) | [x86 ELF](data/curve25519-donna/x86/smda/curve25519-donna_1.3_gcc13_x86_curve25519-donna.so.7z) / [x64 ELF](data/curve25519-donna/x64/smda/curve25519-donna_1.3_gcc13_x64_curve25519-donna.so.7z) |
+| curve25519-donna | 1.3 | MinGW-w64 GCC 13 | [x86 PE](data/curve25519-donna/x86/mcrit/curve25519-donna_1.3_mingw13_x86_curve25519-donna.dll.mcrit) / [x64 PE](data/curve25519-donna/x64/mcrit/curve25519-donna_1.3_mingw13_x64_curve25519-donna.dll.mcrit) | [x86 PE](data/curve25519-donna/x86/smda/curve25519-donna_1.3_mingw13_x86_curve25519-donna.dll.7z) / [x64 PE](data/curve25519-donna/x64/smda/curve25519-donna_1.3_mingw13_x64_curve25519-donna.dll.7z) |
 <!-- /generated -->
 
 ### libuv<a id='libuv'></a>
