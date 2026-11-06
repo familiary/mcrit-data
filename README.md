@@ -36,6 +36,7 @@ Libraries
 * [libsodium](#libsodium)
 * [libtomcrypt](#libtomcrypt)
 * [libuv](#libuv)
+* [libwebsockets](#libwebsockets)
 * [libxml2](#libxml2)
 * [lz4](#lz4)
 * [mbedTLS](#mbedtls)
@@ -405,6 +406,20 @@ Generated with `scripts/build_corpus.py`; see `data/libuv/provenance.json` for s
 | libuv | 1.44.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libuv/x86/mcrit/libuv_1.44.2_msvc143_x86_uv.dll.mcrit) / [x64 PE](data/libuv/x64/mcrit/libuv_1.44.2_msvc143_x64_uv.dll.mcrit) | [x86 PE](data/libuv/x86/smda/libuv_1.44.2_msvc143_x86_uv.dll.7z) / [x64 PE](data/libuv/x64/smda/libuv_1.44.2_msvc143_x64_uv.dll.7z) |
 | libuv | 1.52.1 | MinGW-w64 GCC 13 | [x86 PE](data/libuv/x86/mcrit/libuv_1.52.1_mingw13_x86_libuv.dll.mcrit) / [x64 PE](data/libuv/x64/mcrit/libuv_1.52.1_mingw13_x64_libuv.dll.mcrit) | [x86 PE](data/libuv/x86/smda/libuv_1.52.1_mingw13_x86_libuv.dll.7z) / [x64 PE](data/libuv/x64/smda/libuv_1.52.1_mingw13_x64_libuv.dll.7z) |
 | libuv | 1.52.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libuv/x86/mcrit/libuv_1.52.1_msvc143_x86_uv.dll.mcrit) / [x64 PE](data/libuv/x64/mcrit/libuv_1.52.1_msvc143_x64_uv.dll.mcrit) | [x86 PE](data/libuv/x86/smda/libuv_1.52.1_msvc143_x86_uv.dll.7z) / [x64 PE](data/libuv/x64/smda/libuv_1.52.1_msvc143_x64_uv.dll.7z) |
+<!-- /generated -->
+
+### libwebsockets<a id='libwebsockets'></a>
+
+libwebsockets is a C WebSocket/HTTP library, linked into the communications DLL of at least one post-compromise malware family (NeedyMantis).  
+Built as a shared library with TLS through OpenSSL 1.1.1w, which stays a separate DLL and is not part of these files; see `data/libwebsockets/provenance.json` for source commits, the OpenSSL digest, compiler and flags.
+
+<!-- generated: libwebsockets -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| libwebsockets | 4.0.21 | MinGW-w64 GCC 13 | [x86 PE](data/libwebsockets/x86/mcrit/libwebsockets_4.0.21_mingw13_x86_libwebsockets.dll.mcrit) / [x64 PE](data/libwebsockets/x64/mcrit/libwebsockets_4.0.21_mingw13_x64_libwebsockets.dll.mcrit) | [x86 PE](data/libwebsockets/x86/smda/libwebsockets_4.0.21_mingw13_x86_libwebsockets.dll.7z) / [x64 PE](data/libwebsockets/x64/smda/libwebsockets_4.0.21_mingw13_x64_libwebsockets.dll.7z) |
+| libwebsockets | 4.3.10 | MinGW-w64 GCC 13 | [x86 PE](data/libwebsockets/x86/mcrit/libwebsockets_4.3.10_mingw13_x86_libwebsockets.dll.mcrit) / [x64 PE](data/libwebsockets/x64/mcrit/libwebsockets_4.3.10_mingw13_x64_libwebsockets.dll.mcrit) | [x86 PE](data/libwebsockets/x86/smda/libwebsockets_4.3.10_mingw13_x86_libwebsockets.dll.7z) / [x64 PE](data/libwebsockets/x64/smda/libwebsockets_4.3.10_mingw13_x64_libwebsockets.dll.7z) |
+| libwebsockets | 4.5.8 | MinGW-w64 GCC 13 | [x86 PE](data/libwebsockets/x86/mcrit/libwebsockets_4.5.8_mingw13_x86_libwebsockets.dll.mcrit) / [x64 PE](data/libwebsockets/x64/mcrit/libwebsockets_4.5.8_mingw13_x64_libwebsockets.dll.mcrit) | [x86 PE](data/libwebsockets/x86/smda/libwebsockets_4.5.8_mingw13_x86_libwebsockets.dll.7z) / [x64 PE](data/libwebsockets/x64/smda/libwebsockets_4.5.8_mingw13_x64_libwebsockets.dll.7z) |
+| libwebsockets | 5.1.0 | MinGW-w64 GCC 13 | [x86 PE](data/libwebsockets/x86/mcrit/libwebsockets_5.1.0_mingw13_x86_libwebsockets.dll.mcrit) / [x64 PE](data/libwebsockets/x64/mcrit/libwebsockets_5.1.0_mingw13_x64_libwebsockets.dll.mcrit) | [x86 PE](data/libwebsockets/x86/smda/libwebsockets_5.1.0_mingw13_x86_libwebsockets.dll.7z) / [x64 PE](data/libwebsockets/x64/smda/libwebsockets_5.1.0_mingw13_x64_libwebsockets.dll.7z) |
 <!-- /generated -->
 
 ### libxml2<a id='libxml2'></a>
