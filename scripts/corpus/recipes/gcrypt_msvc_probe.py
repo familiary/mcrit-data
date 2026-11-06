@@ -9,7 +9,7 @@ _GC = Source(url="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.11.3.tar.bz
 
 def _probe(variant):
     return Recipe(
-        family="libgpg-error", version="1.61", upstream="https://gnupg.org/",
+        family="libgpg-error", version="probe" + variant, upstream="https://gnupg.org/",
         license="LGPL-2.1-or-later", source=_GE, extra_sources={"gcrypt": _GC},
         build=[BuildStep(
             "C:\\msys64\\usr\\bin\\bash.exe "
@@ -21,4 +21,4 @@ def _probe(variant):
         notes="scratch probe", min_named_ratio=0)
 
 
-RECIPES = {"gcrypt_probe_A_msvc": _probe("A"), "gcrypt_probe_B_msvc": _probe("B")}
+RECIPES = {"gcrypt_probe_A_msvc": _probe("A")}
