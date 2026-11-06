@@ -77,15 +77,35 @@ def _props(extra_link=""):
 
 
 # winvnc.sln lists two installer projects both named "UltraVnc" (.vdproj),
-# which MSBuild refuses (MSB5004). A solution filter naming only the .vcxproj
-# entries of the solution avoids loading them; it is generated, not edited in.
-_SLNF = (
+# which MSBuild refuses (MSB5004) - a solution filter did not help, the check
+# runs before the filter is applied. A copy of the solution without the
+# .vdproj entries (and the lines naming their GUIDs) is generated beside it;
+# upstream's file is not edited.
+_SLN = (
     'python -c "'
-    r"import re,json;"
-    r"s=open('winvnc/winvnc.sln').read();"
-    r"p=re.findall(r'[\w\\.\-]+\.vcxproj',s);"
-    r"json.dump(dict(solution=dict(path='winvnc.sln',projects=p)),"
-    r"open('winvnc/winvnc.slnf','w'))"
+    r"import re;"
+    r"L=open('winvnc/winvnc.sln',encoding='utf-8-sig').read().splitlines();"
+    r"I=[i for i,l in enumerate(L) if l.startswith('Project(') and 'vdproj' in l];"
+    r"G=[re.findall(r'\x7b([0-9A-Fa-f-]+)\x7d',L[i])[-1] for i in I];"
+    r"D=set([j for i in I for j in range(i,L.index('EndProject',i)+1)]);"
+    r"O=[l for j,l in enumerate(L) if j not in D and not any([x in l for x in G])];"
+    r"open('winvnc/winvnc_build.sln','w').write(chr(10).join(O)+chr(10));"
+    r"print(len(I),'installer projects dropped')"
+    '"')
+
+# The 1.2.1.5 zip32 project (Info-ZIP) does not compile against the newest
+# SDK on the runner (winnt.h 10.0.26100.0, 120 syntax errors, nothing else in
+# the tree). The era's own SDK range is preferred when it is installed; this
+# writes the choice to sdkver.txt for the msbuild line to read.
+_SDK = (
+    'python -c "'
+    "import os;"
+    "d='C:/Program Files (x86)/Windows Kits/10/Include';"
+    "v=os.listdir(d);"
+    "w=[x for x in ['10.0.19041.0','10.0.22621.0','10.0.20348.0','10.0.17763.0'] if x in v];"
+    "c=(w+sorted(v)[::-1])[0];"
+    "open('sdkver.txt','w').write(c);"
+    "print('sdk',c,'of',sorted(v))"
     '"')
 
 # libjpeg-turbo-win's SIMD sources are assembled with nasm (the project adds
@@ -110,6 +130,16 @@ _MSBUILD = ('msbuild %s /t:%s /p:Configuration=Release '
             '/p:PostBuildEventUseInBuild=false %s'
             '/p:ForceImportBeforeCppTargets=%%CD%%\\msvcprops.props '
             '/m /v:minimal')
+
+# Same line with the SDK read from sdkver.txt; delayed expansion because the
+# variable is set and used in one command.
+_MSBUILD_OLD = ('cmd /v:on /c "set /p SDK=<sdkver.txt && msbuild %s /t:%s '
+                '/p:Configuration=Release /p:Platform={msbuild_platform} '
+                '/p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=!SDK! '
+                '/p:WholeProgramOptimization=false /p:LinkIncremental=false '
+                '/p:PostBuildEventUseInBuild=false '
+                '/p:ForceImportBeforeCppTargets=%%CD%%\\msvcprops.props '
+                '/m /v:minimal"')
 
 # vcpkg manifest mode, as upstream's cmake/VCPKG_README.txt describes for
 # Windows. VcpkgTriplet is forced to the -md variant, which vcpkg ships:
@@ -144,10 +174,11 @@ RECIPES = {
         build=[
             BuildStep(_props()),
             BuildStep(_NASM, allow_failure=True),
-            BuildStep(_SLNF),
-            BuildStep(_MSBUILD % ("vncviewer\\vncviewer.sln", "vncviewer", ""),
+            BuildStep(_SDK),
+            BuildStep(_SLN),
+            BuildStep(_MSBUILD_OLD % ("vncviewer\\vncviewer.sln", "vncviewer"),
                       allow_failure=True),
-            BuildStep(_MSBUILD % ("winvnc\\winvnc.slnf", "winvnc", ""),
+            BuildStep(_MSBUILD_OLD % ("winvnc\\winvnc_build.sln", "winvnc"),
                       allow_failure=True),
             BuildStep(_LOCATE),
         ],

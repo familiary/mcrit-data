@@ -49,6 +49,7 @@ _PROPS = (
     "'<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>'"
     "'<WholeProgramOptimization>false</WholeProgramOptimization>'"
     "'<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>'"
+    "'<PreprocessorDefinitions>_CRT_RAND_S;@p(PreprocessorDefinitions)</PreprocessorDefinitions>'"
     "'</ClCompile><Link>'"
     "'<GenerateDebugInformation>true</GenerateDebugInformation>'"
     "'<ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>'"
@@ -62,7 +63,11 @@ _PROPS = (
     # in the first x86 run, all in rfb.vcxproj, nothing else failed). Forced
     # inclusion of <string> for C++ translation units only, because the
     # zlib and libjpeg projects are C. The text is built with placeholder
-    # tokens so no quote or percent sign reaches cmd.exe.
+    # tokens so no quote or percent sign reaches cmd.exe. _CRT_RAND_S goes
+    # with it: 2.8.90 calls rand_s (win-system, desktop, log-server,
+    # rfb-sconn), which stdlib.h declares only when the macro is defined
+    # first, and the forced <string> now pulls stdlib.h in ahead of the
+    # sources' own #define. 2.8.85 does not call it.
     "'<Target Name=@dForceStringInclude@d BeforeTargets=@dClCompile@d>'"
     "'<ItemGroup><ClCompile Condition=@d@s@p(Extension)@s==@s.cpp@s@d>'"
     "'<ForcedIncludeFiles>string</ForcedIncludeFiles></ClCompile>'"
