@@ -54,6 +54,7 @@ Libraries
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [libstdc++](#libstdcxx)
+* [PuTTY](#putty)
 
 Runtimes
 * [Lua](#lua)
@@ -673,6 +674,20 @@ Generated with `scripts/build_corpus.py`; see `data/libstdc++/provenance.json` f
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libstdc++ | 13.2-mingw-w64 | MinGW-w64 GCC 13 | [x86 PE](data/libstdc++/x86/mcrit/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.mcrit) | [x86 PE](data/libstdc++/x86/smda/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.7z) |
+<!-- /generated -->
+
+### PuTTY<a id='putty'></a>
+
+PuTTY 0.77, built from the unmodified upstream source tarball: `putty.exe` and `psftp.exe` for Windows, and the console tools `plink` and `psftp` for Linux. The reference value is upstream's own SSH, terminal and crypto code, which a recompiled or trojanized `putty.exe` (UNC4034) is made of. `psftp.exe` is kept because it adds the SFTP client, which `putty.exe` lacks; `plink`, `pscp` and `puttytel` add under 2% each on Windows. The Linux build shares no PicHash with the Windows one on x64, so it is a separate reference value; the GTK programs need GTK and are not built. Upstream's own Windows release binaries are built with clang-cl and a static runtime, which is not covered here.  
+Generated with `scripts/build_corpus.py`; see `data/PuTTY/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: PuTTY -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| PuTTY | 0.77 | GCC 13 (Linux, glibc) | [x86 ELF](data/PuTTY/x86/mcrit/PuTTY_0.77_gcc13_x86_plink.mcrit) / [x64 ELF](data/PuTTY/x64/mcrit/PuTTY_0.77_gcc13_x64_plink.mcrit) | [x86 ELF](data/PuTTY/x86/smda/PuTTY_0.77_gcc13_x86_plink.7z) / [x64 ELF](data/PuTTY/x64/smda/PuTTY_0.77_gcc13_x64_plink.7z) |
+| PuTTY | 0.77 | GCC 13 (Linux, glibc) | [x86 ELF](data/PuTTY/x86/mcrit/PuTTY_0.77_gcc13_x86_psftp.mcrit) / [x64 ELF](data/PuTTY/x64/mcrit/PuTTY_0.77_gcc13_x64_psftp.mcrit) | [x86 ELF](data/PuTTY/x86/smda/PuTTY_0.77_gcc13_x86_psftp.7z) / [x64 ELF](data/PuTTY/x64/smda/PuTTY_0.77_gcc13_x64_psftp.7z) |
+| PuTTY | 0.77 | MinGW-w64 GCC 13 | [x86 PE](data/PuTTY/x86/mcrit/PuTTY_0.77_mingw13_x86_psftp.exe.mcrit) / [x64 PE](data/PuTTY/x64/mcrit/PuTTY_0.77_mingw13_x64_psftp.exe.mcrit) | [x86 PE](data/PuTTY/x86/smda/PuTTY_0.77_mingw13_x86_psftp.exe.7z) / [x64 PE](data/PuTTY/x64/smda/PuTTY_0.77_mingw13_x64_psftp.exe.7z) |
+| PuTTY | 0.77 | MinGW-w64 GCC 13 | [x86 PE](data/PuTTY/x86/mcrit/PuTTY_0.77_mingw13_x86_putty.exe.mcrit) / [x64 PE](data/PuTTY/x64/mcrit/PuTTY_0.77_mingw13_x64_putty.exe.mcrit) | [x86 PE](data/PuTTY/x86/smda/PuTTY_0.77_mingw13_x86_putty.exe.7z) / [x64 PE](data/PuTTY/x64/smda/PuTTY_0.77_mingw13_x64_putty.exe.7z) |
 <!-- /generated -->
 
 ## Runtimes
