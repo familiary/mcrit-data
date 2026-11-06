@@ -3254,6 +3254,21 @@ def _msvc_probes(toolchain):
                 probes.append((toolchain.cc, "probe_msvcrt_wstdio_%s_%s_ref.c" % (tg, fl),
                                _stdio_table_source("wstdio_" + tg, nm),
                                ["-shared", "/MD"] + flags + bbl))
+    names = dict(_STDIO_GROUPS)
+    for xp, flags in (("o1", ["/MD", "/O1"]), ("gl", ["/MD", "/GL"]),
+                      ("mt", ["/MT"]), ("gs0", ["/MD", "/Gs0"]),
+                      ("o1gl", ["/MD", "/O1", "/GL"])):
+        for tg in ("narrow_print", "narrow_string", "wide_print"):
+            probes.append((toolchain.cc, "probe_msvcrt_wstdio_%s_xp_%s.c" % (tg, xp),
+                           _stdio_table_source("wstdio_" + tg, names[tg]),
+                           ["-shared"] + flags + _MSVC_RECIPE_LINK))
+    for xp, flags in (("cpp20", ["/MD", "/EHsc", "/std:c++20"]),
+                      ("cpp20o1", ["/MD", "/EHsc", "/std:c++20", "/O1"]),
+                      ("cpp20gl", ["/MD", "/EHsc", "/std:c++20", "/GL"])):
+        for tg in ("narrow_print", "wide_print"):
+            probes.append((toolchain.cxx, "probe_msvcrt_wstdio_%s_xp_%s.cpp" % (tg, xp),
+                           _stdio_table_source("wstdio_" + tg, names[tg]),
+                           ["-shared"] + flags + _MSVC_RECIPE_LINK))
     return probes  # LAB: skip STL
     # Which templates the STL headers instantiate depends on the language
     # version, and the two recipes disagree: vxapi.py builds /std:c++20 and
