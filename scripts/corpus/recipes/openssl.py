@@ -58,6 +58,38 @@ def _openssl(version, sha256, url):
     )
 
 
+def _openssl_1_0(version, sha256, url):
+    """1.0.x, MinGW. The legacy build system names things differently."""
+    return Recipe(
+        family="OpenSSL",
+        version=version,
+        upstream="https://github.com/openssl/openssl",
+        license="OpenSSL / SSLeay",
+        source=Source(url=url, sha256=sha256),
+        build=[
+            # 1.0.x Configure has no no-tests; the tests are a separate make
+            # target and build_libs does not touch them.
+            BuildStep("./Configure {openssl_target} "
+                      "--cross-compile-prefix={prefix} shared", env=_ENV),
+            BuildStep("make -j$(nproc) build_libs || make build_libs",
+                      env=_ENV),
+        ],
+        # libeay32 / ssleay32 are 1.0.x's names for libcrypto / libssl, on
+        # both bitnesses; the component keeps the family's own spelling.
+        artifacts=[
+            Artifact(path="libeay32.dll", component="libcrypto"),
+            Artifact(path="ssleay32.dll", component="libssl"),
+        ],
+        toolchains=["mingw_x86", "mingw_x64"],
+        build_flags="-O3 (upstream default; 1.0.x Configure ignores the "
+                    "CFLAGS the toolchain exports), shared, asm",
+        requires=["perl"],
+        notes="1.0.x MinGW: the DLLs are libeay32.dll and ssleay32.dll on "
+              "both x86 and x64. perlasm generates GAS assembly, so no nasm "
+              "is needed.",
+    )
+
+
 RECIPES = {
     # No provider layer; still the most encountered OpenSSL by a wide margin.
     "OpenSSL_1.1.1w": _openssl(
@@ -71,4 +103,13 @@ RECIPES = {
     "OpenSSL_3.5.8": _openssl(
         "3.5.8", "a8f84a39918ec6415ce765d9b429d313ba97b8143169c172e734b9514464f5b2",
         "https://github.com/openssl/openssl/releases/download/openssl-3.5.8/openssl-3.5.8.tar.gz"),
+    # The 1.0 branch. 1.0.1u is not built for MinGW: its Makefile.shared
+    # links the cygwin-shared flavour with -Wl,-s (strip), which 1.0.2u
+    # dropped, so both DLLs come out without a COFF symbol table and
+    # ssleay32.dll fails the symbol-coverage gate (254 of 624 functions named
+    # on x86, 190 of 563 on x64) while libeay32.dll passes it only on its
+    # exports. No flag undoes a strip. The 1.0.1 branch is covered by ELF.
+    "OpenSSL_1.0.2u": _openssl_1_0(
+        "1.0.2u", "ecd0c6ffb493dd06707d38b14bb4d8c2288bb7033735606569d8f90f89669d16",
+        "https://www.openssl.org/source/old/1.0.2/openssl-1.0.2u.tar.gz"),
 }
