@@ -134,6 +134,17 @@ emits neither, though it links and runs like every other. The cause needs
 MSVC in front of it, so it is recorded here rather than guessed at, and
 `validate --deep` fails on it as it should.
 
+It now reaches four more families, and for the same reason. `HellsGate`,
+`TartarusGate`, `RecycledGate` and `LayeredSyscall` are MSVC x64 console
+executables - they are proof-of-concept programs with a `main`, not
+libraries - so each carries that same 99-instruction wrapper under its own
+name. A deep run over those four plus the five SysWhispers families reports
+**3 cross-family PicHashes: that one leakage finding, 0 standard-library
+instantiations, 0 whose names differ, and 2 carrying no symbol at all.**
+Nothing was done about it here on purpose: the fix belongs in the baseline
+probe, which is being worked on separately, and a recipe that papered over
+it would hide the one finding this gate exists to surface.
+
 The deep check fails on one kind of collision only - the kind every round
 above was found by, one symbol name repeated across every family sharing the
 hash - and reports the rest as `NOTE` lines with their counts. `validate`,

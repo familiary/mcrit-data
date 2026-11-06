@@ -1074,6 +1074,20 @@ Generated with `scripts/build_corpus.py`; see `data/SysWhispers4/provenance.json
 | SysWhispers4 | 4.2.0 | MinGW-w64 GCC 13 | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_mingw13_x64_unhookntdll_O2.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_unhookntdll_O2.7z) |
 | SysWhispers4 | 4.2.0 | MinGW-w64 GCC 13 | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_mingw13_x64_vehencrypt_O0.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_vehencrypt_O0.7z) |
 | SysWhispers4 | 4.2.0 | MinGW-w64 GCC 13 | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_mingw13_x64_vehencrypt_O2.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_vehencrypt_O2.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_msvc143_x64_egghunt.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_msvc143_x64_egghunt.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_msvc143_x64_freshycalls.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_msvc143_x64_freshycalls.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_msvc143_x64_fromdisk.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_msvc143_x64_fromdisk.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_msvc143_x64_halosgate.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_msvc143_x64_halosgate.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_msvc143_x64_hellsgate.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_msvc143_x64_hellsgate.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_msvc143_x64_hwbreakpoint.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_msvc143_x64_hwbreakpoint.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_msvc143_x64_indirect.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_msvc143_x64_indirect.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_msvc143_x64_presetall.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_msvc143_x64_presetall.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_msvc143_x64_randomized.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_msvc143_x64_randomized.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_msvc143_x64_recycledgate.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_msvc143_x64_recycledgate.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_msvc143_x64_static.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_msvc143_x64_static.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/SysWhispers4/x64/mcrit/SysWhispers4_4.2.0_msvc143_x64_tartarusgate.mcrit) | [x64 PE](data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_msvc143_x64_tartarusgate.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/SysWhispers4/x86/mcrit/SysWhispers4_4.2.0_msvc143_x86_wow64_freshycalls.mcrit) | [x86 PE](data/SysWhispers4/x86/smda/SysWhispers4_4.2.0_msvc143_x86_wow64_freshycalls.7z) |
+| SysWhispers4 | 4.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/SysWhispers4/x86/mcrit/SysWhispers4_4.2.0_msvc143_x86_wow64_hellsgate.mcrit) | [x86 PE](data/SysWhispers4/x86/smda/SysWhispers4_4.2.0_msvc143_x86_wow64_hellsgate.7z) |
 <!-- /generated -->
 
 ### FreshyCalls<a id='freshycalls'></a>
@@ -1087,6 +1101,7 @@ Generated with `scripts/build_corpus.py`; see `data/FreshyCalls/provenance.json`
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | FreshyCalls | 2022-09-01 | MinGW-w64 GCC 13 | [x64 PE](data/FreshyCalls/x64/mcrit/FreshyCalls_2022-09-01_mingw13_x64_freshycalls.dll.mcrit) | [x64 PE](data/FreshyCalls/x64/smda/FreshyCalls_2022-09-01_mingw13_x64_freshycalls.dll.7z) |
+| FreshyCalls | 2022-09-01 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/FreshyCalls/x64/mcrit/FreshyCalls_2022-09-01_msvc143_x64_freshycalls.dll.mcrit) | [x64 PE](data/FreshyCalls/x64/smda/FreshyCalls_2022-09-01_msvc143_x64_freshycalls.dll.7z) |
 <!-- /generated -->
 
 ### LayeredSyscall<a id='layeredsyscall'></a>
@@ -1098,6 +1113,50 @@ MSVC only, for two reasons neither of which a command-line option reaches: upstr
 Generated with `scripts/build_corpus.py`; see `data/LayeredSyscall/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: LayeredSyscall -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| LayeredSyscall | 2024-07-31 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/LayeredSyscall/x64/mcrit/LayeredSyscall_2024-07-31_msvc143_x64_layeredsyscall.exe.mcrit) | [x64 PE](data/LayeredSyscall/x64/smda/LayeredSyscall_2024-07-31_msvc143_x64_layeredsyscall.exe.7z) |
+<!-- /generated -->
+
+### HellsGate<a id='hellsgate'></a>
+
+The technique every later gate is named after, and the one SysWhispers4 offers as `--resolve hells_gate`. It walks ntdll's export directory, hashes each name with djb2, and for the ones it wants reads the service number straight out of the stub's first bytes - the `mov r10, rcx; mov eax, <ssn>` prologue - rather than carrying a table. If the stub has been hooked the bytes it reads are the hook's and the read fails, which is the limitation Halo's Gate and Tartarus' Gate exist to work around.  
+Eight C functions and two MASM procedures, which is the whole project: `RtlGetThreadEnvironmentBlock` reads the TEB from `gs:[0x30]`, `djb2` hashes, `GetImageExportDirectory` and `GetVxTableEntry` do the parse and the SSN read, `VxMoveMemory` is a hand-rolled memcpy, `Payload` is the demonstration, `wmain` drives it, and `HellsGate`/`HellDescent` are the two halves of the indirect invocation - the first stores the service number in a module-level variable, the second issues the `syscall`.  
+MSVC and x64 only: `hellsgate.asm` is MASM and is rejected by both nasm and GAS, the same constraint that puts SysWhispers v1 on a Windows runner. No LICENSE file of any kind in the repository, which is recorded as the fact it is.
+
+Generated with `scripts/build_corpus.py`; see `data/HellsGate/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: HellsGate -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| HellsGate | 2021-06-28 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/HellsGate/x64/mcrit/HellsGate_2021-06-28_msvc143_x64_hellsgate.exe.mcrit) | [x64 PE](data/HellsGate/x64/smda/HellsGate_2021-06-28_msvc143_x64_hellsgate.exe.7z) |
+<!-- /generated -->
+
+### TartarusGate<a id='tartarusgate'></a>
+
+A fork of am0nsec/HellsGate, and a separate family rather than a second component of it because what it changes is the technique. Hell's Gate reads the service number out of ntdll's stub and gives up when the stub has been hooked; Tartarus' Gate handles the hooked case. When the first bytes are not the expected `mov r10, rcx` prologue it walks to a neighbouring stub - `UP` and `DOWN` are defined as -32 and +32, one stub's width - reads the number there, and corrects by the number of stubs it moved, since the kernel assigns them in image order. It also recognises both the near and the far JMP forms a hook can take, which is what SysWhispers4's feature table means by crediting it with "near+far JMP" where it marks SysWhispers3 as partial.  
+Measured against its parent: `main.c` differs by 185 diff lines and the assembly by 18, so this is a real reimplementation of the resolver and not a renamed copy. MSVC and x64 only, for its parent's reason. No LICENSE file in the repository.
+
+Generated with `scripts/build_corpus.py`; see `data/TartarusGate/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: TartarusGate -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| TartarusGate | 2022-01-25 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/TartarusGate/x64/mcrit/TartarusGate_2022-01-25_msvc143_x64_tartarusgate.exe.mcrit) | [x64 PE](data/TartarusGate/x64/smda/TartarusGate_2022-01-25_msvc143_x64_tartarusgate.exe.7z) |
+<!-- /generated -->
+
+### RecycledGate<a id='recycledgate'></a>
+
+SysWhispers4 offers this as `--resolve recycled` and calls it the most resilient of its eight: take the candidate service number from the stub's position in the virtual-address-sorted export list, the way FreshyCalls does, and then - if and only if the stub looks clean - confirm it against the number in the stub's own bytes, the way Hell's Gate does. A hook that rewrites opcodes defeats the second check and not the first; a hook that reordered stubs would defeat the first, and there is no such hook.  
+Six C functions - `findNtDll` walking the PEB's loader list, `getSyscall` doing the sort and the validation, `djb2_unicode` and `djb2`, `toLower`, and `xor_hash`, which is why the hashes are passed in encrypted - plus `PrepareSyscall` and `DoSyscall` in MASM and `main` from the sample driver. `HashGenerator/` is deliberately excluded: it is a host-side utility that prints hashes for the developer and shares no code with the gate.  
+MSVC and x64 only: `GateTrampolin.asm` is MASM. No LICENSE file in the repository.
+
+Generated with `scripts/build_corpus.py`; see `data/RecycledGate/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: RecycledGate -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| RecycledGate | 2022-02-03 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/RecycledGate/x64/mcrit/RecycledGate_2022-02-03_msvc143_x64_recycledgate.exe.mcrit) | [x64 PE](data/RecycledGate/x64/smda/RecycledGate_2022-02-03_msvc143_x64_recycledgate.exe.7z) |
 <!-- /generated -->
 
 ### Hidden<a id='hidden'></a>
