@@ -37,7 +37,65 @@ is often built size-optimised (-Os / /O1 /Os), which changes the code far
 more than any of the PB_* options, so a real nanopb sample is more likely to
 match by MinHash than by PicHash.
 
-MEASUREMENTS_PLACEHOLDER
+Read back from the runner (windows-2022, MSVC 19.44, v143), not assumed: the
+cl line the build log prints is the one in _COMPILE; link.exe took the .def
+and wrote protobuf-nanopb.dll (36,864 bytes at 0.4.9.2 x64) with a 545 KB PDB,
+and neither tool printed a warning. No /GL is passed and no /LTCG is in play.
+
+Counted on the runner, kept + removed = image total (removed is the
+baseline's compiler-runtime filter, "dropped N compiler runtime functions"):
+
+                    kept    removed    image
+    0.3.9.10 x86      83      125       208
+    0.3.9.10 x64      80      129       209
+    0.4.5    x86      79      125       204
+    0.4.5    x64      77      129       206
+    0.4.9.2  x86      79      125       204
+    0.4.9.2  x64      78      129       207
+
+What the baseline removed is MSVC runtime glue (DllMain, _DllMainCRTStartup,
+the __scrt_* startup functions, __castguard_*, __security_*, __report_*,
+SEH handlers, kernel32 import thunks), compiled into the DLL even under /MD.
+
+What survives, by name and PicHash: no unnamed function and no glue in any
+of the six artefacts. Every kept function is either an exported pb_* routine
+or a nanopb static (buf_read, buf_write, decode_field, decode_static_field,
+encode_array, safe_read_bool and so on, 17 to 19 per artefact). At x86 the
+PDB also labels three interior entry points of large functions
+(decode_static_field$+0x1fd at 0.3.9.10, decode_static_field$+0x249 at 0.4.5,
+encode_basic_field$+0x13d at 0.3.9.10), which are nanopb code and not glue.
+At 0.4.9.2 x64 the statics are advance_iterator 16606061034253823674,
+load_descriptor_values 9361589287834584332, buf_read 7805911138840976995,
+decode_basic_field 2819844878615162245, decode_callback_field
+15500451049100105837, decode_extension 8778844127214404292, decode_field
+3816378724393654135, decode_pointer_field 2407915914967506153 (7
+instructions), decode_static_field 9276057699374094180,
+default_extension_decoder 11079785349539649306, read_raw_value
+12392993382980208415, buf_write 9946167767070953582,
+default_extension_encoder 2432676270308423099, encode_array
+12456943543875295928, encode_basic_field 10583906757704221710,
+encode_callback_field 9275046920793274101, encode_extension_field
+15754941812377411732, encode_field 13065938681143563832, safe_read_bool
+9149913116463287761.
+
+validate --deep over nanopb plus cJSON, lz4, q3vm, aPLib and protobuf: 0
+problems; 3 cross-family PicHashes at 10+ instructions, all carrying no
+symbol, 0 leakage.
+
+MinGW against MSVC, PicHash overlap over functions of 10+ instructions (same
+tag, same arch):
+
+                  mingw / msvc     shared
+    0.3.9.10 x86     57 / 72         0
+    0.3.9.10 x64     55 / 71         0
+    0.4.5    x86     42 / 69         0
+    0.4.5    x64     39 / 67         0
+    0.4.9.2  x86     43 / 68         0
+    0.4.9.2  x64     40 / 67         0
+
+The pair shares no exact function body at all, which is the case for holding
+the MSVC axis. The MSVC side has more functions of 10+ instructions than the
+MinGW side at every tag.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
