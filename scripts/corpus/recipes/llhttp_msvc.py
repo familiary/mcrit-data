@@ -29,6 +29,43 @@ CMakeLists.txt at the tag rather than assumed:
   * configure_file writes libllhttp.pc into the source tree, as in MinGW.
 
 Component name llhttp.dll (the name this build writes).
+
+Read back from the runner's logs (windows-2022, MSVC 19.44.35229, v143), not
+assumed: the link line at both archs is, verbatim apart from paths,
+`/out:llhttp.dll /dll /version:9.3 /machine:<x64|X86> /INCREMENTAL:NO /DEBUG
+/Brepro /OPT:NOREF /OPT:NOICF` plus CMake's default libraries and
+/MANIFEST:EMBED; no /GL and no /LTCG anywhere. The compile line goes through
+a response file nmake does not echo, so the compile flags are CMake's
+RelWithDebInfo defaults, not read back. The DLL is 56,320 bytes (x64) and the
+build directory holds llhttp.dll and llhttp.pdb.
+
+Counted on the runner, kept + removed = image total (removed is the
+baseline's compiler-runtime filter, "dropped N compiler runtime functions"):
+
+               kept    removed    image
+    x86         125      128       253
+    x64         125      122       247
+
+The removed functions are MSVC runtime glue (DllMain, _DllMainCRTStartup,
+_CRT_INIT, __scrt_* and __castguard_* families, kernel32 import thunks).
+Glue survivors: none. The three non-llhttp names that remain are llhttp's own
+generated helpers, llparse__match_sequence_id, llparse__match_sequence_to_lower
+and llparse__match_sequence_to_lower_unsafe (PicHashes x86
+4122063763036958151, 2954676877279366605, 6934423368462920082; x64
+16863769406257931593, 2664413443017959462, 8404370493517813254; 42 to 54
+instructions each). The other 122 functions are llhttp__internal__* and
+llhttp_* by name; no unnamed function in either artefact.
+
+MinGW against MSVC, PicHash overlap over functions of 10+ instructions (same
+tag, same arch):
+
+                  mingw / msvc     shared
+    x86              44 / 56          0
+    x64              30 / 31          0
+
+No exact function body is shared at that floor (13 x86 and 15 x64 PicHashes
+are shared across all sizes, i.e. trivial functions), so the MSVC axis is
+needed for a cl-built sample.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
