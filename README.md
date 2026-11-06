@@ -430,6 +430,7 @@ Generated with `scripts/build_corpus.py`; see `data/llhttp/provenance.json` for 
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | llhttp | 9.3.0 | MinGW-w64 GCC 13 | [x86 PE](data/llhttp/x86/mcrit/llhttp_9.3.0_mingw13_x86_libllhttp.dll.mcrit) / [x64 PE](data/llhttp/x64/mcrit/llhttp_9.3.0_mingw13_x64_libllhttp.dll.mcrit) | [x86 PE](data/llhttp/x86/smda/llhttp_9.3.0_mingw13_x86_libllhttp.dll.7z) / [x64 PE](data/llhttp/x64/smda/llhttp_9.3.0_mingw13_x64_libllhttp.dll.7z) |
+| llhttp | 9.3.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/llhttp/x86/mcrit/llhttp_9.3.0_msvc143_x86_llhttp.dll.mcrit) / [x64 PE](data/llhttp/x64/mcrit/llhttp_9.3.0_msvc143_x64_llhttp.dll.mcrit) | [x86 PE](data/llhttp/x86/smda/llhttp_9.3.0_msvc143_x86_llhttp.dll.7z) / [x64 PE](data/llhttp/x64/smda/llhttp_9.3.0_msvc143_x64_llhttp.dll.7z) |
 <!-- /generated -->
 
 ### lz4<a id='lz4'></a>
