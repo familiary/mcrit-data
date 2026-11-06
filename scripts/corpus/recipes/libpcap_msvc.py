@@ -1,7 +1,89 @@
 """libpcap built with MSVC (wpcap.dll), beside the MinGW pcap.dll builds.
 
-Work-in-progress docstring; measurements are added once the runner has
-produced the artefacts.
+libpcap is linked into Windows software built with cl at least as often as
+with gcc, and data/libpcap held MinGW and Linux artefacts only. The same
+source compiles to different machine code under cl (measured below), so this
+is the axis that answers an MSVC-built sample. Same four tarballs, same
+sha256 pins and the same Npcap SDK 1.17 pin as libpcap.py (imported from it,
+so the two cannot drift); see that docstring for the SDK licence terms. A
+separate registry entry because these steps are cmd.exe.
+
+Unlike the MinGW recipe nothing is cross-linked: cl links the SDK's
+Packet.lib natively, so the 1.8.1 problem there (GenVersion.bat cannot run
+under a Linux host) does not exist, and 1.8.1 is built here: four versions,
+both architectures. 1.8.1 is the only version with no MinGW twin.
+
+Decisions, each read from the CMakeLists of the pinned tarballs.
+  * The artefact is wpcap.dll, the Windows library name. 1.8.1 hardcodes it;
+    1.9.1 and later default LIBRARY_NAME to pcap on Windows and document it
+    as overridable, so -DLIBRARY_NAME=wpcap is passed (the target is then
+    called wpcap, and DEFINE_SYMBOL pcap_EXPORTS keeps the dllexport
+    working). The MinGW build is pcap.dll.
+  * USE_STATIC_RT defaults to ON on MSVC in all four versions; it is turned
+    OFF, because the mandate is /MD (the compile line read back from a log:
+    /MD /O2 /Ob2 /DNDEBUG /Zi). The link line carries /INCREMENTAL:NO
+    /DEBUG /Brepro /OPT:NOREF /OPT:NOICF and no /GL or /LTCG.
+  * No .def file: the API is declspec(dllexport) in every version.
+  * flex and bison are not on the windows-2022 image and the tarballs do not
+    ship the generated parser. The first build step runs
+    `choco install winflexbison3` (the package upstream's appveyor.yml uses;
+    CMake finds win_flex and win_bison by name), so the workflow is
+    untouched. `requires` is not used: it is checked before any step runs.
+  * The SDK's 64-bit library is in Lib/x64. The 1.10 and later FindPacket
+    module took Lib/Packet.lib on the x64 runner (LNK4272, 24 unresolved
+    externals in the first dispatch), so the matching Packet.lib is copied to
+    Packet-<arch>.lib and handed to CMake explicitly.
+  * CMAKE_DISABLE_FIND_PACKAGE_OpenSSL=ON. 1.10 and later use OpenSSL if
+    find_package finds one; the x64 runner has C:\\Program Files\\OpenSSL and
+    pcap-new.c then fails on off_t, while the x86 leg found none. Switching
+    it off makes both legs the same configuration (ENABLE_REMOTE stays at
+    each version's default, as in the MinGW recipe).
+  * Remote capture follows each version's own default, as in the MinGW
+    recipe: ON on Windows for 1.8.1 (forced) and 1.9.1, OFF for 1.10.5 and
+    1.11.0. The MinGW docstring says remote capture is off for all; the
+    MinGW 1.9.1 artefact exports pcap_findalldevs_ex and contains rpcap_*
+    functions, so it is on there too, and the pair matches.
+
+Measured on the artefacts (kept + removed = image):
+    1.8.1   x86 615 + 155 = 770     x64 613 + 162 = 775
+    1.9.1   x86 681 + 159 = 840     x64 678 + 165 = 843
+    1.10.5  x86 718 + 165 = 883     x64 717 + 171 = 888
+    1.11.0  x86 674 + 157 = 831     x64 667 + 162 = 829
+(Removed are the MSVC runtime, Win32 and stdio functions the baseline
+recognises; 155-171 per image, the CRT startup code a /MD DLL carries.)
+
+Exported API against the MinGW build: identical. The exported name sets of
+wpcap.dll and pcap.dll are the same for 1.9.1 (115), 1.10.5 (117) and
+1.11.0 (112), on both architectures, so the difference between the two
+families is code generation, not interface. 1.8.1 exports 112.
+
+PicHash overlap of the 10+ instruction functions between the MinGW and MSVC
+artefact of the same version and architecture is 0 in all twelve pairs
+(1.9.1 x86 0 of 422 MSVC / 326 MinGW, x64 0 of 419 / 301; 1.10.5 x86 0 of
+448 / 351, x64 0 of 445 / 326; 1.11.0 x86 0 of 434 / 317, x64 0 of 426 /
+293), the same result as every earlier MSVC pass: the MSVC data is new
+reference data, not a duplicate of the MinGW data.
+
+Glue that survives the baseline, by name. Each kept artefact still holds
+about 75-108 one-instruction import thunks (a `jmp [IAT slot]`) that the
+linker emits for imported functions: the Npcap Packet* family (32 names,
+PacketOpenAdapter, PacketGetNetInfoEx, ... PacketSetTimestampMode), and CRT,
+Win32 and Winsock imports (_strdup, _fdopen, _fileno, _setmode, _close,
+_open_osfhandle, _wfopen, _ftelli64, _wcserror_s, __intrinsic_setjmp/_setjmp3,
+longjmp, clearerr, feof, ferror, fflush, fwrite, getc, puts, rewind,
+setvbuf, isspace, strtoul, strncpy_s, strerror_s, LoadLibraryA, GetVersion,
+SetEvent, FormatMessageW, GetSystemDirectoryA, WSAStartup, WSACleanup,
+getaddrinfo, freeaddrinfo, gethostbyname, getprotobyname, inet_pton, htonl,
+ntohl, ntohs). Their PicHash is 1165511d87767dcf on both architectures (72
+of the 75 one-instruction functions on 1.11.0 x86, 67 of 78 on x64; the x64
+ones that are not it, 458924a8d07e5d36 x8 and d38af1f639c8eb6d x3, are
+libpcap's own one-line functions such as pcap_free_datalinks). They are not
+removed because the baseline is shared tooling this pass does not edit.
+Names with a `$+0x...` suffix (6-14 on x86, 0-1 on x64, e.g. gen_scode$+0x749)
+are SMDA entries inside a libpcap function and are libpcap code.
+
+Sources: tcpdump.org tarballs by sha256, GPG-verified when libpcap.py was
+written; the SDK as libpcap.py pins it.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
