@@ -10,6 +10,18 @@ The family is kept separate from Tor because the Tor client configuration
 does not link the GPL-gated PoW service module; ``nm`` on the client image has
 no Equi-X or HashX symbols. This yields the candidate's ~73 functions without
 duplicating them under the Tor family.
+
+Local measurements (>=10 instructions / distinct PicHashes): Linux x86 38/38,
+x64 29/29; MinGW x86 33/33, x64 26/26. The x86 Linux/MinGW builds share three
+hashes (35 and 30 unique); x64 and cross-architecture pairs share none. The
+shared x86 functions are ``hashx_siphash_rng_init`` (PicHash
+12052320502482513257), ``build_solution`` (12171589145970997990), and
+``build_solution_stage2`` (2163312168133937849).
+
+GCC x86 startup glue survives with these names and PicHashes: ``_init``
+1190297631016324560, ``deregister_tm_clones`` 1854011519951462340,
+``register_tm_clones`` 12965823927437490162, and
+``__do_global_dtors_aux`` 2827890300630113428.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -36,7 +48,9 @@ def _recipe(flavor, toolchains):
     if flavor == "msvc":
         artifact_args["pdb"] = "build_equix/equix-hashx-{arch}.pdb"
     flags = ("/O2 /MD /Zi /GL-; /DLL /NOENTRY /DEBUG /OPT:NOREF "
-             "/OPT:NOICF /Brepro /INCREMENTAL:NO" if flavor == "msvc" else
+             "/OPT:NOICF /Brepro /INCREMENTAL:NO; program_exec.c uses a "
+             "forced include to normalize its MSVC architecture checks; "
+             "explicit ucrt.lib and kernel32.lib at link" if flavor == "msvc" else
              "-O2 -g -fPIC -std=gnu11; HASHX_SIZE=8; "
              "EQUIX_STATIC=1; HASHX_STATIC=1")
     if flavor == "mingw":
@@ -54,7 +68,10 @@ def _recipe(flavor, toolchains):
         notes=("Compiled from Tor 0.4.8.25's vendored HashX and Equi-X C "
                "sources with the consumer's eight-byte HashX output size. "
                "Only the C translation units in src/ext/include.am are "
-               "included; upstream source is unchanged."),
+               "included; upstream source is unchanged. MSVC's intrinsics "
+               "header is force-included with corrected architecture-test "
+               "macros for program_exec.c, avoiding its x64 parse error "
+               "without changing the source."),
     )
 
 

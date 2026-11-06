@@ -6,14 +6,17 @@ selecting MIRACL's architecture-specific ``mirdef.h`` and ``mrmuldv.c``
 variants through a build-only include directory. It does not modify upstream
 files or compile the C++ examples.
 
-Local reference measurements, functions >=10 instructions (SMDA 5.0.2,
-MCRIT 1.16.0):
-  Linux x86 1004+11=1015 total, 455 functions/451 PicHashes; Linux x64
-  731+5=736, 427/421.
-  MinGW x86 466+70=536, 452/445; MinGW x64 471+67=538, 438/431.
-  Linux x86 versus MinGW x86 shares 26 hashes; every other architecture or
-  compiler pair shares 0. The separate axes retain hundreds of unique hashes.
-  Named C runtime glue survivors are recorded after the corpus builds.
+Local reference measurements (SMDA 5.0.2, MCRIT 1.16.0): Linux x86 kept 495,
+removed 11, total 506; 457 functions have >=10 instructions and 453 distinct
+PicHashes. Linux x64 kept 477, removed 6, total 483; 431/426. MinGW x86 kept
+466, removed 70, total 536; 452/445. MinGW x64 kept 471, removed 67, total
+538; 438/431. Linux and MinGW x86 share 26 >=10-instruction hashes (427 and
+419 unique); x64 shares none, and cross-architecture pairs share none.
+
+The GCC x86 startup glue that survives has these names and PicHashes:
+``_init`` 6770588054045069260, ``deregister_tm_clones`` 1610452992239176880,
+``register_tm_clones`` 8826685758498774199, and
+``__do_global_dtors_aux`` 18385553704422894850.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -67,6 +70,6 @@ RECIPES = {
     "MIRACL_2019-08-21_msvc": _recipe(
         "msvc", ["msvc_x86", "msvc_x64"], "dll",
         "/O2 /MD /Zi /GL-; /DLL /NOENTRY /DEBUG /OPT:NOREF /OPT:NOICF "
-        "/Brepro /INCREMENTAL:NO; upstream MSVC C units and matching "
-        "mirdef/mrmuldv variants"),
+        "/Brepro /INCREMENTAL:NO; explicit ucrt.lib and kernel32.lib at "
+        "link; upstream MSVC C units and matching mirdef/mrmuldv variants"),
 }

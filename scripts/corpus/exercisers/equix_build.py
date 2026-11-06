@@ -50,6 +50,19 @@ def build(args: argparse.Namespace) -> Path:
     objects: list[Path] = []
 
     if args.flavor == "msvc":
+        arch_header = build_dir / "msvc-program-exec.h"
+        arch_header.write_text(
+            "#include <intrin.h>\n"
+            "#undef __MACHINEX64\n"
+            "#undef __MACHINEARM64_X64\n"
+            "#define __MACHINEARM64_X64(x)\n"
+            "#if defined(_M_X64)\n"
+            "#define __MACHINEX64(x) x\n"
+            "#else\n"
+            "#define __MACHINEX64(x)\n"
+            "#endif\n",
+            encoding="ascii",
+        )
         for index, source_name in enumerate(SOURCES):
             source = root / source_name
             obj = object_dir / ("%02d-%s.obj" % (index, source.stem))
@@ -58,6 +71,12 @@ def build(args: argparse.Namespace) -> Path:
                        "/O2", "/MD", "/Zi", "/GL-", "/W3", "/DHASHX_SIZE=8",
                        "/DEQUIX_STATIC=1", "/DHASHX_STATIC=1"]
             command += ["/I" + str(path) for path in include_dirs]
+            if source.name == "program_exec.c":
+                # Tor's source tests these intrinsics.h annotation macros as
+                # booleans; the MSVC header expands the x64 one to a trailing
+                # semicolon. Pre-include intrinsics, then normalize only the
+                # two architecture tests without changing the upstream file.
+                command.append("/FI" + str(arch_header))
             command += ["/Fo" + str(obj), "/Fd" + str(compiler_pdb), str(source)]
             _run(command, root)
             objects.append(obj)
@@ -65,7 +84,7 @@ def build(args: argparse.Namespace) -> Path:
         _run(["link", "/DLL", "/NOENTRY", "/DEBUG", "/OPT:NOREF",
               "/OPT:NOICF", "/Brepro", "/INCREMENTAL:NO",
               "/OUT:" + str(output), "/PDB:" + str(linker_pdb),
-              *[str(obj) for obj in objects]], root)
+              *[str(obj) for obj in objects], "ucrt.lib", "kernel32.lib"], root)
         return output
 
     compiler = shlex.split(args.cc)

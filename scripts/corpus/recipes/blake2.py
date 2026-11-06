@@ -8,10 +8,24 @@ images already contain vendored BLAKE2b reference code; the standalone family
 adds both BLAKE2b and BLAKE2s variants, including parallel and extended-output
 implementations. The libsodium provenance records that vendored component.
 
-Overlap evidence (>=10 instructions, final per-axis values added after builds):
-  standalone ref versus SSE on the same compiler/architecture;
-  Linux versus MinGW and MSVC for each source variant.
-Named glue survivors and their PicHashes are recorded after the images build.
+Local measurements are functions with >=10 instructions / distinct PicHashes:
+ref Linux x86 43/43, x64 34/34; ref MinGW x86 39/38, x64 37/37; SSE Linux x86
+39/39, x64 30/30; SSE MinGW x86 36/35, x64 36/35. Ref versus SSE shares 12
+hashes on Linux x64, 8 on MinGW x64, 2 on MinGW x86 and none on Linux x86.
+Same-mode Linux/MinGW and cross-architecture pairs share no hashes.
+
+The only standalone-to-libsodium >=10-instruction matches are unnamed hashes
+12578432865501340970 on x64 MinGW and 16132965489037543538 on x86 MinGW; each
+appears in both libsodium versions and both standalone modes. Deep validation
+classifies them as no-symbol matches, with no named cross-family leakage.
+
+GCC x86 startup glue survives with these names and PicHashes. Ref:
+``_init`` 9608256718953870546, ``deregister_tm_clones`` 2780497305776452871,
+``register_tm_clones`` 12755717022944402199,
+``__do_global_dtors_aux`` 4810785454881136303. SSE:
+``_init`` 15718644553860916983, ``deregister_tm_clones`` 8718169112306472195,
+``register_tm_clones`` 12945903060382388116,
+``__do_global_dtors_aux`` 17331431794667355242.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -42,7 +56,8 @@ def _recipe(mode, flavor, toolchains):
              "upstream sse/makefile -O3; SSE2 enabled with compiler flags")
     if flavor == "msvc":
         flags += "; /O2 /MD /Zi /GL-; /DLL /NOENTRY /DEBUG /OPT:NOREF " \
-                 "/OPT:NOICF /Brepro /INCREMENTAL:NO"
+                 "/OPT:NOICF /Brepro /INCREMENTAL:NO; explicit ucrt.lib " \
+                 "and kernel32.lib at link"
     elif flavor == "linux":
         flags += "; -g -fPIC -shared"
     else:
