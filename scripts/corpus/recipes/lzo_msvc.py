@@ -58,13 +58,15 @@ helpers, _initterm, atexit/onexit, the memset thunk), and everything left is
 lzo code - the public lzo1x/lzo1y/... API plus upstream's file-local helpers
 (swd_*, find_match, do_compress, code_match, ...) and lzo_bitops_* inlines.
 MSVC keeps more of those helpers as separate functions than gcc -O2 does
-(25 do_compress and 7 swd_accept bodies against fewer inlined copies in the
-MinGW build), which is why it has more functions from the same source.
+(25 do_compress and 7 swd_accept bodies, against none under those names in
+the MinGW artefact, where they are inlined or renamed by gcc), which is why it
+has more functions from the same source.
 
 Exports: 96 functions on both arches, equal to the MinGW x64 artefact's 96.
-The MinGW x86 artefact exports 108; the 12 extra are x86-only assembler entry
-points (lzo1x_decompress_asm_fast and friends) and data objects that the
-function-only filter does not take.
+The MinGW x86 artefact exports 108; the 12 extra are exactly the x86-only
+assembler entry points (lzo1c/1f/1x/1y_decompress_asm*), which this build,
+compiling only src/*.c, does not have. Every other MinGW x86 export is
+exported here too.
 
 MinGW against MSVC PicHash overlap, functions of 10+ instructions (x86 /
 x64): 0 shared, of 139 / 107 on the MinGW side and 204 / 196 on the MSVC
