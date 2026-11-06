@@ -133,6 +133,7 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                     is_library=artifact.is_library,
                     toolchain_id=toolchain_id,
                     drop_crt_glue=recipe.drop_crt_glue,
+                    glue_filter=recipe.glue_filter,
                     filename=os.path.basename(binary_path),
                     min_named_ratio=recipe.min_named_ratio,
                     min_functions=recipe.min_functions,

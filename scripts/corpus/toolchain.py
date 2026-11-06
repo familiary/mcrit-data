@@ -194,6 +194,10 @@ class Toolchain:
             # MSBuild and vcvarsall spellings.
             "msbuild_platform": "x64" if self.bitness == 64 else "Win32",
             "masm": "ml64" if self.bitness == 64 else "ml",
+            # Go's spellings of the same target, for recipes that drive the
+            # Go toolchain under whichever C toolchain id names the target.
+            "goos": "linux" if self.kind == "linux" else "windows",
+            "goarch": "amd64" if self.bitness == 64 else "386",
         }
 
 
