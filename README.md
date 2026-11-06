@@ -54,6 +54,7 @@ Libraries
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [libstdc++](#libstdcxx)
+* [Zydis and Zycore](#zydis)
 
 Runtimes
 * [Lua](#lua)
@@ -85,6 +86,10 @@ Offensive tooling
 * [BlackBoneDrv](#blackbonedrv)
 * [SysWhispers](#syswhispers)
 * [Hidden](#hidden)
+
+Hooking and runtime code generation
+* [Detours](#detours)
+* [jitasm](#jitasm)
 
 String obfuscation
 * [Obfuscate](#obfuscate)
@@ -675,6 +680,24 @@ Generated with `scripts/build_corpus.py`; see `data/libstdc++/provenance.json` f
 | libstdc++ | 13.2-mingw-w64 | MinGW-w64 GCC 13 | [x86 PE](data/libstdc++/x86/mcrit/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.mcrit) | [x86 PE](data/libstdc++/x86/smda/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.7z) |
 <!-- /generated -->
 
+### Zydis and Zycore<a id='zydis'></a>
+
+Zydis is a fast, allocation-free x86 and x86-64 instruction decoder and formatter in C, and Zycore is the support library it sits on (strings, vectors, lists, bitsets, the allocator, the argument parser) and its only dependency. `data/Hidden` vendors Zydis 3.1.0 and Zycore 1.0.0 into `Hidden.sys`, so 103 of that driver's 507 functions carry a Zydis, Zyan or Zycore name under the Hidden family; this family is the attribution for them. All 103 names are present in the MSVC builds of Zydis 3.1.0 (the `3.1.0-nolibc` row is built with `ZYAN_NO_LIBC`, the configuration Hidden uses), 83 in the MinGW and ELF builds. Exact PicHash agreement is thin, 3 of the 91 that are ten instructions or more, because the WDK compiles the driver with different flags, so fuzzy matching and not PicHash is what will link them. They stay filed under Hidden: moving them out would rewrite committed Hidden data. There is no published function-level match between Zydis and a ValleyRAT sample and none is claimed; the chain is ValleyRAT to Hidden (Check Point Research) and Hidden to Zydis (measured here).  
+Zycore is part of the Zydis image rather than a family of its own: built separately it would be a second copy of the same functions under another name. Both are built as static archives and linked into one DLL or shared object with the whole of each archive included, because Zydis's own shared target needs a UTF-16 `.rc` file that `windres` rejects. Two versions, 3.1.0 and 4.1.1, on MinGW, MSVC and Linux, x86 and x64; between the two versions about half the distinct ten-instruction PicHashes on one toolchain are shared, and between PE and ELF none on x64. MIT, with per-file headers naming Florian Bernd and Joel Hoener.  
+Generated with `scripts/build_corpus.py`; see `data/Zydis/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Zydis -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Zydis | 3.1.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/Zydis/x86/mcrit/Zydis_3.1.0_gcc13_x86_libzydis.so.mcrit) / [x64 ELF](data/Zydis/x64/mcrit/Zydis_3.1.0_gcc13_x64_libzydis.so.mcrit) | [x86 ELF](data/Zydis/x86/smda/Zydis_3.1.0_gcc13_x86_libzydis.so.7z) / [x64 ELF](data/Zydis/x64/smda/Zydis_3.1.0_gcc13_x64_libzydis.so.7z) |
+| Zydis | 3.1.0 | MinGW-w64 GCC 13 | [x86 PE](data/Zydis/x86/mcrit/Zydis_3.1.0_mingw13_x86_zydis.dll.mcrit) / [x64 PE](data/Zydis/x64/mcrit/Zydis_3.1.0_mingw13_x64_zydis.dll.mcrit) | [x86 PE](data/Zydis/x86/smda/Zydis_3.1.0_mingw13_x86_zydis.dll.7z) / [x64 PE](data/Zydis/x64/smda/Zydis_3.1.0_mingw13_x64_zydis.dll.7z) |
+| Zydis | 3.1.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Zydis/x86/mcrit/Zydis_3.1.0_msvc143_x86_zydis.dll.mcrit) / [x64 PE](data/Zydis/x64/mcrit/Zydis_3.1.0_msvc143_x64_zydis.dll.mcrit) | [x86 PE](data/Zydis/x86/smda/Zydis_3.1.0_msvc143_x86_zydis.dll.7z) / [x64 PE](data/Zydis/x64/smda/Zydis_3.1.0_msvc143_x64_zydis.dll.7z) |
+| Zydis | 3.1.0-nolibc | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Zydis/x86/mcrit/Zydis_3.1.0-nolibc_msvc143_x86_zydis.dll.mcrit) / [x64 PE](data/Zydis/x64/mcrit/Zydis_3.1.0-nolibc_msvc143_x64_zydis.dll.mcrit) | [x86 PE](data/Zydis/x86/smda/Zydis_3.1.0-nolibc_msvc143_x86_zydis.dll.7z) / [x64 PE](data/Zydis/x64/smda/Zydis_3.1.0-nolibc_msvc143_x64_zydis.dll.7z) |
+| Zydis | 4.1.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/Zydis/x86/mcrit/Zydis_4.1.1_gcc13_x86_libzydis.so.mcrit) / [x64 ELF](data/Zydis/x64/mcrit/Zydis_4.1.1_gcc13_x64_libzydis.so.mcrit) | [x86 ELF](data/Zydis/x86/smda/Zydis_4.1.1_gcc13_x86_libzydis.so.7z) / [x64 ELF](data/Zydis/x64/smda/Zydis_4.1.1_gcc13_x64_libzydis.so.7z) |
+| Zydis | 4.1.1 | MinGW-w64 GCC 13 | [x86 PE](data/Zydis/x86/mcrit/Zydis_4.1.1_mingw13_x86_zydis.dll.mcrit) / [x64 PE](data/Zydis/x64/mcrit/Zydis_4.1.1_mingw13_x64_zydis.dll.mcrit) | [x86 PE](data/Zydis/x86/smda/Zydis_4.1.1_mingw13_x86_zydis.dll.7z) / [x64 PE](data/Zydis/x64/smda/Zydis_4.1.1_mingw13_x64_zydis.dll.7z) |
+| Zydis | 4.1.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Zydis/x86/mcrit/Zydis_4.1.1_msvc143_x86_zydis.dll.mcrit) / [x64 PE](data/Zydis/x64/mcrit/Zydis_4.1.1_msvc143_x64_zydis.dll.mcrit) | [x86 PE](data/Zydis/x86/smda/Zydis_4.1.1_msvc143_x86_zydis.dll.7z) / [x64 PE](data/Zydis/x64/smda/Zydis_4.1.1_msvc143_x64_zydis.dll.7z) |
+<!-- /generated -->
+
 ## Runtimes
 
 Interpreters and virtual machines that are commonly statically linked into tooling.
@@ -957,13 +980,46 @@ Generated with `scripts/build_corpus.py`; see `data/SysWhispers/provenance.json`
 
 A WDM filter driver that hides and protects filesystem objects, registry keys and processes, together with the user-mode client that drives it. The driver registers a filesystem minifilter and a registry callback, watches process creation against a rule set it keeps in memory, reads its configuration from the registry, and exposes the whole surface through a single `DeviceIoControl` switch. Two artefacts come out of the one solution: `Hidden.sys`, and `HiddenCLI.exe` with the `HiddenLib` static library linked into it - the `.lib` is an archive rather than a PE and is not collected on its own, so a match on the client may be a match on the library.  
 Neither reported function count is the project's own code, and both were counted rather than estimated. `Hidden.sys` reports 507 functions: 150 are MSVC string-literal COMDATs that are not code at all, 90 are import thunks of three instructions or fewer, 101 are Zydis or Zycore, and 4 are compiler runtime - leaving **134** that are the driver's own. `HiddenCLI.exe` reports 525: 223 thunks, 83 short bodies, 72 CRT or STL the runtime filter did not reach, and **147** that belong to the client and `HiddenLib`. Judge coverage on 134 and 147.  
-A fifth of `Hidden.sys` is therefore not this project's code: `Hidden/Disasm` carries a vendored Zydis 3.1.0 and Zycore 1.0.0 compiled into the driver, so a match landing in the instruction decoder is a match on Zydis. It is built with `ZYAN_NO_LIBC`, which changes what Zydis compiles, so those functions will not necessarily agree with a Zydis built the ordinary way.  
+A fifth of `Hidden.sys` is therefore not this project's code: `Hidden/Disasm` carries a vendored Zydis 3.1.0 and Zycore 1.0.0 compiled into the driver, so a match landing in the instruction decoder is a match on Zydis. It is built with `ZYAN_NO_LIBC`, which changes what Zydis compiles, so those functions will not necessarily agree with a Zydis built the ordinary way. That family now exists as [Zydis and Zycore](#zydis): all 103 Zydis- and Zycore-named functions of `Hidden.sys` are present there by name, with exact PicHash agreement on only 3 of the 91 substantial ones, and they remain filed under Hidden.  
 The user-mode half is built `/MD`. Upstream builds it `/MT`, which linked the CRT and the STL statically and put 952 functions in the image of which only about 130 were the project's; `/MD` leaves that code in `ucrtbase` and `vcruntime140`, where `data/MSVC` already covers it. The driver keeps its own runtime, having no ucrt to move out.  
 The project carries no licence of any kind - no LICENSE or COPYING file and no copyright line in any of its own sources. The only licence text in the repository is the MIT header on the vendored Zydis and Zycore files. The `Hidden Package` project, which runs `Inf2Cat` over the driver's `.inf` to emit a catalogue and produces no code, is not built; the binaries are linked and disassembled, never packaged, signed, installed or loaded.  
 
 Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Hidden -->
+<!-- /generated -->
+
+## Hooking and runtime code generation
+
+Two libraries from the StrikeShark / SharkLoader chain Kaspersky described on 2026-06-24, beside MinHook: Microsoft Detours, which hooks functions, and jitasm, which assembles x86 and x64 at run time to build the direct syscall stubs. Both identifications are structural - the vendor names the projects and publishes no matched function body - so this is reference data to test them against, not a confirmed match.
+
+### Detours<a id='detours'></a>
+
+Microsoft Detours rewrites a function's first bytes with a jump and keeps the displaced instructions in a trampoline. Reference data covers the transaction core (`DetourTransactionBegin`, `DetourUpdateThread`, `DetourAttach`, `DetourTransactionCommitEx`), the per-architecture instruction copiers in `disasm.cpp` (`CDetourDis` with the x86 and x64 tables) and the image and import-table code. Upstream builds a static `detours.lib`, which SMDA cannot read, so seven of its ten objects are compiled and linked into a DLL; the Itanium, ARM and ARM64 copiers are left out.  
+Five builds, each with its own PicHashes: the pinned 2026-09-29 commit with MinGW and with MSVC at `/O2`, v4.0.1 (the last tagged release) with MSVC at `/O2`, and the pinned commit built by upstream's own `nmake` Makefile, which is `/Od /MT` with no other configuration (`2026-09-29-nmake`). At the ten-instruction floor none of the MinGW, `/O2` and `nmake` builds share a PicHash with any other, and v4.0.1 shares 55 of its 145 distinct x64 hashes with the later commit. v4.0.1 does not compile under GCC (its `detours.h` redeclares four Windows typedefs when `_MSC_VER` is undefined), so there is no MinGW row for it. Kept functions are all named; the strsafe `StringCchPrintfA/W` wrappers and, in the unoptimised build, the UCRT `_vsnprintf` family are Windows SDK code that the glue filter does not remove. MIT, Copyright (c) Microsoft Corporation.  
+Generated with `scripts/build_corpus.py`; see `data/Detours/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Detours -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Detours | 4.0.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Detours/x86/mcrit/Detours_4.0.1_msvc143_x86_detours.dll.mcrit) / [x64 PE](data/Detours/x64/mcrit/Detours_4.0.1_msvc143_x64_detours.dll.mcrit) | [x86 PE](data/Detours/x86/smda/Detours_4.0.1_msvc143_x86_detours.dll.7z) / [x64 PE](data/Detours/x64/smda/Detours_4.0.1_msvc143_x64_detours.dll.7z) |
+| Detours | 2026-09-29 | MinGW-w64 GCC 13 | [x86 PE](data/Detours/x86/mcrit/Detours_2026-09-29_mingw13_x86_detours.dll.mcrit) / [x64 PE](data/Detours/x64/mcrit/Detours_2026-09-29_mingw13_x64_detours.dll.mcrit) | [x86 PE](data/Detours/x86/smda/Detours_2026-09-29_mingw13_x86_detours.dll.7z) / [x64 PE](data/Detours/x64/smda/Detours_2026-09-29_mingw13_x64_detours.dll.7z) |
+| Detours | 2026-09-29 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Detours/x86/mcrit/Detours_2026-09-29_msvc143_x86_detours.dll.mcrit) / [x64 PE](data/Detours/x64/mcrit/Detours_2026-09-29_msvc143_x64_detours.dll.mcrit) | [x86 PE](data/Detours/x86/smda/Detours_2026-09-29_msvc143_x86_detours.dll.7z) / [x64 PE](data/Detours/x64/smda/Detours_2026-09-29_msvc143_x64_detours.dll.7z) |
+| Detours | 2026-09-29-nmake | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Detours/x86/mcrit/Detours_2026-09-29-nmake_msvc143_x86_detours.dll.mcrit) / [x64 PE](data/Detours/x64/mcrit/Detours_2026-09-29-nmake_msvc143_x64_detours.dll.mcrit) | [x86 PE](data/Detours/x86/smda/Detours_2026-09-29-nmake_msvc143_x86_detours.dll.7z) / [x64 PE](data/Detours/x64/smda/Detours_2026-09-29-nmake_msvc143_x64_detours.dll.7z) |
+<!-- /generated -->
+
+### jitasm<a id='jitasm'></a>
+
+jitasm is a header-only C++ library that writes x86 and x64 machine code at run time, with a register allocator and If/While control flow, and covers MMX through AVX2, FMA, FMA4 and XOP. Nothing of it exists in a binary until something assembles with it, so the reference data comes from an exerciser (`scripts/corpus/exercisers/jitasm.cpp`) that includes upstream's own `test/test_backend.cpp` unmodified - sixty instruction-family structs - and assembles each, plus seven functions that reach the register allocator, control flow and calling conventions.  
+What survives optimisation was measured rather than assumed: at `-O2` the linked image keeps over 1300 `jitasm::` functions on x86 and over 1500 on x64 with MinGW, and 4877 and 5311 with MSVC, against text-symbol counts of 11634 and 12489 at `-O0`. The library is not a set of one-line inlines, so there is no unoptimised build and the artefacts do not describe an unoptimised consumer. The cost is that the sixty `test_*::naked_main` bodies, the exerciser's `ex_*` and `assemble_one` functions and the `<iostream>` initialiser are filed under this family too - roughly one function in eight with MinGW, one in fourteen with MSVC - recognisable by name and unlikely to match a real sample. MinGW, MSVC and Linux ELF builds share no PicHash at the ten-instruction floor on x64 (4 of 863 between MinGW and ELF on x86). The pin is the last commit of the `hikaru-i/jitasm` mirror, 2018-11-24: the Google Code original is gone and the URL first filed is a 404. New BSD licence.  
+Generated with `scripts/build_corpus.py`; see `data/jitasm/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: jitasm -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| jitasm | 2018-11-24 | GCC 13 (Linux, glibc) | [x86 ELF](data/jitasm/x86/mcrit/jitasm_2018-11-24_gcc13_x86_libjitasm.so.mcrit) / [x64 ELF](data/jitasm/x64/mcrit/jitasm_2018-11-24_gcc13_x64_libjitasm.so.mcrit) | [x86 ELF](data/jitasm/x86/smda/jitasm_2018-11-24_gcc13_x86_libjitasm.so.7z) / [x64 ELF](data/jitasm/x64/smda/jitasm_2018-11-24_gcc13_x64_libjitasm.so.7z) |
+| jitasm | 2018-11-24 | MinGW-w64 GCC 13 | [x86 PE](data/jitasm/x86/mcrit/jitasm_2018-11-24_mingw13_x86_jitasm.dll.mcrit) / [x64 PE](data/jitasm/x64/mcrit/jitasm_2018-11-24_mingw13_x64_jitasm.dll.mcrit) | [x86 PE](data/jitasm/x86/smda/jitasm_2018-11-24_mingw13_x86_jitasm.dll.7z) / [x64 PE](data/jitasm/x64/smda/jitasm_2018-11-24_mingw13_x64_jitasm.dll.7z) |
+| jitasm | 2018-11-24 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/jitasm/x86/mcrit/jitasm_2018-11-24_msvc143_x86_jitasm.dll.mcrit) / [x64 PE](data/jitasm/x64/mcrit/jitasm_2018-11-24_msvc143_x64_jitasm.dll.mcrit) | [x86 PE](data/jitasm/x86/smda/jitasm_2018-11-24_msvc143_x86_jitasm.dll.7z) / [x64 PE](data/jitasm/x64/smda/jitasm_2018-11-24_msvc143_x64_jitasm.dll.7z) |
 <!-- /generated -->
 
 ## String obfuscation

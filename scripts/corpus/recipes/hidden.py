@@ -97,6 +97,17 @@ later: a meaningful share of Hidden.sys's functions are Zydis's and not this
 project's, and because ZYAN_NO_LIBC changes what Zydis compiles, they will
 not necessarily match a Zydis built the ordinary way. The notes say so, and
 this is a good argument for adding Zydis as a family in its own right.
+That family now exists (data/Zydis, issue 45 of the tracker, built by
+zydis_msvc.py among others). Measured against this recipe's Hidden.sys: all
+103 of the functions here carrying a Zydis, Zyan or Zycore name are present
+by name in the MSVC builds of Zydis 3.1.0, with and without ZYAN_NO_LIBC, so the
+vendored copy is 3.1.0 by name; exact PicHash agreement is only 3 of the 91
+that are ten instructions or more (ZydisFormatterBufferGetString,
+ZydisFormatterTokenNext, ZydisIsFeatureEnabled), because the WDK compiles the
+driver with different flags from the user-mode cl line. The 103 are still
+filed under Hidden: moving them out rewrites committed Hidden data and needs
+a name-based removal that refilter, which matches baseline symbol and PicHash
+only, does not do.
 
 x64 only, and not because the project says so. All five projects declare
 Debug|Win32, Debug|x64, Release|Win32 and Release|x64, and nothing in the
@@ -441,7 +452,11 @@ RECIPES = {
               "ZYAN_NO_LIBC, which changes what Zydis compiles, so those "
               "functions will not necessarily agree with a Zydis built the "
               "ordinary way - a reason to carry Zydis as a family of its own "
-              "rather than to read it through this one. The image also "
+              "rather than to read it through this one - which data/Zydis "
+              "now is: all 103 Zydis, Zyan and Zycore functions here are "
+              "present by name in its 3.1.0 MSVC builds, with exact PicHash "
+              "agreement on 3 of the 91 substantial ones, and they remain "
+              "filed under this family. The image also "
               "carries whatever kernel-mode runtime the WDK links in, which "
               "the compiler-runtime filter cannot recognise because the "
               "baseline it measures against is a user-mode ucrt/vcruntime "
