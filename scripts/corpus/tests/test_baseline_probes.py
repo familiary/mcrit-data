@@ -114,6 +114,26 @@ class MsvcProbeRegistrationTest(unittest.TestCase):
         self.assertEqual(registered["probe_md_exe_noincr.c"][0],
                          registered["probe_md_exe.c"][0])
 
+    def test_every_probe_registered_as_an_exe_defines_a_main(self):
+        """LNK1561 otherwise, on every run, for the whole toolchain.
+
+        A probe that will not build is not fatal to the family being built -
+        it costs precision in the filter - but it fails the run and leaves
+        that run's artefacts filtered against less than the corpus was. The
+        first version of this round registered the stdio DLL source as an EXE
+        and did exactly that on both architectures.
+        """
+        for arch in ("x86", "x64"):
+            for _, filename, code, extra in baseline._msvc_probes(
+                    _toolchain(arch=arch)):
+                if "-shared" in extra:
+                    # A DLL needs no entry point of its own: link supplies
+                    # _DllMainCRTStartup, and probe_md.cpp defines no DllMain.
+                    continue
+                self.assertTrue("int main(" in code or "wmain(" in code,
+                                "%s is linked as an EXE and defines no main"
+                                % filename)
+
     def test_no_probe_filename_is_registered_twice(self):
         """Two probes of one name would overwrite each other's source."""
         for arch in ("x86", "x64"):

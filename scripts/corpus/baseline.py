@@ -2777,6 +2777,22 @@ BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 # "the names differ between families". One family dropping stdio would turn it
 # into leakage. The names are Microsoft's either way.
 #
+# Measured on the runner, this probe emits exactly those bodies: printf at
+# PicHash 121597203084696572 (25 instructions) on x64 and 14739679411554417350
+# (17) on x86, vfprintf at 18319647447110778407 (19) and 15763949986211485148
+# (10), vprintf at 3515039425838154103 (21) and 7807335352819369265 (13) -
+# every one of them the hash the committed artefacts carry. Rebuilt, LuaJIT
+# drops printf, vprintf and vfprintf, MemoryModule and q3vm drop printf, and
+# fflush and fputs go with them as thunks.
+#
+# What it does not reach is the rest of the surface LuaJIT instantiates. Its
+# images carry the whole UCRT inline set - printf_s, wprintf, wprintf_s,
+# _printf_p and _wprintf_p share printf's body, and vfprintf_s, vfwprintf_s,
+# vfscanf, vfwscanf, _vfprintf_p and _vfwprintf_p share vfprintf's - so those
+# hashes stay in the cross-family census under LuaJIT's name until a probe
+# calls them too. That is forty-odd names, half of them wide, and it is a
+# measurement of its own rather than an addition to this one.
+#
 # Narrow only, and separate from the wide half for the reason
 # _PROBE_MSVCRT_PRINTF gives: a wrong guess about vswprintf's two UCRT
 # declarations must not cost printf. puts and fputs are in here as well
@@ -2827,6 +2843,24 @@ __declspec(dllexport) int probe_msvcrt_stdio_streams(const char *text)
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 """
 
+# The EXE registration of the same source, derived the way _PROBE_EXE is
+# derived from _PROBE_DLL rather than registered as a second entry point: an
+# EXE needs a main, and the first version of this round registered the DLL
+# source as an EXE and got LNK1561 out of every run - which probe_failures
+# reported and failed the run for, which is what it is for.
+#
+# It is coverage rather than a fix, and the measurement says so: the wrapper
+# bodies are compiled from this translation unit, and probe_md.c and
+# probe_md_exe.c give fprintf the same PicHash (13953233625706420610 on x64),
+# so DLL and EXE do not differ for them. What the EXE adds is the startup set
+# beside them.
+_PROBE_MSVCRT_STDIO_EXE = _PROBE_MSVCRT_STDIO.replace(
+    "BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }",
+    "int main(int argc, char **argv)\n"
+    "{\n"
+    "    return probe_msvcrt_stdio_streams(argv[0]) + argc;\n"
+    "}")
+
 # The EXE form of the probe above, and the one thing in this file that is
 # shaped by what it has to match rather than by what it has to call.
 #
@@ -2839,31 +2873,46 @@ BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 # dozen more - so what the existing probe_md_exe.c registration measures is
 # the right object set, from the right CRT flavour, and still not this body.
 #
-# Two things are different between that probe and every EXE this corpus
-# builds, and this probe removes both rather than guessing which one matters.
+# What the name does in the baseline turned out to be the useful question, and
+# it was measured rather than guessed: probe_md_exe.c emits
+# __scrt_common_main_seh at 95 instructions, PicHash 470324384558745095, which
+# is none of the three bodies in the corpus. The name was in the baseline all
+# along and only the body disagreed, so the filter - symbol *and* PicHash -
+# correctly kept the artefacts' copies.
 #
-#   * Its main is a plain console main that prints, which is what Lua's,
+# The cause is the link line, and the probe above proves it by elimination: the
+# same translation unit linked /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF emits
+# 11855707620856894801 at 99 instructions, which is exactly the leaking body,
+# while the incrementally linked registration beside it still emits 95. Every
+# MSVC recipe here passes /INCREMENTAL:NO and no probe did: link /DEBUG implies
+# /INCREMENTAL, and this file's own note on that flag records what it does to
+# an image - every call leaves through a table of five-byte jump thunks.
+# __scrt_common_main_seh is the only function in the startup chain carrying an
+# __except, so it is also the only one whose recovered extent follows the
+# layout rather than the bytes, which is why its neighbours matched and it did
+# not. On x86 the two links agree, at 14520804967954049952 and 112
+# instructions, and no x86 artefact carries the name - consistent with the
+# funclet being an x64 shape.
+#
+# Two registrations rather than one, because two things differed and both are
+# worth having measured:
+#
+#   * This source is a plain console main that prints, which is what Lua's,
 #     bzip2's and MemoryModule's are. exe_main.obj's invoke_main() is inlined
 #     into __scrt_common_main_seh and calls main there, so main is the one
 #     caller this body has, and probe_md_exe.c's main calls a 200-line
 #     exported function instead.
-#   * It links /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF, which every MSVC recipe
-#     here passes and which no probe passed before. link /DEBUG implies
-#     /INCREMENTAL, so every probe image in this file is incrementally linked
-#     while no artefact is - and this file's own note on /INCREMENTAL:NO
-#     records what that does to an image: every call leaves through a table of
-#     five-byte jump thunks. __scrt_common_main_seh is the only function in
-#     the startup chain carrying an __except, so it is also the only one whose
-#     recovered extent can follow the layout rather than the bytes, which is
-#     the one explanation consistent with its neighbours all matching.
+#   * probe_md_exe_noincr.c is probe_md_exe.c's source relinked, so the whole
+#     broad EXE surface - 237 named functions on x64 against 351 from the
+#     incremental link - is measured non-incrementally too.
 #
-# Neither of those can lose anything: crt_glue maps a name to a set of
-# PicHashes, so a registration that measures the same body twice adds nothing
-# and one that measures a second body adds a member.
+# Neither can lose anything: crt_glue maps a name to a set of PicHashes, so a
+# registration that measures the same body twice adds nothing and one that
+# measures a second body adds a member.
 #
-# Whether it is enough is a measurement that needs MSVC in front of it. If the
-# body still does not match, the next thing to read is which PicHash this
-# probe does produce for the name, against the three in the committed reports.
+# What stays is the 98-instruction body in q3vm, which builds /GL, and the
+# 109-instruction one in CallObfuscator, which is wmain's startup object. Both
+# are single-family and neither has ever been leakage.
 _PROBE_MSVCRT_MAIN = """\
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <windows.h>
@@ -2983,13 +3032,13 @@ def _msvc_probes(toolchain):
         (toolchain.cc, "probe_msvcrt_printf_wide.c", _PROBE_MSVCRT_PRINTF_WIDE,
          ["-shared", "/MD"]),
         # Sixth round: the printf half of stdio, and the entry-point wrapper.
-        # Both sources' notes say what each is for; the registrations are
-        # three because the DLL and the EXE are different object sets here as
-        # everywhere else in this file, and because the EXE pair is also what
-        # tests the link line rather than the translation unit.
+        # Both sources' notes say what each is for; the registrations are four
+        # because the DLL and the EXE are different object sets here as
+        # everywhere else in this file, and because the EXE pair is what
+        # measures the link line rather than the translation unit.
         (toolchain.cc, "probe_msvcrt_stdio.c", _PROBE_MSVCRT_STDIO,
          ["-shared", "/MD"]),
-        (toolchain.cc, "probe_msvcrt_stdio_exe.c", _PROBE_MSVCRT_STDIO,
+        (toolchain.cc, "probe_msvcrt_stdio_exe.c", _PROBE_MSVCRT_STDIO_EXE,
          ["/MD"]),
         (toolchain.cc, "probe_msvcrt_main.c", _PROBE_MSVCRT_MAIN,
          ["/MD"] + _MSVC_RECIPE_LINK),
