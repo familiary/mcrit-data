@@ -687,6 +687,7 @@ Generated with `scripts/build_corpus.py`; see `data/TinyXML/provenance.json` for
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | TinyXML | 2.6.2 | MinGW-w64 GCC 13 | [x86 PE](data/TinyXML/x86/mcrit/TinyXML_2.6.2_mingw13_x86_tinyxml.dll.mcrit) / [x64 PE](data/TinyXML/x64/mcrit/TinyXML_2.6.2_mingw13_x64_tinyxml.dll.mcrit) | [x86 PE](data/TinyXML/x86/smda/TinyXML_2.6.2_mingw13_x86_tinyxml.dll.7z) / [x64 PE](data/TinyXML/x64/smda/TinyXML_2.6.2_mingw13_x64_tinyxml.dll.7z) |
+| TinyXML | 2.6.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TinyXML/x86/mcrit/TinyXML_2.6.2_msvc143_x86_tinyxml.dll.mcrit) / [x64 PE](data/TinyXML/x64/mcrit/TinyXML_2.6.2_msvc143_x64_tinyxml.dll.mcrit) | [x86 PE](data/TinyXML/x86/smda/TinyXML_2.6.2_msvc143_x86_tinyxml.dll.7z) / [x64 PE](data/TinyXML/x64/smda/TinyXML_2.6.2_msvc143_x64_tinyxml.dll.7z) |
 <!-- /generated -->
 
 ### TinyXML2<a id='tinyxml2'></a>
@@ -699,8 +700,11 @@ Generated with `scripts/build_corpus.py`; see `data/TinyXML2/provenance.json` fo
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | TinyXML2 | 6.2.0 | MinGW-w64 GCC 13 | [x86 PE](data/TinyXML2/x86/mcrit/TinyXML2_6.2.0_mingw13_x86_tinyxml2.dll.mcrit) / [x64 PE](data/TinyXML2/x64/mcrit/TinyXML2_6.2.0_mingw13_x64_tinyxml2.dll.mcrit) | [x86 PE](data/TinyXML2/x86/smda/TinyXML2_6.2.0_mingw13_x86_tinyxml2.dll.7z) / [x64 PE](data/TinyXML2/x64/smda/TinyXML2_6.2.0_mingw13_x64_tinyxml2.dll.7z) |
+| TinyXML2 | 6.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TinyXML2/x86/mcrit/TinyXML2_6.2.0_msvc143_x86_tinyxml2.dll.mcrit) / [x64 PE](data/TinyXML2/x64/mcrit/TinyXML2_6.2.0_msvc143_x64_tinyxml2.dll.mcrit) | [x86 PE](data/TinyXML2/x86/smda/TinyXML2_6.2.0_msvc143_x86_tinyxml2.dll.7z) / [x64 PE](data/TinyXML2/x64/smda/TinyXML2_6.2.0_msvc143_x64_tinyxml2.dll.7z) |
 | TinyXML2 | 9.0.0 | MinGW-w64 GCC 13 | [x86 PE](data/TinyXML2/x86/mcrit/TinyXML2_9.0.0_mingw13_x86_tinyxml2.dll.mcrit) / [x64 PE](data/TinyXML2/x64/mcrit/TinyXML2_9.0.0_mingw13_x64_tinyxml2.dll.mcrit) | [x86 PE](data/TinyXML2/x86/smda/TinyXML2_9.0.0_mingw13_x86_tinyxml2.dll.7z) / [x64 PE](data/TinyXML2/x64/smda/TinyXML2_9.0.0_mingw13_x64_tinyxml2.dll.7z) |
+| TinyXML2 | 9.0.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TinyXML2/x86/mcrit/TinyXML2_9.0.0_msvc143_x86_tinyxml2.dll.mcrit) / [x64 PE](data/TinyXML2/x64/mcrit/TinyXML2_9.0.0_msvc143_x64_tinyxml2.dll.mcrit) | [x86 PE](data/TinyXML2/x86/smda/TinyXML2_9.0.0_msvc143_x86_tinyxml2.dll.7z) / [x64 PE](data/TinyXML2/x64/smda/TinyXML2_9.0.0_msvc143_x64_tinyxml2.dll.7z) |
 | TinyXML2 | 11.0.0 | MinGW-w64 GCC 13 | [x86 PE](data/TinyXML2/x86/mcrit/TinyXML2_11.0.0_mingw13_x86_tinyxml2.dll.mcrit) / [x64 PE](data/TinyXML2/x64/mcrit/TinyXML2_11.0.0_mingw13_x64_tinyxml2.dll.mcrit) | [x86 PE](data/TinyXML2/x86/smda/TinyXML2_11.0.0_mingw13_x86_tinyxml2.dll.7z) / [x64 PE](data/TinyXML2/x64/smda/TinyXML2_11.0.0_mingw13_x64_tinyxml2.dll.7z) |
+| TinyXML2 | 11.0.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TinyXML2/x86/mcrit/TinyXML2_11.0.0_msvc143_x86_tinyxml2.dll.mcrit) / [x64 PE](data/TinyXML2/x64/mcrit/TinyXML2_11.0.0_msvc143_x64_tinyxml2.dll.mcrit) | [x86 PE](data/TinyXML2/x86/smda/TinyXML2_11.0.0_msvc143_x86_tinyxml2.dll.7z) / [x64 PE](data/TinyXML2/x64/smda/TinyXML2_11.0.0_msvc143_x64_tinyxml2.dll.7z) |
 <!-- /generated -->
 
 ## Runtimes

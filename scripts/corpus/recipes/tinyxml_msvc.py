@@ -48,7 +48,53 @@ Link line as in bzip2_msvc.py: /DLL /DEBUG /Brepro /INCREMENTAL:NO
 /OPT:NOREF /OPT:NOICF, no /GL and no /LTCG, the PDB beside the DLL so SMDA can
 name the non-exported functions.
 
-PLACEHOLDER_MEASUREMENTS
+Read back from the runner's build output (windows-2022, MSVC 19.44, v143):
+the TinyXML2 builds link with no warning that matters, and the TinyXML v1 x86
+link first failed with LNK2001 on nine inline-CRT symbols (see the .def note
+above), fixed by the C++-only filter; x64 had linked cleanly either way.
+
+Counted on the runner, kept + removed = image total (removed is the
+baseline's compiler-runtime filter):
+
+                    kept    removed    image
+    TinyXML 2.6.2   x86  266   166   432      x64  321   173   494
+    TinyXML2 6.2.0  x86  471   177   648      x64  478   183   661
+    TinyXML2 9.0.0  x86  491   177   668      x64  500   181   681
+    TinyXML2 11.0.0 x86  493   177   670      x64  502   181   683
+
+What the baseline removed is MSVC runtime glue (DllMain, _DllMainCRTStartup,
+the __scrt_* and __castguard_* families, __GSHandlerCheck and so on). What
+survives, by name and PicHash: no unnamed function in any artefact. The named
+non-TinyXML survivors are the UCRT's inline stdio wrappers, compiled into the
+DLL because the headers define them inline, plus import thunks:
+  - one-instruction thunks, all PicHash 1253497258561142223: fopen_s, ferror,
+    fputc, fgetc, fwrite, isalpha, isdigit, isspace, isalnum, tolower, atof,
+    atoi, __stdio_common_vsnprintf_s and, at x64, _fseeki64/_ftelli64 (the
+    x86 names carry a leading underscore). Below the 10-instruction floor.
+  - 10+ instruction wrappers: vsnprintf_s / _vsnprintf_s (x86 4459759386411083615,
+    x64 17148774425584255660), _vsnprintf_s_l (x86 5041835696237107364, x64
+    1498956780003838507), _vsscanf_s_l (x86 8059414595489697058, x64
+    2697921591418893498), sscanf_s (x86 9435645412979247388, x64
+    12704080054257707107), vsscanf_s (x86 9481955067755469391, x64
+    12233240881603539681), and in TinyXML2 printf (x86 14739679411554417350,
+    x64 121597203084696572) and vfprintf (x86 15763949986211485148, x64
+    18319647447110778407); in TinyXML v1 the _snprintf_s<N> templates
+    (N=32/64/256) and three operator+ (TiXmlString concatenation, real
+    project code, 33-97 instructions). Reported, not patched: the baseline is
+    shared tooling.
+
+MinGW against MSVC, PicHash overlap over functions of 10+ instructions (same
+version, same arch; mingw / msvc counts):
+
+    TinyXML 2.6.2   x86 134 / 152   x64 115 / 153     shared 0 and 0
+    TinyXML2 6.2.0  x86 171 / 209   x64 146 / 216     shared 0 and 0
+    TinyXML2 9.0.0  x86 179 / 218   x64 153 / 225     shared 0 and 0
+    TinyXML2 11.0.0 x86 181 / 220   x64 156 / 227     shared 0 and 0
+
+The pair shares no exact function body, which is the case for holding the
+MSVC axis at all. validate --deep (these families plus cJSON, lz4, q3vm,
+aPLib, bzip2): 0 problems apart from README links to families outside the
+sparse checkout; no leakage.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
