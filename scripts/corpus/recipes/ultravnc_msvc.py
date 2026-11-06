@@ -16,7 +16,10 @@ Versions. "1.2.13" cannot be resolved to a commit: the upstream history
 until commit b4034d51 ("1214", 2017-05-13), which is 1.2.1.4. No commit
 carries 1.2.1.3, so the read is "1.2.1.3, which has no source state of its
 own" and the nearest labelled state is pinned: 1.2.1.4. That is a judgement,
-not an evidenced match. The current main (1.8.3.2, a different build system
+not an evidenced match. The 1.8.2.9 release (1.8.3.0 and later cannot be
+fetched by this pipeline: eab6d20a moved the 3rdparty/noVNC submodule to
+commit b493d9bb, which noVNC no longer serves, and fetch.py updates
+submodules) (a different build system
 altogether) is built as well, because it is what an analyst meets today; its
 shape is in the second recipe below.
 
@@ -69,6 +72,22 @@ def _props(extra_link=""):
         '"')
 
 
+# winvnc.sln lists two installer projects both named "UltraVnc" (.vdproj),
+# which MSBuild refuses (MSB5004). A solution filter naming only the .vcxproj
+# entries of the solution avoids loading them; it is generated, not edited in.
+_SLNF = (
+    'python -c "'
+    r"import re,json;"
+    r"s=open('winvnc/winvnc.sln').read();"
+    r"p=re.findall(r'[\w\\.\-]+\.vcxproj',s);"
+    r"json.dump(dict(solution=dict(path='winvnc\\winvnc.sln',projects=p)),"
+    r"open('winvnc/winvnc.slnf','w'))"
+    '"')
+
+# libjpeg-turbo-win's SIMD sources are assembled with nasm (the project adds
+# C:\Program Files\nasm to ExecutablePath); the runner has none (exit 9009).
+_NASM = 'choco install nasm -y --no-progress'
+
 _NAMES = ("vncviewer", "winvnc")
 _LOCATE = (
     'python -c "'
@@ -83,7 +102,7 @@ _LOCATE = (
 
 _MSBUILD = ('msbuild %s /t:%s /p:Configuration=Release '
             '/p:Platform={msbuild_platform} /p:PlatformToolset=v143 '
-            '/p:WholeProgramOptimization=false /p:LinkIncremental=false '
+            '/p:WindowsTargetPlatformVersion=10.0 /p:WholeProgramOptimization=false /p:LinkIncremental=false '
             '/p:PostBuildEventUseInBuild=false %s'
             '/p:ForceImportBeforeCppTargets=%%CD%%\\msvcprops.props '
             '/m /v:minimal')
@@ -102,7 +121,7 @@ _OLD_FLAGS = ("Release configuration of the 1.2.1.4 vcxproj files: "
               "forced by this recipe over upstream's /OPT:REF; /PROFILE off; "
               "post-build signing disabled")
 
-_NEW_FLAGS = ("Release configuration of the 1.8.3.2 vcxproj files, platform "
+_NEW_FLAGS = ("Release configuration of the 1.8.2.9 vcxproj files, platform "
               "toolset v143 in place of v142; dependencies from vcpkg "
               "(manifest mode) as the static-library, dynamic-CRT triplet; "
               "/MT replaced by /MD, /GL and /LTCG off; /DEBUG /Brepro "
@@ -120,9 +139,11 @@ RECIPES = {
                       git_ref="b4034d51163fefd9935691a11ec4d3597d5c571f"),
         build=[
             BuildStep(_props()),
+            BuildStep(_NASM, allow_failure=True),
+            BuildStep(_SLNF),
             BuildStep(_MSBUILD % ("vncviewer\\vncviewer.sln", "vncviewer", ""),
                       allow_failure=True),
-            BuildStep(_MSBUILD % ("winvnc\\winvnc.sln", "winvnc", ""),
+            BuildStep(_MSBUILD % ("winvnc\\winvnc.slnf", "winvnc", ""),
                       allow_failure=True),
             BuildStep(_LOCATE),
         ],
@@ -144,13 +165,13 @@ RECIPES = {
               "the UltraVNC family. The CRT is imported (/MD) and stays "
               "attributed to data/MSVC.",
     ),
-    "UltraVNC_1.8.3.2_msvc": Recipe(
+    "UltraVNC_1.8.2.9_msvc": Recipe(
         family="UltraVNC",
-        version="1.8.3.2",
+        version="1.8.2.9",
         upstream="https://github.com/ultravnc/UltraVNC",
         license="GPL-3.0-or-later",
         source=Source(git_url="https://github.com/ultravnc/UltraVNC.git",
-                      git_ref="c757708e83b6c8249a1cdc9b9c0427c4e72f1c21"),
+                      git_ref="97a077cc5b069c6b2ff87f3131d7d10b9a9d7122"),
         build=[
             BuildStep(_props(" /DEPENDENTLOADFLAG:0x800")),
             BuildStep(_VCPKG_INTEGRATE, allow_failure=True),
@@ -172,7 +193,7 @@ RECIPES = {
         ],
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags=_NEW_FLAGS,
-        notes="Commit c757708e (main, 2026-11-02), version 1.8.3.2. "
+        notes="Commit 97a077cc (2026-09-06), version 1.8.2.9. "
               "Dependencies come from vcpkg per vcpkg.json: zlib, zstd, "
               "libjpeg-turbo, liblzma, libsodium and minizip-ng, statically "
               "linked into the exes, so those libraries' functions are "

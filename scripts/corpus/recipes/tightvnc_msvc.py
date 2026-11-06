@@ -75,13 +75,13 @@ _LOCATE = (
 
 _MSBUILD = ('msbuild %s\\%s.vcxproj /p:Configuration=Release '
             '/p:Platform={msbuild_platform} /p:PlatformToolset=v143 '
-            '/p:SolutionDir=%%CD%%\\ /p:WholeProgramOptimization=false '
+            '/p:WindowsTargetPlatformVersion=10.0 /p:SolutionDir=%%CD%%\\ /p:WholeProgramOptimization=false '
             '/p:LinkIncremental=false '
             '/p:ForceImportBeforeCppTargets=%%CD%%\\msvcprops.props '
             '/m /v:minimal')
 
 _FLAGS = ("Release configuration of the 2.8 vcxproj files: /O2 (MaxSpeed) "
-          "/Oi /Ot /Gy, platform toolset v143 in place of v141_xp; /MT "
+          "/Oi /Ot /Gy, platform toolset v143 in place of v141_xp and Windows SDK 10.0 in place of 8.1; /MT "
           "replaced by /MD, WholeProgramOptimization off (no /GL, no "
           "/LTCG); /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at "
           "link, forced by this recipe over upstream's /OPT:REF /OPT:ICF")
