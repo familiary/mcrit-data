@@ -70,6 +70,7 @@ RECIPES = {
     "MIRACL_2019-08-21_msvc": _recipe(
         "msvc", ["msvc_x86", "msvc_x64"], "dll",
         "/O2 /MD /Zi /GL-; /DLL /NOENTRY /DEBUG /OPT:NOREF /OPT:NOICF "
-        "/Brepro /INCREMENTAL:NO; explicit ucrt.lib and kernel32.lib at "
+        "/Brepro /INCREMENTAL:NO; explicit vcruntime.lib, ucrt.lib and "
+        "kernel32.lib at "
         "link; upstream MSVC C units and matching mirdef/mrmuldv variants"),
 }

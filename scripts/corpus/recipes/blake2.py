@@ -56,8 +56,8 @@ def _recipe(mode, flavor, toolchains):
              "upstream sse/makefile -O3; SSE2 enabled with compiler flags")
     if flavor == "msvc":
         flags += "; /O2 /MD /Zi /GL-; /DLL /NOENTRY /DEBUG /OPT:NOREF " \
-                 "/OPT:NOICF /Brepro /INCREMENTAL:NO; explicit ucrt.lib " \
-                 "and kernel32.lib at link"
+                 "/OPT:NOICF /Brepro /INCREMENTAL:NO; explicit vcruntime.lib, " \
+                 "ucrt.lib and kernel32.lib at link"
     elif flavor == "linux":
         flags += "; -g -fPIC -shared"
     else:

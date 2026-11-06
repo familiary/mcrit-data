@@ -54,7 +54,8 @@ def build(args: argparse.Namespace) -> Path:
         _run(["link", "/DLL", "/NOENTRY", "/DEBUG", "/OPT:NOREF",
               "/OPT:NOICF", "/Brepro", "/INCREMENTAL:NO",
               "/OUT:" + str(output), "/PDB:" + str(linker_pdb),
-              *[str(obj) for obj in objects], "ucrt.lib", "kernel32.lib"], root)
+              *[str(obj) for obj in objects], "vcruntime.lib", "ucrt.lib",
+              "kernel32.lib"], root)
         return output
 
     compiler = shlex.split(args.cc)

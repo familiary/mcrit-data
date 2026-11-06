@@ -50,7 +50,7 @@ def _recipe(flavor, toolchains):
     flags = ("/O2 /MD /Zi /GL-; /DLL /NOENTRY /DEBUG /OPT:NOREF "
              "/OPT:NOICF /Brepro /INCREMENTAL:NO; program_exec.c uses a "
              "forced include to normalize its MSVC architecture checks; "
-             "explicit ucrt.lib and kernel32.lib at link" if flavor == "msvc" else
+             "explicit vcruntime.lib, ucrt.lib and kernel32.lib at link" if flavor == "msvc" else
              "-O2 -g -fPIC -std=gnu11; HASHX_SIZE=8; "
              "EQUIX_STATIC=1; HASHX_STATIC=1")
     if flavor == "mingw":
