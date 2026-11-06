@@ -1,0 +1,140 @@
+{
+  "ntpd_4.2.2_gcc14_x64_ntpd": {
+    "architecture": "x64",
+    "build_flags": "-O2 -m32/-m64 -fcommon -fvisibility=hidden -Wno-error=implicit-function-declaration -Wno-error=incompatible-pointer-types -Wno-error=int-conversion --without-crypto --without-ntpsnmpd; default supported reference clocks",
+    "built_artifact": "ntpd/ntpd",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "ntpd",
+    "family": "ntpd",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "NTP licence (upstream COPYRIGHT); bundled support licences in source",
+    "mcrit": "data/ntpd/x64/mcrit/ntpd_4.2.2_gcc14_x64_ntpd.mcrit",
+    "notes": "Legitimate daemon baseline: matches clean ntpd installations and is not an indicator of compromise. Issue #57 supplies no version; these are chosen era references, not claims about Turla's build. Only ntpd is harvested, including the libntp, libparse and bundled support objects its link reaches. Default supported clocks retained. OpenSSL and SNMP integration disabled. System libc and libm are dynamic. -fcommon and warning flags accommodate legacy configure probes on GCC 14 without changing upstream source.",
+    "num_functions": 635,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "_start",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "3b5c65d1355a04c0ae685fbea374b2acdc0d56ff7f57d7994842baa3ead65497",
+    "smda": "data/ntpd/x64/smda/ntpd_4.2.2_gcc14_x64_ntpd.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "ntp-4.2.2.tar.gz",
+      "sha256": "fb392fa5f1a753043981e661b09c6d0249050ff903078ed215a568952d76befc",
+      "url": "https://archive.ntp.org/ntp4/4.2.2/ntp-4.2.2.tar.gz"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://www.ntp.org/; https://github.com/ntp-project/ntp",
+    "version": "4.2.2"
+  },
+  "ntpd_4.2.2_gcc14_x86_ntpd": {
+    "architecture": "x86",
+    "build_flags": "-O2 -m32/-m64 -fcommon -fvisibility=hidden -Wno-error=implicit-function-declaration -Wno-error=incompatible-pointer-types -Wno-error=int-conversion --without-crypto --without-ntpsnmpd; default supported reference clocks",
+    "built_artifact": "ntpd/ntpd",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "ntpd",
+    "family": "ntpd",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "NTP licence (upstream COPYRIGHT); bundled support licences in source",
+    "mcrit": "data/ntpd/x86/mcrit/ntpd_4.2.2_gcc14_x86_ntpd.mcrit",
+    "notes": "Legitimate daemon baseline: matches clean ntpd installations and is not an indicator of compromise. Issue #57 supplies no version; these are chosen era references, not claims about Turla's build. Only ntpd is harvested, including the libntp, libparse and bundled support objects its link reaches. Default supported clocks retained. OpenSSL and SNMP integration disabled. System libc and libm are dynamic. -fcommon and warning flags accommodate legacy configure probes on GCC 14 without changing upstream source.",
+    "num_functions": 766,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.cx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "__x86.get_pc_thunk.si",
+      "frame_dummy"
+    ],
+    "sha256": "b27de69be2a71e44ad1118ea51d1d4e750bee13078887bbe2c2f22ac349c7245",
+    "smda": "data/ntpd/x86/smda/ntpd_4.2.2_gcc14_x86_ntpd.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "ntp-4.2.2.tar.gz",
+      "sha256": "fb392fa5f1a753043981e661b09c6d0249050ff903078ed215a568952d76befc",
+      "url": "https://archive.ntp.org/ntp4/4.2.2/ntp-4.2.2.tar.gz"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://www.ntp.org/; https://github.com/ntp-project/ntp",
+    "version": "4.2.2"
+  },
+  "ntpd_4.2.8p18_gcc14_x64_ntpd": {
+    "architecture": "x64",
+    "build_flags": "-O2 -m32/-m64 -fcommon -fvisibility=hidden -Wno-error=implicit-function-declaration -Wno-error=incompatible-pointer-types -Wno-error=int-conversion --without-crypto --without-ntpsnmpd; default supported reference clocks; --with-yielding-select=yes",
+    "built_artifact": "ntpd/ntpd",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "ntpd",
+    "family": "ntpd",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "NTP licence (upstream COPYRIGHT); bundled support licences in source",
+    "mcrit": "data/ntpd/x64/mcrit/ntpd_4.2.8p18_gcc14_x64_ntpd.mcrit",
+    "notes": "Legitimate daemon baseline: matches clean ntpd installations and is not an indicator of compromise. Issue #57 supplies no version; these are chosen era references, not claims about Turla's build. Only ntpd is harvested, including the libntp, libparse and bundled support objects its link reaches. Default supported clocks retained. OpenSSL and SNMP integration disabled. System libc and libm are dynamic. -fcommon and warning flags accommodate legacy configure probes on GCC 14 without changing upstream source.",
+    "num_functions": 1173,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_fini",
+      "_init",
+      "_start",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "e26da4b6c4063af626d8614692ceb1294d83625fe904c88e9251048689c583a5",
+    "smda": "data/ntpd/x64/smda/ntpd_4.2.8p18_gcc14_x64_ntpd.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "ntp-4.2.8p18.tar.gz",
+      "sha256": "cf84c5f3fb1a295284942624d823fffa634144e096cfc4f9969ac98ef5f468e5",
+      "url": "https://archive.ntp.org/ntp4/ntp-4.2.8p18.tar.gz"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://www.ntp.org/; https://github.com/ntp-project/ntp",
+    "version": "4.2.8p18"
+  },
+  "ntpd_4.2.8p18_gcc14_x86_ntpd": {
+    "architecture": "x86",
+    "build_flags": "-O2 -m32/-m64 -fcommon -fvisibility=hidden -Wno-error=implicit-function-declaration -Wno-error=incompatible-pointer-types -Wno-error=int-conversion --without-crypto --without-ntpsnmpd; default supported reference clocks; --with-yielding-select=yes",
+    "built_artifact": "ntpd/ntpd",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "ntpd",
+    "family": "ntpd",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "NTP licence (upstream COPYRIGHT); bundled support licences in source",
+    "mcrit": "data/ntpd/x86/mcrit/ntpd_4.2.8p18_gcc14_x86_ntpd.mcrit",
+    "notes": "Legitimate daemon baseline: matches clean ntpd installations and is not an indicator of compromise. Issue #57 supplies no version; these are chosen era references, not claims about Turla's build. Only ntpd is harvested, including the libntp, libparse and bundled support objects its link reaches. Default supported clocks retained. OpenSSL and SNMP integration disabled. System libc and libm are dynamic. -fcommon and warning flags accommodate legacy configure probes on GCC 14 without changing upstream source.",
+    "num_functions": 1638,
+    "removed_runtime_functions": [
+      "__divmoddi4",
+      "__udivdi3",
+      "__udivmoddi4",
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.cx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "__x86.get_pc_thunk.si",
+      "frame_dummy"
+    ],
+    "sha256": "4902582051aff52383ca73a8879842aa40f52fe54bf168a809fb7d9bba47e519",
+    "smda": "data/ntpd/x86/smda/ntpd_4.2.8p18_gcc14_x86_ntpd.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "ntp-4.2.8p18.tar.gz",
+      "sha256": "cf84c5f3fb1a295284942624d823fffa634144e096cfc4f9969ac98ef5f468e5",
+      "url": "https://archive.ntp.org/ntp4/ntp-4.2.8p18.tar.gz"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://www.ntp.org/; https://github.com/ntp-project/ntp",
+    "version": "4.2.8p18"
+  }
+}
