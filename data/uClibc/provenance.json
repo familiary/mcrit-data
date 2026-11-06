@@ -1,0 +1,194 @@
+{
+  "uClibc_0.9.30.1_gcc14_x64_libc.elf": {
+    "architecture": "x64",
+    "build_flags": "Prebuilt static libc; host link only: -nostdlib -no-pie -Wl,-e,0; --whole-archive; dynamic libgcc_s",
+    "built_artifact": "libc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "mini-native-x86_64.tar.bz2",
+        "sha256": "38203f01f4dceff5c7128953b5ec50478cf0a1395a8c162223b150b53e338f41",
+        "url": "https://uclibc.org/downloads/binaries/0.9.30.1/mini-native-x86_64.tar.bz2"
+      }
+    },
+    "family": "uClibc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "LGPL-2.1-or-later",
+    "mcrit": "data/uClibc/x64/mcrit/uClibc_0.9.30.1_gcc14_x64_libc.elf.mcrit",
+    "notes": "Shipped libc.a, not rebuilt. The host compiler in provenance only drives the final link. zlib supplies a staging directory and none of it is linked. No startup or driver, entry zero; not runnable. Dynamic libgcc_s keeps compiler arithmetic bodies out. The runtime filter is off because libc is the subject. uClibc.org mini-native 0.9.30.1, GCC 4.1.2 producer.",
+    "num_functions": 1324,
+    "sha256": "b1774befa71c1a1eab10fa3ef22b1df93058ed113aef84539a563d19da044663",
+    "smda": "data/uClibc/x64/smda/uClibc_0.9.30.1_gcc14_x64_libc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://uclibc.org/",
+    "version": "0.9.30.1"
+  },
+  "uClibc_0.9.30.1_gcc14_x86_libc.elf": {
+    "architecture": "x86",
+    "build_flags": "Prebuilt static libc; host link only: -nostdlib -no-pie -Wl,-e,0; --whole-archive; dynamic libgcc_s",
+    "built_artifact": "libc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "mini-native-i686.tar.bz2",
+        "sha256": "37172fec0d0b723bd51990662d5ccf98c0ba386427781a292a09ab7b212d432f",
+        "url": "https://uclibc.org/downloads/binaries/0.9.30.1/mini-native-i686.tar.bz2"
+      }
+    },
+    "family": "uClibc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "LGPL-2.1-or-later",
+    "mcrit": "data/uClibc/x86/mcrit/uClibc_0.9.30.1_gcc14_x86_libc.elf.mcrit",
+    "notes": "Shipped libc.a, not rebuilt. The host compiler in provenance only drives the final link. zlib supplies a staging directory and none of it is linked. No startup or driver, entry zero; not runnable. Dynamic libgcc_s keeps compiler arithmetic bodies out. The runtime filter is off because libc is the subject. uClibc.org mini-native 0.9.30.1, GCC 4.1.2 producer.",
+    "num_functions": 1316,
+    "sha256": "e818f41658bb38c8f6d63b391d781786e3dbf19c4bafbfd57ad621b04e7c69ba",
+    "smda": "data/uClibc/x86/smda/uClibc_0.9.30.1_gcc14_x86_libc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://uclibc.org/",
+    "version": "0.9.30.1"
+  },
+  "uClibc_0.9.33.2-aboriginal1.2.0_gcc14_x64_libc.elf": {
+    "architecture": "x64",
+    "build_flags": "Prebuilt uClibc 0.9.33.2, Aboriginal 1.2.0; host link only: -nostdlib -no-pie -Wl,-e,0 -Wl,--whole-archive; dynamic libgcc_s",
+    "built_artifact": "libc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "cross-compiler-x86_64.tar.bz2",
+        "sha256": "7e165cb77259e9266baac216f30974b55cb46434adf821e012b4db13c60cdd55",
+        "url": "https://web.archive.org/web/20171205071925id_/http://landley.net/aboriginal/downloads/old/binaries/1.2.0/cross-compiler-x86_64.tar.bz2"
+      }
+    },
+    "family": "uClibc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "LGPL-2.1-or-later",
+    "mcrit": "data/uClibc/x64/mcrit/uClibc_0.9.33.2-aboriginal1.2.0_gcc14_x64_libc.elf.mcrit",
+    "notes": "Original static libc.a from Aboriginal Linux 1.2.0, GCC 4.2.1 producer. Not rebuilt; the host compiler is only the link driver. All archive members retained. No startup or driver, entry zero; not runnable. Compiler arithmetic uses dynamic libgcc_s. Runtime filtering disabled because libc is the subject. zlib is an unpackable staging directory only.",
+    "num_functions": 1371,
+    "sha256": "e74072d46db3743bece119da5ccdb0129c72423794d28daa6c404a062c433355",
+    "smda": "data/uClibc/x64/smda/uClibc_0.9.33.2-aboriginal1.2.0_gcc14_x64_libc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://uclibc.org/; https://landley.net/aboriginal/",
+    "version": "0.9.33.2-aboriginal1.2.0"
+  },
+  "uClibc_0.9.33.2-aboriginal1.2.0_gcc14_x86_libc.elf": {
+    "architecture": "x86",
+    "build_flags": "Prebuilt uClibc 0.9.33.2, Aboriginal 1.2.0; host link only: -nostdlib -no-pie -Wl,-e,0 -Wl,--whole-archive; dynamic libgcc_s",
+    "built_artifact": "libc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "cross-compiler-i686.tar.bz2",
+        "sha256": "8081a6a579df6afb144aae45af1b0f29171c5daeafee64b9b48f3b34b49d603f",
+        "url": "https://web.archive.org/web/20171205071925id_/http://landley.net/aboriginal/downloads/old/binaries/1.2.0/cross-compiler-i686.tar.bz2"
+      }
+    },
+    "family": "uClibc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "LGPL-2.1-or-later",
+    "mcrit": "data/uClibc/x86/mcrit/uClibc_0.9.33.2-aboriginal1.2.0_gcc14_x86_libc.elf.mcrit",
+    "notes": "Original static libc.a from Aboriginal Linux 1.2.0, GCC 4.2.1 producer. Not rebuilt; the host compiler is only the link driver. All archive members retained. No startup or driver, entry zero; not runnable. Compiler arithmetic uses dynamic libgcc_s. Runtime filtering disabled because libc is the subject. zlib is an unpackable staging directory only.",
+    "num_functions": 1569,
+    "sha256": "868ebf17ee5e5049ab06ff02e0a84f33d3a98ed0374212dcc670e5a90dd1db00",
+    "smda": "data/uClibc/x86/smda/uClibc_0.9.33.2-aboriginal1.2.0_gcc14_x86_libc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://uclibc.org/; https://landley.net/aboriginal/",
+    "version": "0.9.33.2-aboriginal1.2.0"
+  },
+  "uClibc_ng-1.0.39-bootlin2021.11-1_gcc14_x86_libc.elf": {
+    "architecture": "x86",
+    "build_flags": "Prebuilt uClibc-ng 1.0.39, Bootlin stable-2021.11-1; host link only: -nostdlib -no-pie -Wl,-e,0 -Wl,--whole-archive -Wl,--copy-dt-needed-entries; dynamic libgcc_s and libc",
+    "built_artifact": "libc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "x86-i686--uclibc--stable-2021.11-1.tar.bz2",
+        "sha256": "d15cfe391474ea19e6a468c011955027581c6a16953380baf3c5718ad42fc45d",
+        "url": "https://toolchains.bootlin.com/downloads/releases/toolchains/x86-i686/tarballs/x86-i686--uclibc--stable-2021.11-1.tar.bz2"
+      }
+    },
+    "family": "uClibc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "LGPL-2.1-or-later",
+    "mcrit": "data/uClibc/x86/mcrit/uClibc_ng-1.0.39-bootlin2021.11-1_gcc14_x86_libc.elf.mcrit",
+    "notes": "Shipped static uClibc-ng libc.a, maintained continuation of uClibc in the same family. Shipped header version macros identify 1.0.39. All archive members retained. The host compiler only drives the final link; no code is rebuilt. Dynamic host libc and libgcc_s resolve external references without including their bodies; --copy-dt-needed-entries resolves the TLS resolver from the dynamic loader. No startup, entry zero; not runnable. Runtime filter off because libc is the subject. zlib is only a staging directory.",
+    "num_functions": 2214,
+    "sha256": "c9da02ccf40bd1f85277179febc36ad37096fa9852a5e85052a6dc606c18927f",
+    "smda": "data/uClibc/x86/smda/uClibc_ng-1.0.39-bootlin2021.11-1_gcc14_x86_libc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://uclibc-ng.org/; https://toolchains.bootlin.com/",
+    "version": "ng-1.0.39-bootlin2021.11-1"
+  },
+  "uClibc_ng-1.0.39-bootlin2021.11-5_gcc14_x64_libc.elf": {
+    "architecture": "x64",
+    "build_flags": "Prebuilt uClibc-ng 1.0.39, Bootlin stable-2021.11-5; host link only: -nostdlib -no-pie -Wl,-e,0 -Wl,--whole-archive -Wl,--copy-dt-needed-entries; dynamic libgcc_s and libc",
+    "built_artifact": "libc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "x86-64--uclibc--stable-2021.11-5.tar.bz2",
+        "sha256": "e68fd1b23f4a5c5132f2122e4012c17eb24e5179b2ff45bb793a27ac30dd454f",
+        "url": "https://toolchains.bootlin.com/downloads/releases/toolchains/x86-64/tarballs/x86-64--uclibc--stable-2021.11-5.tar.bz2"
+      }
+    },
+    "family": "uClibc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "LGPL-2.1-or-later",
+    "mcrit": "data/uClibc/x64/mcrit/uClibc_ng-1.0.39-bootlin2021.11-5_gcc14_x64_libc.elf.mcrit",
+    "notes": "Shipped static uClibc-ng libc.a, maintained continuation of uClibc in the same family. Shipped header version macros identify 1.0.39. All archive members retained. The host compiler only drives the final link; no code is rebuilt. Dynamic host libc and libgcc_s resolve external references without including their bodies; --copy-dt-needed-entries resolves the TLS resolver from the dynamic loader. No startup, entry zero; not runnable. Runtime filter off because libc is the subject. zlib is only a staging directory.",
+    "num_functions": 2183,
+    "sha256": "f344642a295baafedea7146df88183b9239603ff99f48b3f82e6166285a0ac52",
+    "smda": "data/uClibc/x64/smda/uClibc_ng-1.0.39-bootlin2021.11-5_gcc14_x64_libc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://uclibc-ng.org/; https://toolchains.bootlin.com/",
+    "version": "ng-1.0.39-bootlin2021.11-5"
+  }
+}

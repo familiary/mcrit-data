@@ -19,6 +19,7 @@ This repository is intended to grow over time, as we find time to process more o
 If you feel that something especially relevant is missing, please open an issue and/or provide input data and we will see what we can do.
 
 Compilers
+* [libgcc](#libgcc)
 * [Golang](#golang)
 * [Microsoft Visual Studio](#msvc)
 * [MinGW](#mingw)
@@ -26,6 +27,10 @@ Compilers
 * [Rust](#rust)
 
 Libraries
+* [uClibc and uClibc-ng](#uclibc)
+* [musl](#musl)
+* [libiptc](#libiptc)
+* [ntpd](#ntpd)
 * [aPLib](#aplib)
 * [libzlib](#libzlib)
 * [bzip2](#bzip2)
@@ -972,7 +977,7 @@ Four compile-time string obfuscators, which hide literals by encrypting them dur
 
 These are the one group here where the optimization level is not a free choice, and it differs per project - the level each was built at is recorded in `build_flags` and argued in `notes`, because it decides what survives into the binary at all. Reference data built at one level will not match a consumer built at another.
 
-All four of the compile-time obfuscators are portable, and all four are also built for Linux: these are the corpus's only ELF artefacts, and every one of them is an ELF row beside the PE row in the same table. Same pinned commit, same exerciser or driver, same optimization level - only the container differs, so the two are directly comparable. They are shared objects rather than executables on purpose: a `-shared` ELF links glibc, libstdc++ and libm dynamically, so none of their code enters the sample under a library's name, and they are built `-fvisibility=hidden` so that only the exerciser's entry point is exported and the library's own calls stay direct, which is what the PE builds get for free from `__declspec(dllexport)`.
+All four of the compile-time obfuscators are portable, and all four are also built for Linux: these sit beside the Linux userland ELF families below, and every one of them is an ELF row beside the PE row in the same table. Same pinned commit, same exerciser or driver, same optimization level - only the container differs, so the two are directly comparable. They are shared objects rather than executables on purpose: a `-shared` ELF links glibc, libstdc++ and libm dynamically, so none of their code enters the sample under a library's name, and they are built `-fvisibility=hidden` so that only the exerciser's entry point is exported and the library's own calls stay direct, which is what the PE builds get for free from `__declspec(dllexport)`.
 
 ### Obfuscate<a id='obfuscate'></a>
 
@@ -1039,4 +1044,69 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
+<!-- /generated -->
+
+### libgcc<a id='libgcc'></a>
+
+Original GCC 4.1.2 and 4.2.1 runtime archives shipped by uClibc.org and Aboriginal Linux, linked whole for disassembly. The Compiler column names the GCC 14 host link driver, not the producer of the harvested code. The version and provenance identify the actual producer. No runtime source is rebuilt, and dynamic libc bodies are excluded. The runtime filter is disabled because libgcc is the subject.
+
+Built with `scripts/build_corpus.py`; source digests, producer details and link flags are in `data/libgcc/provenance.json`.
+
+<!-- generated: libgcc -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| libgcc | 4.1.2-uclibc0.9.30.1 | GCC 14 (Linux, glibc) | [x86 ELF](data/libgcc/x86/mcrit/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x86_libgcc.elf.mcrit) / [x64 ELF](data/libgcc/x64/mcrit/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x64_libgcc.elf.mcrit) | [x86 ELF](data/libgcc/x86/smda/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x86_libgcc.elf.7z) / [x64 ELF](data/libgcc/x64/smda/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x64_libgcc.elf.7z) |
+| libgcc | 4.2.1-aboriginal1.4.4 | GCC 14 (Linux, glibc) | [x86 ELF](data/libgcc/x86/mcrit/libgcc_4.2.1-aboriginal1.4.4_gcc14_x86_libgcc.elf.mcrit) / [x64 ELF](data/libgcc/x64/mcrit/libgcc_4.2.1-aboriginal1.4.4_gcc14_x64_libgcc.elf.mcrit) | [x86 ELF](data/libgcc/x86/smda/libgcc_4.2.1-aboriginal1.4.4_gcc14_x86_libgcc.elf.7z) / [x64 ELF](data/libgcc/x64/smda/libgcc_4.2.1-aboriginal1.4.4_gcc14_x64_libgcc.elf.7z) |
+<!-- /generated -->
+
+### uClibc<a id='uclibc'></a>
+
+Original static libc archives: uClibc.org 0.9.30.1 (GCC 4.1.2), Aboriginal Linux 1.2.0 / uClibc 0.9.33.2 (GCC 4.2.1), and Bootlin stable-2021.11 / uClibc-ng 1.0.39 (GCC 10.3.0). uClibc-ng is the maintained continuation and stays in this family. The Compiler column names only the GCC 14 host link driver. No libc code is rebuilt. Compiler arithmetic and external TLS references resolve dynamically, without importing host runtime bodies.
+
+Built with `scripts/build_corpus.py`; source digests, producer details and link flags are in `data/uClibc/provenance.json`.
+
+<!-- generated: uClibc -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| uClibc | 0.9.30.1 | GCC 14 (Linux, glibc) | [x86 ELF](data/uClibc/x86/mcrit/uClibc_0.9.30.1_gcc14_x86_libc.elf.mcrit) / [x64 ELF](data/uClibc/x64/mcrit/uClibc_0.9.30.1_gcc14_x64_libc.elf.mcrit) | [x86 ELF](data/uClibc/x86/smda/uClibc_0.9.30.1_gcc14_x86_libc.elf.7z) / [x64 ELF](data/uClibc/x64/smda/uClibc_0.9.30.1_gcc14_x64_libc.elf.7z) |
+| uClibc | 0.9.33.2-aboriginal1.2.0 | GCC 14 (Linux, glibc) | [x86 ELF](data/uClibc/x86/mcrit/uClibc_0.9.33.2-aboriginal1.2.0_gcc14_x86_libc.elf.mcrit) / [x64 ELF](data/uClibc/x64/mcrit/uClibc_0.9.33.2-aboriginal1.2.0_gcc14_x64_libc.elf.mcrit) | [x86 ELF](data/uClibc/x86/smda/uClibc_0.9.33.2-aboriginal1.2.0_gcc14_x86_libc.elf.7z) / [x64 ELF](data/uClibc/x64/smda/uClibc_0.9.33.2-aboriginal1.2.0_gcc14_x64_libc.elf.7z) |
+| uClibc | ng-1.0.39-bootlin2021.11-1 | GCC 14 (Linux, glibc) | [x86 ELF](data/uClibc/x86/mcrit/uClibc_ng-1.0.39-bootlin2021.11-1_gcc14_x86_libc.elf.mcrit) | [x86 ELF](data/uClibc/x86/smda/uClibc_ng-1.0.39-bootlin2021.11-1_gcc14_x86_libc.elf.7z) |
+| uClibc | ng-1.0.39-bootlin2021.11-5 | GCC 14 (Linux, glibc) | [x64 ELF](data/uClibc/x64/mcrit/uClibc_ng-1.0.39-bootlin2021.11-5_gcc14_x64_libc.elf.mcrit) | [x64 ELF](data/uClibc/x64/smda/uClibc_ng-1.0.39-bootlin2021.11-5_gcc14_x64_libc.elf.7z) |
+<!-- /generated -->
+
+### musl<a id='musl'></a>
+
+Original musl 1.1.12 static libc archives from Aboriginal Linux 1.4.4, produced by GCC 4.2.1. GCC 14 in the Compiler column is only the host link driver. Every global text symbol except dynamic-loader-only `__tlsdesc_*` is forced from the unchanged archive; the omitted loader member has an unresolved hidden `__tls_get_new`. Runtime dependencies are dynamic. No startup driver is added, and the ELF images are for disassembly rather than execution.
+
+Built with `scripts/build_corpus.py`; source digests, producer details and link flags are in `data/musl/provenance.json`.
+
+<!-- generated: musl -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| musl | 1.1.12-aboriginal1.4.4 | GCC 14 (Linux, glibc) | [x86 ELF](data/musl/x86/mcrit/musl_1.1.12-aboriginal1.4.4_gcc14_x86_libc.elf.mcrit) / [x64 ELF](data/musl/x64/mcrit/musl_1.1.12-aboriginal1.4.4_gcc14_x64_libc.elf.mcrit) | [x86 ELF](data/musl/x86/smda/musl_1.1.12-aboriginal1.4.4_gcc14_x86_libc.elf.7z) / [x64 ELF](data/musl/x64/smda/musl_1.1.12-aboriginal1.4.4_gcc14_x64_libc.elf.7z) |
+<!-- /generated -->
+
+### libiptc<a id='libiptc'></a>
+
+The legacy IPv4 and IPv6 libiptc archives from iptables 1.8.11, linked whole into one shared image with hidden internal calls and dynamic libc. This is a corpus link construction, not an upstream-distributed shared library. Issue #43 supplies no version; 1.8.11 is chosen freely. No iptables CLI, extensions or nft backend code is included.
+
+Built with `scripts/build_corpus.py`; source digests, producer details and link flags are in `data/libiptc/provenance.json`.
+
+<!-- generated: libiptc -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| libiptc | 1.8.11 | GCC 14 (Linux, glibc) | [x86 ELF](data/libiptc/x86/mcrit/libiptc_1.8.11_gcc14_x86_libiptc.so.mcrit) / [x64 ELF](data/libiptc/x64/mcrit/libiptc_1.8.11_gcc14_x64_libiptc.so.mcrit) | [x86 ELF](data/libiptc/x86/smda/libiptc_1.8.11_gcc14_x86_libiptc.so.7z) / [x64 ELF](data/libiptc/x64/smda/libiptc_1.8.11_gcc14_x64_libiptc.so.7z) |
+<!-- /generated -->
+
+### ntpd<a id='ntpd'></a>
+
+The legitimate ntpd daemon from early 4.2.2 and stable 4.2.8p18. Issue #57 identifies no upstream version; these are era references, not claims about the Turla host version. Matches also identify clean installations and are not indicators of compromise. Only ntpd and support objects reached by its link are collected. Default supported reference clocks are retained; OpenSSL and SNMP integration are disabled, while system libc and libm remain dynamic.
+
+Built with `scripts/build_corpus.py`; source digests, producer details and link flags are in `data/ntpd/provenance.json`.
+
+<!-- generated: ntpd -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| ntpd | 4.2.2 | GCC 14 (Linux, glibc) | [x86 ELF](data/ntpd/x86/mcrit/ntpd_4.2.2_gcc14_x86_ntpd.mcrit) / [x64 ELF](data/ntpd/x64/mcrit/ntpd_4.2.2_gcc14_x64_ntpd.mcrit) | [x86 ELF](data/ntpd/x86/smda/ntpd_4.2.2_gcc14_x86_ntpd.7z) / [x64 ELF](data/ntpd/x64/smda/ntpd_4.2.2_gcc14_x64_ntpd.7z) |
+| ntpd | 4.2.8p18 | GCC 14 (Linux, glibc) | [x86 ELF](data/ntpd/x86/mcrit/ntpd_4.2.8p18_gcc14_x86_ntpd.mcrit) / [x64 ELF](data/ntpd/x64/mcrit/ntpd_4.2.8p18_gcc14_x64_ntpd.mcrit) | [x86 ELF](data/ntpd/x86/smda/ntpd_4.2.8p18_gcc14_x86_ntpd.7z) / [x64 ELF](data/ntpd/x64/smda/ntpd_4.2.8p18_gcc14_x64_ntpd.7z) |
 <!-- /generated -->

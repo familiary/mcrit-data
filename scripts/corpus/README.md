@@ -520,6 +520,19 @@ The filter matches on symbol *and* PicHash deliberately, which is what stops
 it deleting a project's own `strlen`, so these stay. The x64 artefacts have
 no such problem and their glue is removed in full.
 
+The Linux userland recipes also harvest shipped static runtime archives:
+libgcc 4.1.2/4.2.1, uClibc 0.9.30.1/0.9.33.2, its maintained uClibc-ng
+continuation 1.0.39, and musl 1.1.12. Their host GCC version describes only
+the final link driver; source URLs, digests and notes identify the original
+producer. No runtime code is rebuilt. These families disable the glue
+filter because the runtime itself is the subject, and link with no startup
+objects, an entry address of zero, and dynamic dependencies for external
+runtime references. They are disassembly containers, not runnable programs.
+The recipes explain the selective musl link and every retained named glue
+function. libiptc uses a whole-archive shared link, while ntpd collects the
+legitimate daemon executable. Their x86/x64 and version overlaps are measured
+at the ten-instruction floor in each recipe docstring.
+
 ## Adding a recipe
 
 Recipes are declarative (`corpus/recipes/*.py`) and carry no logic, so every
@@ -540,6 +553,10 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| ntpd 4.2.0 | #57 | GCC 14 rejects `include/ntp_stdlib.h:138:23: error: array type has incomplete element type ‘struct clktype’`. Forced upstream header includes allow libntp to build, but ntpd then fails at `include/ntpd.h:230:24: error: array type has incomplete element type ‘struct ctl_trap’`; pre-including the unguarded control header causes `redefinition of ‘struct ctl_trap’`. No source patch; 4.2.2 is the early reference instead |
+| musl 1.1.12 dynamic-loader TLS descriptor member | #5 | x64 whole-archive link: `libc.a(tlsdesc.o): in function __tlsdesc_dynamic: undefined reference to __tls_get_new`; `hidden symbol __tls_get_new isn't defined`; `final link failed: bad value`. The recipe forces global text symbols except `__tlsdesc_*` from the unchanged archive; all static libc API code remains reachable |
+| Firmware Linux 0.9.6 original distribution | #4, #5 | archived directory `https://web.archive.org/web/20171205071925id_/http://landley.net/aboriginal/downloads/old/binaries/0.9.6/` returns `curl: (22) The requested URL returned error: 404`. uClibc.org's original mini-native 0.9.30.1 / GCC 4.1.2 archives are harvested under their own provenance, without claiming they are the Firmware tarballs |
+| Aboriginal Linux 1.0.3 / uClibc 0.9.32 | #5 | archived directory and `cross-compiler-i686.tar.bz2` / `cross-compiler-x86_64.tar.bz2` under `https://web.archive.org/web/20171205071925id_/http://landley.net/aboriginal/downloads/old/binaries/1.0.3/` return `curl: (22) The requested URL returned error: 404`. 1.2.0 / uClibc 0.9.33.2 is harvested separately |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |

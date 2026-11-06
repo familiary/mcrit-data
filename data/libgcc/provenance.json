@@ -1,0 +1,130 @@
+{
+  "libgcc_4.1.2-uclibc0.9.30.1_gcc14_x64_libgcc.elf": {
+    "architecture": "x64",
+    "build_flags": "Prebuilt GCC 4.1.2 libgcc.a + libgcc_eh.a; host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libgcc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "mini-native-x86_64.tar.bz2",
+        "sha256": "38203f01f4dceff5c7128953b5ec50478cf0a1395a8c162223b150b53e338f41",
+        "url": "https://uclibc.org/downloads/binaries/0.9.30.1/mini-native-x86_64.tar.bz2"
+      }
+    },
+    "family": "libgcc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "GPL-2.0-or-later with GCC runtime linking exception (GCC 4.1.2)",
+    "mcrit": "data/libgcc/x64/mcrit/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x64_libgcc.elf.mcrit",
+    "notes": "Harvested from uClibc.org mini-native 0.9.30.1, not rebuilt. GCC 4.1.2 producer confirmed by .comment. The recorded host compiler drives only the final link. Entry zero, no startup, dynamic host libc; not runnable. All members of libgcc.a and libgcc_eh.a are retained. Runtime filter off because libgcc is the subject. zlib is only the staging directory.",
+    "num_functions": 136,
+    "sha256": "1ce4324bfe0ad341df7f1823f6e40181898895071c049fc3d82d2315d4e41469",
+    "smda": "data/libgcc/x64/smda/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x64_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://gcc.gnu.org/; https://uclibc.org/downloads/binaries/0.9.30.1/",
+    "version": "4.1.2-uclibc0.9.30.1"
+  },
+  "libgcc_4.1.2-uclibc0.9.30.1_gcc14_x86_libgcc.elf": {
+    "architecture": "x86",
+    "build_flags": "Prebuilt GCC 4.1.2 libgcc.a + libgcc_eh.a; host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libgcc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "mini-native-i686.tar.bz2",
+        "sha256": "37172fec0d0b723bd51990662d5ccf98c0ba386427781a292a09ab7b212d432f",
+        "url": "https://uclibc.org/downloads/binaries/0.9.30.1/mini-native-i686.tar.bz2"
+      }
+    },
+    "family": "libgcc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "GPL-2.0-or-later with GCC runtime linking exception (GCC 4.1.2)",
+    "mcrit": "data/libgcc/x86/mcrit/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x86_libgcc.elf.mcrit",
+    "notes": "Harvested from uClibc.org mini-native 0.9.30.1, not rebuilt. GCC 4.1.2 producer confirmed by .comment. The recorded host compiler drives only the final link. Entry zero, no startup, dynamic host libc; not runnable. All members of libgcc.a and libgcc_eh.a are retained. Runtime filter off because libgcc is the subject. zlib is only the staging directory.",
+    "num_functions": 135,
+    "sha256": "531053d027fa71c9d71c29a3e6b0c31f66f5c2a0b75b28b89d1b5bdea3f375c8",
+    "smda": "data/libgcc/x86/smda/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x86_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://gcc.gnu.org/; https://uclibc.org/downloads/binaries/0.9.30.1/",
+    "version": "4.1.2-uclibc0.9.30.1"
+  },
+  "libgcc_4.2.1-aboriginal1.4.4_gcc14_x64_libgcc.elf": {
+    "architecture": "x64",
+    "build_flags": "Prebuilt GCC 4.2.1 libgcc.a + libgcc_eh.a; host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libgcc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "cross-compiler-x86_64.tar.gz",
+        "sha256": "418b3710496e22904a5d8eb3361b629f8a49bc7232df1cfd9ff353323dc514bc",
+        "url": "https://web.archive.org/web/20171205071925id_/http://landley.net/aboriginal/downloads/old/binaries/1.4.4/cross-compiler-x86_64.tar.gz"
+      }
+    },
+    "family": "libgcc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "GPL-2.0-or-later with GCC runtime linking exception (GCC 4.2.1)",
+    "mcrit": "data/libgcc/x64/mcrit/libgcc_4.2.1-aboriginal1.4.4_gcc14_x64_libgcc.elf.mcrit",
+    "notes": "Harvested from Aboriginal Linux 1.4.4, not rebuilt. The GCC 4.2.1 producer is confirmed by .comment. The recorded host compiler drives only the final link. Entry address zero, no startup, dynamic host libc; the image is not runnable. All members of libgcc.a and libgcc_eh.a are retained. The runtime filter is off because libgcc is the subject. zlib supplies only the staging directory; none of it is linked.",
+    "num_functions": 145,
+    "sha256": "412c7080d3a225c19b65c6876f92f044b661f6733615f1217aaf449336d21349",
+    "smda": "data/libgcc/x64/smda/libgcc_4.2.1-aboriginal1.4.4_gcc14_x64_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://gcc.gnu.org/; https://landley.net/aboriginal/",
+    "version": "4.2.1-aboriginal1.4.4"
+  },
+  "libgcc_4.2.1-aboriginal1.4.4_gcc14_x86_libgcc.elf": {
+    "architecture": "x86",
+    "build_flags": "Prebuilt GCC 4.2.1 libgcc.a + libgcc_eh.a; host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libgcc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "cross-compiler-i686.tar.gz",
+        "sha256": "4f016c9d7607839ffff28e70ebb46f384deabc5df17825c94e3a30388814ff25",
+        "url": "https://web.archive.org/web/20171205071925id_/http://landley.net/aboriginal/downloads/old/binaries/1.4.4/cross-compiler-i686.tar.gz"
+      }
+    },
+    "family": "libgcc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "GPL-2.0-or-later with GCC runtime linking exception (GCC 4.2.1)",
+    "mcrit": "data/libgcc/x86/mcrit/libgcc_4.2.1-aboriginal1.4.4_gcc14_x86_libgcc.elf.mcrit",
+    "notes": "Harvested from Aboriginal Linux 1.4.4, not rebuilt. The GCC 4.2.1 producer is confirmed by .comment. The recorded host compiler drives only the final link. Entry address zero, no startup, dynamic host libc; the image is not runnable. All members of libgcc.a and libgcc_eh.a are retained. The runtime filter is off because libgcc is the subject. zlib supplies only the staging directory; none of it is linked.",
+    "num_functions": 155,
+    "sha256": "31bfe59856f7bb2e002d57e2776e5087198995a836ac723f05300cb862df2328",
+    "smda": "data/libgcc/x86/smda/libgcc_4.2.1-aboriginal1.4.4_gcc14_x86_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://gcc.gnu.org/; https://landley.net/aboriginal/",
+    "version": "4.2.1-aboriginal1.4.4"
+  }
+}
