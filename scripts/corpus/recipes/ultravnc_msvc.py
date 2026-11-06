@@ -13,19 +13,23 @@ and 125 in Citadel. Two things in the issue decide what is built.
 
 Versions. "1.2.13" cannot be resolved to a commit: the upstream history
 (git-svn import, 1862 commits) carries FILEVERSION 1.2.1.2 from 2016-09-19
-until commit b4034d51 ("1214", 2017-05-13), which is 1.2.1.4. No commit
-carries 1.2.1.3, so the read is "1.2.1.3, which has no source state of its
-own" and the nearest labelled state is pinned: 1.2.1.4. That is a judgement,
-not an evidenced match. The 1.8.2.9 release (1.8.3.0 and later cannot be
-fetched by this pipeline: eab6d20a moved the 3rdparty/noVNC submodule to
-commit b493d9bb, which noVNC no longer serves, and fetch.py updates
-submodules) (a different build system
-altogether) is built as well, because it is what an analyst meets today; its
-shape is in the second recipe below.
+until commit b4034d51 ("1214", 2017-05-13), which is 1.2.1.4, then reverts to
+1.2.1.2 and goes to 1.2.1.5 (9761329e, 2017-06-10). No commit carries
+1.2.1.3. 1.2.1.4 was the first pin tried and does not build: its
+libjpeg-turbo-win directory lacks the private headers (jdcoefct.h,
+jdmainct.h, jdmaster.h, jdsample.h) that its own .c files include, and the
+1.2.1.2 tree lacks them too. 1.2.1.5, the next state, carries them and is
+pinned. That is a judgement about the nearest buildable state, not an
+evidenced match. The second recipe is 1.8.2.9, the newest release a source
+checkout can be taken of: 1.8.3.0 and later cannot be fetched by this
+pipeline, because eab6d20a moved the 3rdparty/noVNC submodule to commit
+b493d9bb, which noVNC no longer serves, and fetch.py updates submodules. It
+is a different build system altogether (vcpkg dependencies) and is what an
+analyst meets today.
 
-1.2.1.4 build. The tree is self-contained: vncviewer\\vncviewer.sln and
+1.2.1.5 build. The tree is self-contained: vncviewer\\vncviewer.sln and
 winvnc\\winvnc.sln build the exe and its dependencies from in-tree projects -
-zlib 1.2.11, libjpeg-turbo 1.4.2 (libjpeg-turbo-win), the Info-ZIP
+zlib (1.2.5 on the viewer's path, per vncviewer.sln), libjpeg-turbo-win, the Info-ZIP
 zip/unzip sources, miniLZO (compiled straight from lzo\\minilzo.c) and
 omnithread/rdr. Nothing comes from vcpkg and nothing is MFC or ATL
 (UseOfMfc is false in every project; the .rc files include afxres.h, so the
@@ -80,7 +84,7 @@ _SLNF = (
     r"import re,json;"
     r"s=open('winvnc/winvnc.sln').read();"
     r"p=re.findall(r'[\w\\.\-]+\.vcxproj',s);"
-    r"json.dump(dict(solution=dict(path='winvnc\\winvnc.sln',projects=p)),"
+    r"json.dump(dict(solution=dict(path='winvnc.sln',projects=p)),"
     r"open('winvnc/winvnc.slnf','w'))"
     '"')
 
@@ -114,8 +118,8 @@ _MSBUILD = ('msbuild %s /t:%s /p:Configuration=Release '
 # VCPKG_CRT_LINKAGE static and would put /MT objects into an /MD link.
 _VCPKG_INTEGRATE = '"%VCPKG_INSTALLATION_ROOT%\\vcpkg.exe" integrate install'
 
-_OLD_FLAGS = ("Release configuration of the 1.2.1.4 vcxproj files: "
-              "/Ox /Ob2 /Oi /Ot /GS- per project, platform toolset v143 in "
+_OLD_FLAGS = ("Release configuration of the 1.2.1.5 vcxproj files: "
+              "/Ox /Ob2 /Oi /Ot per project, platform toolset v143 in "
               "place of v100; /MT replaced by /MD, /GL and /LTCG off; /DEBUG "
               "/Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link, "
               "forced by this recipe over upstream's /OPT:REF; /PROFILE off; "
@@ -130,13 +134,13 @@ _NEW_FLAGS = ("Release configuration of the 1.8.2.9 vcxproj files, platform "
 
 
 RECIPES = {
-    "UltraVNC_1.2.1.4_msvc": Recipe(
+    "UltraVNC_1.2.1.5_msvc": Recipe(
         family="UltraVNC",
-        version="1.2.1.4",
+        version="1.2.1.5",
         upstream="https://github.com/ultravnc/UltraVNC",
         license="GPL-2.0-or-later",
         source=Source(git_url="https://github.com/ultravnc/UltraVNC.git",
-                      git_ref="b4034d51163fefd9935691a11ec4d3597d5c571f"),
+                      git_ref="9761329ece79ab416bd6f17b3d68cbca21c9737c"),
         build=[
             BuildStep(_props()),
             BuildStep(_NASM, allow_failure=True),
@@ -155,12 +159,12 @@ RECIPES = {
         ],
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags=_OLD_FLAGS,
-        notes="Commit b4034d51 (git-svn r1079, 2017-05-13), FILEVERSION "
-              "1.2.1.4: the nearest labelled state to the 1.2.13 viewer "
-              "FOSSIL used, which has no commit of its own. vncviewer.exe is "
+        notes="Commit 9761329e (2017-06-10), FILEVERSION 1.2.1.5: the "
+              "nearest buildable state to the 1.2.13 viewer FOSSIL used, "
+              "which has no commit of its own. vncviewer.exe is "
               "the component the evidence points at; winvnc.exe, the "
               "server, is the second target. Both statically link the "
-              "in-tree zlib 1.2.11, libjpeg-turbo 1.4.2, miniLZO and the "
+              "in-tree zlib, libjpeg-turbo, miniLZO and the "
               "Info-ZIP sources, so those functions are present here under "
               "the UltraVNC family. The CRT is imported (/MD) and stays "
               "attributed to data/MSVC.",
@@ -199,6 +203,6 @@ RECIPES = {
               "linked into the exes, so those libraries' functions are "
               "present here under the UltraVNC family; miniLZO is compiled "
               "from lzo\\minilzo.c. vncviewer.exe and winvnc.exe as in "
-              "1.2.1.4.",
+              "1.2.1.5.",
     ),
 }

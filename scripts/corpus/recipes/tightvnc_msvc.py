@@ -44,7 +44,7 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 
 _PROPS = (
     'python -c "'
-    "open('msvcprops.props','w').write("
+    "open('msvcprops.props','w').write(("
     "'<Project><ItemDefinitionGroup><ClCompile>'"
     "'<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>'"
     "'<WholeProgramOptimization>false</WholeProgramOptimization>'"
@@ -56,7 +56,18 @@ _PROPS = (
     "'<EnableCOMDATFolding>false</EnableCOMDATFolding>'"
     "'<OptimizeReferences>false</OptimizeReferences>'"
     "'<AdditionalOptions>/Brepro /INCREMENTAL:NO</AdditionalOptions>'"
-    "'</Link></ItemDefinitionGroup></Project>')"
+    "'</Link></ItemDefinitionGroup>'"
+    # rfb/RfbKeySym.h uses std::wstring without including <string>, which
+    # older toolsets supplied transitively and v143 does not (34 x C2039/C2061
+    # in the first x86 run, all in rfb.vcxproj, nothing else failed). Forced
+    # inclusion of <string> for C++ translation units only, because the
+    # zlib and libjpeg projects are C. The text is built with placeholder
+    # tokens so no quote or percent sign reaches cmd.exe.
+    "'<Target Name=@dForceStringInclude@d BeforeTargets=@dClCompile@d>'"
+    "'<ItemGroup><ClCompile Condition=@d@s@p(Extension)@s==@s.cpp@s@d>'"
+    "'<ForcedIncludeFiles>string</ForcedIncludeFiles></ClCompile>'"
+    "'</ItemGroup></Target></Project>').replace('@d',chr(34)).replace('@s',chr(39))"
+    ".replace('@p',chr(37)))"
     '"')
 
 # Copies each built exe and its PDB to corpusout\ so the artefact paths do not
