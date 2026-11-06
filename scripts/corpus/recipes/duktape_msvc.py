@@ -47,6 +47,44 @@ only level the mandates name; /O1 (minimise size) would be the closer MSVC
 analogue of -Os but is not used. Duktape's bytecode executor is one very large
 function whose shape depends on the level, so the two axes differ in
 optimisation level as well as in compiler; /O2 is the one MSVC variant built.
+
+Measurements, from the runner build (windows-2022, cl 19.44.35229, v143; flags
+read back from the build log: the compile and link lines above are what ran).
+The exports step found 287 external functions on x86 and x64 (2.6.0). That is
+the duk_* API: the shipped duk_config.h defines DUK_INTERNAL as ``static`` in
+single-file builds [read, duk_config.h line 1096], so the engine internals
+are not external symbols for either compiler. The MinGW export count was not
+measured, so no count comparison is made.
+
+Function counts, kept after the MSVC glue baseline removed some runtime
+functions, so kept plus removed is the image total:
+
+  2.6.0  x86 1487 + 176 = 1663   x64 1473 + 163 = 1636
+  2.7.0  x86 1489 + 177 = 1666   x64 1475 + 163 = 1638
+
+(MinGW kept: 969 / 962 and 969 / 961.) The MSVC side keeps about 500 more
+functions: probably because cl at /O2 inlines Duktape's many ``static`` helpers
+less than gcc -Os does (not isolated) and it splits large functions into ``$`` chunks. Every
+kept function is named from the PDB (0 unnamed).
+
+Glue survivors, by name (2.6.0; 2.7.0 is the same). Eleven on x64 and 19 on
+x86 are one-instruction import or linker thunks whose PicHash is
+1253497258561142223 (x86: _QueryPerformanceFrequency, _GetSystemTimePrecise
+AsFileTime, _FileTimeToSystemTime, _SystemTimeToFileTime, _SystemTimeToTz
+SpecificLocalTime, _longjmp, __setjmp3, __dsign, __dclass, _cbrt, _log2,
+__CIatan2, __CIfmod and six __libm_sse2_*_precise; x64: the five Win32 calls
+plus longjmp, __intrinsic_setjmp, _dsign, _dclass, cbrt, log2). x86 has two more:
+_ftoul2_legacy (7 instructions, PicHash 18195770136869812399) and the
+__scrt_is_nonwritable_in_current_image$+0x77 chunk (1 instruction, PicHash
+14488817810038351142). They are runtime/import stubs the baseline probes do not
+cover (it removed sin, floor, memcpy and the like, not these); baseline.py is shared tooling and is not changed here.
+
+MinGW against MSVC PicHash overlap, functions of 10+ instructions (x86 / x64):
+0 / 1 shared, of 796 / 720 (2.6.0) and 796 / 719 (2.7.0) MinGW functions and
+1175 / 1141 and 1176 / 1141 MSVC ones. The one hit is
+duk_heap_remove_from_heap_allocated (11 instructions, x64). At any size the
+overlap is 2 (x86) and 25 (x64) hashes per pair, almost all one-instruction
+thunks. So this axis shares essentially nothing with the MinGW one.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
