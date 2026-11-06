@@ -1062,12 +1062,13 @@ The reusable core and static API from the 2024-08-30 pin, including its vendored
 
 ### EDRSilencer<a id='edrsilencer'></a>
 
-The two upstream C files from the 2024-11-03 pin. MinGW x86 and x64 have no shared PicHashes at the 10-instruction floor. MSVC fails on three duplicate GUID initializations in the current SDK; exact errors are listed in scripts/corpus/README.md. No filters are installed or exercised.
+The two upstream C files from the 2024-11-03 pin, built with MinGW and MSVC for x86 and x64. Within each compiler, x86 and x64 have no shared PicHashes at the 10-instruction floor, and MSVC shares only one with MinGW (PrintHelp, x64). MSVC fails on three duplicate GUID initializations in the current SDK; exact errors are listed in scripts/corpus/README.md. No filters are installed or exercised.
 
 <!-- generated: EDRSilencer -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | EDRSilencer | 2024-11-03 | MinGW-w64 GCC 13 | [x86 PE](data/EDRSilencer/x86/mcrit/EDRSilencer_2024-11-03_mingw13_x86_EDRSilencer.exe.mcrit) / [x64 PE](data/EDRSilencer/x64/mcrit/EDRSilencer_2024-11-03_mingw13_x64_EDRSilencer.exe.mcrit) | [x86 PE](data/EDRSilencer/x86/smda/EDRSilencer_2024-11-03_mingw13_x86_EDRSilencer.exe.7z) / [x64 PE](data/EDRSilencer/x64/smda/EDRSilencer_2024-11-03_mingw13_x64_EDRSilencer.exe.7z) |
+| EDRSilencer | 2024-11-03 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/EDRSilencer/x86/mcrit/EDRSilencer_2024-11-03_msvc143_x86_EDRSilencer.exe.mcrit) / [x64 PE](data/EDRSilencer/x64/mcrit/EDRSilencer_2024-11-03_msvc143_x64_EDRSilencer.exe.mcrit) | [x86 PE](data/EDRSilencer/x86/smda/EDRSilencer_2024-11-03_msvc143_x86_EDRSilencer.exe.7z) / [x64 PE](data/EDRSilencer/x64/smda/EDRSilencer_2024-11-03_msvc143_x64_EDRSilencer.exe.7z) |
 <!-- /generated -->
 
 ### al-khaser<a id='al-khaser'></a>
