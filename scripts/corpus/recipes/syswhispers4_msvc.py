@@ -4,23 +4,26 @@ syswhispers4.py covers what mingw-w64 can reach, which is x64 with GAS
 stubs. Four things are only on this side, and the first three are not
 choices:
 
-* **x86.** The GAS stub emitter ignores ``--arch`` and writes x64
-  unconditionally - generated for x86 it emits ``lea rcx, [rip + ...]``,
-  which i686 GAS rejects outright. The MASM emitter writes a real 32-bit
-  file, ``SW.x86.asm``, and that is the only place x86 stubs exist.
+* **WoW64.** See below; it is the one 32-bit output that assembles.
 * **WoW64.** The generator writes ``SW.wow64.asm`` whatever ``-c`` says, so
   there is no GAS path at all. The file is Heaven's Gate: 151 far-jump and
-  segment-selector references against zero in the x64 output.
-* **ARM64.** Also MASM-only, and the only output that actually contains
-  ``svc`` and ``w8`` - 76 references, against zero in anything the GAS
-  emitter produces for the same ``-a arm64``, which silently emits x64. It
-  needs ``armasm64`` on the runner; if that is absent the point fails and is
-  recorded in the README's not-built table rather than quietly skipped.
+  segment-selector references against zero in the x64 output, and it
+  declares ``.686``, so ``ml`` accepts it.
 * **``--resolve hw_breakpoint``.** The generated C uses ``__try``/
   ``__except``, which mingw-w64 GCC does not implement. This is the only
   resolver of the eight that MinGW cannot build, and it is the one that
   reads SSNs out of debug registers through a vectored exception handler
   rather than out of ntdll's bytes.
+
+**Two of the four architectures are not built, and the reasons are
+different.** ``--arch x86`` emits a MASM file that declares ``.386`` and then
+issues ``sysenter``; ``ml`` rejects every stub with "error A2085: instruction
+or register not accepted in current CPU mode". That is a defect in the
+generated file - no option to ``ml`` overrides a CPU directive, and the
+directive is in the output, so nobody can assemble SysWhispers4's x86 MASM as
+shipped. ``--arch arm64`` emits real ARM64 (76 ``svc``/``w8`` references) but
+needs ``armasm64``, which the runner does not have. Both are in the README's
+not-built table; WoW64 covers the 32-bit side instead.
 
 Beyond those, MSVC is a separate axis in its own right for the same reason
 the README's MSVC section gives: a MinGW reference matches an MSVC-built
@@ -79,21 +82,19 @@ _VARIANTS = (
     ("randomized",            "x64", "freshycalls",   "randomized", "common"),
     ("egghunt",               "x64", "freshycalls",   "egg",      "common"),
     ("presetall",             "x64", "freshycalls",   "embedded", "all"),
-    # x86: the only place 32-bit stubs exist.
-    ("freshycalls",           "x86", "freshycalls",   "embedded", "common"),
-    ("hellsgate",             "x86", "hells_gate",    "embedded", "common"),
-    ("indirect",              "x86", "freshycalls",   "indirect", "common"),
-    ("presetall",             "x86", "freshycalls",   "embedded", "all"),
+    # --arch x86 is NOT here: see the docstring. Its MASM declares .386 and
+    # then emits sysenter, which ml rejects outright.
     # WoW64: Heaven's Gate, MASM only, built by the x86 leg.
     ("wow64_freshycalls",     "x86", "freshycalls",   "embedded", "common"),
     ("wow64_hellsgate",       "x86", "hells_gate",    "embedded", "common"),
 )
 
-# ARM64 is a separate tuple because it is the one point that may not build:
-# it needs armasm64 on the runner. Declared on the x64 leg.
-_ARM64 = (
-    ("arm64_freshycalls",     "freshycalls", "embedded", "common"),
-)
+# ARM64 is not built. The generator does emit real ARM64 - 76 svc/w8
+# references against zero in anything the GAS emitter produces for the same
+# --arch - but assembling it needs armasm64, and a step that may fail cannot
+# carry a declared artefact: the pipeline fails the whole recipe on a missing
+# one, which is what run 42222222313 did, taking five good artefacts with it.
+# Recorded in the README's not-built table instead.
 
 
 def _arch_of(component, var_arch):
@@ -116,21 +117,6 @@ def _for(leg):
         artifacts.append(Artifact(
             path=out.replace("\\", "/"), component=component,
             pdb="bld/%s/sw4_%s.pdb" % (component, component)))
-    if leg == "x64":
-        for component, resolve, method, preset in _ARM64:
-            out = "bld\\%s\\sw4_%s.dll" % (component, component)
-            steps.append(BuildStep(
-                "python %s --arch arm64 --seed %s --out %s "
-                "-- -p %s -c msvc -a arm64 -r %s -m %s"
-                % (_BUILD, _SEED, out, preset, resolve, method),
-                # armasm64 may not be installed on windows-2022. The point is
-                # worth attempting because it is the only ARM64 syscall
-                # reference this corpus would have; it is not worth failing
-                # seventeen good artefacts over.
-                allow_failure=True))
-            artifacts.append(Artifact(
-                path=out.replace("\\", "/"), component=component,
-                pdb="bld/%s/sw4_%s.pdb" % (component, component)))
     return steps, artifacts
 
 
