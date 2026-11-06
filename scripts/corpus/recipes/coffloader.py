@@ -48,8 +48,7 @@ RECIPES = {
             BuildStep("{cc} -O2 -g -Wall -DCOFF_STANDALONE "
                       "beacon_compatibility.c COFFLoader.c -o COFFLoader.exe"),
         ],
-        artifacts=[Artifact(path="COFFLoader.exe", component="COFFLoader.exe",
-                            is_library=False)],
+        artifacts=[Artifact(path="COFFLoader.exe", component="COFFLoader.exe")],
         toolchains=["mingw_x86", "mingw_x64"],
         build_flags="-O2 -g -Wall -DCOFF_STANDALONE (upstream Makefile line "
                     "at its default -O0)",

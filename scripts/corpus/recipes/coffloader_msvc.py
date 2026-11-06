@@ -36,8 +36,7 @@ RECIPES = {
                       "COFFLoader.obj kernel32.lib advapi32.lib"),
             BuildStep("dir", allow_failure=True),
         ],
-        artifacts=[Artifact(path="COFFLoader.exe", component="COFFLoader.exe",
-                            is_library=False, pdb="COFFLoader.pdb")],
+        artifacts=[Artifact(path="COFFLoader.exe", component="COFFLoader.exe", pdb="COFFLoader.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags="cl /O2 /MD /Zi -DCOFF_STANDALONE (no /GL); /DEBUG "
                     "/Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
