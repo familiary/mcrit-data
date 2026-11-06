@@ -3079,6 +3079,15 @@ def _msvc_probes(toolchain):
 # in by crt_glue and read by probe_failures below. A dict rather than a return
 # value because crt_glue is lru_cached: the second caller gets the memoised
 # glue set and would otherwise see no failures at all.
+# Scratch-only: the names this round is about, so one run says which probe
+# emits which body for each of them.
+_WATCH = tuple(name.lstrip("_") for name in (
+    "printf", "vprintf", "vfprintf", "fprintf", "puts",
+    "_vfprintf_l", "_vprintf_l", "_printf_p", "_wprintf_p",
+    "__scrt_common_main_seh", "__scrt_common_main",
+    "mainCRTStartup", "wmainCRTStartup", "__scrt_initialize_crt"))
+
+
 _PROBE_FAILURES = {}
 
 
@@ -3225,10 +3234,17 @@ def crt_glue(toolchain_id):
                 _PROBE_FAILURES.setdefault(toolchain_id, []).append(filename)
                 continue
             probe = disassemble(target, pdb_path=toolchain.probe_pdb(target))
+            watched = {}
             for function in probe.getFunctions():
                 if not function.function_name:
                     continue
                 glue.setdefault(function.function_name, set()).add(function.pic_hash)
+                if function.function_name.lstrip("_") in _WATCH:
+                    watched.setdefault(function.function_name, []).append(
+                        (function.pic_hash, function.num_instructions))
+            LOGGER.info("PROBE-WATCH %s %s %d functions %s", toolchain_id,
+                        filename, probe.num_functions,
+                        sorted(watched.items()))
     # The probe's own function is the one thing here that is not runtime code.
     #
     # The names the four shared probes contribute are still listed one by one
