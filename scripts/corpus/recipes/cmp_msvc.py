@@ -55,10 +55,12 @@ _DEF = (
     'python -c "'
     "import subprocess;"
     "o=subprocess.check_output(['dumpbin','/SYMBOLS','cmp.obj']).decode();"
-    "l=[x.split('|')[1].split()[0] for x in o.splitlines() "
-    "if ' SECT' in x and '() External' in x];"
+    "l=[t[t.index('|')+1] for t in map(str.split,o.splitlines()) "
+    "if '|' in t and '()' in t and 'External' in t "
+    "and any([w.startswith('SECT') for w in t])];"
     "p='{arch}'=='x86';"
     "n=sorted(set([s[1:] if p and s.startswith('_') else s for s in l]));"
+    "assert n,'no exports found';"
     "open('cmp.def','w').write('EXPORTS\\n'+'\\n'.join(n)+'\\n');"
     "print(len(n),'exports')"
     '"')
