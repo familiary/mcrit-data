@@ -61,6 +61,7 @@ Windows tools
 * [al-khaser](#al-khaser)
 * [peinjector](#peinjector)
 * [DiskCryptor](#diskcryptor)
+* [DiskCryptorDrv](#diskcryptordrv)
 * [WinPmem](#winpmem)
 * [WinPmemDrv](#winpmemdrv)
 
@@ -1062,12 +1063,13 @@ The reusable core and static API from the 2024-08-30 pin, including its vendored
 
 ### EDRSilencer<a id='edrsilencer'></a>
 
-The two upstream C files from the 2024-11-03 pin. MinGW x86 and x64 have no shared PicHashes at the 10-instruction floor. MSVC fails on three duplicate GUID initializations in the current SDK; exact errors are listed in scripts/corpus/README.md. No filters are installed or exercised.
+The two upstream C files from the 2024-11-03 pin, built with MinGW and MSVC for x86 and x64. Within each compiler, x86 and x64 have no shared PicHashes at the 10-instruction floor, and MSVC shares only one with MinGW (PrintHelp, x64). MSVC fails on three duplicate GUID initializations in the current SDK; exact errors are listed in scripts/corpus/README.md. No filters are installed or exercised.
 
 <!-- generated: EDRSilencer -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | EDRSilencer | 2024-11-03 | MinGW-w64 GCC 13 | [x86 PE](data/EDRSilencer/x86/mcrit/EDRSilencer_2024-11-03_mingw13_x86_EDRSilencer.exe.mcrit) / [x64 PE](data/EDRSilencer/x64/mcrit/EDRSilencer_2024-11-03_mingw13_x64_EDRSilencer.exe.mcrit) | [x86 PE](data/EDRSilencer/x86/smda/EDRSilencer_2024-11-03_mingw13_x86_EDRSilencer.exe.7z) / [x64 PE](data/EDRSilencer/x64/smda/EDRSilencer_2024-11-03_mingw13_x64_EDRSilencer.exe.7z) |
+| EDRSilencer | 2024-11-03 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/EDRSilencer/x86/mcrit/EDRSilencer_2024-11-03_msvc143_x86_EDRSilencer.exe.mcrit) / [x64 PE](data/EDRSilencer/x64/mcrit/EDRSilencer_2024-11-03_msvc143_x64_EDRSilencer.exe.mcrit) | [x86 PE](data/EDRSilencer/x86/smda/EDRSilencer_2024-11-03_msvc143_x86_EDRSilencer.exe.7z) / [x64 PE](data/EDRSilencer/x64/smda/EDRSilencer_2024-11-03_msvc143_x64_EDRSilencer.exe.7z) |
 <!-- /generated -->
 
 ### al-khaser<a id='al-khaser'></a>
@@ -1103,6 +1105,16 @@ Original 1.1.846.118 source preserved as an archive by the maintained fork. The 
 | DiskCryptor | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/DiskCryptor/x86/mcrit/DiskCryptor_1.1.846.118_msvc143_x86_dcapi.dll.mcrit) / [x64 PE](data/DiskCryptor/x64/mcrit/DiskCryptor_1.1.846.118_msvc143_x64_dcapi.dll.mcrit) | [x86 PE](data/DiskCryptor/x86/smda/DiskCryptor_1.1.846.118_msvc143_x86_dcapi.dll.7z) / [x64 PE](data/DiskCryptor/x64/smda/DiskCryptor_1.1.846.118_msvc143_x64_dcapi.dll.7z) |
 | DiskCryptor | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/DiskCryptor/x86/mcrit/DiskCryptor_1.1.846.118_msvc143_x86_dccon.exe.mcrit) / [x64 PE](data/DiskCryptor/x64/mcrit/DiskCryptor_1.1.846.118_msvc143_x64_dccon.exe.mcrit) | [x86 PE](data/DiskCryptor/x86/smda/DiskCryptor_1.1.846.118_msvc143_x86_dccon.exe.7z) / [x64 PE](data/DiskCryptor/x64/smda/DiskCryptor_1.1.846.118_msvc143_x64_dccon.exe.7z) |
 | DiskCryptor | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/DiskCryptor/x86/mcrit/DiskCryptor_1.1.846.118_msvc143_x86_dcinst.exe.mcrit) / [x64 PE](data/DiskCryptor/x64/mcrit/DiskCryptor_1.1.846.118_msvc143_x64_dcinst.exe.mcrit) | [x86 PE](data/DiskCryptor/x86/smda/DiskCryptor_1.1.846.118_msvc143_x86_dcinst.exe.7z) / [x64 PE](data/DiskCryptor/x64/smda/DiskCryptor_1.1.846.118_msvc143_x64_dcinst.exe.7z) |
+<!-- /generated -->
+
+### DiskCryptorDrv<a id='diskcryptordrv'></a>
+
+The 1.1.846.118 filter driver from the same archive as DiskCryptor, built for x64 only with WDK 10.0.26100.0. Upstream source is not patched; a generated stub suppress.h is supplied by include path. The driver image is linked and disassembled only, never signed, installed or loaded.
+
+<!-- generated: DiskCryptorDrv -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| DiskCryptorDrv | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/DiskCryptorDrv/x64/mcrit/DiskCryptorDrv_1.1.846.118_msvc143_x64_dcrypt.sys.mcrit) | [x64 PE](data/DiskCryptorDrv/x64/smda/DiskCryptorDrv_1.1.846.118_msvc143_x64_dcrypt.sys.7z) |
 <!-- /generated -->
 
 ### WinPmem<a id='winpmem'></a>
