@@ -1,7 +1,7 @@
 {
   "SysWhispers4_4.2.0_mingw13_x64_allevasion_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/allevasion_O2/sw4_allevasion_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "allevasion_O2",
@@ -65,7 +65,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "3e8799354e9fae57986842b8ae3473ad9497c6f15b8260281f023d8a69b2bdeb",
+    "sha256": "58c28cba8ea327e565d6fa30e789b0bc0c077717564c25207443fc74efbfe52e",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_allevasion_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -79,7 +79,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_amsibypass_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/amsibypass_O0/sw4_amsibypass_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "amsibypass_O0",
@@ -142,7 +142,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "a6223b72a5b73787836a79f8b64c76d0987073e1be4358f6e66af9730d56816b",
+    "sha256": "81facd907372756c8baf31d2196094ab34b71f665e9310db38c919bb3c725dd7",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_amsibypass_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -156,7 +156,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_amsibypass_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/amsibypass_O2/sw4_amsibypass_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "amsibypass_O2",
@@ -219,7 +219,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "d0610eefd1cc85653cd528fe1f79d29f8493a90e46f3bb99ccb44c8aaa84cb61",
+    "sha256": "7c7a06a34c0d9d72a9ec777f6b96ca462f3c637c23df38e18a13db67f8d311d2",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_amsibypass_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -233,7 +233,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_antidebug_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/antidebug_O0/sw4_antidebug_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "antidebug_O0",
@@ -297,7 +297,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "d8bdc6be734854d6f349114f20ffdfe1ee982a69e54edbdb9944b3d4e58eeca6",
+    "sha256": "1155588debd9ebfb88c55f914cf1656d711a26f7a38efc3521b9fb1aa4085f13",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_antidebug_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -311,7 +311,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_antidebug_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/antidebug_O2/sw4_antidebug_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "antidebug_O2",
@@ -374,7 +374,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "1331c0cd24c69fdaca0ba968af80bce78fa7b81027184489a3b53aa6b2bcbce1",
+    "sha256": "771fc27791dab12b784b26ce1133e6de7f14705f7567a092365c647905240f68",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_antidebug_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -388,7 +388,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_egghunt_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/egghunt_O0/sw4_egghunt_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "egghunt_O0",
@@ -452,7 +452,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "7a91549227132e1f3e2fed54af6b994ae844e26f6e6a1c2dc27b688bf40fe585",
+    "sha256": "3353d3e3deb98e391f5767fdf3f55103512c9bc2f19304ed8a9a1321f8059d20",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_egghunt_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -466,7 +466,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_egghunt_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/egghunt_O2/sw4_egghunt_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "egghunt_O2",
@@ -529,7 +529,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "1b4c5837b6b294fa5c046d26ab479daaeaefbea162cc0a9ba23192d4e9b3f2c2",
+    "sha256": "f653ce96d2ea5eedf2354a5452e59927a5732b6d5da464dfb78ec379d9aec91a",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_egghunt_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -543,7 +543,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_encryptssn_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/encryptssn_O0/sw4_encryptssn_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "encryptssn_O0",
@@ -606,7 +606,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "36000f16f425bc046c36c957157b0fa2b6f335e42f59f700ca1e83b09fdc6159",
+    "sha256": "7f2d329ca3644b8d20bb21786110fadd5be7102fae174020d9de90f674d4cd2d",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_encryptssn_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -620,7 +620,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_encryptssn_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/encryptssn_O2/sw4_encryptssn_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "encryptssn_O2",
@@ -683,7 +683,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "cce6abfaeb38709dd78c2a1bf421ddc00f0899942eaa2612bb2ab51cdd69d7bf",
+    "sha256": "c4b60c4124c07a0d5675dfbc9a5f51a3f53e78cb4f56ada6a7188293169ab0e1",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_encryptssn_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -697,7 +697,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_etwbypass_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/etwbypass_O0/sw4_etwbypass_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "etwbypass_O0",
@@ -760,7 +760,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "a384c18e3d67b9c17566c5e530b31f548270bfcc2a93f2d6dea19878216f94dd",
+    "sha256": "96d86acbd72130b8e118b2dbc38f4e6b836e9e9fb129b962ea976d7117c4a27a",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_etwbypass_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -774,7 +774,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_etwbypass_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/etwbypass_O2/sw4_etwbypass_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "etwbypass_O2",
@@ -837,7 +837,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "0da73f86a4970a5518f323ad5e18a70592ebaba7d91d03bcfa23c3da817219ca",
+    "sha256": "d51f89405926fa3d5567ce3162d3dab64043ec82ff9b9ad41d24ef8b08f6671b",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_etwbypass_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -851,7 +851,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_freshycalls_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/freshycalls_O0/sw4_freshycalls_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "freshycalls_O0",
@@ -914,7 +914,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "599a67d8d8074ab9686891c14c48dfa09de10c481d12b0603ad9e93dce3f722a",
+    "sha256": "6082a644a40d461abf70df836390325e8af51b3f646f31d991db6f78800f3ca1",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_freshycalls_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -928,7 +928,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_freshycalls_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/freshycalls_O2/sw4_freshycalls_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "freshycalls_O2",
@@ -991,7 +991,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "e663db4f6603f62ca34970368c0fc4ba6cd7e9591b2e941458092c1de4fac9ba",
+    "sha256": "8a70fccf764c0acaab540d2938b288ded76bf52325acbe42b6389a7734c1da7c",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_freshycalls_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -1005,7 +1005,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_fromdisk_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/fromdisk_O0/sw4_fromdisk_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "fromdisk_O0",
@@ -1069,7 +1069,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "c375727fa047483783a8759cb5e33efa2d147807dcc2221038b39241e0a8eb7f",
+    "sha256": "c71a96b845f4935f2901a02bb92500d0509d16a9c3f7f59f56fa3ce73e8ac144",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_fromdisk_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -1083,7 +1083,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_fromdisk_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/fromdisk_O2/sw4_fromdisk_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "fromdisk_O2",
@@ -1146,7 +1146,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "88e4f1ac88ea3d5e1c3b13bbf9778372384a75847ee9f3e305dce385441c541b",
+    "sha256": "5d1073c0ace62f63c2940ad98a5198f1103c7ec7ea50107ddab010e5b2019a60",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_fromdisk_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -1160,7 +1160,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_halosgate_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/halosgate_O0/sw4_halosgate_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "halosgate_O0",
@@ -1223,7 +1223,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "7550f0fd1fba412efab2fd8f8223729312e55537c64fe9a73135c369a291f743",
+    "sha256": "73dd30ac095adb63ef33c0c12d68417f7f53f74b706dee6ebc7927054afbb731",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_halosgate_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -1237,7 +1237,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_halosgate_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/halosgate_O2/sw4_halosgate_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "halosgate_O2",
@@ -1300,7 +1300,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "76b4a810ee0e657f5cdeb78e06d6917156ef2471df71a41bd2dd5d4f17f15019",
+    "sha256": "1d895470c172dfc3d8ab10100ad87d54ed97d3b32aff36fd11e1ca35e7d54fa1",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_halosgate_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -1314,7 +1314,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_hash_crc32_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/hash_crc32_O0/sw4_hash_crc32_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "hash_crc32_O0",
@@ -1377,7 +1377,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "4566865982a012df726febaacb56aec08b3dc5b54a9de64d1522b39848d00fe8",
+    "sha256": "002bb48e86a6d973ac2be9bbf98bf53200ad49ad25c18397ce448870cd7202eb",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_hash_crc32_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -1391,7 +1391,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_hash_crc32_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/hash_crc32_O2/sw4_hash_crc32_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "hash_crc32_O2",
@@ -1454,7 +1454,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "c3593911a5ec4bd47d06c0e46cff43e3988b4e4828849218b2e3757db2ed5d59",
+    "sha256": "3c48d3ec626a0f63fff78aea94ced105906d569e5d7cd9ff88e4010659d7a5ec",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_hash_crc32_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -1468,7 +1468,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_hash_fnv1a_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/hash_fnv1a_O0/sw4_hash_fnv1a_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "hash_fnv1a_O0",
@@ -1531,7 +1531,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "fd27b9d45a982361acec2cb66c402573051e06a62315fbb962c96a9feac3d87a",
+    "sha256": "5a6b332e3c74d1acba198450b9922b0e2b3be7ecf0ccd8fa199517c23e41b9b8",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_hash_fnv1a_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -1545,7 +1545,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_hash_fnv1a_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/hash_fnv1a_O2/sw4_hash_fnv1a_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "hash_fnv1a_O2",
@@ -1608,7 +1608,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "12488a67e7e617d5f8ee7589e3b295bbe6479047e7f6aa268322627aefe9d5ce",
+    "sha256": "5052b3484de8f41e357a4dd47f451e2d553442c6cd818f15f6ce1ee82494c42d",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_hash_fnv1a_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -1622,7 +1622,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_hash_ror13_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/hash_ror13_O0/sw4_hash_ror13_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "hash_ror13_O0",
@@ -1685,7 +1685,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "33b80b51bed3e3f8d682bb5449e8861c5fb639b20f5c3d4216e9c132a8f15127",
+    "sha256": "1aa2b703cd61b4644aec8cca6a8b7aedec1a623bf6113e7cf2b49b622e24035e",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_hash_ror13_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -1699,7 +1699,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_hash_ror13_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/hash_ror13_O2/sw4_hash_ror13_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "hash_ror13_O2",
@@ -1762,7 +1762,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "258fb35b695136cd229bd5d6d2d05553f7184056148138de1405a4f5a8a35e27",
+    "sha256": "c3582f878b94d5ec1db687a6e0f180994a3ba25ab6425cb814b051ae3c7b2f08",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_hash_ror13_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -1776,7 +1776,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_hellsgate_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/hellsgate_O0/sw4_hellsgate_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "hellsgate_O0",
@@ -1839,7 +1839,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "945efc87feb458fe8a86aeaa1147947821d17f75619c16d374a67105e3dac873",
+    "sha256": "f279bf61544699f6d62075e5e4ae05bdd8e403251f9ba5df8611afddd2171669",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_hellsgate_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -1853,7 +1853,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_hellsgate_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/hellsgate_O2/sw4_hellsgate_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "hellsgate_O2",
@@ -1916,7 +1916,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "639348c42c2a33b95ff8ff3f39810ba35b1f35829a123460a929a3506d742972",
+    "sha256": "0ddf3c7721b4284383a425894d6bf2beaabcf8e7789ffffe14f685f7ac517c1a",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_hellsgate_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -1930,7 +1930,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_indirect_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/indirect_O0/sw4_indirect_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "indirect_O0",
@@ -1993,7 +1993,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "866a81a0b356bba4a4035b7442177df03f4d52bf03a440524aa4fe3e39c0c569",
+    "sha256": "c13d4689bbdcf322314d0ede4a2856d7fa70fbc37ffa73f2b58f1f0c39975839",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_indirect_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -2007,7 +2007,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_indirect_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/indirect_O2/sw4_indirect_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "indirect_O2",
@@ -2070,7 +2070,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "bb459a9ad629741c4b66bec1e635f1eaf8b2c2159742c33f2bf393a4e21437dd",
+    "sha256": "348e2bc3a873ecd081ca52c4909643b2a90edce00fb5bcc5e46883109937e8c4",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_indirect_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -2084,7 +2084,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_indirect_recycledgate_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/indirect_recycledgate_O0/sw4_indirect_recycledgate_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "indirect_recycledgate_O0",
@@ -2147,7 +2147,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "20aa222447993cd6e0f180cfdacfd548f5a5d85572a7d28286bb6b0c74456028",
+    "sha256": "fe95335825a1634876a1d0fb7f4dddd0943fa2f1192a9784ac6a15108385fb78",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_indirect_recycledgate_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -2161,7 +2161,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_modulestomp_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/modulestomp_O0/sw4_modulestomp_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "modulestomp_O0",
@@ -2225,7 +2225,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "3b4f8c715ca5fc5c88925c3b5d15fdfae9f8a2ecb0532e8e988eca3fed99e92e",
+    "sha256": "6673797d39030f3c437b73984937ed7df8fe8c405e3ed6f669521992fd7bb12d",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_modulestomp_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -2239,7 +2239,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_modulestomp_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/modulestomp_O2/sw4_modulestomp_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "modulestomp_O2",
@@ -2302,7 +2302,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "2897537bf370e5cd899b808836d09028e105bd48c3c8b1e4f8f95583cf66d6b5",
+    "sha256": "0b816c4d60977a9df9434561c1642a1e8833c755e70de396bb1e2cd3050e9a88",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_modulestomp_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -2316,7 +2316,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_obfuscate_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/obfuscate_O2/sw4_obfuscate_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "obfuscate_O2",
@@ -2379,7 +2379,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "b8f8a24f23f2c24578cc90ea5cc09829c510b5c82020bfa876a0f85a91963866",
+    "sha256": "53d00b0926161e8d9209765a0d6c803388dc489959ae0b0c86403ea24be524dd",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_obfuscate_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -2393,7 +2393,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_presetall_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/presetall_O0/sw4_presetall_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "presetall_O0",
@@ -2456,7 +2456,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "f66ccf117490233d2cf34ec3d6da0be8bceb1e3ec4fabd44807bf4034640eddc",
+    "sha256": "421938af956a3e13efd20b3a7bc85e89239405129b9ca77bdfb09990a9121fb7",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_presetall_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -2470,7 +2470,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_presetall_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/presetall_O2/sw4_presetall_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "presetall_O2",
@@ -2533,7 +2533,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "a62638e968e07791f9c1cc46546631fa0eaec27afb078c9e0983b11fe4f3f6ec",
+    "sha256": "70383fb30bd466e1f01deabb44c388774c968f67dedf38397700974a0e01e949",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_presetall_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -2547,7 +2547,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_randomized_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/randomized_O0/sw4_randomized_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "randomized_O0",
@@ -2610,7 +2610,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "bbba8f398018ef93cf42b1e3609cb19a6abdc599a5b1152cfdba2dff26b32e36",
+    "sha256": "cf673437a86cb7addbd8f7e1d92c9f46037d04cc8b879444d3e449283ef726bf",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_randomized_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -2624,7 +2624,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_randomized_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/randomized_O2/sw4_randomized_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "randomized_O2",
@@ -2687,7 +2687,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "49c0953a6698a3c2cdc0e725cc7b709a0fec742cd2ba0729957f8d9cca097ed2",
+    "sha256": "75e05533cc84e19ba96812d7a9c55605cda810cbb704d3fd478996b106cabf0b",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_randomized_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -2701,7 +2701,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_randomized_obfuscated_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/randomized_obfuscated_O2/sw4_randomized_obfuscated_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "randomized_obfuscated_O2",
@@ -2764,7 +2764,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "467f58e82fc960c9d14911afff7634576c246057915175fdc5b9b4424967f197",
+    "sha256": "0e9095e6466fb7d757d9bde84eb2f578bebc47aa4ac009ebeb4ebbad98ed73ab",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_randomized_obfuscated_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -2778,7 +2778,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_recycledgate_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/recycledgate_O0/sw4_recycledgate_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "recycledgate_O0",
@@ -2841,7 +2841,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "f6c7f2a378cfccb14bf9f5771155d7b0a41b38db23f02608d312d7fc342a928b",
+    "sha256": "428fa6324244852e6989e6414f18ca1b5483bcacaf8787256f622cdb99da4511",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_recycledgate_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -2855,7 +2855,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_recycledgate_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/recycledgate_O2/sw4_recycledgate_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "recycledgate_O2",
@@ -2918,7 +2918,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "dc98a24c0df625f6001800cdbc538d74ae31381deeb173a0b73b8cd9f5d4137e",
+    "sha256": "09f0fa4aa5a59f2c9ebe102972c67feeaeb60c1fbd2ffcf4b853753e0e0cc43f",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_recycledgate_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -2932,7 +2932,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_sleepencrypt_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/sleepencrypt_O0/sw4_sleepencrypt_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "sleepencrypt_O0",
@@ -2995,7 +2995,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "4010e2e3eca7e9e2f0967f0e9e907d54e67f109bde5685977cdc142a217482e4",
+    "sha256": "3c670af3b5a77b4aea11ee5aa9f06a4b723c8a66cabacb1b9a75c3a483d0af43",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_sleepencrypt_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -3009,7 +3009,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_sleepencrypt_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/sleepencrypt_O2/sw4_sleepencrypt_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "sleepencrypt_O2",
@@ -3072,7 +3072,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "cfbf866787ff51fad9c7a709bba168524eb42ff1c7249e7568ce50371ad1642e",
+    "sha256": "7dce597a9a0a2a28326fb0496ab0bbef0ede843692b6a5aaa1cf54a6513b915a",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_sleepencrypt_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -3086,7 +3086,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_static_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/static_O0/sw4_static_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "static_O0",
@@ -3149,7 +3149,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "af6b4ab544e19be81053b55f2eabb55af38fa5d28ef113278813fdcb8406db5d",
+    "sha256": "229831f20e38a86048b6e065946c0efa884cd79b30d03d0ad9ab99efca74cbd1",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_static_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -3163,7 +3163,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_static_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/static_O2/sw4_static_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "static_O2",
@@ -3226,7 +3226,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "9326790f6c992f9ccaf16f958d793dcb26244ac8fba7f122cfe3a127e4d9179e",
+    "sha256": "47f1120104b53162c343618ff22eec18ae81afb0db943639a2e395b553e4491f",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_static_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -3240,7 +3240,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_stringencrypt_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/stringencrypt_O0/sw4_stringencrypt_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "stringencrypt_O0",
@@ -3303,7 +3303,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "554293409166d0e4560558d74204294400908ff1908255cb77b678c28ddeedb8",
+    "sha256": "26173b6439deaf40234a93d747e6a9326e201be13940dee6d7c59e2e5775298b",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_stringencrypt_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -3317,7 +3317,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_stringencrypt_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/stringencrypt_O2/sw4_stringencrypt_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "stringencrypt_O2",
@@ -3380,7 +3380,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "2d4de304d769e86d5946577a25a1f831336b7b7ed1731e75341ab6f648fcb933",
+    "sha256": "48c016ee89f4276514ead1c5e1dc2d484a60be0e4ad2b51839db9519186df631",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_stringencrypt_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -3394,7 +3394,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_tartarusgate_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/tartarusgate_O0/sw4_tartarusgate_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "tartarusgate_O0",
@@ -3457,7 +3457,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "4b6f6a12740497bde4e9d3627c0a1c632f2e5d42442adefb6e591cfe617c43d6",
+    "sha256": "655968f29efba6e67819457d6fa0ed53fcbad30efa7a071200d83bf38111f249",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_tartarusgate_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -3471,7 +3471,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_tartarusgate_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/tartarusgate_O2/sw4_tartarusgate_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "tartarusgate_O2",
@@ -3534,7 +3534,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "7a30ee3b217becfb3445eda26efee09d0db16f3df3981a7b5d769752652607ce",
+    "sha256": "ac2ec7593e1742e0dbf846a0a495dd6438a5592530699f4dbedfb17b81a73aa6",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_tartarusgate_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -3548,7 +3548,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_unhookntdll_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/unhookntdll_O0/sw4_unhookntdll_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "unhookntdll_O0",
@@ -3613,7 +3613,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "4fa7c29684da349dedffc31bada7c73abe618eebafda23a5fd4940b9d5cfc5e3",
+    "sha256": "bbb08b117b2ce4a69781bcf306193cfa0feda52a5852168bdfd7d6c33e04e892",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_unhookntdll_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -3627,7 +3627,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_unhookntdll_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/unhookntdll_O2/sw4_unhookntdll_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "unhookntdll_O2",
@@ -3691,7 +3691,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "49ac48145122297b1317ce02eb40873cded23805b61e05f3933ba7958eac7a9f",
+    "sha256": "6eed17d2501d5cd698ec015d23fa632a262f008cbc6991e15b0096e91db8805f",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_unhookntdll_O2.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -3705,7 +3705,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_vehencrypt_O0": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/vehencrypt_O0/sw4_vehencrypt_O0.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "vehencrypt_O0",
@@ -3768,7 +3768,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "271b3d9a29c196a6803a521f4f5cb1c0bba7124eb3532228409047b43b558f9c",
+    "sha256": "e5b58fde07d26e1b775ad2209e0f70aea9678d482407927946500ebb074dd060",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_vehencrypt_O0.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -3782,7 +3782,7 @@
   },
   "SysWhispers4_4.2.0_mingw13_x64_vehencrypt_O2": {
     "architecture": "x64",
-    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; generated with SW4_SEED=20260101",
+    "build_flags": "-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000 so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/vehencrypt_O2/sw4_vehencrypt_O2.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "vehencrypt_O2",
@@ -3845,7 +3845,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "03fb8dec6238faaa3b5745a04f8dae6b5593b4dd1dd319115b2c1e8415026ddc",
+    "sha256": "fe31771e6216551cf4b654d0b2b7e464bdbcecb4632b86bc7923ec6c2649d1bf",
     "smda": "data/SysWhispers4/x64/smda/SysWhispers4_4.2.0_mingw13_x64_vehencrypt_O2.7z",
     "smda_version": "5.0.2",
     "source": {

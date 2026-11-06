@@ -25,7 +25,7 @@ none of them a change to upstream:
   scope".
 * **``-I`` a case shim for ``Windows.h``**. utils.cpp includes the capital-W
   spelling, which exists on MSVC's case-insensitive filesystem and not in a
-  mingw-w64 sysroot on Linux. ``exercisers/freshycalls_compat/Windows.h``
+  mingw-w64 sysroot on Linux. ``exercisers/win_case_compat/Windows.h``
   forwards to ``<windows.h>``; the same obstacle is recorded in
   wow64pp.cpp's docstring, which solved it by editing its own include.
 * **``-DUNICODE -D_UNICODE``**. utils.cpp passes a wide literal to
@@ -53,10 +53,15 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
 _EX = "{repo}/scripts/corpus/exercisers"
-_BUILD = ("{cxx} -std=c++17 -O2 -shared -I. -I%s/freshycalls_compat "
+_BUILD = ("{cxx} -std=c++17 -O2 -shared -I. -I%s/win_case_compat "
           "-include intrin.h -DUNICODE -D_UNICODE "
           "-o freshycalls.dll %s/freshycalls.cpp syscall.cpp utils.cpp "
-          "-shared-libgcc" % (_EX, _EX))
+          # mingw's ld stamps a PE timestamp and picks a random DLL
+          # ImageBase, either of which makes the recorded sha256 change on
+          # every rebuild. See exercisers/sw4_build.py:repro_flags.
+          "-shared-libgcc -Wl,--no-insert-timestamp "
+          "-Wl,--disable-auto-image-base -Wl,--image-base,0x180000000"
+          % (_EX, _EX))
 
 
 RECIPES = {
@@ -72,7 +77,10 @@ RECIPES = {
         # x64 only; syscall.hpp #errors on anything else.
         toolchains=["mingw_x64"],
         build_flags=("-std=c++17 -O2 -shared -shared-libgcc, "
-                     "-include intrin.h, -DUNICODE -D_UNICODE"),
+                     "-include intrin.h, -DUNICODE -D_UNICODE, "
+                     "-Wl,--no-insert-timestamp "
+                     "-Wl,--disable-auto-image-base "
+                     "-Wl,--image-base,0x180000000"),
         notes="Built from an exerciser translation unit: the project has no "
               "build system and its callers are variadic templates, so "
               "nothing of the interesting half exists in a binary until "

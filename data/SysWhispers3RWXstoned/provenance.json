@@ -1,7 +1,7 @@
 {
   "SysWhispers3RWXstoned_2024-04-03_mingw13_x64_embedded_presetall": {
     "architecture": "x64",
-    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Generated with SW_SEED=20260101",
+    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base so the recorded sha256 is stable across rebuilds. Generated with SW_SEED=20260101",
     "built_artifact": "bld/embedded_presetall/sw3_embedded_presetall.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "embedded_presetall",
@@ -64,7 +64,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "1e6ebf26df0328c0538e0fa0a70fcb2751b4050d1137b9d150affadb45739a8a",
+    "sha256": "80b1a496718c5ed35438ea645b8c084aba74f7cbcb88bf1385084ee4d41b4ed0",
     "smda": "data/SysWhispers3RWXstoned/x64/smda/SysWhispers3RWXstoned_2024-04-03_mingw13_x64_embedded_presetall.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -78,7 +78,7 @@
   },
   "SysWhispers3RWXstoned_2024-04-03_mingw13_x64_jumper": {
     "architecture": "x64",
-    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Generated with SW_SEED=20260101",
+    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base so the recorded sha256 is stable across rebuilds. Generated with SW_SEED=20260101",
     "built_artifact": "bld/jumper/sw3_jumper.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "jumper",
@@ -141,7 +141,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "6ca8e1607e14897d7fc9527dc603faee222bcb9baf740cad99db639c4e418bee",
+    "sha256": "3a4746feae8efeb787ef4d0253f91c0c770c5362a8def81976b3fa8b896422da",
     "smda": "data/SysWhispers3RWXstoned/x64/smda/SysWhispers3RWXstoned_2024-04-03_mingw13_x64_jumper.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -155,7 +155,7 @@
   },
   "SysWhispers3RWXstoned_2024-04-03_mingw13_x86_embedded": {
     "architecture": "x86",
-    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Generated with SW_SEED=20260101",
+    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base so the recorded sha256 is stable across rebuilds. Generated with SW_SEED=20260101",
     "built_artifact": "bld/embedded/sw3_embedded.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "embedded",
@@ -217,7 +217,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "621a711f6b45584b1d3719f4c770a1b71585a5d0245a9036ba2fac242ecb025f",
+    "sha256": "cbc48c2f01e646332951f377a3759a4ceaf0e92143b19495d339e3df475c0347",
     "smda": "data/SysWhispers3RWXstoned/x86/smda/SysWhispers3RWXstoned_2024-04-03_mingw13_x86_embedded.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -231,7 +231,7 @@
   },
   "SysWhispers3RWXstoned_2024-04-03_mingw13_x86_jumper": {
     "architecture": "x86",
-    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Generated with SW_SEED=20260101",
+    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base so the recorded sha256 is stable across rebuilds. Generated with SW_SEED=20260101",
     "built_artifact": "bld/jumper/sw3_jumper.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "jumper",
@@ -293,7 +293,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "fb22c4ea3856c701290c30684e42a11aee54dac575f95aee8cd0bc1a67fba36f",
+    "sha256": "d0d4f0d5d1e43d6f4dd2d99c305023a7719441aa929c8f54308a1e4e298052e4",
     "smda": "data/SysWhispers3RWXstoned/x86/smda/SysWhispers3RWXstoned_2024-04-03_mingw13_x86_jumper.7z",
     "smda_version": "5.0.2",
     "source": {

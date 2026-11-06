@@ -260,7 +260,9 @@ _GEN = "{repo}/scripts/corpus/exercisers/sw4_build.py"
 # docstring explains. Nothing else of the compile line varies between points.
 _FLAGS = ("-shared, -O2 or -O0 per component, -DWAIT_TYPE=ULONG "
           "-DTIMER_TYPE=ULONG for the two enum types mingw-w64 omits; "
-          "generated with SW_SEED=" + _SEED)
+          "linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base "
+          "-Wl,--image-base,0x180000000 so the recorded sha256 is stable "
+          "across rebuilds; generated with SW_SEED=" + _SEED)
 
 
 def _steps_and_artifacts():

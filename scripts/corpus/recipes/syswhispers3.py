@@ -79,8 +79,10 @@ _NOTES = ("Built from the generator's own output; no exerciser is needed "
           "where there are two.")
 _FLAGS = ("-O2 -masm=intel -shared; -masm=intel is required because the "
           "generated inline assembly is Intel syntax with no directive of "
-          "its own and GAS otherwise rejects every stub. Generated with "
-          "SW_SEED=" + _SEED)
+          "its own and GAS otherwise rejects every stub. Linked "
+          "-Wl,--no-insert-timestamp -Wl,--disable-auto-image-base "
+          "-Wl,--image-base so the recorded sha256 is stable across "
+          "rebuilds. Generated with SW_SEED=" + _SEED)
 
 
 def _recipe(arch, upstream, ref, family, version, min_functions,

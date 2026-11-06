@@ -1,7 +1,7 @@
 {
   "SysWhispers3_2023-12-23_mingw13_x64_embedded_presetall": {
     "architecture": "x64",
-    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Generated with SW_SEED=20260101",
+    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base so the recorded sha256 is stable across rebuilds. Generated with SW_SEED=20260101",
     "built_artifact": "bld/embedded_presetall/sw3_embedded_presetall.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "embedded_presetall",
@@ -64,7 +64,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "2df319add9e4314897bcd8bb93416adfe66a94742bca37f77b2bb152d72da89f",
+    "sha256": "7d4cb03fc681d067364672a525992be10136c162317e3c2d8afccc687fc34a1a",
     "smda": "data/SysWhispers3/x64/smda/SysWhispers3_2023-12-23_mingw13_x64_embedded_presetall.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -78,7 +78,7 @@
   },
   "SysWhispers3_2023-12-23_mingw13_x64_jumper": {
     "architecture": "x64",
-    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Generated with SW_SEED=20260101",
+    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base so the recorded sha256 is stable across rebuilds. Generated with SW_SEED=20260101",
     "built_artifact": "bld/jumper/sw3_jumper.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "jumper",
@@ -141,7 +141,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "30e3fe78266ce26e17356b508482b024464c94faebc67a7fa37600d9c8cf2f04",
+    "sha256": "184b78628cbc6a7d904aea8d992c614ea691e65eb76cf627eb4464dfe90116f2",
     "smda": "data/SysWhispers3/x64/smda/SysWhispers3_2023-12-23_mingw13_x64_jumper.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -155,7 +155,7 @@
   },
   "SysWhispers3_2023-12-23_mingw13_x86_embedded": {
     "architecture": "x86",
-    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Generated with SW_SEED=20260101",
+    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base so the recorded sha256 is stable across rebuilds. Generated with SW_SEED=20260101",
     "built_artifact": "bld/embedded/sw3_embedded.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "embedded",
@@ -217,7 +217,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "ebb4619ca84656761700264767484994d603dfd47623ddecc82ade0fbb5f3f6e",
+    "sha256": "99b46ff77e9223e4b8d44cdb57292a42e3d5931f67157c770148cabd0d4080ce",
     "smda": "data/SysWhispers3/x86/smda/SysWhispers3_2023-12-23_mingw13_x86_embedded.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -231,7 +231,7 @@
   },
   "SysWhispers3_2023-12-23_mingw13_x86_jumper": {
     "architecture": "x86",
-    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Generated with SW_SEED=20260101",
+    "build_flags": "-O2 -masm=intel -shared; -masm=intel is required because the generated inline assembly is Intel syntax with no directive of its own and GAS otherwise rejects every stub. Linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base so the recorded sha256 is stable across rebuilds. Generated with SW_SEED=20260101",
     "built_artifact": "bld/jumper/sw3_jumper.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "jumper",
@@ -293,7 +293,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "c65e9921ffd21c420a8c61ede05d690c73cb4f03fb937d60698c23222eddac95",
+    "sha256": "a4d444e971a8bd2d6a9797fd4e7b7e9e14ebb7ff52e90df855b43b01a1039ce1",
     "smda": "data/SysWhispers3/x86/smda/SysWhispers3_2023-12-23_mingw13_x86_jumper.7z",
     "smda_version": "5.0.2",
     "source": {

@@ -1,7 +1,7 @@
 {
   "FreshyCalls_2022-09-01_mingw13_x64_freshycalls.dll": {
     "architecture": "x64",
-    "build_flags": "-std=c++17 -O2 -shared -shared-libgcc, -include intrin.h, -DUNICODE -D_UNICODE",
+    "build_flags": "-std=c++17 -O2 -shared -shared-libgcc, -include intrin.h, -DUNICODE -D_UNICODE, -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base,0x180000000",
     "built_artifact": "freshycalls.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "freshycalls.dll",
@@ -124,7 +124,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "a2a6ace55c75016cefd16a4331494330f028e158e722837bd430b5a20aaf2112",
+    "sha256": "7fff786100674604f49c7da2b315034c3488bad57f6af307b70a5119b013daab",
     "smda": "data/FreshyCalls/x64/smda/FreshyCalls_2022-09-01_mingw13_x64_freshycalls.dll.7z",
     "smda_version": "5.0.2",
     "source": {

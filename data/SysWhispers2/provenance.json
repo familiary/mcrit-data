@@ -1,7 +1,7 @@
 {
   "SysWhispers2_2022-09-03_mingw13_x64_rnd": {
     "architecture": "x64",
-    "build_flags": "-O2 -shared, GAS stub flavour assembled by the mingw-w64 assembler, -DRANDSYSCALL on the randomised points; generated with SW_SEED=20260101",
+    "build_flags": "-O2 -shared, GAS stub flavour assembled by the mingw-w64 assembler, -DRANDSYSCALL on the randomised points, linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/rnd/sw2_rnd.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "rnd",
@@ -64,7 +64,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "5183f95ac4794f79e0521cf4843e76d147bc35edb1252774e37b7185d447170a",
+    "sha256": "5a4e8515a702eb99151eacfc8d290868b44875f69e4fad6ae872c6dafc7f931e",
     "smda": "data/SysWhispers2/x64/smda/SysWhispers2_2022-09-03_mingw13_x64_rnd.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -78,7 +78,7 @@
   },
   "SysWhispers2_2022-09-03_mingw13_x64_std_presetall": {
     "architecture": "x64",
-    "build_flags": "-O2 -shared, GAS stub flavour assembled by the mingw-w64 assembler, -DRANDSYSCALL on the randomised points; generated with SW_SEED=20260101",
+    "build_flags": "-O2 -shared, GAS stub flavour assembled by the mingw-w64 assembler, -DRANDSYSCALL on the randomised points, linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/std_presetall/sw2_std_presetall.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "std_presetall",
@@ -141,7 +141,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "d26134944c977e0e38ee2f832ef06e13e6ab3c279556107eb4c1e01cfb4032d1",
+    "sha256": "6efbb1c8c522f3de374a8a71feb102e464af26402d40cec45c412eebef36fa69",
     "smda": "data/SysWhispers2/x64/smda/SysWhispers2_2022-09-03_mingw13_x64_std_presetall.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -155,7 +155,7 @@
   },
   "SysWhispers2_2022-09-03_mingw13_x86_rnd": {
     "architecture": "x86",
-    "build_flags": "-O2 -shared, GAS stub flavour assembled by the mingw-w64 assembler, -DRANDSYSCALL on the randomised points; generated with SW_SEED=20260101",
+    "build_flags": "-O2 -shared, GAS stub flavour assembled by the mingw-w64 assembler, -DRANDSYSCALL on the randomised points, linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/rnd/sw2_rnd.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "rnd",
@@ -217,7 +217,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "3788bb1f99dbfb48c468e7ff05a8e98bcb78ce503bd3cae7d06e92118b20537d",
+    "sha256": "aed04824b35d3afec9691682556a31ca580785ab97f123bbdeae4ce31b638646",
     "smda": "data/SysWhispers2/x86/smda/SysWhispers2_2022-09-03_mingw13_x86_rnd.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -231,7 +231,7 @@
   },
   "SysWhispers2_2022-09-03_mingw13_x86_std": {
     "architecture": "x86",
-    "build_flags": "-O2 -shared, GAS stub flavour assembled by the mingw-w64 assembler, -DRANDSYSCALL on the randomised points; generated with SW_SEED=20260101",
+    "build_flags": "-O2 -shared, GAS stub flavour assembled by the mingw-w64 assembler, -DRANDSYSCALL on the randomised points, linked -Wl,--no-insert-timestamp -Wl,--disable-auto-image-base -Wl,--image-base so the recorded sha256 is stable across rebuilds; generated with SW_SEED=20260101",
     "built_artifact": "bld/std/sw2_std.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "std",
@@ -293,7 +293,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "625251ec3caba0e5b6072ceb0670c4483fd7a89c010cf8121ed92cd92f777833",
+    "sha256": "b6a58f4641eca1e14ea42dd9c1d76a2f68b4bec992160a02cedb7f710bb4e94c",
     "smda": "data/SysWhispers2/x86/smda/SysWhispers2_2022-09-03_mingw13_x86_std.7z",
     "smda_version": "5.0.2",
     "source": {

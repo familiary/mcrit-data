@@ -33,6 +33,29 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+# mingw-w64's ld makes a DLL that is not byte-reproducible, in two ways that
+# both had to be found by building the same source three times and diffing:
+#
+#   * It stamps the PE TimeDateStamp, like MSVC does without /Brepro.
+#   * It picks a pseudo-random ImageBase for a DLL ("auto image base"), so
+#     every absolute address in the image moves. Two runs of one source
+#     differed in 1117 bytes, and all but two of them were the high half of
+#     a 64-bit address: 0x00024A2B0000 against 0x00022F690000.
+#
+# PicHashes are position-independent and did not move, which is why the
+# measurements were stable either way - but provenance records a sha256 per
+# artefact, and an artefact whose digest changes on every rebuild cannot be
+# traced to the source it came from. With the three flags below, three runs
+# produce one digest.
+#
+# 0x180000000 is the conventional x64 DLL base and 0x10000000 the x86 one;
+# the value only has to be fixed, not meaningful.
+def repro_flags(cc):
+    base = "0x10000000" if "i686" in cc else "0x180000000"
+    return ("-Wl,--no-insert-timestamp -Wl,--disable-auto-image-base "
+            "-Wl,--image-base,%s" % base)
+
+
 
 def sh(cmd, **kw):
     r = subprocess.run(cmd, shell=True, text=True, **kw)
@@ -75,8 +98,8 @@ def main():
             srcs += " %s/SW_stubs.c" % d
 
     sh("%s %s -shared -o %s %s -I%s -lntdll "
-       "-DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG"
-       % (a.cc, a.opt, a.out, srcs, d))
+       "-DWAIT_TYPE=ULONG -DTIMER_TYPE=ULONG %s"
+       % (a.cc, a.opt, a.out, srcs, d, repro_flags(a.cc)))
     print("built %s (%d bytes)" % (a.out, os.path.getsize(a.out)))
 
 

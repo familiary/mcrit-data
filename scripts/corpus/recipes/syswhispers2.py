@@ -102,8 +102,10 @@ _NOTES = ("Built from the generator's own output. The artefact carries the "
           "immediates - and so every body carrying them - differ on every "
           "run.")
 _FLAGS = ("-O2 -shared, GAS stub flavour assembled by the mingw-w64 "
-          "assembler, -DRANDSYSCALL on the randomised points; generated with "
-          "SW_SEED=" + _SEED)
+          "assembler, -DRANDSYSCALL on the randomised points, linked "
+          "-Wl,--no-insert-timestamp -Wl,--disable-auto-image-base "
+          "-Wl,--image-base so the recorded sha256 is stable across "
+          "rebuilds; generated with SW_SEED=" + _SEED)
 
 
 RECIPES = {

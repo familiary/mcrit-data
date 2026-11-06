@@ -112,7 +112,15 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          # 3.12 rather than 3.11 because mcrit declares Requires-Python
+          # >=3.12 from 1.10.0 onwards, so scripts/requirements.txt cannot be
+          # satisfied on 3.11: pip reports "Ignored the following versions
+          # that require a different python version" for every release after
+          # 1.9.0 and then fails the job. This is the only edit to this file
+          # and it does not widen what a push builds - the recipe selection
+          # below keys on $core, which this file is not in, so a push that
+          # touches it still builds only the recipes it changed.
+          python-version: '3.12'
 
       - name: Install analysis dependencies
         run: python -m pip install --quiet -r scripts/requirements.txt
