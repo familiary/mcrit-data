@@ -2943,6 +2943,9 @@ int main(int argc, char **argv)
 """
 
 
+# MSVC only. The rest of the UCRT's inline stdio surface, wide and narrow.
+#
+# NOTES-PLACEHOLDER
 _STDIO_TABLE_HEAD = """\
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <windows.h>
@@ -2954,21 +2957,6 @@ _STDIO_TABLE_HEAD = """\
 typedef void (*probe_symbol)(void);
 
 """
-
-_STDIO_TABLE_DLL = "BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }\n"
-
-
-def _stdio_table_source(tag, names, exe=False):
-    entries = "".join("    (probe_symbol)%s,\n" % name for name in names)
-    if exe:
-        tail = ("int main(int argc, char **argv)\n{\n"
-                "    return probe_msvcrt_%s_symbols[argc] != 0;\n}\n" % tag)
-    else:
-        tail = _STDIO_TABLE_DLL
-    return (_STDIO_TABLE_HEAD +
-            "__declspec(dllexport) probe_symbol probe_msvcrt_%s_symbols[] = {\n"
-            "%s};\n\n%s" % (tag, entries, tail))
-
 
 _STDIO_NARROW_PRINT = (
     "printf", "vprintf", "fprintf", "vfprintf",
@@ -3003,15 +2991,15 @@ _STDIO_WIDE_STRING_X = (
     "_swprintf_p_l", "_vswprintf_p_l", "_vswprintf_l", "_swprintf_l",
     "_scwprintf", "_vscwprintf", "_scwprintf_l", "_vscwprintf_l",
     "_scwprintf_p", "_vscwprintf_p")
+_STDIO_PRINT_X = (
+    "_snprintf_c", "_snprintf_c_l", "_vsnprintf_c", "_vsnprintf_c_l",
+    "vsnprintf_s", "__swprintf_l", "__vswprintf_l",
+    "_scprintf_p_l", "_scwprintf_p_l")
 _STDIO_SCAN = (
     "scanf", "wscanf", "fscanf", "fwscanf", "sscanf", "swscanf",
     "vfscanf", "vfwscanf", "vsscanf", "vswscanf",
     "scanf_s", "wscanf_s", "fscanf_s", "fwscanf_s", "sscanf_s", "swscanf_s",
     "_vfscanf_l", "_vfwscanf_l")
-_STDIO_MISC = (
-    "localtime_s", "gmtime_s", "__local_stdio_printf_options",
-    "__local_stdio_scanf_options")
-
 _STDIO_SCAN_L = (
     "_scanf_l", "_wscanf_l", "_scanf_s_l", "_wscanf_s_l",
     "_fscanf_l", "_fwscanf_l", "_fscanf_s_l", "_fwscanf_s_l",
@@ -3022,56 +3010,93 @@ _STDIO_VSCAN = (
     "vscanf", "vwscanf", "vscanf_s", "vwscanf_s", "vfscanf_s", "vfwscanf_s",
     "vswscanf_s", "_vscanf_l", "_vwscanf_l", "_vscanf_s_l", "_vwscanf_s_l",
     "_vsscanf_l", "_vsnwscanf_l", "_vsnwscanf_s_l")
-_STDIO_VSCAN_X = (
-    "vsscanf_s", "_vsscanf_s_l", "_vswscanf_l", "_vswscanf_s_l",
-    "_vfscanf_s_l", "_vfwscanf_s_l")
-_STDIO_PRINT_X = (
-    "_snprintf_c", "_snprintf_c_l", "_vsnprintf_c", "_vsnprintf_c_l",
-    "vsnprintf_s", "__swprintf_l", "__vswprintf_l",
-    "_scprintf_p_l", "_scwprintf_p_l")
+_STDIO_MISC = (
+    "localtime_s", "gmtime_s", "__local_stdio_printf_options",
+    "__local_stdio_scanf_options")
 
+# Each source is its own translation unit and its own probe: a name that a
+# future SDK stops declaring takes down one group, not the lot, and
+# probe_failures names the group that went.
 _STDIO_GROUPS = (
     ("narrow_print", _STDIO_NARROW_PRINT),
     ("narrow_string", _STDIO_NARROW_STRING),
     ("wide_print", _STDIO_WIDE_PRINT),
     ("wide_string", _STDIO_WIDE_STRING),
     ("wide_string_x", _STDIO_WIDE_STRING_X),
+    ("print_x", _STDIO_PRINT_X),
     ("scan", _STDIO_SCAN),
     ("scan_l", _STDIO_SCAN_L),
     ("vscan", _STDIO_VSCAN),
-    ("vscan_x", _STDIO_VSCAN_X),
-    ("print_x", _STDIO_PRINT_X),
     ("misc", _STDIO_MISC),
 )
 
-_STDIO_FLAVOURS = {
-    "x86": (("", []), ("oy", ["/Oy-"]), ("sdloy", ["/sdl", "/Oy-"]),
-            ("od", ["/Od"])),
-    "x64": (("", []), ("sdl", ["/sdl"]), ("odsdl", ["/Od", "/sdl"])),
+# Which groups are built under which flags, per architecture. Every entry is
+# there because the probe it names emitted a body that an artefact carries
+# (see the note above); a combination that emitted nothing new is not listed.
+# The flags are the ones the artefacts' own projects turn out to have used,
+# worked out from which probe flavour reproduced which hash, not read off the
+# recipes.
+_STDIO_ALL = tuple(tag for tag, _ in _STDIO_GROUPS if tag != "misc")
+_STDIO_PLAN = {
+    "x86": (
+        ("", [], _STDIO_ALL),
+        ("oy", ["/Oy-"], ("narrow_print", "narrow_string", "wide_print",
+                           "wide_string", "scan")),
+        ("sdl", ["/sdl"], ("narrow_print", "narrow_string", "wide_print",
+                           "wide_string", "wide_string_x", "scan")),
+        ("sdloy", ["/sdl", "/Oy-"], ("narrow_print", "narrow_string",
+                                     "wide_print", "wide_string", "scan")),
+        ("od", ["/Od"], ("narrow_print", "narrow_string", "wide_print",
+                         "wide_string", "wide_string_x", "print_x", "misc")),
+    ),
+    "x64": (
+        ("", [], _STDIO_ALL),
+        ("sdl", ["/sdl"], _STDIO_ALL),
+        ("odsdl", ["/Od", "/sdl"], ("narrow_print", "wide_print",
+                                    "wide_string", "misc")),
+    ),
 }
 
-_STDIO_BB_TABLES = (
-    ("bba", ("swprintf_s", "_swprintf_s_l", "vswprintf_s")),
-    ("bbb", ("swprintf_s",)),
-    ("bbc", ("swprintf_s", "fprintf", "printf", "_vswprintf_s_l_unused")),
-)
+
+def _stdio_table_source(tag, names, exe=False):
+    """C source whose only content is the address of every name in ``names``.
+
+    The address is the point. Called, a UCRT inline wrapper is inlined at
+    /O2 or not depending on the caller, and an inline the compiler can see
+    through is an inline the baseline never gets a body for; with its address
+    taken it is emitted as a function in its own right, every time.
+    """
+    entries = "".join("    (probe_symbol)%s,\n" % name for name in names)
+    if exe:
+        tail = ("int main(int argc, char **argv)\n{\n"
+                "    return probe_msvcrt_%s_symbols[argc] != 0;\n}\n" % tag)
+    else:
+        tail = ("BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, "
+                "LPVOID reserved) { return TRUE; }\n")
+    return (_STDIO_TABLE_HEAD +
+            "__declspec(dllexport) probe_symbol probe_msvcrt_%s_symbols[] = {\n"
+            "%s};\n\n%s" % (tag, entries, tail))
 
 
-def _stdio_lab_probes(toolchain):
+def _msvc_stdio_probes(toolchain):
+    """The probe registrations for the groups above, as _msvc_probes wants."""
+    names = dict(_STDIO_GROUPS)
     probes = []
-    for flavour, flags in _STDIO_FLAVOURS[toolchain.arch]:
-        for tag, names in _STDIO_GROUPS:
-            probes.append((toolchain.cc,
-                           "probe_msvcrt_wstdio_%s%s.c" % (tag, "_" + flavour if flavour else ""),
-                           _stdio_table_source("wstdio_" + tag, names),
+    for flavour, flags, tags in _STDIO_PLAN[toolchain.arch]:
+        for tag in tags:
+            filename = "probe_msvcrt_wstdio_%s%s.c" % (
+                tag, "_" + flavour if flavour else "")
+            probes.append((toolchain.cc, filename,
+                           _stdio_table_source("wstdio_" + tag, names[tag]),
                            ["-shared", "/MD"] + flags + _MSVC_RECIPE_LINK))
-    for flavour, flags in (("oxgloy", ["/Ox", "/Ob2", "/Ot", "/GS-", "/GL", "/Oy-"]),
-                           ("oxgl", ["/Ox", "/Ob2", "/Ot", "/GS-", "/GL"])):
-        for tag, names in _STDIO_BB_TABLES:
-            names = tuple(n for n in names if not n.endswith("_unused"))
-            probes.append((toolchain.cc, "probe_msvcrt_wstdio_%s_%s.c" % (tag, flavour),
-                           _stdio_table_source("wstdio_" + tag, names),
-                           ["-shared", "/MD"] + flags + _MSVC_RECIPE_LINK))
+    # One EXE registration, for the reason _PROBE_MSVCRT_STDIO_EXE gives: an
+    # executable is a different object set. The bodies it contributes are the
+    # DLL's, hash for hash, so it carries the two print groups and no more.
+    probes.append((toolchain.cc, "probe_msvcrt_wstdio_exe.c",
+                   _stdio_table_source("wstdio_exe",
+                                       _STDIO_NARROW_PRINT + _STDIO_WIDE_PRINT,
+                                       exe=True),
+                   ["/MD"] + _MSVC_RECIPE_LINK))
     return probes
 
 
@@ -3219,7 +3244,16 @@ def _msvc_probes(toolchain):
         probes.append(
             (toolchain.cc, "probe_msvcrt_helpers_x87.c", _PROBE_MSVCRT_HELPERS,
              ["-shared", "/MD", "/arch:IA32"]))
-    probes += _stdio_lab_probes(toolchain)
+    probes += _msvc_stdio_probes(toolchain)
+    if toolchain.arch == "x86":
+        bbl = ["link:/INCREMENTAL:NO", "link:/LTCG", "link:/OPT:REF", "link:/OPT:ICF"]
+        for fl, flags in (("oxgloy", ["/Ox", "/Ob2", "/Ot", "/GS-", "/GL", "/Oy-"]),
+                          ("oxgl", ["/Ox", "/Ob2", "/Ot", "/GS-", "/GL"])):
+            for tg, nm in (("bba", ("swprintf_s", "_swprintf_s_l", "vswprintf_s")),
+                           ("bbb", ("swprintf_s",))):
+                probes.append((toolchain.cc, "probe_msvcrt_wstdio_%s_%s_ref.c" % (tg, fl),
+                               _stdio_table_source("wstdio_" + tg, nm),
+                               ["-shared", "/MD"] + flags + bbl))
     return probes  # LAB: skip STL
     # Which templates the STL headers instantiate depends on the language
     # version, and the two recipes disagree: vxapi.py builds /std:c++20 and
