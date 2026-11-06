@@ -26,7 +26,7 @@ RECIPES = {
     "EDRSilencer_2024-11-03_msvc": Recipe(
         family="EDRSilencer", version="2024-11-03", source=_SOURCE,
         upstream="https://github.com/netero1010/EDRSilencer", license="MIT",
-        build=[BuildStep("python -m pip install --quiet smda==5.0.2 mcrit==1.16.0"), BuildStep("cl /nologo /O2 /MD /Zi /D_CRT_SECURE_NO_WARNINGS EDRSilencer.c utils.c /link fwpuclnt.lib advapi32.lib /DEBUG /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO /OUT:EDRSilencer.exe /PDB:EDRSilencer.pdb")],
+        build=[BuildStep("cl /nologo /O2 /MD /Zi /D_CRT_SECURE_NO_WARNINGS EDRSilencer.c utils.c /link fwpuclnt.lib advapi32.lib /DEBUG /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO /OUT:EDRSilencer.exe /PDB:EDRSilencer.pdb")],
         artifacts=[Artifact(path="EDRSilencer.exe", component="EDRSilencer.exe", pdb="EDRSilencer.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags="/O2 /MD /Zi /DEBUG /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO; fwpuclnt.lib advapi32.lib",

@@ -27,7 +27,7 @@ for _kind, _tcs in (("mingw", ["mingw_x86", "mingw_x64"]), ("linux", ["linux_x86
     RECIPES["peinjector_2016-05-11_" + _kind] = Recipe(
         family="peinjector", version="2016-05-11", source=_SOURCE,
         upstream="https://github.com/JonDoNym/peinjector", license="Unlicense",
-        build=([BuildStep("python -m pip install --quiet smda==5.0.2 mcrit==1.16.0")] if _kind == "msvc" else []) + [BuildStep(_command)], artifacts=[_artifact], toolchains=_tcs,
+        build=[BuildStep(_command)], artifacts=[_artifact], toolchains=_tcs,
         build_flags=_flags,
         notes="Only libpefile.c, libpeinfect.c, libpeinfect_obfuscator.c and "
               "libpetool.c are linked, the same four library files identified "
