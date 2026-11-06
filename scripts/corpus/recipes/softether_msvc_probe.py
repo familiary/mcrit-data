@@ -10,7 +10,7 @@ RECIPES = {
         source=Source(
             git_url="https://github.com/SoftEtherVPN/SoftEtherVPN_Stable.git",
             git_ref="ed17437af9719ac66acab30faa29e375d613c35f"),
-        build=[BuildStep("msbuild src\\SEVPN.sln "
+        build=[BuildStep("msbuild src\\vpnserver\\vpnserver.vcproj "
                          "/p:Configuration=Release "
                          "/p:Platform={msbuild_platform} /m:2")],
         artifacts=[Artifact(path="src\\bin\\vpnserver.exe", component="vpnserver")],
