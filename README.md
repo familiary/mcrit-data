@@ -54,6 +54,7 @@ Libraries
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [libstdc++](#libstdcxx)
+* [Tor](#tor)
 
 Runtimes
 * [Lua](#lua)
@@ -673,6 +674,19 @@ Generated with `scripts/build_corpus.py`; see `data/libstdc++/provenance.json` f
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libstdc++ | 13.2-mingw-w64 | MinGW-w64 GCC 13 | [x86 PE](data/libstdc++/x86/mcrit/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.mcrit) | [x86 PE](data/libstdc++/x86/smda/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.7z) |
+<!-- /generated -->
+
+### Tor<a id='tor'></a>
+
+Tor is a widely deployed anonymity network implementation. The reference covers its client and circuit core from the 0.4.8.25 LTS release, with relay and directory-authority modules disabled and shared dependencies kept outside the Tor image.
+Generated with `scripts/build_corpus.py`; see `data/Tor/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Tor -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Tor | 0.4.8.25 | GCC 13 (Linux, glibc) | [x86 ELF](data/Tor/x86/mcrit/Tor_0.4.8.25_gcc13_x86_tor-client.mcrit) | [x86 ELF](data/Tor/x86/smda/Tor_0.4.8.25_gcc13_x86_tor-client.7z) |
+| Tor | 0.4.8.25 | GCC 14 (Linux, glibc) | [x64 ELF](data/Tor/x64/mcrit/Tor_0.4.8.25_gcc14_x64_tor-client.mcrit) | [x64 ELF](data/Tor/x64/smda/Tor_0.4.8.25_gcc14_x64_tor-client.7z) |
+| Tor | 0.4.8.25 | MinGW-w64 GCC 13 | [x86 PE](data/Tor/x86/mcrit/Tor_0.4.8.25_mingw13_x86_tor-client.mcrit) / [x64 PE](data/Tor/x64/mcrit/Tor_0.4.8.25_mingw13_x64_tor-client.mcrit) | [x86 PE](data/Tor/x86/smda/Tor_0.4.8.25_mingw13_x86_tor-client.7z) / [x64 PE](data/Tor/x64/smda/Tor_0.4.8.25_mingw13_x64_tor-client.7z) |
 <!-- /generated -->
 
 ## Runtimes
