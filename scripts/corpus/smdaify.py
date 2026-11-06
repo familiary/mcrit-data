@@ -12,7 +12,7 @@ import logging
 import os
 
 from . import config
-from .baseline import is_glue
+from .baseline import is_glue, is_go_glue
 
 
 LOGGER = logging.getLogger(__name__)
@@ -147,6 +147,54 @@ def _drop_crt_glue(report, toolchain_id):
         _recompute_statistics(report)
         LOGGER.info("dropped %d compiler runtime functions: %s",
                     len(removed), ", ".join(sorted(removed)))
+    return removed
+
+
+def _drop_go_runtime(report):
+    """Remove the Go runtime and standard library from a Go-built image.
+
+    A Go binary links the runtime and every standard package it reaches
+    statically, so most of its functions are not the project's. They are in
+    the Golang family, once per Go version; attributing them to a project
+    would make every Go sample match every Go family. The rule is on the
+    symbol name alone (baseline.is_go_runtime_symbol), because the Go
+    toolchain is a single pinned version here and there is no C-style probe
+    to measure: the whole standard library is the glue.
+
+    One kind of function has no name to apply it to: the runtime's assembly
+    stubs (the reflectcall variants, the debug-call helpers) that SMDA cannot
+    name. The linker lays the packages out one after another, so an unnamed
+    function whose nearest named neighbour on each side is runtime or
+    standard library is one too; a project's own unnamed function sits
+    between the project's functions and is kept.
+    """
+    ordered = sorted(report.xcfg.items())
+    verdicts = [None if not function.function_name
+                else is_go_glue(function) for _, function in ordered]
+    # Nearest named verdict before and after each position.
+    before, last = [None] * len(ordered), None
+    for index, verdict in enumerate(verdicts):
+        before[index] = last
+        if verdict is not None:
+            last = verdict
+    after, last = [None] * len(ordered), None
+    for index in range(len(ordered) - 1, -1, -1):
+        after[index] = last
+        if verdicts[index] is not None:
+            last = verdicts[index]
+    removed = []
+    for index, (offset, function) in enumerate(ordered):
+        glue = verdicts[index]
+        if glue is None:
+            glue = before[index] is True and after[index] is True
+        if glue:
+            removed.append(function.function_name or "sub_%x" % offset)
+            del report.xcfg[offset]
+    report._sorted_functions = None
+    if removed:
+        _recompute_statistics(report)
+        LOGGER.info("dropped %d Go runtime and standard library functions",
+                    len(removed))
     return removed
 
 
@@ -303,7 +351,8 @@ def _is_direct_target(instruction):
 
 
 def smdaify(binary_path, family, version, component, is_library=True,
-            toolchain_id=None, drop_crt_glue=True, filename=None,
+            toolchain_id=None, drop_crt_glue=True, glue_filter="crt",
+            filename=None,
             min_named_ratio=0.5, is_blob=False, bitness=None,
             base_addr=0x400000, pdb_path="", min_functions=None):
     """Disassemble ``binary_path`` and label it the way the corpus expects.
@@ -334,7 +383,9 @@ def smdaify(binary_path, family, version, component, is_library=True,
         assert_not_incrementally_linked(report, binary_path)
 
     removed = []
-    if drop_crt_glue and toolchain_id:
+    if drop_crt_glue and glue_filter == "go":
+        removed = _drop_go_runtime(report)
+    elif drop_crt_glue and toolchain_id:
         removed = _drop_crt_glue(report, toolchain_id)
 
     if is_blob:
