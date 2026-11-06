@@ -294,7 +294,7 @@
       "memset",
       "terminate"
     ],
-    "sha256": "b2f7683340bbcb074ed099db3cd01aced4b46f0284bd448cda87c0d1dd71b82a",
+    "sha256": "2209d6aea1ddd28aa9576c53eab1584d306e280f275bfb4e9eb58fe020c23074",
     "smda": "data/cmp/x64/smda/cmp_10_msvc143_x64_cmp.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -444,7 +444,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "3e14d6d1752bf4aea639bd6da70c6591c5b648a2d480d37eec118ee5165ef211",
+    "sha256": "067d4926019c2da09e8beae45f4fe5c5f5ea023531dae5c4fb118d008ddf3923",
     "smda": "data/cmp/x86/smda/cmp_10_msvc143_x86_cmp.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -751,7 +751,7 @@
       "memset",
       "terminate"
     ],
-    "sha256": "9a605d24d427d74143b2f09955ba8f4238b47a4cddf823e8d71ff1a6de822333",
+    "sha256": "e620040405a3c80d481bdf0588fc14b8e866e2e89ddf353260e05c7c5fd75f73",
     "smda": "data/cmp/x64/smda/cmp_20_msvc143_x64_cmp.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -901,7 +901,7 @@
       "find_pe_section",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "fa9142c6948cd25fa571a401404ae3ff8811708a2bd4010091c2eccac6d99095",
+    "sha256": "ae59bb5e8371f72a00e77e75ec95d953a2445fd7f2071a1ff6c1a4e05ff69816",
     "smda": "data/cmp/x86/smda/cmp_20_msvc143_x86_cmp.dll.7z",
     "smda_version": "4.8.0",
     "source": {

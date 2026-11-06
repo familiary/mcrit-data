@@ -41,7 +41,42 @@ MinGW build is plain -O2 with no --gc-sections, so NOREF/NOICF keeps the pair
 comparable. The flags that actually ran are read back from the tracker log
 rather than assumed (see the README's MSVC section).
 
-Measurements: filled in after the runner build, see the section below.
+Measurements, from the runner build (windows-2022, cl 19.44.35229, v143).
+The exports step worked on the second attempt: the first dumpbin filter
+matched '() External' with one space, but dumpbin pads the column with
+several, so cmp.def came out as a bare EXPORTS and the DLL exported nothing
+(SMDA is_exported 0 of 194). With the filter fixed the DLL exports 159 (v10)
+and 170 (v20) names on both arches, identical to the MinGW artefacts' counts,
+and the step asserts a non-empty list so that cannot pass silently again.
+
+Function counts, kept after the MSVC glue baseline removed 123 (x86) or 129
+(x64) runtime functions, so kept plus removed is the image total:
+
+  v10  x86 194 + 123 = 317   x64 171 + 129 = 300
+  v20  x86 213 + 123 = 336   x64 189 + 129 = 318
+
+(MinGW, for comparison: v10 160 / 169, v20 175 / 184 kept.) Every kept
+function is named from the PDB (0 unnamed). What the baseline removed is the
+static CRT startup that /MD still links into a DLL: _DllMainCRTStartup,
+dllmain_dispatch and friends, __scrt_*, the __castguard_* stubs, the SEH and
+GS-cookie helpers, _initterm, atexit/onexit, and the memcpy/memset thunks.
+No runtime glue survives by name: the non-exported survivors (35 on v10 x86,
+19 on v20 x64) are cmp's own file-local helpers - be16/be32/be64, read_byte,
+read_type_marker, write_byte, write_fixed_value, read_obj_data, skip_bytes,
+type_marker_to_cmp_type - and SMDA's 'cmp_read_int$+0x109'-style names, which
+are code chunks of exported functions that /O2 split off. Because v10 has the
+chunks and MinGW does not, the MSVC counts run above the MinGW ones even
+though the source is the same.
+
+MinGW against MSVC PicHash overlap, functions of 10+ instructions (x86 /
+x64): 0 shared of 137 / 125 (v10) and of 153 / 140 (v20) on the MinGW side.
+At any size the overlap is 6-7 hashes per pair, all of them two- to
+five-instruction accessors (cmp_version, cmp_mp_version, cmp_object_is_nil,
+_is_bool, _is_float, _is_double, and cmp_init on v10 x64). So this axis shares
+essentially nothing with the MinGW one, which is the case for building it.
+MSVC v10 against MSVC v20: 79 / 59 shared of 153 / 145 (x86 / x64), against
+69 / 57 of 137 / 125 for MinGW, so the two tags differ by about as much under
+either compiler and both are worth keeping.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
