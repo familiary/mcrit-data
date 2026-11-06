@@ -43,8 +43,33 @@ explicit /Fd, no /GL and no /LTCG, and at link /DEBUG /Brepro /INCREMENTAL:NO
 read back from a tracker log. The MinGW build is -g -O2 without
 --gc-sections, so NOREF/NOICF keeps the pair comparable.
 
-Measurements: see the end of this docstring (filled in from the runner
-build).
+Measurements, from the runner build (windows-2022, cl 19.44.35229, v143).
+The build worked on the first dispatch. Function counts, kept after the MSVC
+glue baseline removed 123 (x86) or 129 (x64) runtime functions, so kept plus
+removed is the image total:
+
+  x86 250 + 123 = 373     x64 250 + 129 = 379
+
+(MinGW, for comparison: 164 / 155 kept.) Every kept function is named from the
+PDB (0 unnamed). No runtime glue survives by name: the baseline took the
+static CRT startup that /MD still links into a DLL (_DllMainCRTStartup,
+dllmain_dispatch, __scrt_*, the __castguard_* stubs, SEH and GS-cookie
+helpers, _initterm, atexit/onexit, the memset thunk), and everything left is
+lzo code - the public lzo1x/lzo1y/... API plus upstream's file-local helpers
+(swd_*, find_match, do_compress, code_match, ...) and lzo_bitops_* inlines.
+MSVC keeps more of those helpers as separate functions than gcc -O2 does
+(25 do_compress and 7 swd_accept bodies against fewer inlined copies in the
+MinGW build), which is why it has more functions from the same source.
+
+Exports: 96 functions on both arches, equal to the MinGW x64 artefact's 96.
+The MinGW x86 artefact exports 108; the 12 extra are x86-only assembler entry
+points (lzo1x_decompress_asm_fast and friends) and data objects that the
+function-only filter does not take.
+
+MinGW against MSVC PicHash overlap, functions of 10+ instructions (x86 /
+x64): 0 shared, of 139 / 107 on the MinGW side and 204 / 196 on the MSVC
+side. So this axis shares nothing with the MinGW one, which is the case for
+building it. The --deep cross-family check on this family is clean (0).
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
