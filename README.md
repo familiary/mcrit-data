@@ -54,6 +54,7 @@ Libraries
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [libstdc++](#libstdcxx)
+* [BLAKE2](#blake2)
 
 Runtimes
 * [Lua](#lua)
@@ -372,6 +373,13 @@ Generated with `scripts/build_corpus.py`; see `data/liblzma/provenance.json` for
 libsodium provides X25519 and XSalsa20 and is linked by several ransomware families.  
 Generated with `scripts/build_corpus.py`; see `data/libsodium/provenance.json` for source digests, compiler and flags.
 
+The libsodium 1.0.18 and 1.0.20 source trees also vendor the BLAKE2b reference
+implementation at `src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c`
+(SHA-256 `b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6`).
+That component is recorded for each libsodium artefact under
+`vendored_components`; the standalone BLAKE2 family covers the broader
+reference and SSE implementations.
+
 <!-- generated: libsodium -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
@@ -673,6 +681,22 @@ Generated with `scripts/build_corpus.py`; see `data/libstdc++/provenance.json` f
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libstdc++ | 13.2-mingw-w64 | MinGW-w64 GCC 13 | [x86 PE](data/libstdc++/x86/mcrit/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.mcrit) | [x86 PE](data/libstdc++/x86/smda/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.7z) |
+<!-- /generated -->
+
+### BLAKE2<a id='blake2'></a>
+
+The standalone BLAKE2 family covers the reference and SSE2 implementations from the pinned upstream snapshot. BLAKE2b is also vendored inside libsodium; that copy is recorded on the libsodium provenance entries, while these images include the wider BLAKE2 implementation set.
+Generated with `scripts/build_corpus.py`; see `data/BLAKE2/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: BLAKE2 -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| BLAKE2 | 2023-02-12-ref | GCC 14 (Linux, glibc) | [x86 ELF](data/BLAKE2/x86/mcrit/BLAKE2_2023-02-12-ref_gcc14_x86_blake2-ref.so.mcrit) / [x64 ELF](data/BLAKE2/x64/mcrit/BLAKE2_2023-02-12-ref_gcc14_x64_blake2-ref.so.mcrit) | [x86 ELF](data/BLAKE2/x86/smda/BLAKE2_2023-02-12-ref_gcc14_x86_blake2-ref.so.7z) / [x64 ELF](data/BLAKE2/x64/smda/BLAKE2_2023-02-12-ref_gcc14_x64_blake2-ref.so.7z) |
+| BLAKE2 | 2023-02-12-sse | GCC 14 (Linux, glibc) | [x86 ELF](data/BLAKE2/x86/mcrit/BLAKE2_2023-02-12-sse_gcc14_x86_blake2-sse.so.mcrit) / [x64 ELF](data/BLAKE2/x64/mcrit/BLAKE2_2023-02-12-sse_gcc14_x64_blake2-sse.so.mcrit) | [x86 ELF](data/BLAKE2/x86/smda/BLAKE2_2023-02-12-sse_gcc14_x86_blake2-sse.so.7z) / [x64 ELF](data/BLAKE2/x64/smda/BLAKE2_2023-02-12-sse_gcc14_x64_blake2-sse.so.7z) |
+| BLAKE2 | 2023-02-12-ref | MinGW-w64 GCC 13 | [x86 PE](data/BLAKE2/x86/mcrit/BLAKE2_2023-02-12-ref_mingw13_x86_blake2-ref.dll.mcrit) / [x64 PE](data/BLAKE2/x64/mcrit/BLAKE2_2023-02-12-ref_mingw13_x64_blake2-ref.dll.mcrit) | [x86 PE](data/BLAKE2/x86/smda/BLAKE2_2023-02-12-ref_mingw13_x86_blake2-ref.dll.7z) / [x64 PE](data/BLAKE2/x64/smda/BLAKE2_2023-02-12-ref_mingw13_x64_blake2-ref.dll.7z) |
+| BLAKE2 | 2023-02-12-sse | MinGW-w64 GCC 13 | [x86 PE](data/BLAKE2/x86/mcrit/BLAKE2_2023-02-12-sse_mingw13_x86_blake2-sse.dll.mcrit) / [x64 PE](data/BLAKE2/x64/mcrit/BLAKE2_2023-02-12-sse_mingw13_x64_blake2-sse.dll.mcrit) | [x86 PE](data/BLAKE2/x86/smda/BLAKE2_2023-02-12-sse_mingw13_x86_blake2-sse.dll.7z) / [x64 PE](data/BLAKE2/x64/smda/BLAKE2_2023-02-12-sse_mingw13_x64_blake2-sse.dll.7z) |
+| BLAKE2 | 2023-02-12-ref | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/BLAKE2/x86/mcrit/BLAKE2_2023-02-12-ref_msvc143_x86_blake2-ref.dll.mcrit) / [x64 PE](data/BLAKE2/x64/mcrit/BLAKE2_2023-02-12-ref_msvc143_x64_blake2-ref.dll.mcrit) | [x86 PE](data/BLAKE2/x86/smda/BLAKE2_2023-02-12-ref_msvc143_x86_blake2-ref.dll.7z) / [x64 PE](data/BLAKE2/x64/smda/BLAKE2_2023-02-12-ref_msvc143_x64_blake2-ref.dll.7z) |
+| BLAKE2 | 2023-02-12-sse | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/BLAKE2/x86/mcrit/BLAKE2_2023-02-12-sse_msvc143_x86_blake2-sse.dll.mcrit) / [x64 PE](data/BLAKE2/x64/mcrit/BLAKE2_2023-02-12-sse_msvc143_x64_blake2-sse.dll.mcrit) | [x86 PE](data/BLAKE2/x86/smda/BLAKE2_2023-02-12-sse_msvc143_x86_blake2-sse.dll.7z) / [x64 PE](data/BLAKE2/x64/smda/BLAKE2_2023-02-12-sse_msvc143_x64_blake2-sse.dll.7z) |
 <!-- /generated -->
 
 ## Runtimes
