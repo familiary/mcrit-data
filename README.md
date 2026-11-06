@@ -308,6 +308,7 @@ Generated with `scripts/build_corpus.py`; see `data/argon2/provenance.json` for 
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | argon2 | 20190702 | MinGW-w64 GCC 13 | [x86 PE](data/argon2/x86/mcrit/argon2_20190702_mingw13_x86_libargon2.dll.mcrit) / [x64 PE](data/argon2/x64/mcrit/argon2_20190702_mingw13_x64_libargon2.dll.mcrit) | [x86 PE](data/argon2/x86/smda/argon2_20190702_mingw13_x86_libargon2.dll.7z) / [x64 PE](data/argon2/x64/smda/argon2_20190702_mingw13_x64_libargon2.dll.7z) |
+| argon2 | 20190702 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/argon2/x86/mcrit/argon2_20190702_msvc143_x86_libargon2.dll.mcrit) / [x64 PE](data/argon2/x64/mcrit/argon2_20190702_msvc143_x64_libargon2.dll.mcrit) | [x86 PE](data/argon2/x86/smda/argon2_20190702_msvc143_x86_libargon2.dll.7z) / [x64 PE](data/argon2/x64/smda/argon2_20190702_msvc143_x64_libargon2.dll.7z) |
 <!-- /generated -->
 
 ### bzip2<a id='bzip2'></a>
