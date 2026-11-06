@@ -1,0 +1,263 @@
+{
+  "libpcap_1.10.5_gcc13_x64_libpcap.so": {
+    "architecture": "x64",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden (set by upstream configure), default Linux PF_PACKET backend; libnl, D-Bus, Bluetooth, RDMA, netmap and usbmon disabled",
+    "built_artifact": "build-x64/libpcap.so.1.10.5",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x64/mcrit/libpcap_1.10.5_gcc13_x64_libpcap.so.mcrit",
+    "notes": "The ELF build only. A MinGW build needs the Npcap/WinPcap SDK (CMake stops with 'No supported packet capture interface was found'); `-DPCAP_TYPE=null` builds without it but cannot capture, so no PE artefact is carried. Needs flex and bison: release tarballs do not ship the generated grammar.c or scanner.c. Pinned by sha256 of tarballs whose GPG signatures verified (tcpdump.org publishes .sig, not sha256, files).",
+    "num_functions": 608,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "e20d348233a1ed178dda27782a49613bc945aa887dca5bc60f9aa2da94702fbf",
+    "smda": "data/libpcap/x64/smda/libpcap_1.10.5_gcc13_x64_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-1.10.5.tar.gz",
+      "sha256": "37ced90a19a302a7f32e458224a00c365c117905c2cd35ac544b6880a81488f0",
+      "url": "https://www.tcpdump.org/release/libpcap-1.10.5.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "1.10.5"
+  },
+  "libpcap_1.10.5_gcc13_x86_libpcap.so": {
+    "architecture": "x86",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden (set by upstream configure), default Linux PF_PACKET backend; libnl, D-Bus, Bluetooth, RDMA, netmap and usbmon disabled",
+    "built_artifact": "build-x86/libpcap.so.1.10.5",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x86/mcrit/libpcap_1.10.5_gcc13_x86_libpcap.so.mcrit",
+    "notes": "The ELF build only. A MinGW build needs the Npcap/WinPcap SDK (CMake stops with 'No supported packet capture interface was found'); `-DPCAP_TYPE=null` builds without it but cannot capture, so no PE artefact is carried. Needs flex and bison: release tarballs do not ship the generated grammar.c or scanner.c. Pinned by sha256 of tarballs whose GPG signatures verified (tcpdump.org publishes .sig, not sha256, files).",
+    "num_functions": 646,
+    "removed_runtime_functions": [
+      "__udivdi3",
+      "__udivmoddi4",
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "9eca47ce85b3638fabe964746f57094e1912c57be5fe85508b38ed3d6619bca9",
+    "smda": "data/libpcap/x86/smda/libpcap_1.10.5_gcc13_x86_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-1.10.5.tar.gz",
+      "sha256": "37ced90a19a302a7f32e458224a00c365c117905c2cd35ac544b6880a81488f0",
+      "url": "https://www.tcpdump.org/release/libpcap-1.10.5.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "1.10.5"
+  },
+  "libpcap_1.11.0_gcc13_x64_libpcap.so": {
+    "architecture": "x64",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden (set by upstream configure), default Linux PF_PACKET backend; libnl, D-Bus, Bluetooth, RDMA, netmap and usbmon disabled",
+    "built_artifact": "build-x64/libpcap.so.1.11.0",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x64/mcrit/libpcap_1.11.0_gcc13_x64_libpcap.so.mcrit",
+    "notes": "The ELF build only. A MinGW build needs the Npcap/WinPcap SDK (CMake stops with 'No supported packet capture interface was found'); `-DPCAP_TYPE=null` builds without it but cannot capture, so no PE artefact is carried. Needs flex and bison: release tarballs do not ship the generated grammar.c or scanner.c. Pinned by sha256 of tarballs whose GPG signatures verified (tcpdump.org publishes .sig, not sha256, files).",
+    "num_functions": 640,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "c7cb9220530b2a7f18cebe55b53e84a7f97aacccd86e4188bf0f996f2fb40a60",
+    "smda": "data/libpcap/x64/smda/libpcap_1.11.0_gcc13_x64_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-1.11.0.tar.gz",
+      "sha256": "596389bc8560ea027dff9db8aaf6c173d992366d9aef4baf5d7c6d180b4d49ad",
+      "url": "https://www.tcpdump.org/release/libpcap-1.11.0.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "1.11.0"
+  },
+  "libpcap_1.11.0_gcc13_x86_libpcap.so": {
+    "architecture": "x86",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden (set by upstream configure), default Linux PF_PACKET backend; libnl, D-Bus, Bluetooth, RDMA, netmap and usbmon disabled",
+    "built_artifact": "build-x86/libpcap.so.1.11.0",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x86/mcrit/libpcap_1.11.0_gcc13_x86_libpcap.so.mcrit",
+    "notes": "The ELF build only. A MinGW build needs the Npcap/WinPcap SDK (CMake stops with 'No supported packet capture interface was found'); `-DPCAP_TYPE=null` builds without it but cannot capture, so no PE artefact is carried. Needs flex and bison: release tarballs do not ship the generated grammar.c or scanner.c. Pinned by sha256 of tarballs whose GPG signatures verified (tcpdump.org publishes .sig, not sha256, files).",
+    "num_functions": 652,
+    "removed_runtime_functions": [
+      "__udivdi3",
+      "__udivmoddi4",
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "5fbb1c8c68c37e29548724419b276ce4b766d78f8671edfe88c64a377f9db44b",
+    "smda": "data/libpcap/x86/smda/libpcap_1.11.0_gcc13_x86_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-1.11.0.tar.gz",
+      "sha256": "596389bc8560ea027dff9db8aaf6c173d992366d9aef4baf5d7c6d180b4d49ad",
+      "url": "https://www.tcpdump.org/release/libpcap-1.11.0.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "1.11.0"
+  },
+  "libpcap_1.8.1_gcc13_x64_libpcap.so": {
+    "architecture": "x64",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden (set by upstream configure), default Linux PF_PACKET backend; libnl, D-Bus, Bluetooth, RDMA, netmap and usbmon disabled",
+    "built_artifact": "build-x64/libpcap.so.1.8.1",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x64/mcrit/libpcap_1.8.1_gcc13_x64_libpcap.so.mcrit",
+    "notes": "The ELF build only. A MinGW build needs the Npcap/WinPcap SDK (CMake stops with 'No supported packet capture interface was found'); `-DPCAP_TYPE=null` builds without it but cannot capture, so no PE artefact is carried. Needs flex and bison: release tarballs do not ship the generated grammar.c or scanner.c. Pinned by sha256 of tarballs whose GPG signatures verified (tcpdump.org publishes .sig, not sha256, files).",
+    "num_functions": 567,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "c714995c1776e8adea22b1b280f06dbc8ea50d1ad545b60e37bb032670a9c70f",
+    "smda": "data/libpcap/x64/smda/libpcap_1.8.1_gcc13_x64_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-1.8.1.tar.gz",
+      "sha256": "673dbc69fdc3f5a86fb5759ab19899039a8e5e6c631749e48dcd9c6f0c83541e",
+      "url": "https://www.tcpdump.org/release/libpcap-1.8.1.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "1.8.1"
+  },
+  "libpcap_1.8.1_gcc13_x86_libpcap.so": {
+    "architecture": "x86",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden (set by upstream configure), default Linux PF_PACKET backend; libnl, D-Bus, Bluetooth, RDMA, netmap and usbmon disabled",
+    "built_artifact": "build-x86/libpcap.so.1.8.1",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x86/mcrit/libpcap_1.8.1_gcc13_x86_libpcap.so.mcrit",
+    "notes": "The ELF build only. A MinGW build needs the Npcap/WinPcap SDK (CMake stops with 'No supported packet capture interface was found'); `-DPCAP_TYPE=null` builds without it but cannot capture, so no PE artefact is carried. Needs flex and bison: release tarballs do not ship the generated grammar.c or scanner.c. Pinned by sha256 of tarballs whose GPG signatures verified (tcpdump.org publishes .sig, not sha256, files).",
+    "num_functions": 597,
+    "removed_runtime_functions": [
+      "__divdi3",
+      "__udivdi3",
+      "__udivmoddi4",
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "20724b9e830446fa2ab4741304b884db4230a395c9f0ede41736eab744295d42",
+    "smda": "data/libpcap/x86/smda/libpcap_1.8.1_gcc13_x86_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-1.8.1.tar.gz",
+      "sha256": "673dbc69fdc3f5a86fb5759ab19899039a8e5e6c631749e48dcd9c6f0c83541e",
+      "url": "https://www.tcpdump.org/release/libpcap-1.8.1.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "1.8.1"
+  },
+  "libpcap_1.9.1_gcc13_x64_libpcap.so": {
+    "architecture": "x64",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden (set by upstream configure), default Linux PF_PACKET backend; libnl, D-Bus, Bluetooth, RDMA, netmap and usbmon disabled",
+    "built_artifact": "build-x64/libpcap.so.1.9.1",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x64/mcrit/libpcap_1.9.1_gcc13_x64_libpcap.so.mcrit",
+    "notes": "The ELF build only. A MinGW build needs the Npcap/WinPcap SDK (CMake stops with 'No supported packet capture interface was found'); `-DPCAP_TYPE=null` builds without it but cannot capture, so no PE artefact is carried. Needs flex and bison: release tarballs do not ship the generated grammar.c or scanner.c. Pinned by sha256 of tarballs whose GPG signatures verified (tcpdump.org publishes .sig, not sha256, files).",
+    "num_functions": 613,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "e651ef053720b6de2f65401463ca31f3190a7106f703b12138b4cd15f1469393",
+    "smda": "data/libpcap/x64/smda/libpcap_1.9.1_gcc13_x64_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-1.9.1.tar.gz",
+      "sha256": "635237637c5b619bcceba91900666b64d56ecb7be63f298f601ec786ce087094",
+      "url": "https://www.tcpdump.org/release/libpcap-1.9.1.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "1.9.1"
+  },
+  "libpcap_1.9.1_gcc13_x86_libpcap.so": {
+    "architecture": "x86",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden (set by upstream configure), default Linux PF_PACKET backend; libnl, D-Bus, Bluetooth, RDMA, netmap and usbmon disabled",
+    "built_artifact": "build-x86/libpcap.so.1.9.1",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x86/mcrit/libpcap_1.9.1_gcc13_x86_libpcap.so.mcrit",
+    "notes": "The ELF build only. A MinGW build needs the Npcap/WinPcap SDK (CMake stops with 'No supported packet capture interface was found'); `-DPCAP_TYPE=null` builds without it but cannot capture, so no PE artefact is carried. Needs flex and bison: release tarballs do not ship the generated grammar.c or scanner.c. Pinned by sha256 of tarballs whose GPG signatures verified (tcpdump.org publishes .sig, not sha256, files).",
+    "num_functions": 650,
+    "removed_runtime_functions": [
+      "__udivdi3",
+      "__udivmoddi4",
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "654fe5f2a20a2b94302822c5a216c840eba31617dfb630fe23e3efa88833e4d7",
+    "smda": "data/libpcap/x86/smda/libpcap_1.9.1_gcc13_x86_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-1.9.1.tar.gz",
+      "sha256": "635237637c5b619bcceba91900666b64d56ecb7be63f298f601ec786ce087094",
+      "url": "https://www.tcpdump.org/release/libpcap-1.9.1.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "1.9.1"
+  }
+}
