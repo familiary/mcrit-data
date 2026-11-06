@@ -42,6 +42,36 @@ The reflective DLL is a DLL with no .def: the single DLLEXPORT function is
 exported by ``__declspec(dllexport)``. With /TP on x64 (2013 pin) that export
 is a C++ decorated name; GetReflectiveLoaderOffset finds it with ``strstr``
 for "ReflectiveLoader", so it works either way.
+
+Measurements from the runner build (windows-2022, cl 19.44, v143). It worked
+on the first dispatch, all twelve legs. Kept + removed by the MSVC glue
+baseline = image total:
+
+                        reflective_dll          inject.exe
+  2013 x86              6 + 121 = 127           22 + 158 = 180
+  2013 x64              6 + 115 = 121           19 + 161 = 180
+  dismantl x86          6 + 126 = 132           32 + 162 = 194
+  dismantl x64          6 + 120 = 126           28 + 154 = 182
+
+Every DLL is six functions: the project's three plus ``hash`` and ``ror``,
+which upstream declares ``__forceinline`` and which /Ob1 still leaves as
+separate bodies for the out-of-line uses, plus the ``MessageBoxA`` thunk. All
+named from the PDB. Survivors by name: ``printf`` (the stdio inline wrapper,
+17 to 25 instructions) in both injectors, ``atoi`` and import thunks, and on
+x64 ``__scrt_common_main_seh`` (99 instructions, the finding recorded in
+scripts/corpus/README.md, which these two injectors now join). Neither is the
+project's.
+
+Open finding for the maintainer, not fixed here because the baseline is shared
+tooling: the x64 ``printf`` wrapper (25 instructions) is the same body in
+MemoryModule, q3vm, ReflectiveDLLInjection and COFFLoader, so ``validate
+--deep`` now fails on it as 'one symbol name across 4 families'. Two families
+was a NOTE; these artefacts make it four. The MSVC probe set has no
+translation unit that calls ``printf``/``vprintf``, which is what a probe for
+it would add (compare the sprintf round in scripts/corpus/README.md).
+
+MinGW against MSVC PicHash overlap at 10+ instructions: 0 shared on both
+architectures and both pins, so the axis is not redundant.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

@@ -61,9 +61,11 @@ Runtimes
 * [q3vm](#q3vm)
 
 Loaders and shellcode
+* [COFFLoader](#coffloader)
 * [donut](#donut)
 * [MemoryModule](#memorymodule)
 * [pe_to_shellcode](#pe_to_shellcode)
+* [ReflectiveDLLInjection](#reflectivedllinjection)
 * [sRDI](#srdi)
 
 Heaven's Gate and WOW64 transitions
@@ -729,6 +731,18 @@ Generated with `scripts/build_corpus.py`; see `data/q3vm/provenance.json` for so
 Position-independent loaders and the projects that generate them. Entries marked as compiled by MSVC are blobs committed upstream and disassembled as buffers, not rebuilt here.
 
 
+### COFFLoader<a id='coffloader'></a>
+
+trustedsec's COFF object loader with its Beacon-Object-File compatibility layer (`RunCOFF`, the relocation and symbol resolution code, and the `Beacon*` API), reported as the base of the loader in the SparroWocky backdoor. Built as the standalone `COFFLoader.exe` with MinGW and MSVC, x86 and x64, at -O2 where upstream's Makefile passes no `-O`.  
+Generated with `scripts/build_corpus.py`; see `data/COFFLoader/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: COFFLoader -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| COFFLoader | 2026-09-28 | MinGW-w64 GCC 13 | [x86 PE](data/COFFLoader/x86/mcrit/COFFLoader_2026-09-28_mingw13_x86_COFFLoader.exe.mcrit) / [x64 PE](data/COFFLoader/x64/mcrit/COFFLoader_2026-09-28_mingw13_x64_COFFLoader.exe.mcrit) | [x86 PE](data/COFFLoader/x86/smda/COFFLoader_2026-09-28_mingw13_x86_COFFLoader.exe.7z) / [x64 PE](data/COFFLoader/x64/smda/COFFLoader_2026-09-28_mingw13_x64_COFFLoader.exe.7z) |
+| COFFLoader | 2026-09-28 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/COFFLoader/x86/mcrit/COFFLoader_2026-09-28_msvc143_x86_COFFLoader.exe.mcrit) / [x64 PE](data/COFFLoader/x64/mcrit/COFFLoader_2026-09-28_msvc143_x64_COFFLoader.exe.mcrit) | [x86 PE](data/COFFLoader/x86/smda/COFFLoader_2026-09-28_msvc143_x86_COFFLoader.exe.7z) / [x64 PE](data/COFFLoader/x64/smda/COFFLoader_2026-09-28_msvc143_x64_COFFLoader.exe.7z) |
+<!-- /generated -->
+
 ### donut<a id='donut'></a>
 
 donut generates position-independent loaders. What is covered here is the loader, not the generator: the loader is the code donut embeds in whatever it packages, so it is what turns up in samples, and upstream commits it MSVC-compiled in `loader_exe_x86.h` and `loader_exe_x64.h` - the same bytes that ship in the release binaries and the PyPI package.  
@@ -764,6 +778,24 @@ Generated with `scripts/build_corpus.py`; see `data/pe_to_shellcode/provenance.j
 |----------|---------|----------|-------|------|
 | pe_to_shellcode | 1.0 | MSVC (as committed upstream) | [x86 code](data/pe_to_shellcode/x86/mcrit/pe_to_shellcode_1.0_msvc_x86_stub2_x86.mcrit) / [x64 code](data/pe_to_shellcode/x64/mcrit/pe_to_shellcode_1.0_msvc_x64_stub2_x64.mcrit) | [x86 code](data/pe_to_shellcode/x86/smda/pe_to_shellcode_1.0_msvc_x86_stub2_x86.7z) / [x64 code](data/pe_to_shellcode/x64/smda/pe_to_shellcode_1.0_msvc_x64_stub2_x64.7z) |
 | pe_to_shellcode | 1.2 | MSVC (as committed upstream) | [x86 code](data/pe_to_shellcode/x86/mcrit/pe_to_shellcode_1.2_msvc_x86_stub2_x86.mcrit) / [x64 code](data/pe_to_shellcode/x64/mcrit/pe_to_shellcode_1.2_msvc_x64_stub2_x64.mcrit) | [x86 code](data/pe_to_shellcode/x86/smda/pe_to_shellcode_1.2_msvc_x86_stub2_x86.7z) / [x64 code](data/pe_to_shellcode/x64/smda/pe_to_shellcode_1.2_msvc_x64_stub2_x64.7z) |
+<!-- /generated -->
+
+### ReflectiveDLLInjection<a id='reflectivedllinjection'></a>
+
+Stephen Fewer's reflective DLL injection: the DLL carries its own PE loader in an exported `ReflectiveLoader`, found by walking the PEB and resolving its imports by ROR-13 hash, and the loader body is what turns up copied into implants. Two versions are covered: the upstream head (2013-09-05) and dismantl's `ImprovedReflectiveDLLInjection` (2016-06-28, filed under the same family). Each is built as the reflective DLL and the injector, with MinGW and MSVC, x86 and x64. The DLL contains only three functions of its own, so the recipe states that floor (`min_functions`) rather than counting runtime code to reach eight.  
+Generated with `scripts/build_corpus.py`; see `data/ReflectiveDLLInjection/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: ReflectiveDLLInjection -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| ReflectiveDLLInjection | 2013-09-05 | MinGW-w64 GCC 13 | [x86 PE](data/ReflectiveDLLInjection/x86/mcrit/ReflectiveDLLInjection_2013-09-05_mingw13_x86_inject.exe.mcrit) / [x64 PE](data/ReflectiveDLLInjection/x64/mcrit/ReflectiveDLLInjection_2013-09-05_mingw13_x64_inject.exe.mcrit) | [x86 PE](data/ReflectiveDLLInjection/x86/smda/ReflectiveDLLInjection_2013-09-05_mingw13_x86_inject.exe.7z) / [x64 PE](data/ReflectiveDLLInjection/x64/smda/ReflectiveDLLInjection_2013-09-05_mingw13_x64_inject.exe.7z) |
+| ReflectiveDLLInjection | 2013-09-05 | MinGW-w64 GCC 13 | [x86 PE](data/ReflectiveDLLInjection/x86/mcrit/ReflectiveDLLInjection_2013-09-05_mingw13_x86_reflective_dll.dll.mcrit) / [x64 PE](data/ReflectiveDLLInjection/x64/mcrit/ReflectiveDLLInjection_2013-09-05_mingw13_x64_reflective_dll.dll.mcrit) | [x86 PE](data/ReflectiveDLLInjection/x86/smda/ReflectiveDLLInjection_2013-09-05_mingw13_x86_reflective_dll.dll.7z) / [x64 PE](data/ReflectiveDLLInjection/x64/smda/ReflectiveDLLInjection_2013-09-05_mingw13_x64_reflective_dll.dll.7z) |
+| ReflectiveDLLInjection | 2013-09-05 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/ReflectiveDLLInjection/x86/mcrit/ReflectiveDLLInjection_2013-09-05_msvc143_x86_inject.exe.mcrit) / [x64 PE](data/ReflectiveDLLInjection/x64/mcrit/ReflectiveDLLInjection_2013-09-05_msvc143_x64_inject.exe.mcrit) | [x86 PE](data/ReflectiveDLLInjection/x86/smda/ReflectiveDLLInjection_2013-09-05_msvc143_x86_inject.exe.7z) / [x64 PE](data/ReflectiveDLLInjection/x64/smda/ReflectiveDLLInjection_2013-09-05_msvc143_x64_inject.exe.7z) |
+| ReflectiveDLLInjection | 2013-09-05 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/ReflectiveDLLInjection/x86/mcrit/ReflectiveDLLInjection_2013-09-05_msvc143_x86_reflective_dll.dll.mcrit) / [x64 PE](data/ReflectiveDLLInjection/x64/mcrit/ReflectiveDLLInjection_2013-09-05_msvc143_x64_reflective_dll.dll.mcrit) | [x86 PE](data/ReflectiveDLLInjection/x86/smda/ReflectiveDLLInjection_2013-09-05_msvc143_x86_reflective_dll.dll.7z) / [x64 PE](data/ReflectiveDLLInjection/x64/smda/ReflectiveDLLInjection_2013-09-05_msvc143_x64_reflective_dll.dll.7z) |
+| ReflectiveDLLInjection | 2016-06-28-dismantl | MinGW-w64 GCC 13 | [x86 PE](data/ReflectiveDLLInjection/x86/mcrit/ReflectiveDLLInjection_2016-06-28-dismantl_mingw13_x86_inject.exe.mcrit) / [x64 PE](data/ReflectiveDLLInjection/x64/mcrit/ReflectiveDLLInjection_2016-06-28-dismantl_mingw13_x64_inject.exe.mcrit) | [x86 PE](data/ReflectiveDLLInjection/x86/smda/ReflectiveDLLInjection_2016-06-28-dismantl_mingw13_x86_inject.exe.7z) / [x64 PE](data/ReflectiveDLLInjection/x64/smda/ReflectiveDLLInjection_2016-06-28-dismantl_mingw13_x64_inject.exe.7z) |
+| ReflectiveDLLInjection | 2016-06-28-dismantl | MinGW-w64 GCC 13 | [x86 PE](data/ReflectiveDLLInjection/x86/mcrit/ReflectiveDLLInjection_2016-06-28-dismantl_mingw13_x86_reflective_dll.dll.mcrit) / [x64 PE](data/ReflectiveDLLInjection/x64/mcrit/ReflectiveDLLInjection_2016-06-28-dismantl_mingw13_x64_reflective_dll.dll.mcrit) | [x86 PE](data/ReflectiveDLLInjection/x86/smda/ReflectiveDLLInjection_2016-06-28-dismantl_mingw13_x86_reflective_dll.dll.7z) / [x64 PE](data/ReflectiveDLLInjection/x64/smda/ReflectiveDLLInjection_2016-06-28-dismantl_mingw13_x64_reflective_dll.dll.7z) |
+| ReflectiveDLLInjection | 2016-06-28-dismantl | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/ReflectiveDLLInjection/x86/mcrit/ReflectiveDLLInjection_2016-06-28-dismantl_msvc143_x86_inject.exe.mcrit) / [x64 PE](data/ReflectiveDLLInjection/x64/mcrit/ReflectiveDLLInjection_2016-06-28-dismantl_msvc143_x64_inject.exe.mcrit) | [x86 PE](data/ReflectiveDLLInjection/x86/smda/ReflectiveDLLInjection_2016-06-28-dismantl_msvc143_x86_inject.exe.7z) / [x64 PE](data/ReflectiveDLLInjection/x64/smda/ReflectiveDLLInjection_2016-06-28-dismantl_msvc143_x64_inject.exe.7z) |
+| ReflectiveDLLInjection | 2016-06-28-dismantl | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/ReflectiveDLLInjection/x86/mcrit/ReflectiveDLLInjection_2016-06-28-dismantl_msvc143_x86_reflective_dll.dll.mcrit) / [x64 PE](data/ReflectiveDLLInjection/x64/mcrit/ReflectiveDLLInjection_2016-06-28-dismantl_msvc143_x64_reflective_dll.dll.mcrit) | [x86 PE](data/ReflectiveDLLInjection/x86/smda/ReflectiveDLLInjection_2016-06-28-dismantl_msvc143_x86_reflective_dll.dll.7z) / [x64 PE](data/ReflectiveDLLInjection/x64/smda/ReflectiveDLLInjection_2016-06-28-dismantl_msvc143_x64_reflective_dll.dll.7z) |
 <!-- /generated -->
 
 ### sRDI<a id='srdi'></a>

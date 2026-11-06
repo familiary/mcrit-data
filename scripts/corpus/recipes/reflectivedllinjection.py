@@ -50,6 +50,40 @@ The reflective DLL is built with upstream's Release defines
 REFLECTIVEDLLINJECTION_VIA_LOADREMOTELIBRARYR and, for the 2013 pin,
 REFLECTIVEDLLINJECTION_CUSTOM_DLLMAIN so ReflectiveDll.c's DllMain is the one
 linked), at -O2 for upstream's /O2 /Oi.
+
+Measured (kept + removed by the MinGW glue baseline = image total; built on
+the runner's twin recipe for MSVC, see reflectivedllinjection_msvc.py):
+
+                        reflective_dll          inject.exe
+  2013 MinGW x86        4 + 48 = 52             8 + 128 = 136
+  2013 MinGW x64       14 + 49 = 63            39 + 125 = 164
+  dismantl MinGW x86    8 + 57 = 65             9 + 129 = 138
+  dismantl MinGW x64   20 + 53 = 73            50 + 126 = 176
+
+The project's own functions in those artefacts are 3 per DLL and 6 (2013) or
+7 (dismantl, which adds inject_via_remotethread_wow64) per inject.exe; the
+rest of each kept count is residue the baseline cannot name. No artefact
+reaches the floor of eight on its own project code in the DLL, hence
+``min_functions=3``: the number of functions the DLL actually contains
+(caller, ReflectiveLoader, DllMain; ReflectiveLoader, DllMain, MyFunction for
+dismantl). The injectors clear eight regardless.
+
+Glue survivors, by name and PicHash. Unnamed in these reports and so out of
+reach of a name-and-hash filter: ``___chkstk_ms`` (15 instructions; the
+unnamed 15-instruction function in every MinGW artefact here, equal to
+``___chkstk_ms`` in data/MinGW x64) and the one-instruction import thunks on
+x64. Named: ``strstr`` (a thunk) in inject.exe, and in the dismantl DLLs
+``sprintf_s``, ``vsprintf_s``, ``_int_vsprintf_s`` and ``_stub`` - libmingwex's
+secure-printf, pulled in by MyFunction's sprintf_s and not in the baseline.
+Four functions in each dismantl DLL; they are not hidden from the counts above.
+
+PicHash overlap, functions of 10+ instructions: 2013 against dismantl shares
+9 (x86) / 8 (x64), which is the injector and DllMain code the fork inherited;
+the loaders themselves differ. MinGW against MSVC shares 0 of 9/11 (2013) and
+13/14 (dismantl) on both architectures, the case for the MSVC axis. Against
+the other loaders already in the corpus nothing project-specific is shared
+(sRDI, donut and pe_to_shellcode are shellcode blobs; MemoryModule shares only
+``printf`` and ``__scrt_common_main_seh``, both MSVC runtime).
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
