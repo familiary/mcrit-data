@@ -94,3 +94,4 @@ RECIPES = {
               "artefacts is the compiler and its optimiser settings both.",
     ),
 }
+# ci-select probe: touching this file must build lz4_1.10.0_msvc only.
