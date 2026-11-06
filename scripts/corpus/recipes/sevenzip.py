@@ -91,3 +91,52 @@ RECIPES = {
         "9cbde5099c6deb73691b0579063da5827522ccbbcba3f0020fd04e8c8c16c0d4",
         _LICENSE_26),
 }
+
+
+# The SFX stubs. 7-Zip ships no makefile.gcc for either, so the build is the
+# helper script in exercisers/, which reads the object list and -D switches out
+# of upstream's nmake makefile. {unicode} is what 23.01 still takes from
+# Build.mak and 26.03 defines in its headers (see the helper's header).
+_SFX = ("bash {repo}/scripts/corpus/exercisers/sevenzip_sfx_gcc.sh {prefix} "
+        "%(dir)s \"%(unicode)s\" %(out)s %(file)s")
+
+
+def _sevenzip_sfx(version, code, sha256, license, unicode):
+    steps = []
+    artifacts = []
+    for stub, directory, out, file, component in (
+            ("7zS", "CPP/7zip/Bundles/SFXSetup", "sfx_7zS", "7zS.sfx", "7zS.sfx"),
+            ("7zS2", "C/Util/SfxSetup", "sfx_7zS2", "7zS2.sfx", "7zS2.sfx")):
+        steps.append(BuildStep(_SFX % dict(dir=directory, unicode=unicode,
+                                           out=out, file=file)))
+        artifacts.append(Artifact(path="%s/%s" % (out, file),
+                                  component=component))
+    return Recipe(
+        family="7-Zip",
+        version=version,
+        upstream="https://www.7-zip.org/",
+        license=license,
+        source=Source(url="https://www.7-zip.org/a/7z%s-src.tar.xz" % code,
+                      sha256=sha256),
+        build=steps,
+        artifacts=artifacts,
+        toolchains=["mingw_x86", "mingw_x64"],
+        build_flags="-O2 -static, hand-written assembly disabled (needs asmc)",
+        notes="SFX stubs: 7zS.sfx from CPP/7zip/Bundles/SFXSetup and "
+              "7zS2.sfx from C/Util/SfxSetup. Neither has a makefile.gcc, so "
+              "the object list and the -DZ7_* switches are read from "
+              "upstream's nmake makefile and compiled with the flags "
+              "7zip_gcc.mak uses for MinGW; no 7-Zip file is modified.",
+    )
+
+
+RECIPES.update({
+    "7-Zip_23.01_sfx": _sevenzip_sfx(
+        "23.01", "2301",
+        "356071007360e5a1824d9904993e8b2480b51b570e8c9faf7c0f58ebe4bf9f74",
+        _LICENSE_23, "-DUNICODE -D_UNICODE"),
+    "7-Zip_26.03_sfx": _sevenzip_sfx(
+        "26.03", "2603",
+        "9cbde5099c6deb73691b0579063da5827522ccbbcba3f0020fd04e8c8c16c0d4",
+        _LICENSE_26, ""),
+})

@@ -187,3 +187,77 @@ RECIPES = {
         "9cbde5099c6deb73691b0579063da5827522ccbbcba3f0020fd04e8c8c16c0d4",
         _LICENSE_26),
 }
+
+
+# The SFX stubs, built the same way as 7z.dll above. Two differences, both
+# read from upstream:
+#
+#   * CPP/Build.mak selects -MT unless MY_DYNAMIC_LINK is set, and neither stub
+#     makefile sets it, so upstream's own SFX stubs carry the static MSVC C
+#     runtime. This corpus mandates -MD for every MSVC artefact so that the
+#     runtime stays attributed to data/MSVC, so MY_DYNAMIC_LINK=1 is passed
+#     exactly as it is for 7z.dll. The stub that results imports the DLL
+#     runtime and is therefore not the self-contained file upstream ships;
+#     what it contains of 7-Zip is the same.
+#   * there is no DEF_FILE, so Build.mak links an executable (MY_FIXED, a
+#     /STACK reservation) and LFLAGS needs no -DLL. LFLAGS is still left alone
+#     for the reason in the module docstring, and the extra linker switches
+#     ride on LIBS. The GUI stub also needs gdi32, comctl32 and comdlg32,
+#     which Build.mak does not list; unreferenced import libraries add no
+#     imports, so all three are named rather than guessed at.
+_SFX_LIBS = ('"LIBS=oleaut32.lib ole32.lib user32.lib advapi32.lib shell32.lib '
+             'gdi32.lib comctl32.lib comdlg32.lib '
+             '-DEBUG -PDB:{asm_arch}\\%s.pdb -Brepro -OPT:NOREF -OPT:NOICF"')
+
+_SFX_NMAKE = ("nmake -f makefile PLATFORM={asm_arch} MY_DYNAMIC_LINK=1 "
+              "CFLAGS_WARN_LEVEL=-W0 %s %s" % (_CFLAGS_COMMON, "%s"))
+
+_SFX_NOTES = (
+    "The SFX stubs, built through upstream's nmake path: 7zS.sfx from "
+    "CPP/7zip/Bundles/SFXSetup (the GUI stub, whose ExtractEngine.cpp is what "
+    "OpenSUpdater is reported to have recompiled) and 7zS2.sfx from "
+    "C/Util/SfxSetup (the small LZMA-SDK based stub). The MASM CRC fast paths "
+    "are assembled as in 7z.dll. Upstream links both with the static C "
+    "runtime; this corpus builds -MD like every MSVC artefact here, so the "
+    "stub imports the DLL runtime rather than carrying it, and the MSVC C "
+    "runtime stays attributed to data/MSVC. No external dependencies.")
+
+
+def _sevenzip_sfx_msvc(version, code, sha256, license):
+    steps = []
+    artifacts = []
+    for directory, prog, pdb in (
+            ("CPP\\7zip\\Bundles\\SFXSetup", "7zS.sfx", "7zS"),
+            ("C\\Util\\SfxSetup", "7zS2.sfx", "7zS2")):
+        steps.append(BuildStep(_SFX_NMAKE % (_SFX_LIBS % pdb), cwd=directory))
+        steps.append(BuildStep("dir {asm_arch}", cwd=directory,
+                               allow_failure=True))
+        base = directory.replace("\\", "/")
+        artifacts.append(Artifact(
+            path="%s/{asm_arch}/%s" % (base, prog), component=prog,
+            pdb="%s/{asm_arch}/%s.pdb" % (base, pdb)))
+    return Recipe(
+        family="7-Zip",
+        version=version,
+        upstream="https://www.7-zip.org/",
+        license=license,
+        source=Source(url="https://www.7-zip.org/a/7z%s-src.tar.xz" % code,
+                      sha256=sha256),
+        build=steps,
+        artifacts=artifacts,
+        toolchains=["msvc_x86", "msvc_x64"],
+        build_flags=_BUILD_FLAGS,
+        notes=_SFX_NOTES,
+    )
+
+
+RECIPES.update({
+    "7-Zip_23.01_sfx_msvc": _sevenzip_sfx_msvc(
+        "23.01", "2301",
+        "356071007360e5a1824d9904993e8b2480b51b570e8c9faf7c0f58ebe4bf9f74",
+        _LICENSE_23),
+    "7-Zip_26.03_sfx_msvc": _sevenzip_sfx_msvc(
+        "26.03", "2603",
+        "9cbde5099c6deb73691b0579063da5827522ccbbcba3f0020fd04e8c8c16c0d4",
+        _LICENSE_26),
+})
