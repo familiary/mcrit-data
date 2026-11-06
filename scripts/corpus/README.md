@@ -183,8 +183,22 @@ CallObfuscator, libtiff and mbedTLS, `validate --deep` goes from 12
 cross-family hashes with one leakage finding - `__scrt_common_main_seh` across
 Hidden, Lua, MemoryModule and bzip2 - to 9 with none.
 
-The two that do not change are q3vm x86, and they are the honest edge of this
-round: q3vm builds with whole-program optimisation, its `printf` bodies are 23
+The whole MSVC side was then rebuilt, 54 recipes per architecture and 114
+artefacts, and that run is the measurement to quote. 38 of the 114 change and
+**78 functions** leave them, 199,384 kept becoming 199,306, across 15
+families: `printf` 15 bodies in LuaJIT, MemoryModule, libxml2, mbedTLS,
+protobuf and q3vm; `vfprintf` 10 in LuaJIT, libtiff and libxml2; `vprintf` 4
+in LuaJIT; `__scrt_common_main_seh` 5 in Hidden, Lua, MemoryModule and bzip2 -
+which is every family the failing hash spanned, so the finding goes rather
+than shrinks; and `fflush` and `fputs` 45 thunks between them across eleven
+families. One more name changed and this round does not explain it:
+`std::basic_stringbuf<char,...>::pbackfail` in protobuf 31.1 x86, one body.
+No probe added here can emit it - all four are C - so the honest reading is a
+difference in protobuf's own rebuild rather than in the baseline, and it is
+recorded rather than claimed.
+
+The two artefacts that do not change in the five families above are q3vm x86,
+and they are the honest edge of this round: q3vm builds with whole-program optimisation, its `printf` bodies are 23
 and 20 instructions where every other x86 artefact's is 17, and a probe built
 at `/O2` emits none of them. Those two bodies are single-family and were never
 leakage. The same is true of the 98-instruction `__scrt_common_main_seh` in
