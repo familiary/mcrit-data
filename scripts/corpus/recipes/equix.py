@@ -11,8 +11,8 @@ does not link the GPL-gated PoW service module; ``nm`` on the client image has
 no Equi-X or HashX symbols. This yields the candidate's ~73 functions without
 duplicating them under the Tor family.
 
-Image totals are kept+removed=total: Linux x86 67+0=67 and x64 50+0=50;
-MinGW x86 36+0=36 and x64 48+0=48; MSVC x86 88+0=88 and x64 89+0=89.
+Image totals are kept+removed=total: Linux x86 67+7=74 and x64 50+5=55;
+MinGW x86 36+114=150 and x64 48+108=156; MSVC x86 88+43=131 and x64 89+49=138.
 Functions with >=10 instructions / distinct PicHashes: Linux x86 38/38, x64
 29/29; MinGW x86 33/33, x64 26/26; MSVC x86 62/59, x64 55/52. The only
 cross-build overlap at this floor is Linux/MinGW x86: three shared hashes
