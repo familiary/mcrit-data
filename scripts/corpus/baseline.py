@@ -3049,14 +3049,18 @@ BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 """
 
 _STDIO_FLAVOURS = (
-    ("", []),
-    ("inc", []),
-    ("sdl", ["/sdl"]),
-    ("nogs", ["/GS-"]),
-    ("od", ["/Od"]),
-    ("odsdl", ["/Od", "/sdl"]),
-    ("ox", ["/Ox", "/Ob2", "/Ot", "/GS-"]),
+    ("oy", ["/Oy-"]),
+    ("sdloy", ["/sdl", "/Oy-"]),
+    ("nogsoy", ["/GS-", "/Oy-"]),
+    ("gloy", ["/GL", "/Oy-"]),
+    ("sdlgloy", ["/sdl", "/GL", "/Oy-"]),
+    ("oxoy", ["/Ox", "/Ob2", "/Ot", "/GS-", "/Oy-"]),
+    ("oxgloy", ["/Ox", "/Ob2", "/Ot", "/GS-", "/GL", "/Oy-"]),
     ("oxgl", ["/Ox", "/Ob2", "/Ot", "/GS-", "/GL"]),
+    ("oxsdloy", ["/Ox", "/Ob2", "/Ot", "/sdl", "/Oy-"]),
+    ("sdloycf", ["/sdl", "/Oy-", "/guard:cf"]),
+    ("odoy", ["/Od", "/Oy-"]),
+    ("odsdloy", ["/Od", "/sdl", "/Oy-"]),
 )
 
 
@@ -3064,13 +3068,12 @@ def _stdio_lab_probes(toolchain):
     probes = []
     for flavour, flags in _STDIO_FLAVOURS:
         for tag, names in _STDIO_GROUPS:
+            if tag not in ("narrow_print", "wide_print", "wide_string", "scan", "narrow_string"):
+                continue
             probes.append((toolchain.cc,
                            "probe_msvcrt_wstdio_%s%s.c" % (tag, "_" + flavour if flavour else ""),
                            _stdio_table_source("wstdio_" + tag, names),
                            ["-shared", "/MD"] + flags + ([] if flavour == "inc" else _MSVC_RECIPE_LINK)))
-        probes.append((toolchain.cxx,
-                       "probe_msvcrt_wstdio_calls%s.cpp" % ("_" + flavour if flavour else ""),
-                       _STDIO_CALLS_CPP, ["-shared", "/MD", "/EHsc"] + flags + ([] if flavour == "inc" else _MSVC_RECIPE_LINK)))
     # one EXE for the default flavour
     probes.append((toolchain.cc, "probe_msvcrt_wstdio_exe.c",
                    _stdio_table_source("wstdio_exe", _STDIO_NARROW_PRINT + _STDIO_WIDE_PRINT, exe=True),
