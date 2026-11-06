@@ -49,7 +49,14 @@ Nothing is run.
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
-_CFLAGS = "/nologo /c /O2 /MD /Zi /EHsc /std:c++17 /I. /Fdls.pdb"
+# /DUNICODE /D_UNICODE because HookModule.cpp:21 passes a wide literal to
+# MessageBox, which is the -A form unless UNICODE is defined: without them cl
+# reports C2664, "cannot convert argument 2 from 'LPCWSTR' to 'LPCSTR'".
+# Upstream builds from a project file that defines it; there is none in the
+# repository, so the compile line has to supply it. The same define is needed
+# on the mingw side of FreshyCalls for the same reason.
+_CFLAGS = ("/nologo /c /O2 /MD /Zi /EHsc /std:c++17 /DUNICODE /D_UNICODE "
+           "/I. /Fdls.pdb")
 _STEPS = (
     BuildStep("cl %s /Fodemo.obj demo.cpp" % _CFLAGS),
     BuildStep("cl %s /FoHookModule.obj HookModule.cpp" % _CFLAGS),
@@ -76,7 +83,8 @@ RECIPES = {
         # x64: the technique reads and rewrites Rip and the Dr registers,
         # which exist in that form only in the 64-bit CONTEXT.
         toolchains=["msvc_x64"],
-        build_flags=("cl /O2 /MD /Zi /EHsc /std:c++17, linked /DEBUG "
+        build_flags=("cl /O2 /MD /Zi /EHsc /std:c++17 /DUNICODE /D_UNICODE, "
+                     "linked /DEBUG "
                      "/Brepro /OPT:NOREF /OPT:NOICF /INCREMENTAL:NO"),
         # Eight functions in HookModule.cpp and the wrapper layer in
         # FuncWrappers.cpp; the floor is set below the project's own count
