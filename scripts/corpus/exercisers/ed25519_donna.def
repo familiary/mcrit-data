@@ -1,0 +1,13 @@
+; Exports for the MSVC build of ed25519-donna, outside the upstream tree.
+; A MinGW DLL exports every global symbol; link.exe exports only what it is
+; told, and ed25519-donna declares none (no __declspec(dllexport) anywhere).
+; This is the public API of ed25519.h, which is every non-static function in
+; ed25519.c: the four signature entry points, the randombytes hook the stub
+; defines, and the curve25519 base-point multiply.
+EXPORTS
+    ed25519_publickey
+    ed25519_sign
+    ed25519_sign_open
+    ed25519_sign_open_batch
+    ed25519_randombytes_unsafe
+    curved25519_scalarmult_basepoint
