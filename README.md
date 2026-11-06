@@ -421,6 +421,17 @@ Generated with `scripts/build_corpus.py`; see `data/libxml2/provenance.json` for
 | libxml2 | 2.14.3 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libxml2/x86/mcrit/libxml2_2.14.3_msvc143_x86_libxml2.dll.mcrit) / [x64 PE](data/libxml2/x64/mcrit/libxml2_2.14.3_msvc143_x64_libxml2.dll.mcrit) | [x86 PE](data/libxml2/x86/smda/libxml2_2.14.3_msvc143_x86_libxml2.dll.7z) / [x64 PE](data/libxml2/x64/smda/libxml2_2.14.3_msvc143_x64_libxml2.dll.7z) |
 <!-- /generated -->
 
+### llhttp<a id='llhttp'></a>
+
+llhttp is the HTTP/1.x parser inside Node.js and undici, and is vendored by XMRig. It is here to fill the corpus's missing HTTP-parser category, on structural evidence only: nothing has been matched against a sample containing it. Built from the pre-generated C on upstream's `release/v9.3.0` tag; the llparse toolchain is not run.  
+Generated with `scripts/build_corpus.py`; see `data/llhttp/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: llhttp -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| llhttp | 9.3.0 | MinGW-w64 GCC 13 | [x86 PE](data/llhttp/x86/mcrit/llhttp_9.3.0_mingw13_x86_libllhttp.dll.mcrit) / [x64 PE](data/llhttp/x64/mcrit/llhttp_9.3.0_mingw13_x64_libllhttp.dll.mcrit) | [x86 PE](data/llhttp/x86/smda/llhttp_9.3.0_mingw13_x86_libllhttp.dll.7z) / [x64 PE](data/llhttp/x64/smda/llhttp_9.3.0_mingw13_x64_libllhttp.dll.7z) |
+<!-- /generated -->
+
 ### lz4<a id='lz4'></a>
 
 lz4 is a fast compressor common in modern loaders, packers and Electron-derived software.  
