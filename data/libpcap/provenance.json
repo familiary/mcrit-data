@@ -66,7 +66,7 @@
   },
   "libpcap_1.10.5_mingw13_x64_pcap.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release), NPF backend against Npcap SDK 1.17 (npcap-sdk-1.17.zip), remote capture off",
+    "build_flags": "-O3 (CMake Release), NPF backend against Npcap SDK 1.17 (npcap-sdk-1.17.zip), remote capture on (this version's own ENABLE_REMOTE default; no OpenSSL, so no rpcap over TLS)",
     "built_artifact": "build-x64/run/pcap.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "pcap.dll",
@@ -285,7 +285,7 @@
   },
   "libpcap_1.10.5_mingw13_x86_pcap.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release), NPF backend against Npcap SDK 1.17 (npcap-sdk-1.17.zip), remote capture off",
+    "build_flags": "-O3 (CMake Release), NPF backend against Npcap SDK 1.17 (npcap-sdk-1.17.zip), remote capture on (this version's own ENABLE_REMOTE default; no OpenSSL, so no rpcap over TLS)",
     "built_artifact": "build-x86/run/pcap.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "pcap.dll",
@@ -983,7 +983,7 @@
   },
   "libpcap_1.11.0_mingw13_x64_pcap.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release), NPF backend against Npcap SDK 1.17 (npcap-sdk-1.17.zip), remote capture off",
+    "build_flags": "-O3 (CMake Release), NPF backend against Npcap SDK 1.17 (npcap-sdk-1.17.zip), remote capture off (this version's own ENABLE_REMOTE default; no OpenSSL, so no rpcap over TLS)",
     "built_artifact": "build-x64/run/pcap.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "pcap.dll",
@@ -1166,7 +1166,7 @@
   },
   "libpcap_1.11.0_mingw13_x86_pcap.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release), NPF backend against Npcap SDK 1.17 (npcap-sdk-1.17.zip), remote capture off",
+    "build_flags": "-O3 (CMake Release), NPF backend against Npcap SDK 1.17 (npcap-sdk-1.17.zip), remote capture off (this version's own ENABLE_REMOTE default; no OpenSSL, so no rpcap over TLS)",
     "built_artifact": "build-x86/run/pcap.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "pcap.dll",
@@ -2263,7 +2263,7 @@
   },
   "libpcap_1.9.1_mingw13_x64_pcap.dll": {
     "architecture": "x64",
-    "build_flags": "-O3 (CMake Release), NPF backend against Npcap SDK 1.17 (npcap-sdk-1.17.zip), remote capture off",
+    "build_flags": "-O3 (CMake Release), NPF backend against Npcap SDK 1.17 (npcap-sdk-1.17.zip), remote capture on (this version's own ENABLE_REMOTE default; no OpenSSL, so no rpcap over TLS)",
     "built_artifact": "build-x64/run/pcap.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "pcap.dll",
@@ -2483,7 +2483,7 @@
   },
   "libpcap_1.9.1_mingw13_x86_pcap.dll": {
     "architecture": "x86",
-    "build_flags": "-O3 (CMake Release), NPF backend against Npcap SDK 1.17 (npcap-sdk-1.17.zip), remote capture off",
+    "build_flags": "-O3 (CMake Release), NPF backend against Npcap SDK 1.17 (npcap-sdk-1.17.zip), remote capture on (this version's own ENABLE_REMOTE default; no OpenSSL, so no rpcap over TLS)",
     "built_artifact": "build-x86/run/pcap.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "pcap.dll",

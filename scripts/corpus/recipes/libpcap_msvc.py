@@ -39,10 +39,16 @@ Decisions, each read from the CMakeLists of the pinned tarballs.
     it off makes both legs the same configuration (ENABLE_REMOTE stays at
     each version's default, as in the MinGW recipe).
   * Remote capture follows each version's own default, as in the MinGW
-    recipe: ON on Windows for 1.8.1 (forced) and 1.9.1, OFF for 1.10.5 and
-    1.11.0. The MinGW docstring says remote capture is off for all; the
-    MinGW 1.9.1 artefact exports pcap_findalldevs_ex and contains rpcap_*
-    functions, so it is on there too, and the pair matches.
+    recipe: ON for 1.8.1, which forces HAVE_REMOTE and has no option at
+    all, and for 1.9.1 and 1.10.5, which set ENABLE_REMOTE ON under
+    if(WIN32) (CMakeLists.txt:128 and :492); OFF for 1.11.0, which defaults
+    it OFF unconditionally as experimental (CMakeLists.txt:506). The
+    artefacts agree, counted by the recovered names belonging to the remote
+    sources: 34 in 1.8.1 on both architectures, 48/49 in 1.9.1 and 55/58 in
+    1.10.5 (x64/x86), and 6 in 1.11.0 - which are the `#else` stubs, the
+    same six the MinGW and ELF 1.11.0 artefacts carry. The MinGW recipe's
+    docstring used to say remote capture was off for all three of its
+    versions; it is corrected to the above and the pair matches.
 
 Measured on the artefacts (kept + removed = image):
     1.8.1   x86 615 + 155 = 770     x64 613 + 162 = 775

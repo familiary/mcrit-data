@@ -48,7 +48,33 @@ under a cross toolchain even with Packet_ROOT set, and
 annotation and mingw-w64's sal.h lacks it. 1.9.1 also needs
 `-DCMAKE_CXX_COMPILER`, or its project() picks the host g++. This is
 upstream libpcap's NPF build, not Npcap's own wpcap.dll (a modified fork):
-the DLL is pcap.dll, remote capture is off, and the function set differs.
+the DLL is pcap.dll and the function set differs.
+
+Remote capture, which is on in two of the three. Nothing here passes
+ENABLE_REMOTE, so each version's own CMake default applies, and that default
+changes inside the range built here. 1.9.1 and 1.10.5 set it ON for Windows
+(`if(WIN32) option(ENABLE_REMOTE "Enable remote capture" ON)`,
+CMakeLists.txt:128 and :492), so the rpcap client is compiled in; 1.11.0
+defaults it OFF unconditionally and says why (CMakeLists.txt:506, "This
+feature is experimental and is not ready for production use").
+
+The artefacts say the same thing. Counting the recovered names that belong to
+the remote sources - `rpcap_*`, `sock_*`, `pcap_remoteact_*`, `pcap_*_rpcap`,
+`pcap_startcapture_remote`, `pcap_findalldevs_ex*`, `pcap_createsrcstr`,
+`pcap_parsesrcstr`, `pcap_setsampling` and `pcapint_*srcstr_ex` - gives 37 in
+1.9.1 and 42 in 1.10.5, the same count on x86 as on x64, covering
+pcap-new.c, pcap-rpcap.c and sockutils.c end to end: authentication
+(`rpcap_doauth`), the protocol header (`rpcap_process_msg_header`) and the
+whole socket layer. 1.11.0 has 6, and they are not remote capture: they are
+the `#else` stubs pcap.c and pcap-new.c compile when ENABLE_REMOTE is unset,
+which is why the same six names, and no others, are in 1.11.0's ELF
+artefacts too - where remote capture is certainly off, the Linux default
+being OFF in every version.
+
+Not rpcap over TLS in either case. 1.10.5's remote branch calls
+`find_package(OpenSSL)` and takes it if it finds one; under
+`CMAKE_FIND_ROOT_PATH=/usr/<host>` it finds none, and no artefact of this
+recipe carries an OpenSSL symbol.
 
 Per version. 1.9.1, 1.10.5 and 1.11.0 build for both architectures. 1.8.1
 does not: its Windows CMake runs GenVersion.bat to write pcap_version.h
@@ -173,7 +199,7 @@ _CMAKE_PE = ("unzip -q -o {npcap_sdk} -d npcap-sdk && "
              "\"-DCMAKE_C_FLAGS=-D_Post_invalid_=\"")
 
 
-def _libpcap_pe(version, sha256):
+def _libpcap_pe(version, sha256, remote):
     return Recipe(
         family="libpcap",
         version=version,
@@ -188,7 +214,9 @@ def _libpcap_pe(version, sha256):
         toolchains=["mingw_x86", "mingw_x64"],
         requires=["flex", "bison", "unzip"],
         build_flags="-O3 (CMake Release), NPF backend against Npcap SDK 1.17 "
-                    "(npcap-sdk-1.17.zip), remote capture off",
+                    "(npcap-sdk-1.17.zip), remote capture %s (this version's "
+                    "own ENABLE_REMOTE default; no OpenSSL, so no rpcap over "
+                    "TLS)" % remote,
         notes="upstream libpcap's Windows NPF backend (pcap-npf.c), not "
               "Npcap's own wpcap.dll; imports packet.dll. Built against the "
               "Npcap SDK 1.17 import library, fetched at build time and not "
@@ -208,9 +236,12 @@ RECIPES = {
     "libpcap_1.11.0_linux": _libpcap(
         "1.11.0", "596389bc8560ea027dff9db8aaf6c173d992366d9aef4baf5d7c6d180b4d49ad"),
     "libpcap_1.9.1": _libpcap_pe(
-        "1.9.1", "635237637c5b619bcceba91900666b64d56ecb7be63f298f601ec786ce087094"),
+        "1.9.1", "635237637c5b619bcceba91900666b64d56ecb7be63f298f601ec786ce087094",
+        "on"),
     "libpcap_1.10.5": _libpcap_pe(
-        "1.10.5", "37ced90a19a302a7f32e458224a00c365c117905c2cd35ac544b6880a81488f0"),
+        "1.10.5", "37ced90a19a302a7f32e458224a00c365c117905c2cd35ac544b6880a81488f0",
+        "on"),
     "libpcap_1.11.0": _libpcap_pe(
-        "1.11.0", "596389bc8560ea027dff9db8aaf6c173d992366d9aef4baf5d7c6d180b4d49ad"),
+        "1.11.0", "596389bc8560ea027dff9db8aaf6c173d992366d9aef4baf5d7c6d180b4d49ad",
+        "off"),
 }
