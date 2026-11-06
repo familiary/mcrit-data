@@ -7,13 +7,20 @@ _BASE = "https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-%s.tar.gz"
 _SHA256 = {
     "2.8.3": "9b640b13047182761a99ce3e4f000be9687566e0828b4a72709e9e6a3ef98477",
     "3.3.6": "3f28849365e1190db2baf9014ff9686012c25b1ca6df8b3a085f789e24fe4b9a",
-    "4.0.0": "4d841955f0acc3dfc71d0e3dd35f283af461222350e26843fea9731c0246a1e4",
-    "4.2.0": "0f7dba44d7cb8df8d53f2cfbf1955254bc128e0089595f1aba2facfaee8408b2",
-    "4.3.4": "57c8b2f8c6f9505587abaeddab003ea243d615edb7ed71957968121fc6316bd6",
+    "3.9.2": "7b031dac64a59eb6ee3304f7ffb75dad33ab8c9d279c847f92c89fb846068f97",
     "4.4.0": "7d02522ad5070b9adb32eb253ecabce181184a3750cf65abac0675ee908687c1",
 }
 
-_CFLAGS = '-DCMAKE_C_FLAGS_RELEASE="/MD /O2 /Ob2 /DNDEBUG /Zi"'
+# 2.8.3 and 3.3.6 add -Drestrict for WIN32 in their CMakeLists.txt, and the
+# UCRT's corecrt_malloc.h spells __declspec(restrict), which becomes
+# __declspec(1): C2485 on every translation unit that includes <stdlib.h>.
+# No source in either tree uses the word, so the definition is cancelled on
+# the command line instead of being edited out.
+_UNDEF_RESTRICT = {"2.8.3", "3.3.6"}
+
+def _cflags(version):
+    extra = " /Urestrict" if version in _UNDEF_RESTRICT else ""
+    return '-DCMAKE_C_FLAGS_RELEASE="/MD /O2 /Ob2 /DNDEBUG /Zi%s"' % extra
 _LDFLAGS = ('-DCMAKE_SHARED_LINKER_FLAGS_RELEASE='
             '"/INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF /OPT:NOICF"')
 
@@ -25,14 +32,14 @@ _LDFLAGS = ('-DCMAKE_SHARED_LINKER_FLAGS_RELEASE='
 # and CMAKE_SYSTEM_PROCESSOR is the host's AMD64 whichever developer
 # environment is active, so an x64 leg would silently build without assembly
 # and an x86 leg would be handed the x86-64 assembler sources.
-_CMAKE = ('cmake -S . -B build-{arch} -G "Visual Studio 17 2022" -A %s '
-          '-DCMAKE_POLICY_VERSION_MINIMUM=3.5 '
-          '-DBUILD_SHARED_LIBS=ON -DLIBRESSL_APPS=OFF -DLIBRESSL_TESTS=OFF '
-          '-DLIBRESSL_SKIP_INSTALL=ON -DENABLE_ASM=ON '
-          '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL ' + _CFLAGS + ' '
-          + _LDFLAGS)
-_CMAKE_X64 = 'if "{arch}"=="x64" ' + _CMAKE % "x64"
-_CMAKE_X86 = 'if "{arch}"=="x86" ' + _CMAKE % "Win32"
+def _cmake(version, platform):
+    return ('cmake -S . -B build-{arch} -G "Visual Studio 17 2022" -A %s '
+            '-DCMAKE_POLICY_VERSION_MINIMUM=3.5 '
+            '-DBUILD_SHARED_LIBS=ON -DLIBRESSL_APPS=OFF -DLIBRESSL_TESTS=OFF '
+            '-DLIBRESSL_SKIP_INSTALL=ON -DENABLE_ASM=ON '
+            '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL %s %s'
+            % (platform, _cflags(version), _LDFLAGS))
+
 
 # The multi-config generator writes into a Release/ subdirectory, and DLL and
 # PDB names carry the soversion from CMake 3.27 on, so they are copied to
@@ -54,8 +61,8 @@ def _msvc(version):
         license="ISC (new code) over OpenSSL/SSLeay-licensed code, see COPYING",
         source=Source(url=_BASE % version, sha256=_SHA256[version]),
         build=[
-            BuildStep(_CMAKE_X64),
-            BuildStep(_CMAKE_X86),
+            BuildStep('if "{arch}"=="x64" ' + _cmake(version, "x64")),
+            BuildStep('if "{arch}"=="x86" ' + _cmake(version, "Win32")),
             BuildStep("cmake --build build-{arch} --config Release --target crypto ssl tls "
                       "-- /m /v:n"),
             BuildStep(_NORMALISE),
