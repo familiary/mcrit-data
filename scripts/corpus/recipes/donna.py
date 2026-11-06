@@ -1,0 +1,265 @@
+"""The two "donna" curve25519 libraries - ed25519-donna and curve25519-donna.
+
+Backlog issues #48 (floodyberry/ed25519-donna, "Tor's signature core under a
+renamed symbol set") and #50 (agl/curve25519-donna, "named behind a malware
+key-generation routine"). One module for both because they share a build
+shape - one C file compiled straight into a shared object, no build system -
+and because the same four toolchains and the same flags serve both; the Linux
+recipes sit beside the MinGW ones rather than in a `*_linux.py` module because
+they differ from them by exactly `-fPIC -fvisibility=hidden`.
+
+Existing coverage, checked before building. data/cryptopp already carries part
+of ed25519-donna: Crypto++ 8.x ships a C++ port of it as `CryptoPP::Donna::
+Ed25519`, with the same function names (`curve25519_square_times`,
+`barrett_reduce256_modm`, `contract256_slidingwindow_modm`, ...). Measured
+against data/cryptopp 8.9.0 MinGW, 8 of this recipe's 30 named functions of
+ten instructions or more share a PicHash on x64 and 11 of 32 on x86 (5 and 6
+for the SSE2 build); against Crypto++'s MSVC build, none. What Crypto++ does
+not have is the public API (`ed25519_publickey`, `_sign`, `_sign_open`,
+`_sign_open_batch`), `ge25519_pack`, `ge25519_unpack_negative_vartime`, the
+hash and the 32-bit-on-64 selection, and it has no Linux artefact at all. None
+of agl's curve25519-donna is in it: against the 6 or 7 named functions here the
+overlap with Crypto++, libsodium and libtomcrypt is zero apart from the
+unnamed libgcc `___chkstk_ms` the baseline already knows about. libsodium has
+no donna at all - its ed25519 is ref10 and its curve25519 is the 51-bit
+`fe51` code. So #48 is built in full and the overlap is recorded rather than
+avoided, and #50 is built as a separate project whose code is not in the
+corpus.
+
+ed25519-donna
+=============
+The repository has no tags or releases; HEAD of master (2015-03-16,
+8757bd4cd209cb032853ece0ce413f122eef212c) is the pin and the version is its
+date. There is no build system either, only the README's compile lines, so the
+build is `ed25519.c` compiled straight into a shared object. Two things the
+recipe has to settle:
+
+* The hash. Upstream defaults to OpenSSL's SHA-512 and offers
+  `-DED25519_REFHASH`, a slow in-tree implementation "that should never be used
+  except to verify the code works". That is what is built: it adds
+  `sha512_blocks`, `ed25519_hash_init/update/final` and `ed25519_hram` to the
+  artefact, which Tor does not have (it substitutes its own digest through
+  `ED25519_CUSTOMHASH`), so a sample linked against Tor's donna will match on
+  everything else and not on those. The alternative was a dependency on
+  libcrypto, whose functions would then be filed under this name.
+* The random source. `-DED25519_CUSTOMRANDOM` leaves
+  `ed25519_randombytes_unsafe` to the consumer, and upstream's
+  `ed25519-randombytes-custom.h` is a comment. A shared object keeps an
+  undefined symbol and a PE DLL does not link, so
+  `scripts/corpus/exercisers/ed25519_donna_rng.c` defines it, outside the
+  upstream tree and compiled beside `ed25519.c`. It is `memset`, which becomes
+  a jump into the C runtime and is well under the ten-instruction floor; an
+  earlier trial version with a byte loop was 11 instructions on x86 and would
+  have sat at the cross-family floor under this family's name.
+
+`ED25519_SUFFIX` (which gives Tor's `ed25519_publickey_donna` names) is not
+set: it changes symbol names and nothing about the code, and the plain names are
+what upstream ships.
+
+Force-inline measurement, which the issue asked for. donna defines
+`DONNA_INLINE` as `inline __attribute__((always_inline))` on GCC, and the
+field arithmetic in `curve25519-donna-*.h` and the group and modm routines all
+go through it, so the question was whether the compiler would leave few
+distinct functions. It does not. At -O2 the generic build keeps 30 named
+functions of ten or more instructions on x64 and 32 on x86 (33 for SSE2), and
+-O0, which still honours always_inline, keeps 62 and 64. Removing the
+attribute from a scratch copy, which is not what is built, moves the -O2 count
+to 29 on x64 and by one on x86, and the -O3 count from 36 to 34 on x64 and not
+at all on x86: at most two functions appear or disappear (`ge25519_add`,
+`ge25519_double` and `ge25519_double_partial` stay out of line when forced and
+are folded in when not, `curve25519_mul` and `ge25519_add_p1p1` the other way
+round), and 19 to 30 of the bodies hash identically either way. The large
+field and group functions are `static` and called from several places, and
+GCC evidently keeps them as functions at -O2 whether forced or not. The floor
+of eight is cleared nearly four times over, with or without the attribute.
+
+Variants, each measured. Generic means the unmodified build: `ED25519_64BIT`
+(`__int128`) on x64, the 32-bit code on x86. `-DED25519_SSE2` selects separate
+SSE2 field arithmetic: 9 of 33 hashes are shared with the generic build on
+MinGW x86 and 13 of 31 on x64 (6 and 12 on Linux), so it is a different code
+shape for the majority of its functions, and it is built as a second component.
+Upstream's own benchmark has it four times faster than the 32-bit generic code
+and slower than the 64-bit generic code, so it is a likely choice on x86 and
+an unlikely but documented one on x64; it is built for both rather than
+guessing. `-DED25519_FORCE_32BIT` on x64 (the 32-bit code with a 64-bit
+`choose`) is not built: nothing in the README or the benchmark recommends it.
+
+Optimisation level. One level, -O2, like the rest of the corpus and like the
+probes the baseline is measured with. How much that matters was measured so it
+is on record: the -O2 and -O3 builds share 11 of 30 hashes on x64 and 14 of 33
+on x86, -Os shares 4 and 0, and -O0 and -O1 share none. A binary built at a
+different level will match this data only partially; an -O3 axis was not added
+because nothing here says donna is commonly built that way.
+
+Operating systems. MinGW x86, MinGW x64, Linux ELF x86 and Linux ELF x64 are
+built, all four because they were measured to differ. MinGW x64 and Linux x64
+share no hash at all (0 of 30, 0 of 34): the Microsoft x64 and System V calling
+conventions put the arguments in different registers, so every function
+differs. On x86 the same calling convention is used but PIC code reaches data
+through the GOT: 3 of 33 shared. Linux is plausible for this code - Tor ships
+it there, and a small dependency-free routine like this is the kind Linux
+malware embeds (a judgement, not something measured here). A
+macOS (Mach-O) axis is not built: there is no Darwin toolchain on this host and
+none is faked.
+
+MSVC is a follow-up and is not written here. Both libraries are plain C that
+`cl` accepts (`ed25519-donna-portable.h` has a full MSVC branch with
+`_umul128` and `__forceinline` in place of `__int128` and `always_inline`), and
+the README's own argument is that most Windows software an analyst meets is
+MSVC-built, so it is the most valuable remaining axis; it needs the Windows
+runner.
+
+curve25519-donna
+================
+agl/curve25519-donna, tag 1.3 (pinned by the commit it names,
+28772f37a4b8a57ab9439b9e79b19f9abee686da, 2015-02-08; the three later commits
+change only the README). The Makefile builds `curve25519-donna.c` with
+`gcc -O2 -m32` and `curve25519-donna-c64.c` with `gcc -O2`, and the recipe
+does the same. Only the first is built.
+
+Thin, and the recipe says so as 4g3nt47/Obfuscator's does. The 32-bit file keeps
+20 named functions at -O0 and 6 to 7 of them survive -O2 as separate functions
+in the image - `fsum`, `fproduct`, `freduce_degree`, `freduce_coefficients`,
+`fsquare_inner` and `curve25519_donna` on x64, plus `swap_conditional` on x86 -
+because the rest are folded into `curve25519_donna`, a
+instruction function (1,484 to 1,702 instructions). That is under the floor of eight, and the artefacts only
+reach eight by counting `___chkstk_ms` and nine import thunks on MinGW x64, or
+PLT stubs on Linux, which are not this project. So `min_functions` is six, the
+count measured on the x64 builds (6 named, own functions on MinGW and on Linux
+alike; 7 on both x86 builds), and not a number chosen to let a build through:
+an artefact that came out below six would still fail. The lowest-count x64
+reports hold 16 and 10 functions in total, of which 6 are the project's.
+
+The 64-bit `curve25519-donna-c64.c` is not built and is recorded under the
+"Targets investigated but not built" table in scripts/corpus/README.md. It does
+not compile for x86 (`__attribute__((mode(TI)))` is unavailable), so it could
+only ever be an x64 component; and it is one function. Measured on MinGW x64
+and Linux x64, -O2 leaves `curve25519_donna` (5,553 instructions) and a
+two-instruction `load_limb`: 1 function of ten instructions or more, against a
+floor of eight and against Obfuscator's seven. At -O1 it is 4, at -Os 2 and
+at -O0 9, which are not the compiler of a real sample. Its `force_inline`
+macro is the same story - with the attribute removed from a scratch copy it is
+two functions (`fmul` separates) - so the thinness is the file, not the
+inlining. Lowering `min_functions` to two for one source file is the move the
+README warns against.
+
+The two projects do not share code, as the issues expected only that they
+"share ideas". Measured PicHash overlap at ten instructions or more between
+curve25519-donna and ed25519-donna is zero on all four targets, apart from
+`___chkstk_ms` on MinGW. ed25519-donna's `curve25519-donna-*.h` are
+derivatives of agl's but were rewritten around different function names and
+limb handling (`curve25519_mul`, `curve25519_square_times` against `fproduct`,
+`fsquare_inner`).
+
+What is not covered, honestly: the 64-bit curve25519-donna, MSVC, Mach-O, and
+the -O3 and -Os builds of either. Everything stripped by a malware author is
+also not covered: these are unstripped, with symbols, like the rest of the
+corpus.
+"""
+
+from ..recipe import Artifact, BuildStep, Recipe, Source
+
+
+_ED_COMMIT = "8757bd4cd209cb032853ece0ce413f122eef212c"
+_CV_COMMIT = "28772f37a4b8a57ab9439b9e79b19f9abee686da"
+
+_RNG = "{repo}/scripts/corpus/exercisers/ed25519_donna_rng.c"
+# {archflag} is -m32/-m64 for the native compiler and empty for the MinGW
+# cross compilers. The two %s are the position-independence flags and the SSE2
+# switches; the third is the output name.
+_ED = ("{cc} {archflag} -O2 %s -shared -DED25519_REFHASH "
+       "-DED25519_CUSTOMRANDOM %s -I. -o %s ed25519.c " + _RNG)
+_CV = "{cc} {archflag} -O2 %s -shared -o %s curve25519-donna.c"
+
+_PIC = "-fPIC -fvisibility=hidden"
+
+
+def _ed25519(linux):
+    pic = _PIC if linux else ""
+    ext = "so" if linux else "dll"
+    plain = "ed25519-donna." + ext
+    sse2 = "ed25519-donna-sse2." + ext
+    return Recipe(
+        family="ed25519-donna",
+        version="2015-03-16",
+        upstream="https://github.com/floodyberry/ed25519-donna",
+        license="public domain, as declared in the header of each source "
+                "file (Andrew M.); the repository ships no licence file",
+        source=Source(git_url="https://github.com/floodyberry/ed25519-donna.git",
+                      git_ref=_ED_COMMIT),
+        build=[BuildStep(_ED % (pic, "", plain)),
+               BuildStep(_ED % (pic, "-DED25519_SSE2 -msse2", sse2))],
+        artifacts=[Artifact(path=plain, component=plain),
+                   Artifact(path=sse2, component=sse2,
+                            build_flags="-O2 -DED25519_SSE2 -msse2 "
+                                        + ("-fPIC -fvisibility=hidden "
+                                           if linux else "")
+                                        + "-DED25519_REFHASH "
+                                          "-DED25519_CUSTOMRANDOM")],
+        toolchains=["linux_x86", "linux_x64"] if linux else ["mingw_x86", "mingw_x64"],
+        build_flags="-O2 " + ("-fPIC -fvisibility=hidden " if linux else "")
+                    + "-DED25519_REFHASH -DED25519_CUSTOMRANDOM",
+        notes="The master HEAD of a repository with no releases, built as "
+              "ed25519.c compiled straight into a shared object, once as "
+              "upstream's default code for the target (32-bit on x86, "
+              "__int128 on x64) and once with -DED25519_SSE2. Uses "
+              "upstream's reference SHA-512 (ED25519_REFHASH), which Tor "
+              "replaces with its own digest, so sha512_blocks and the "
+              "ed25519_hash_* functions are not in a Tor build. "
+              "ed25519_randombytes_unsafe is the only function not from "
+              "upstream: a memset stub in scripts/corpus/exercisers, which "
+              "resolves the symbol ED25519_CUSTOMRANDOM leaves open and must "
+              "never run. 30 named functions of ten instructions or more "
+              "in the generic x64 artefacts, 32 in the x86 ones and 33 in "
+              "the SSE2 ones: the DONNA_INLINE force-inlining does not "
+              "reduce this - without it the count is within two. "
+              "Crypto++ 8.x ships a port of part of this code, so about 8 "
+              "(x64) to 11 (x86) of these functions also match "
+              "data/cryptopp under its C++ names; libsodium shares none. "
+              "ED25519_SUFFIX is not set, so symbols are ed25519_publickey "
+              "and not Tor's ed25519_publickey_donna.",
+    )
+
+
+def _curve25519(linux):
+    pic = _PIC if linux else ""
+    name = "curve25519-donna." + ("so" if linux else "dll")
+    return Recipe(
+        family="curve25519-donna",
+        version="1.3",
+        upstream="https://github.com/agl/curve25519-donna",
+        license="BSD-3-Clause, Copyright 2008 Google Inc.",
+        source=Source(git_url="https://github.com/agl/curve25519-donna.git",
+                      git_ref=_CV_COMMIT),
+        build=[BuildStep(_CV % (pic, name))],
+        artifacts=[Artifact(path=name, component=name)],
+        toolchains=["linux_x86", "linux_x64"] if linux else ["mingw_x86", "mingw_x64"],
+        build_flags="-O2 " + ("-fPIC -fvisibility=hidden" if linux else ""),
+        # The smallest count of the project's own functions in any artefact,
+        # measured: 6 on both x64 builds, 7 on both x86 builds. See the module
+        # docstring for why this is the project's real size and not a number
+        # picked to admit a build.
+        min_functions=6,
+        notes="Tag 1.3, the 32-bit curve25519-donna.c, built with the "
+              "Makefile's -O2. Thin: 6 to 7 of the file's 20 functions "
+              "survive as separate functions (fsum, fproduct, "
+              "freduce_degree, freduce_coefficients, fsquare_inner, "
+              "curve25519_donna, and swap_conditional on x86), the rest "
+              "being folded into curve25519_donna, which is 1,484 to 1,702 "
+              "instructions. Below the corpus floor of eight, so the recipe "
+              "sets min_functions to 6; on MinGW x64 the report's other 10 "
+              "functions are the unnamed ___chkstk_ms and nine import "
+              "thunks, and on Linux 4 PLT stubs. The 64-bit "
+              "curve25519-donna-c64.c is not built: it collapses to one "
+              "function of 5,553 instructions. No code in common with "
+              "ed25519-donna or Crypto++'s donna port (measured: no shared "
+              "PicHash at ten instructions or more).",
+    )
+
+
+RECIPES = {
+    "ed25519-donna_2015-03-16": _ed25519(False),
+    "ed25519-donna_2015-03-16_linux": _ed25519(True),
+    "curve25519-donna_1.3": _curve25519(False),
+    "curve25519-donna_1.3_linux": _curve25519(True),
+}
