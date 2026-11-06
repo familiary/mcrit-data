@@ -134,6 +134,17 @@ emits neither, though it links and runs like every other. The cause needs
 MSVC in front of it, so it is recorded here rather than guessed at, and
 `validate --deep` fails on it as it should.
 
+It now reaches four more families, and for the same reason. `HellsGate`,
+`TartarusGate`, `RecycledGate` and `LayeredSyscall` are MSVC x64 console
+executables - they are proof-of-concept programs with a `main`, not
+libraries - so each carries that same 99-instruction wrapper under its own
+name. A deep run over those four plus the five SysWhispers families reports
+**3 cross-family PicHashes: that one leakage finding, 0 standard-library
+instantiations, 0 whose names differ, and 2 carrying no symbol at all.**
+Nothing was done about it here on purpose: the fix belongs in the baseline
+probe, which is being worked on separately, and a recipe that papered over
+it would hide the one finding this gate exists to surface.
+
 The deep check fails on one kind of collision only - the kind every round
 above was found by, one symbol name repeated across every family sharing the
 hash - and reports the rest as `NOTE` lines with their counts. `validate`,
@@ -543,7 +554,19 @@ Recorded here so the analysis is not repeated:
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |
-| SysWhispers2, SysWhispers3 | #9 | cross-build cleanly, but the generated stubs are 2-15 instructions differing by one immediate - a large, low-value cluster. v1, whose stubs carry a full PEB version ladder, is covered instead |
+| SysWhispers2, SysWhispers3 | #9 | **no longer true; both are built.** The row was right about the stubs - 2-15 instructions differing by one immediate - and wrong to conclude from that that the projects carry nothing. The code worth matching is the shared resolver, which `syswhispers.py`'s own docstring had already identified and left as "a separate question". `syswhispers2.py`, `syswhispers3.py` and `syswhispers3_rwxstoned.py` cover it |
+| SysWhispers2_x86 | #9 | the pre-generated MASM directory in the upstream repository is still not used, but the licence is no longer the reason: `syswhispers2.py` generates its own output from `syswhispers.py`, which the repository's own LICENSE covers, so the directory is simply redundant |
+| SysWhispers4 `-c clang` | - | clang 18 cross-compiles the generated source to a mingw target and its codegen differs from GCC's - measured, six function bodies that no GCC point produces, among them its own `SW4_FreshyCalls`, `SW4_HashStr` and `SW4_SortExports`. Not built because `corpus.toolchain` registers no clang toolchain, and adding one means editing `toolchain.py`, which the MSVC workflow treats as pipeline code and which would rebuild every MSVC recipe. Worth roughly six functions if a clang toolchain is ever added |
+| SysWhispers4 `-c nasm` | - | builds, and adds nothing. The NASM stubs assemble to the same instructions as the GAS ones and the artefact came back with the same two bodies as `freshycalls_O2`; nasm also emits no COFF `.def` directives, so the stub symbols are lost - 3 named SysWhispers4 functions against 28. Dropped on the evidence |
+| SysWhispers4 `--arch x86`/`arm64` under `-c mingw`/`-c clang` | - | the GAS stub emitter ignores `--arch` and writes x64 unconditionally. For `arm64` it emits `mov r10, rcx` and `syscall` and not one `svc` or `w8`; for x86 it emits `lea rcx, [rip + ...]`, which i686 GAS rejects. Those arches are real only on the MASM path and are built by `syswhispers4_msvc.py` |
+| SysWhispers4 `--arch x86` (MASM) | - | **a defect in the generated file.** `SW.x86.asm` declares `.386` and then issues `sysenter` in every stub, which `ml` rejects: "error A2085: instruction or register not accepted in current CPU mode" at each one. No option to `ml` overrides a CPU directive and the directive is in the generator's own output, so SysWhispers4's x86 MASM cannot be assembled as shipped - and fixing it would mean editing that output, which would make the reference data describe something nobody can build. WoW64 covers the 32-bit side instead: it declares `.686` and assembles |
+| SysWhispers4 `--arch arm64` | - | the generator does emit real ARM64 - 76 `svc`/`w8` references, against zero in anything the GAS emitter produces for the same `--arch` - but assembling it needs `armasm64`, which the `windows-2022` runner does not carry. This would be the corpus's only ARM64 syscall reference and is worth revisiting on a runner that has the ARM64 build tools |
+| SysWhispers3 `--method egg_hunter` | - | refused by the generator itself under `-c mingw`: "[-] Egg-Hunter not compatible with MinGW". Needs the MASM path |
+| Halo's Gate (SEKTOR7) | - | no source repository. The reference is to `sektor7.net`, which redirects to `www.sektor7.institute/consumer`, a course storefront; `github.com/sektor7net` is a 404. The *technique* is covered all the same, by SysWhispers4's `--resolve halos_gate` (`SW4_HalosGate`) and by SysWhispers3, which implement it |
+| Call Stack Spoofing (WithSecure Labs) | - | article, and the article is gone: `labs.withsecure.com/publications/spoofing-call-stacks-to-confuse-edrs` now 301s to the generic `www.withsecure.com/en/resources-hub/w-labs/` index, so there is no longer a page to read a repository link off. Nothing to build |
+| VEH-based on-demand memory encryption (xop01) | - | a bare GitHub profile link, not a repository. The account exists and has 14 public repositories, all forks or unrelated (ghidra, seaweedfs, x64dbg, an inline PE finder); none implements VEH memory encryption. The three projects its profile names as related - `ultradumper`, `kernel-monitor-edr`, `pdb_provider` - are private. The technique itself is covered by SysWhispers4's `--veh-encrypt`, which credits this author and whose `SW4_VehPageFaultHandler`, `SW4_VehXorPage`, `SW4_VehEncryptInit` and `SW4_VehEncryptShutdown` are built |
+| Windows Syscall Tables (j00ru) | - | data, not code: a generated set of HTML and JSON tables of service numbers per Windows build. There is nothing to compile, and SysWhispers4 consumes it as input (`scripts/update_syscall_table.py`) rather than linking it |
+| SysWhispers Evolution Analysis (Siddharth S.) | - | a Medium article comparing v1-v3. No code |
 | sc4cpp | #14 | upstream repository and the owning GitHub account are both gone (404); the surviving derivative needs clang-cl |
 | BlackLotus | #15 | not an open-source project: leaked bootkit source with no licence, and the UEFI half does not build from the repository as published (it references `global/` and `gnu-efi/` directories that are not there) |
 | gperftools (tcmalloc) | #10 | its Windows port targets MSVC; `src/windows/port.h` clashes with mingw's `nanosleep` linkage and needs a source patch |
