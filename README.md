@@ -61,6 +61,7 @@ Windows tools
 * [al-khaser](#al-khaser)
 * [peinjector](#peinjector)
 * [DiskCryptor](#diskcryptor)
+* [DiskCryptorDrv](#diskcryptordrv)
 * [WinPmem](#winpmem)
 * [WinPmemDrv](#winpmemdrv)
 
@@ -1103,6 +1104,13 @@ Original 1.1.846.118 source preserved as an archive by the maintained fork. The 
 | DiskCryptor | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/DiskCryptor/x86/mcrit/DiskCryptor_1.1.846.118_msvc143_x86_dcapi.dll.mcrit) / [x64 PE](data/DiskCryptor/x64/mcrit/DiskCryptor_1.1.846.118_msvc143_x64_dcapi.dll.mcrit) | [x86 PE](data/DiskCryptor/x86/smda/DiskCryptor_1.1.846.118_msvc143_x86_dcapi.dll.7z) / [x64 PE](data/DiskCryptor/x64/smda/DiskCryptor_1.1.846.118_msvc143_x64_dcapi.dll.7z) |
 | DiskCryptor | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/DiskCryptor/x86/mcrit/DiskCryptor_1.1.846.118_msvc143_x86_dccon.exe.mcrit) / [x64 PE](data/DiskCryptor/x64/mcrit/DiskCryptor_1.1.846.118_msvc143_x64_dccon.exe.mcrit) | [x86 PE](data/DiskCryptor/x86/smda/DiskCryptor_1.1.846.118_msvc143_x86_dccon.exe.7z) / [x64 PE](data/DiskCryptor/x64/smda/DiskCryptor_1.1.846.118_msvc143_x64_dccon.exe.7z) |
 | DiskCryptor | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/DiskCryptor/x86/mcrit/DiskCryptor_1.1.846.118_msvc143_x86_dcinst.exe.mcrit) / [x64 PE](data/DiskCryptor/x64/mcrit/DiskCryptor_1.1.846.118_msvc143_x64_dcinst.exe.mcrit) | [x86 PE](data/DiskCryptor/x86/smda/DiskCryptor_1.1.846.118_msvc143_x86_dcinst.exe.7z) / [x64 PE](data/DiskCryptor/x64/smda/DiskCryptor_1.1.846.118_msvc143_x64_dcinst.exe.7z) |
+<!-- /generated -->
+
+### DiskCryptorDrv<a id='diskcryptordrv'></a>
+
+The 1.1.846.118 filter driver from the same archive as DiskCryptor, built for x64 only with WDK 10.0.26100.0. Upstream source is not patched; a generated stub suppress.h is supplied by include path. The driver image is linked and disassembled only, never signed, installed or loaded.
+
+<!-- generated: DiskCryptorDrv -->
 <!-- /generated -->
 
 ### WinPmem<a id='winpmem'></a>
