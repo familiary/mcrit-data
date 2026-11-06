@@ -26,8 +26,10 @@ Reading the files rather than assuming:
     needed there and nothing is patched.
   * TinyXML 2.6.2 has no export macro at all. The exports come from a .def
     that the first build step generates from the compiled objects (dumpbin
-    /symbols, external defined functions, minus the compiler's ``??_`` vtable
-    and deleting-destructor helpers). It lives in the build tree beside the
+    /symbols, external defined C++-mangled functions, minus the compiler's
+    ``??_`` vtable and deleting-destructor helpers; the C-linkage external
+    COMDATs of the CRT's inline stdio wrappers are left out - exporting them
+    fails the x86 link with LNK2001 on _fprintf, _sscanf_s and the like). It lives in the build tree beside the
     objects; no upstream file is touched. This is what the MinGW DLL's
     auto-export gives: every function, inline ones included.
   * upstream's own Release configuration (tinyxml_lib.vcxproj) is MaxSpeed
@@ -69,7 +71,7 @@ _V1_DEF = (
     "o=subprocess.check_output(['dumpbin','/symbols']+sorted(glob.glob('*.obj'))).decode();"
     "n=sorted({m.group(1) for m in re.finditer("
     r"r'SECT\w+\s+notype \(\)\s+External\s+\|\s+(\S+)',o)"
-    " if not m.group(1).startswith('??_')});"
+    " if m.group(1).startswith('?') and not m.group(1).startswith('??_')});"
     "open('tinyxml.def','w').write('EXPORTS\\n'+'\\n'.join(n)+'\\n');"
     "print(len(n),'exports')"
     '"')
