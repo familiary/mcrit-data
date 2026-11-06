@@ -77,10 +77,10 @@ def _miniz_msvc(version, git_ref):
             BuildStep("cmake --build build-{arch} --target miniz"),
             # NMake hides the cl and link command lines in response files,
             # so the flags that were actually used are read back from the
-            # files CMake generated them into and printed to the build log.
+            # files CMake generated them into (compile: flags.make, link: the inline response file in build.make) and printed to the build log.
             BuildStep("type build-{arch}\\CMakeFiles\\miniz.dir\\flags.make",
                       allow_failure=True),
-            BuildStep("type build-{arch}\\CMakeFiles\\miniz.dir\\link.txt",
+            BuildStep("type build-{arch}\\CMakeFiles\\miniz.dir\\build.make",
                       allow_failure=True),
             BuildStep("dir bin", allow_failure=True),
         ],
