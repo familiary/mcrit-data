@@ -85,6 +85,22 @@ def read_list(text, name):
             if word.endswith(".c")]
 
 
+def replaced_functions(sources):
+    """Sources configure adds through AC_REPLACE_FUNCS, which libc lacks.
+
+    2.7.1 compiles memxor.c only because Windows has no memxor; later releases
+    list it in nettle_SOURCES outright.
+    """
+    with open("configure.ac", encoding="utf-8") as handle:
+        text = handle.read()
+    extra = []
+    for group in re.findall(r"AC_REPLACE_FUNCS\(\[?([^)\]]*)", text):
+        for name in group.split():
+            if os.path.exists(name + ".c") and name + ".c" not in sources:
+                extra.append(name + ".c")
+    return extra
+
+
 def write_config(arch, hogweed):
     defines = _defines(arch, hogweed)
     with open("config.h.in", encoding="utf-8") as handle:
@@ -158,26 +174,49 @@ def write_ecc_tables(makefile, flags):
 
 
 def exports(objects, arch, path):
+    """Write the .def and return {data symbol: object} for the objects.
+
+    The map is for the data a second DLL cannot import: see link_hogweed.
+    """
     names = set()
+    data = {}
     for obj in objects:
         out = subprocess.check_output(["dumpbin", "/SYMBOLS", obj]).decode(
             "utf-8", "replace")
         for line in out.splitlines():
             tokens = line.split()
-            if ("|" in tokens and "()" in tokens and "External" in tokens
+            if not ("|" in tokens and "External" in tokens
                     and any(t.startswith("SECT") for t in tokens)):
-                name = tokens[tokens.index("|") + 1]
-                if arch == "x86" and name.startswith("_"):
-                    name = name[1:]
-                names.add(name)
+                continue
+            name = tokens[tokens.index("|") + 1]
+            if "()" not in tokens:
+                data[name] = obj
+                continue
+            if arch == "x86" and name.startswith("_"):
+                name = name[1:]
+            names.add(name)
     if not names:
         raise SystemExit("no exports found in %s" % ", ".join(objects[:3]))
     with open(path, "w") as handle:
         handle.write("EXPORTS\n" + "\n".join(sorted(names)) + "\n")
     print("%s: %d exports" % (path, len(names)))
+    return data
 
 
-def build_library(name, sources, arch, flags, libs):
+def link(name, objects, libs):
+    with open(name + "_obj.rsp", "w") as handle:
+        handle.write("\n".join(objects) + "\n")
+    command = ["link", "/nologo", "/DLL", "/DEBUG", "/Brepro", "/INCREMENTAL:NO",
+               "/OPT:NOREF", "/OPT:NOICF", "/DEF:%s.def" % name,
+               "/PDB:lib%s.pdb" % name, "/OUT:lib%s.dll" % name,
+               "@%s_obj.rsp" % name] + libs
+    print("> " + " ".join(command), flush=True)
+    result = subprocess.run(command, capture_output=True, text=True)
+    print(result.stdout + result.stderr, flush=True)
+    return result
+
+
+def build_library(name, sources, arch, flags, libs, data=None):
     objdir = "obj_" + name
     os.makedirs(objdir, exist_ok=True)
     with open(name + ".rsp", "w") as handle:
@@ -189,13 +228,28 @@ def build_library(name, sources, arch, flags, libs):
     if len(objects) != len(sources):
         raise SystemExit("%s: %d sources but %d objects"
                          % (name, len(sources), len(objects)))
-    exports(objects, arch, name + ".def")
-    with open(name + "_obj.rsp", "w") as handle:
-        handle.write("\n".join(objects) + "\n")
-    run(["link", "/nologo", "/DLL", "/DEBUG", "/Brepro", "/INCREMENTAL:NO",
-         "/OPT:NOREF", "/OPT:NOICF", "/DEF:%s.def" % name,
-         "/PDB:lib%s.pdb" % name, "/OUT:lib%s.dll" % name,
-         "@%s_obj.rsp" % name] + libs)
+    defined = exports(objects, arch, name + ".def")
+    result = link(name, objects, libs)
+    if result.returncode != 0 and data:
+        # libhogweed refers to data that libnettle defines (the nettle_sha256
+        # family of hash descriptors). A DLL can export data, but cl code can
+        # only reach it through __declspec(dllimport), which the headers do
+        # not carry and which this build does not add; MinGW's ld has
+        # auto-import for the case, link.exe does not. The descriptors are
+        # const tables of names, sizes and function pointers, so the objects
+        # that define them are linked in whole (their code is none) and the
+        # functions they point at still resolve through libnettle's import
+        # library. Only what the linker names as unresolved is pulled in.
+        wanted = set(re.findall(r"unresolved external symbol (\S+)",
+                                result.stdout + result.stderr))
+        if wanted and wanted <= set(data):
+            extra = sorted({data[symbol] for symbol in wanted})
+            print("pulling in %d libnettle object(s) for data: %s"
+                  % (len(extra), ", ".join(extra)), flush=True)
+            result = link(name, objects + extra, libs)
+    if result.returncode != 0:
+        raise SystemExit("link of lib%s.dll failed" % name)
+    return defined
 
 
 def main():
@@ -213,6 +267,7 @@ def main():
     hog = read_list(makefile, "hogweed_SOURCES")
     if not nettle or (hogweed and not hog):
         raise SystemExit("could not read the source lists from Makefile.in")
+    nettle += replaced_functions(nettle)
     print("%d libnettle sources, %d libhogweed sources" % (len(nettle), len(hog)))
 
     write_config(args.arch, hogweed)
@@ -224,13 +279,19 @@ def main():
     # a non-ASCII author name in their comments.
     flags = ["/Igen", "/I.", "/DHAVE_CONFIG_H=1", "/D_CRT_SECURE_NO_WARNINGS",
              "/utf-8"]
+    with open("nettle-types.h", encoding="utf-8") as handle:
+        if "stdalign.h" in handle.read():
+            # 4.0 uses C11 alignas. cl only ships <stdalign.h> under /std:c11,
+            # and that mode defines __STDC__, which hides the CRT's
+            # non-standard names (alloca among them) unless asked.
+            flags += ["/std:c11", "/D_CRT_DECLARE_NONSTDC_NAMES=1"]
     if hogweed:
         write_ecc_tables(makefile, flags)
 
-    build_library("nettle", nettle, args.arch, flags, [])
+    data = build_library("nettle", nettle, args.arch, flags, [])
     if hogweed:
         build_library("hogweed", hog + ["mini-gmp.c"], args.arch, flags,
-                      ["libnettle.lib"])
+                      ["libnettle.lib"], data)
     print("done")
 
 
