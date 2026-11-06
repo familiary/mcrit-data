@@ -47,6 +47,7 @@ Libraries
 * [OpenSSL](#openssl)
 * [Crypto++](#cryptopp)
 * [7-Zip](#7-zip)
+* [Info-ZIP](#info-zip)
 * [PCRE](#pcre)
 * [abseil](#abseil)
 * [re2](#re2)
@@ -573,6 +574,20 @@ Generated with `scripts/build_corpus.py`; see `data/7-Zip/provenance.json` for s
 | 7-Zip | 23.01 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/7-Zip/x86/mcrit/7-Zip_23.01_msvc143_x86_7z.dll.mcrit) / [x64 PE](data/7-Zip/x64/mcrit/7-Zip_23.01_msvc143_x64_7z.dll.mcrit) | [x86 PE](data/7-Zip/x86/smda/7-Zip_23.01_msvc143_x86_7z.dll.7z) / [x64 PE](data/7-Zip/x64/smda/7-Zip_23.01_msvc143_x64_7z.dll.7z) |
 | 7-Zip | 26.03 | MinGW-w64 GCC 13 | [x86 PE](data/7-Zip/x86/mcrit/7-Zip_26.03_mingw13_x86_7z.dll.mcrit) / [x64 PE](data/7-Zip/x64/mcrit/7-Zip_26.03_mingw13_x64_7z.dll.mcrit) | [x86 PE](data/7-Zip/x86/smda/7-Zip_26.03_mingw13_x86_7z.dll.7z) / [x64 PE](data/7-Zip/x64/smda/7-Zip_26.03_mingw13_x64_7z.dll.7z) |
 | 7-Zip | 26.03 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/7-Zip/x86/mcrit/7-Zip_26.03_msvc143_x86_7z.dll.mcrit) / [x64 PE](data/7-Zip/x64/mcrit/7-Zip_26.03_msvc143_x64_7z.dll.mcrit) | [x86 PE](data/7-Zip/x86/smda/7-Zip_26.03_msvc143_x86_7z.dll.7z) / [x64 PE](data/7-Zip/x64/smda/7-Zip_26.03_msvc143_x64_7z.dll.7z) |
+<!-- /generated -->
+
+### Info-ZIP<a id='info-zip'></a>
+
+Info-ZIP's own deflate (`deflate.c`, `trees.c`) and inflate (`inflate.c`, `explode.c`, `unshrink.c`) - separate code from zlib, matched in all five malware families the FOSSIL study analysed. Version 3.0 is `zip.exe`, version 6.0 is `unzip.exe`; they are two programs with independent version numbers. Both are executables because that is what upstream's win32 makefiles produce.  
+Upstream publishes no checksum; the tarballs were fetched from SourceForge and Debian's pool, found byte-identical, and the sha256 in the provenance was computed from that download.  
+
+Generated with `scripts/build_corpus.py`; see `data/Info-ZIP/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Info-ZIP -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Info-ZIP | 3.0 | MinGW-w64 GCC 13 | [x86 PE](data/Info-ZIP/x86/mcrit/Info-ZIP_3.0_mingw13_x86_zip.exe.mcrit) / [x64 PE](data/Info-ZIP/x64/mcrit/Info-ZIP_3.0_mingw13_x64_zip.exe.mcrit) | [x86 PE](data/Info-ZIP/x86/smda/Info-ZIP_3.0_mingw13_x86_zip.exe.7z) / [x64 PE](data/Info-ZIP/x64/smda/Info-ZIP_3.0_mingw13_x64_zip.exe.7z) |
+| Info-ZIP | 6.0 | MinGW-w64 GCC 13 | [x86 PE](data/Info-ZIP/x86/mcrit/Info-ZIP_6.0_mingw13_x86_unzip.exe.mcrit) / [x64 PE](data/Info-ZIP/x64/mcrit/Info-ZIP_6.0_mingw13_x64_unzip.exe.mcrit) | [x86 PE](data/Info-ZIP/x86/smda/Info-ZIP_6.0_mingw13_x86_unzip.exe.7z) / [x64 PE](data/Info-ZIP/x64/smda/Info-ZIP_6.0_mingw13_x64_unzip.exe.7z) |
 <!-- /generated -->
 
 ### PCRE<a id='pcre'></a>
