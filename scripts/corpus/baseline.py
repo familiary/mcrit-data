@@ -55,6 +55,7 @@ linked .so to measure or to remove.
 import functools
 import logging
 import os
+import re
 import subprocess
 import tempfile
 
@@ -2942,6 +2943,141 @@ int main(int argc, char **argv)
 """
 
 
+_STDIO_TABLE_HEAD = """\
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <windows.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <time.h>
+#include <wchar.h>
+
+typedef void (*probe_symbol)(void);
+
+"""
+
+_STDIO_TABLE_DLL = "BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }\n"
+
+
+def _stdio_table_source(tag, names, exe=False):
+    entries = "".join("    (probe_symbol)%s,\n" % name for name in names)
+    if exe:
+        tail = ("int main(int argc, char **argv)\n{\n"
+                "    return probe_msvcrt_%s_symbols[argc] != 0;\n}\n" % tag)
+    else:
+        tail = _STDIO_TABLE_DLL
+    return (_STDIO_TABLE_HEAD +
+            "__declspec(dllexport) probe_symbol probe_msvcrt_%s_symbols[] = {\n"
+            "%s};\n\n%s" % (tag, entries, tail))
+
+
+_STDIO_NARROW_PRINT = (
+    "printf", "vprintf", "fprintf", "vfprintf",
+    "_printf_l", "_vprintf_l", "_fprintf_l", "_vfprintf_l",
+    "printf_s", "vprintf_s", "fprintf_s", "vfprintf_s",
+    "_printf_s_l", "_vprintf_s_l", "_fprintf_s_l", "_vfprintf_s_l",
+    "_printf_p", "_vprintf_p", "_fprintf_p", "_vfprintf_p",
+    "_printf_p_l", "_vprintf_p_l", "_fprintf_p_l", "_vfprintf_p_l")
+_STDIO_NARROW_STRING = (
+    "sprintf", "vsprintf", "snprintf", "vsnprintf", "_snprintf", "_vsnprintf",
+    "sprintf_s", "vsprintf_s", "_snprintf_s", "_vsnprintf_s",
+    "_sprintf_l", "_vsprintf_l", "_snprintf_l", "_vsnprintf_l",
+    "_sprintf_s_l", "_vsprintf_s_l", "_snprintf_s_l", "_vsnprintf_s_l",
+    "_sprintf_p", "_vsprintf_p", "_sprintf_p_l", "_vsprintf_p_l",
+    "_scprintf", "_vscprintf", "_scprintf_l", "_vscprintf_l",
+    "_scprintf_p", "_vscprintf_p")
+_STDIO_WIDE_PRINT = (
+    "wprintf", "vwprintf", "fwprintf", "vfwprintf",
+    "_wprintf_l", "_vwprintf_l", "_fwprintf_l", "_vfwprintf_l",
+    "wprintf_s", "vwprintf_s", "fwprintf_s", "vfwprintf_s",
+    "_wprintf_s_l", "_vwprintf_s_l", "_fwprintf_s_l", "_vfwprintf_s_l",
+    "_wprintf_p", "_vwprintf_p", "_fwprintf_p", "_vfwprintf_p",
+    "_wprintf_p_l", "_vwprintf_p_l", "_fwprintf_p_l", "_vfwprintf_p_l")
+_STDIO_WIDE_STRING = (
+    "swprintf", "vswprintf", "swprintf_s", "vswprintf_s",
+    "_snwprintf", "_vsnwprintf", "_snwprintf_s", "_vsnwprintf_s",
+    "_swprintf_s_l", "_vswprintf_s_l", "_snwprintf_l", "_vsnwprintf_l",
+    "_snwprintf_s_l", "_vsnwprintf_s_l")
+_STDIO_WIDE_STRING_X = (
+    "_swprintf", "_vswprintf", "_swprintf_c", "_vswprintf_c",
+    "_swprintf_c_l", "_vswprintf_c_l", "_swprintf_p", "_vswprintf_p",
+    "_swprintf_p_l", "_vswprintf_p_l", "_vswprintf_l", "_swprintf_l",
+    "_scwprintf", "_vscwprintf", "_scwprintf_l", "_vscwprintf_l",
+    "_scwprintf_p", "_vscwprintf_p")
+_STDIO_SCAN = (
+    "scanf", "wscanf", "fscanf", "fwscanf", "sscanf", "swscanf",
+    "vfscanf", "vfwscanf", "vsscanf", "vswscanf",
+    "scanf_s", "wscanf_s", "fscanf_s", "fwscanf_s", "sscanf_s", "swscanf_s",
+    "_vfscanf_l", "_vfwscanf_l")
+_STDIO_MISC = (
+    "localtime_s", "gmtime_s", "__local_stdio_printf_options",
+    "__local_stdio_scanf_options")
+
+_STDIO_GROUPS = (
+    ("narrow_print", _STDIO_NARROW_PRINT),
+    ("narrow_string", _STDIO_NARROW_STRING),
+    ("wide_print", _STDIO_WIDE_PRINT),
+    ("wide_string", _STDIO_WIDE_STRING),
+    ("wide_string_x", _STDIO_WIDE_STRING_X),
+    ("scan", _STDIO_SCAN),
+    ("misc", _STDIO_MISC),
+)
+
+_STDIO_CALLS_CPP = """\
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <windows.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <wchar.h>
+
+__declspec(dllexport) int probe_msvcrt_calls_cpp(wchar_t *wide, char *narrow,
+                                                 size_t size, const wchar_t *wformat,
+                                                 const char *format, ...)
+{
+    int total = 0;
+    total += swprintf_s(wide, size, wformat, 1, 2);
+    total += wprintf(wformat, 1, 2);
+    total += fwprintf(stderr, wformat, 1, 2);
+    total += printf(format, 1, 2);
+    total += fprintf(stderr, format, 1, 2);
+    total += sprintf_s(narrow, size, format, 1, 2);
+    total += _snwprintf_s(wide, size, size - 1, wformat, 1, 2);
+    total += _snwprintf(wide, size, wformat, 1, 2);
+    return total;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+_STDIO_FLAVOURS = (
+    ("", []),
+    ("inc", []),
+    ("sdl", ["/sdl"]),
+    ("nogs", ["/GS-"]),
+    ("od", ["/Od"]),
+    ("odsdl", ["/Od", "/sdl"]),
+    ("ox", ["/Ox", "/Ob2", "/Ot", "/GS-"]),
+    ("oxgl", ["/Ox", "/Ob2", "/Ot", "/GS-", "/GL"]),
+)
+
+
+def _stdio_lab_probes(toolchain):
+    probes = []
+    for flavour, flags in _STDIO_FLAVOURS:
+        for tag, names in _STDIO_GROUPS:
+            probes.append((toolchain.cc,
+                           "probe_msvcrt_wstdio_%s%s.c" % (tag, "_" + flavour if flavour else ""),
+                           _stdio_table_source("wstdio_" + tag, names),
+                           ["-shared", "/MD"] + flags + ([] if flavour == "inc" else _MSVC_RECIPE_LINK)))
+        probes.append((toolchain.cxx,
+                       "probe_msvcrt_wstdio_calls%s.cpp" % ("_" + flavour if flavour else ""),
+                       _STDIO_CALLS_CPP, ["-shared", "/MD", "/EHsc"] + flags + ([] if flavour == "inc" else _MSVC_RECIPE_LINK)))
+    # one EXE for the default flavour
+    probes.append((toolchain.cc, "probe_msvcrt_wstdio_exe.c",
+                   _stdio_table_source("wstdio_exe", _STDIO_NARROW_PRINT + _STDIO_WIDE_PRINT, exe=True),
+                   ["/MD"] + _MSVC_RECIPE_LINK))
+    return probes
+
+
 def _probe_command(toolchain, compiler, source, target, extra):
     """The command line for one probe, with ``extra`` put where it belongs.
 
@@ -3086,6 +3222,8 @@ def _msvc_probes(toolchain):
         probes.append(
             (toolchain.cc, "probe_msvcrt_helpers_x87.c", _PROBE_MSVCRT_HELPERS,
              ["-shared", "/MD", "/arch:IA32"]))
+    probes += _stdio_lab_probes(toolchain)
+    return probes  # LAB: skip STL
     # Which templates the STL headers instantiate depends on the language
     # version, and the two recipes disagree: vxapi.py builds /std:c++20 and
     # BlackBone's own Release(DLL) project asks for /std:c++latest. Both are
@@ -3278,6 +3416,10 @@ def crt_glue(toolchain_id):
                 if not function.function_name:
                     continue
                 glue.setdefault(function.function_name, set()).add(function.pic_hash)
+                if re.search(r"printf|scanf|localtime|gmtime|stdio_|__scrt_common_main|\$\+", function.function_name):
+                    LOGGER.warning("PROBELAB|%s|%s|%s|%d|%d", toolchain_id, filename,
+                                   function.function_name, function.pic_hash,
+                                   function.num_instructions)
     # The probe's own function is the one thing here that is not runtime code.
     #
     # The names the four shared probes contribute are still listed one by one
