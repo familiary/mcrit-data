@@ -3012,6 +3012,24 @@ _STDIO_MISC = (
     "localtime_s", "gmtime_s", "__local_stdio_printf_options",
     "__local_stdio_scanf_options")
 
+_STDIO_SCAN_L = (
+    "_scanf_l", "_wscanf_l", "_scanf_s_l", "_wscanf_s_l",
+    "_fscanf_l", "_fwscanf_l", "_fscanf_s_l", "_fwscanf_s_l",
+    "_sscanf_l", "_swscanf_l", "_sscanf_s_l", "_swscanf_s_l",
+    "_snscanf", "_snwscanf", "_snscanf_l", "_snwscanf_l",
+    "_snscanf_s", "_snwscanf_s", "_snscanf_s_l", "_snwscanf_s_l")
+_STDIO_VSCAN = (
+    "vscanf", "vwscanf", "vscanf_s", "vwscanf_s", "vfscanf_s", "vfwscanf_s",
+    "vswscanf_s", "_vscanf_l", "_vwscanf_l", "_vscanf_s_l", "_vwscanf_s_l",
+    "_vsscanf_l", "_vsnwscanf_l", "_vsnwscanf_s_l")
+_STDIO_VSCAN_X = (
+    "vsscanf_s", "_vsscanf_s_l", "_vswscanf_l", "_vswscanf_s_l",
+    "_vfscanf_s_l", "_vfwscanf_s_l")
+_STDIO_PRINT_X = (
+    "_snprintf_c", "_snprintf_c_l", "_vsnprintf_c", "_vsnprintf_c_l",
+    "vsnprintf_s", "__swprintf_l", "__vswprintf_l",
+    "_scprintf_p_l", "_scwprintf_p_l")
+
 _STDIO_GROUPS = (
     ("narrow_print", _STDIO_NARROW_PRINT),
     ("narrow_string", _STDIO_NARROW_STRING),
@@ -3019,65 +3037,41 @@ _STDIO_GROUPS = (
     ("wide_string", _STDIO_WIDE_STRING),
     ("wide_string_x", _STDIO_WIDE_STRING_X),
     ("scan", _STDIO_SCAN),
+    ("scan_l", _STDIO_SCAN_L),
+    ("vscan", _STDIO_VSCAN),
+    ("vscan_x", _STDIO_VSCAN_X),
+    ("print_x", _STDIO_PRINT_X),
     ("misc", _STDIO_MISC),
 )
 
-_STDIO_CALLS_CPP = """\
-#define _CRT_SECURE_NO_WARNINGS 1
-#include <windows.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <wchar.h>
-
-__declspec(dllexport) int probe_msvcrt_calls_cpp(wchar_t *wide, char *narrow,
-                                                 size_t size, const wchar_t *wformat,
-                                                 const char *format, ...)
-{
-    int total = 0;
-    total += swprintf_s(wide, size, wformat, 1, 2);
-    total += wprintf(wformat, 1, 2);
-    total += fwprintf(stderr, wformat, 1, 2);
-    total += printf(format, 1, 2);
-    total += fprintf(stderr, format, 1, 2);
-    total += sprintf_s(narrow, size, format, 1, 2);
-    total += _snwprintf_s(wide, size, size - 1, wformat, 1, 2);
-    total += _snwprintf(wide, size, wformat, 1, 2);
-    return total;
+_STDIO_FLAVOURS = {
+    "x86": (("", []), ("oy", ["/Oy-"]), ("sdloy", ["/sdl", "/Oy-"]),
+            ("od", ["/Od"])),
+    "x64": (("", []), ("sdl", ["/sdl"]), ("odsdl", ["/Od", "/sdl"])),
 }
 
-BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
-"""
-
-_STDIO_FLAVOURS = (
-    ("oy", ["/Oy-"]),
-    ("sdloy", ["/sdl", "/Oy-"]),
-    ("nogsoy", ["/GS-", "/Oy-"]),
-    ("gloy", ["/GL", "/Oy-"]),
-    ("sdlgloy", ["/sdl", "/GL", "/Oy-"]),
-    ("oxoy", ["/Ox", "/Ob2", "/Ot", "/GS-", "/Oy-"]),
-    ("oxgloy", ["/Ox", "/Ob2", "/Ot", "/GS-", "/GL", "/Oy-"]),
-    ("oxgl", ["/Ox", "/Ob2", "/Ot", "/GS-", "/GL"]),
-    ("oxsdloy", ["/Ox", "/Ob2", "/Ot", "/sdl", "/Oy-"]),
-    ("sdloycf", ["/sdl", "/Oy-", "/guard:cf"]),
-    ("odoy", ["/Od", "/Oy-"]),
-    ("odsdloy", ["/Od", "/sdl", "/Oy-"]),
+_STDIO_BB_TABLES = (
+    ("bba", ("swprintf_s", "_swprintf_s_l", "vswprintf_s")),
+    ("bbb", ("swprintf_s",)),
+    ("bbc", ("swprintf_s", "fprintf", "printf", "_vswprintf_s_l_unused")),
 )
 
 
 def _stdio_lab_probes(toolchain):
     probes = []
-    for flavour, flags in _STDIO_FLAVOURS:
+    for flavour, flags in _STDIO_FLAVOURS[toolchain.arch]:
         for tag, names in _STDIO_GROUPS:
-            if tag not in ("narrow_print", "wide_print", "wide_string", "scan", "narrow_string"):
-                continue
             probes.append((toolchain.cc,
                            "probe_msvcrt_wstdio_%s%s.c" % (tag, "_" + flavour if flavour else ""),
                            _stdio_table_source("wstdio_" + tag, names),
-                           ["-shared", "/MD"] + flags + ([] if flavour == "inc" else _MSVC_RECIPE_LINK)))
-    # one EXE for the default flavour
-    probes.append((toolchain.cc, "probe_msvcrt_wstdio_exe.c",
-                   _stdio_table_source("wstdio_exe", _STDIO_NARROW_PRINT + _STDIO_WIDE_PRINT, exe=True),
-                   ["/MD"] + _MSVC_RECIPE_LINK))
+                           ["-shared", "/MD"] + flags + _MSVC_RECIPE_LINK))
+    for flavour, flags in (("oxgloy", ["/Ox", "/Ob2", "/Ot", "/GS-", "/GL", "/Oy-"]),
+                           ("oxgl", ["/Ox", "/Ob2", "/Ot", "/GS-", "/GL"])):
+        for tag, names in _STDIO_BB_TABLES:
+            names = tuple(n for n in names if not n.endswith("_unused"))
+            probes.append((toolchain.cc, "probe_msvcrt_wstdio_%s_%s.c" % (tag, flavour),
+                           _stdio_table_source("wstdio_" + tag, names),
+                           ["-shared", "/MD"] + flags + _MSVC_RECIPE_LINK))
     return probes
 
 
