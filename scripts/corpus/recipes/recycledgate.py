@@ -57,7 +57,13 @@ RECIPES = {
         artifacts=[Artifact(path="recycledgate.exe",
                             component="recycledgate.exe",
                             pdb="rg.pdb",
-                            is_library=False)],
+                            # is_library stays true, as it is for every
+                            # executable in this corpus: MCRIT keys its
+                            # library-versus-malware views off that flag and
+                            # validate refuses a reference sample without it.
+                            # It says "this is reference material", not "this
+                            # is a .dll".
+                            is_library=True)],
         toolchains=["msvc_x64"],
         build_flags=("cl /O2 /MD /Zi, assembled with ml64, linked /DEBUG "
                      "/Brepro /OPT:NOREF /OPT:NOICF /INCREMENTAL:NO"),

@@ -84,7 +84,13 @@ RECIPES = {
         artifacts=[Artifact(path="layeredsyscall.exe",
                             component="layeredsyscall.exe",
                             pdb="ls.pdb",
-                            is_library=False)],
+                            # is_library stays true, as it is for every
+                            # executable in this corpus: MCRIT keys its
+                            # library-versus-malware views off that flag and
+                            # validate refuses a reference sample without it.
+                            # It says "this is reference material", not "this
+                            # is a .dll".
+                            is_library=True)],
         # x64: the technique reads and rewrites Rip and the Dr registers,
         # which exist in that form only in the 64-bit CONTEXT.
         toolchains=["msvc_x64"],
