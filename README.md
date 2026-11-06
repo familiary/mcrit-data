@@ -684,6 +684,7 @@ Generated with `scripts/build_corpus.py`; see `data/Tor/provenance.json` for sou
 <!-- generated: Tor -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| Tor | 0.4.8.25 | GCC 13 (Linux, glibc) | [x86 ELF](data/Tor/x86/mcrit/Tor_0.4.8.25_gcc13_x86_tor-client.mcrit) | [x86 ELF](data/Tor/x86/smda/Tor_0.4.8.25_gcc13_x86_tor-client.7z) |
 | Tor | 0.4.8.25 | GCC 14 (Linux, glibc) | [x64 ELF](data/Tor/x64/mcrit/Tor_0.4.8.25_gcc14_x64_tor-client.mcrit) | [x64 ELF](data/Tor/x64/smda/Tor_0.4.8.25_gcc14_x64_tor-client.7z) |
 | Tor | 0.4.8.25 | MinGW-w64 GCC 13 | [x86 PE](data/Tor/x86/mcrit/Tor_0.4.8.25_mingw13_x86_tor-client.mcrit) / [x64 PE](data/Tor/x64/mcrit/Tor_0.4.8.25_mingw13_x64_tor-client.mcrit) | [x86 PE](data/Tor/x86/smda/Tor_0.4.8.25_mingw13_x86_tor-client.7z) / [x64 PE](data/Tor/x64/smda/Tor_0.4.8.25_mingw13_x64_tor-client.7z) |
 <!-- /generated -->

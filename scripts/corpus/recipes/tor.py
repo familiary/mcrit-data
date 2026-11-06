@@ -8,8 +8,9 @@ PoW service module stays disabled; its separate Equi-X/HashX image is built
 from the same release's vendored sources with Tor's ``HASHX_SIZE=8``.
 
 Local measurements are functions with >=10 instructions / distinct PicHashes:
-Linux x64 5,560/4,603; MinGW x64 5,325/4,442; MinGW x86 1,148/1,129. No
-cross-compiler or cross-architecture pair shares a hash. The MinGW images
+Linux x64 5,560/4,603; Linux x86 5,614/5,134; MinGW x64 5,325/4,442; MinGW
+x86 1,148/1,129. No cross-compiler or cross-architecture pair shares a hash
+(all six pairs measured at that floor). The MinGW images
 retain the following named ``printf`` glue survivors: x64 PicHashes
 17868027862970709286, 13435729981230083553, and 14062597412585830361; x86
 ``_printf`` PicHashes 11120635638106864954, 246913217931940896, and
@@ -68,8 +69,13 @@ def _recipe(flavor, toolchains):
                      "--disable-asciidoc --disable-unittests"),
         notes=("Built from the official Tor 0.4.8.25 source archive. Relay "
                "and directory-authority modules are disabled per the client "
-               "scope. Linux dynamically imports system OpenSSL 3.5.7 and "
-               "zlib 1.3.1; MinGW builds OpenSSL 1.1.1w and zlib 1.3.1 as "
+               "scope. Linux x64 dynamically imports system OpenSSL 3.5.7 "
+               "and zlib 1.3.1. The Linux x86 image is built with gcc -m32 "
+               "against the i386 development packages of the same system "
+               "libraries (libssl-dev, zlib1g-dev, liblzma-dev) and needs "
+               "gcc-multilib; it was built locally on Ubuntu 24.04 with "
+               "OpenSSL 3.0.13 and zlib 1.3. MinGW builds OpenSSL 1.1.1w and "
+               "zlib 1.3.1 as "
                "shared dependencies. Both use shared libevent 2.1.12. "
                "Equi-X's PoW service is disabled and recorded as a separate "
                "EquiX family using HASHX_SIZE=8. The release exposes an "
@@ -79,6 +85,6 @@ def _recipe(flavor, toolchains):
 
 
 RECIPES = {
-    "Tor_0.4.8.25_linux": _recipe("linux", ["linux_x64"]),
+    "Tor_0.4.8.25_linux": _recipe("linux", ["linux_x86", "linux_x64"]),
     "Tor_0.4.8.25_mingw": _recipe("mingw", ["mingw_x86", "mingw_x64"]),
 }

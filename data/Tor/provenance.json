@@ -1,4 +1,47 @@
 {
+  "Tor_0.4.8.25_gcc13_x86_tor-client": {
+    "architecture": "x86",
+    "build_flags": "-O2 -g; dynamic OpenSSL and zlib; libevent 2.1.12 shared; --disable-module-relay --disable-module-dirauth --disable-asciidoc --disable-unittests",
+    "built_artifact": "src/app/tor",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "tor-client",
+    "dependencies": {
+      "libevent": {
+        "commit": "5df3037d10556bfcb675bc73e516978b75fc7bc7",
+        "git_ref": "5df3037d10556bfcb675bc73e516978b75fc7bc7",
+        "git_url": "https://github.com/libevent/libevent.git"
+      }
+    },
+    "family": "Tor",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "See upstream source",
+    "mcrit": "data/Tor/x86/mcrit/Tor_0.4.8.25_gcc13_x86_tor-client.mcrit",
+    "notes": "Built from the official Tor 0.4.8.25 source archive. Relay and directory-authority modules are disabled per the client scope. Linux x64 dynamically imports system OpenSSL 3.5.7 and zlib 1.3.1. The Linux x86 image is built with gcc -m32 against the i386 development packages of the same system libraries (libssl-dev, zlib1g-dev, liblzma-dev) and needs gcc-multilib; it was built locally on Ubuntu 24.04 with OpenSSL 3.0.13 and zlib 1.3. MinGW builds OpenSSL 1.1.1w and zlib 1.3.1 as shared dependencies. Both use shared libevent 2.1.12. Equi-X's PoW service is disabled and recorded as a separate EquiX family using HASHX_SIZE=8. The release exposes an Autotools build, not a Visual Studio project.",
+    "num_functions": 6496,
+    "removed_runtime_functions": [
+      "__divdi3",
+      "__udivdi3",
+      "__udivmoddi4",
+      "__umoddi3",
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "5e84f016c6175fce651aecbc618a63f6f26833df97610d2aea5889cfab870c73",
+    "smda": "data/Tor/x86/smda/Tor_0.4.8.25_gcc13_x86_tor-client.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "tor-0.4.8.25.tar.gz",
+      "sha256": "371cd22178fa4b35e64b03933403890795ce3e304c5850a5b59adcc68820a799",
+      "url": "https://dist.torproject.org/tor-0.4.8.25.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://gitlab.torproject.org/tpo/core/tor",
+    "version": "0.4.8.25"
+  },
   "Tor_0.4.8.25_gcc14_x64_tor-client": {
     "architecture": "x64",
     "build_flags": "-O2 -g; dynamic OpenSSL and zlib; libevent 2.1.12 shared; --disable-module-relay --disable-module-dirauth --disable-asciidoc --disable-unittests",
@@ -17,7 +60,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/Tor/x64/mcrit/Tor_0.4.8.25_gcc14_x64_tor-client.mcrit",
-    "notes": "Built from the official Tor 0.4.8.25 source archive. Relay and directory-authority modules are disabled per the client scope. Linux dynamically imports system OpenSSL 3.5.7 and zlib 1.3.1; MinGW builds OpenSSL 1.1.1w and zlib 1.3.1 as shared dependencies. Both use shared libevent 2.1.12. Equi-X's PoW service is disabled and recorded as a separate EquiX family using HASHX_SIZE=8. The release exposes an Autotools build, not a Visual Studio project.",
+    "notes": "Built from the official Tor 0.4.8.25 source archive. Relay and directory-authority modules are disabled per the client scope. Linux x64 dynamically imports system OpenSSL 3.5.7 and zlib 1.3.1. The Linux x86 image is built with gcc -m32 against the i386 development packages of the same system libraries (libssl-dev, zlib1g-dev, liblzma-dev) and needs gcc-multilib; it was built locally on Ubuntu 24.04 with OpenSSL 3.0.13 and zlib 1.3. MinGW builds OpenSSL 1.1.1w and zlib 1.3.1 as shared dependencies. Both use shared libevent 2.1.12. Equi-X's PoW service is disabled and recorded as a separate EquiX family using HASHX_SIZE=8. The release exposes an Autotools build, not a Visual Studio project.",
     "num_functions": 6036,
     "removed_runtime_functions": [
       "__do_global_dtors_aux",
@@ -67,7 +110,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/Tor/x64/mcrit/Tor_0.4.8.25_mingw13_x64_tor-client.mcrit",
-    "notes": "Built from the official Tor 0.4.8.25 source archive. Relay and directory-authority modules are disabled per the client scope. Linux dynamically imports system OpenSSL 3.5.7 and zlib 1.3.1; MinGW builds OpenSSL 1.1.1w and zlib 1.3.1 as shared dependencies. Both use shared libevent 2.1.12. Equi-X's PoW service is disabled and recorded as a separate EquiX family using HASHX_SIZE=8. The release exposes an Autotools build, not a Visual Studio project.",
+    "notes": "Built from the official Tor 0.4.8.25 source archive. Relay and directory-authority modules are disabled per the client scope. Linux x64 dynamically imports system OpenSSL 3.5.7 and zlib 1.3.1. The Linux x86 image is built with gcc -m32 against the i386 development packages of the same system libraries (libssl-dev, zlib1g-dev, liblzma-dev) and needs gcc-multilib; it was built locally on Ubuntu 24.04 with OpenSSL 3.0.13 and zlib 1.3. MinGW builds OpenSSL 1.1.1w and zlib 1.3.1 as shared dependencies. Both use shared libevent 2.1.12. Equi-X's PoW service is disabled and recorded as a separate EquiX family using HASHX_SIZE=8. The release exposes an Autotools build, not a Visual Studio project.",
     "num_functions": 5702,
     "removed_runtime_functions": [
       "_FindPESection",
@@ -283,7 +326,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/Tor/x86/mcrit/Tor_0.4.8.25_mingw13_x86_tor-client.mcrit",
-    "notes": "Built from the official Tor 0.4.8.25 source archive. Relay and directory-authority modules are disabled per the client scope. Linux dynamically imports system OpenSSL 3.5.7 and zlib 1.3.1; MinGW builds OpenSSL 1.1.1w and zlib 1.3.1 as shared dependencies. Both use shared libevent 2.1.12. Equi-X's PoW service is disabled and recorded as a separate EquiX family using HASHX_SIZE=8. The release exposes an Autotools build, not a Visual Studio project.",
+    "notes": "Built from the official Tor 0.4.8.25 source archive. Relay and directory-authority modules are disabled per the client scope. Linux x64 dynamically imports system OpenSSL 3.5.7 and zlib 1.3.1. The Linux x86 image is built with gcc -m32 against the i386 development packages of the same system libraries (libssl-dev, zlib1g-dev, liblzma-dev) and needs gcc-multilib; it was built locally on Ubuntu 24.04 with OpenSSL 3.0.13 and zlib 1.3. MinGW builds OpenSSL 1.1.1w and zlib 1.3.1 as shared dependencies. Both use shared libevent 2.1.12. Equi-X's PoW service is disabled and recorded as a separate EquiX family using HASHX_SIZE=8. The release exposes an Autotools build, not a Visual Studio project.",
     "num_functions": 1416,
     "removed_runtime_functions": [
       "__FindPESection",
