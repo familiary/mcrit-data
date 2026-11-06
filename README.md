@@ -370,7 +370,7 @@ Generated with `scripts/build_corpus.py`; see `data/liblzma/provenance.json` for
 
 ### libpcap<a id='libpcap'></a>
 
-libpcap is the packet-capture core behind tcpdump and a great deal of traffic-monitoring software. ELF only: its Windows capture backend needs the Npcap/WinPcap SDK, so the artefacts are Linux builds of the default PF_PACKET configuration.  
+libpcap is the packet-capture core behind tcpdump and a great deal of traffic-monitoring software. The ELF artefacts are the default Linux PF_PACKET build; the PE artefacts are upstream's Windows NPF backend built against the Npcap SDK (no SDK file is stored, see `scripts/corpus/recipes/libpcap.py` for the licence terms). 1.8.1 is ELF only because its CMake needs a batch file.  
 Generated with `scripts/build_corpus.py`; see `data/libpcap/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: libpcap -->
@@ -378,8 +378,11 @@ Generated with `scripts/build_corpus.py`; see `data/libpcap/provenance.json` for
 |----------|---------|----------|-------|------|
 | libpcap | 1.8.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/libpcap/x86/mcrit/libpcap_1.8.1_gcc13_x86_libpcap.so.mcrit) / [x64 ELF](data/libpcap/x64/mcrit/libpcap_1.8.1_gcc13_x64_libpcap.so.mcrit) | [x86 ELF](data/libpcap/x86/smda/libpcap_1.8.1_gcc13_x86_libpcap.so.7z) / [x64 ELF](data/libpcap/x64/smda/libpcap_1.8.1_gcc13_x64_libpcap.so.7z) |
 | libpcap | 1.9.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/libpcap/x86/mcrit/libpcap_1.9.1_gcc13_x86_libpcap.so.mcrit) / [x64 ELF](data/libpcap/x64/mcrit/libpcap_1.9.1_gcc13_x64_libpcap.so.mcrit) | [x86 ELF](data/libpcap/x86/smda/libpcap_1.9.1_gcc13_x86_libpcap.so.7z) / [x64 ELF](data/libpcap/x64/smda/libpcap_1.9.1_gcc13_x64_libpcap.so.7z) |
+| libpcap | 1.9.1 | MinGW-w64 GCC 13 | [x86 PE](data/libpcap/x86/mcrit/libpcap_1.9.1_mingw13_x86_pcap.dll.mcrit) / [x64 PE](data/libpcap/x64/mcrit/libpcap_1.9.1_mingw13_x64_pcap.dll.mcrit) | [x86 PE](data/libpcap/x86/smda/libpcap_1.9.1_mingw13_x86_pcap.dll.7z) / [x64 PE](data/libpcap/x64/smda/libpcap_1.9.1_mingw13_x64_pcap.dll.7z) |
 | libpcap | 1.10.5 | GCC 13 (Linux, glibc) | [x86 ELF](data/libpcap/x86/mcrit/libpcap_1.10.5_gcc13_x86_libpcap.so.mcrit) / [x64 ELF](data/libpcap/x64/mcrit/libpcap_1.10.5_gcc13_x64_libpcap.so.mcrit) | [x86 ELF](data/libpcap/x86/smda/libpcap_1.10.5_gcc13_x86_libpcap.so.7z) / [x64 ELF](data/libpcap/x64/smda/libpcap_1.10.5_gcc13_x64_libpcap.so.7z) |
+| libpcap | 1.10.5 | MinGW-w64 GCC 13 | [x86 PE](data/libpcap/x86/mcrit/libpcap_1.10.5_mingw13_x86_pcap.dll.mcrit) / [x64 PE](data/libpcap/x64/mcrit/libpcap_1.10.5_mingw13_x64_pcap.dll.mcrit) | [x86 PE](data/libpcap/x86/smda/libpcap_1.10.5_mingw13_x86_pcap.dll.7z) / [x64 PE](data/libpcap/x64/smda/libpcap_1.10.5_mingw13_x64_pcap.dll.7z) |
 | libpcap | 1.11.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/libpcap/x86/mcrit/libpcap_1.11.0_gcc13_x86_libpcap.so.mcrit) / [x64 ELF](data/libpcap/x64/mcrit/libpcap_1.11.0_gcc13_x64_libpcap.so.mcrit) | [x86 ELF](data/libpcap/x86/smda/libpcap_1.11.0_gcc13_x86_libpcap.so.7z) / [x64 ELF](data/libpcap/x64/smda/libpcap_1.11.0_gcc13_x64_libpcap.so.7z) |
+| libpcap | 1.11.0 | MinGW-w64 GCC 13 | [x86 PE](data/libpcap/x86/mcrit/libpcap_1.11.0_mingw13_x86_pcap.dll.mcrit) / [x64 PE](data/libpcap/x64/mcrit/libpcap_1.11.0_mingw13_x64_pcap.dll.mcrit) | [x86 PE](data/libpcap/x86/smda/libpcap_1.11.0_mingw13_x86_pcap.dll.7z) / [x64 PE](data/libpcap/x64/smda/libpcap_1.11.0_mingw13_x64_pcap.dll.7z) |
 <!-- /generated -->
 
 ### libsodium<a id='libsodium'></a>
