@@ -8,10 +8,10 @@ images already contain vendored BLAKE2b reference code; the standalone family
 adds both BLAKE2b and BLAKE2s variants, including parallel and extended-output
 implementations. The libsodium provenance records that vendored component.
 
-Image totals are kept+removed=total. Ref: Linux x86 84+0=84, x64 60+0=60;
-MinGW x86 42+0=42, x64 51+0=51; MSVC x86 73+0=73, x64 73+0=73. SSE:
-Linux x86 80+0=80, x64 56+0=56; MinGW x86 38+0=38, x64 47+0=47; MSVC
-x86 65+0=65, x64 65+0=65. The >=10-instruction functions / distinct
+Image totals are kept+removed=total. Ref: Linux x86 84+4=88, x64 60+6=66;
+MinGW x86 42+50=92, x64 51+50=101; MSVC x86 73+35=108, x64 73+42=115. SSE:
+Linux x86 80+6=86, x64 56+6=62; MinGW x86 38+50=88, x64 47+50=97; MSVC
+x86 65+33=98, x64 65+42=107. The >=10-instruction functions / distinct
 PicHashes are ref Linux x86 43/43, x64 34/34; MinGW x86 39/38, x64 37/37;
 MSVC x86 51/45, x64 48/42. SSE Linux x86 39/39, x64 30/30; MinGW x86
 36/35, x64 36/35; MSVC x86 45/41, x64 44/40.
