@@ -1,0 +1,5 @@
+; Exports for the MSVC build of agl/curve25519-donna, outside the upstream tree.
+; curve25519-donna.c declares no __declspec(dllexport); its one public
+; function is curve25519_donna and a MinGW DLL exports it by default.
+EXPORTS
+    curve25519_donna
