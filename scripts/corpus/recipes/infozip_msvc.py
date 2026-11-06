@@ -41,9 +41,14 @@ What was read rather than assumed, in the two tarballs:
     not code-generation switches that the MinGW build has an equivalent for
     and are left out; ``-J`` (unsigned char) would be a real difference and
     is deliberately not used.
-  * ``-DWIN32`` is passed as upstream does. cl also defines ``_WIN32``. The
-    ``CR`` clash that needs ``-include windows.h`` under MinGW does not occur
-    with the Windows SDK headers.
+  * ``-DWIN32`` is passed as upstream does. cl also defines ``_WIN32``.
+  * ``/FIwindows.h`` is the MSVC spelling of the MinGW recipe's ``-include
+    windows.h`` and is needed for the same reason. A first attempt without it
+    failed on all four builds in winnt.h of the 10.0.26100.0 SDK (line 21730,
+    C2143/C2059): both programs ``#define CR 13`` before they include
+    <windows.h>, and winnt.h declares an ARM64 struct with a bitfield named
+    ``CR``. Including windows.h first lets its include guard stop it being
+    read again once the macro exists.
   * osdep.h and w32cfg.h already define ``_CRT_SECURE_NO_DEPRECATE`` and
     ``_CRT_NONSTDC_NO_DEPRECATE`` for _MSC_VER >= 1400; they are repeated on
     the command line only so the build does not depend on include order.
@@ -64,7 +69,7 @@ counts and the MinGW/MSVC PicHash overlap at ten instructions or more.
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
-_DEFS = ("/DWIN32 /DFORCE_WIN32_OVER_UNIX "
+_DEFS = ("/FIwindows.h /DWIN32 /DFORCE_WIN32_OVER_UNIX "
          "/D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE")
 
 # One cl invocation so /Fd names one compiler PDB for the linker to start
