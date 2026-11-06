@@ -55,6 +55,18 @@ Libraries
 * [jemalloc](#jemalloc)
 * [libstdc++](#libstdcxx)
 
+Windows tools
+* [EDRSandblast](#edrsandblast)
+* [EDRSilencer](#edrsilencer)
+* [al-khaser](#al-khaser)
+* [peinjector](#peinjector)
+* [DiskCryptor](#diskcryptor)
+* [DiskCryptorDrv](#diskcryptordrv)
+* [KProcessHacker](#kprocesshacker)
+* [kphlib](#kphlib)
+* [WinPmem](#winpmem)
+* [WinPmemDrv](#winpmemdrv)
+
 Runtimes
 * [Lua](#lua)
 * [LuaJIT](#luajit)
@@ -1039,4 +1051,81 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
+<!-- /generated -->
+
+### EDRSandblast<a id='edrsandblast'></a>
+
+The reusable core and static API from the 2024-08-30 pin, including its vendored SysWhispers2 code. x64 only. A corpus DLL links the two complete archives; the CLI and LSASS example are excluded. All images are linked and disassembled only; no tool, check, installer or driver is executed.
+
+<!-- generated: EDRSandblast -->
+<!-- /generated -->
+
+### EDRSilencer<a id='edrsilencer'></a>
+
+The two upstream C files from the 2024-11-03 pin. Windows SDK APIs and the CRT are dynamic. MinGW and MSVC x86/x64 are compared separately. All images are linked and disassembled only; no tool, check, installer or driver is executed.
+
+<!-- generated: EDRSilencer -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| EDRSilencer | 2024-11-03 | MinGW-w64 GCC 13 | [x86 PE](data/EDRSilencer/x86/mcrit/EDRSilencer_2024-11-03_mingw13_x86_EDRSilencer.exe.mcrit) / [x64 PE](data/EDRSilencer/x64/mcrit/EDRSilencer_2024-11-03_mingw13_x64_EDRSilencer.exe.mcrit) | [x86 PE](data/EDRSilencer/x86/smda/EDRSilencer_2024-11-03_mingw13_x86_EDRSilencer.exe.7z) / [x64 PE](data/EDRSilencer/x64/smda/EDRSilencer_2024-11-03_mingw13_x64_EDRSilencer.exe.7z) |
+<!-- /generated -->
+
+### al-khaser<a id='al-khaser'></a>
+
+The complete upstream check suite, pinned to 2026-07-01. Release /O2 and /Od measure the optimized consumer shape and the independent check bodies respectively. All images are linked and disassembled only; no tool, check, installer or driver is executed.
+
+<!-- generated: al-khaser -->
+<!-- /generated -->
+
+### peinjector<a id='peinjector'></a>
+
+Only libpefile, libpeinfect, libpeinfect_obfuscator and libpetool from the final 2016-05-11 commit. The protocol/server code and minIni are excluded. The same four files build for MinGW, MSVC and Linux ELF. All images are linked and disassembled only; no tool, check, installer or driver is executed.
+
+<!-- generated: peinjector -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| peinjector | 2016-05-11 | GCC 14 (Linux, glibc) | [x86 ELF](data/peinjector/x86/mcrit/peinjector_2016-05-11_gcc14_x86_peinjector.so.mcrit) / [x64 ELF](data/peinjector/x64/mcrit/peinjector_2016-05-11_gcc14_x64_peinjector.so.mcrit) | [x86 ELF](data/peinjector/x86/smda/peinjector_2016-05-11_gcc14_x86_peinjector.so.7z) / [x64 ELF](data/peinjector/x64/smda/peinjector_2016-05-11_gcc14_x64_peinjector.so.7z) |
+| peinjector | 2016-05-11 | MinGW-w64 GCC 13 | [x86 PE](data/peinjector/x86/mcrit/peinjector_2016-05-11_mingw13_x86_peinjector.dll.mcrit) / [x64 PE](data/peinjector/x64/mcrit/peinjector_2016-05-11_mingw13_x64_peinjector.dll.mcrit) | [x86 PE](data/peinjector/x86/smda/peinjector_2016-05-11_mingw13_x86_peinjector.dll.7z) / [x64 PE](data/peinjector/x64/smda/peinjector_2016-05-11_mingw13_x64_peinjector.dll.7z) |
+<!-- /generated -->
+
+### DiskCryptor<a id='diskcryptor'></a>
+
+Original 1.1.846.118 source, preserved as an archive by the maintained fork. The API, console and installer-support images are separate components. Modern fork code is not substituted for the original. All images are linked and disassembled only; no tool, check, installer or driver is executed.
+
+<!-- generated: DiskCryptor -->
+<!-- /generated -->
+
+### DiskCryptorDrv<a id='diskcryptordrv'></a>
+
+Original 1.1.846.118 filter driver, collected separately from the user-mode family. WDK 10.0.26100.0 supplies only the x64 kernel target. Kernel runtime/import residue needs separate accounting. All images are linked and disassembled only; no tool, check, installer or driver is executed.
+
+<!-- generated: DiskCryptorDrv -->
+<!-- /generated -->
+
+### KProcessHacker<a id='kprocesshacker'></a>
+
+The Process Hacker v2.39 driver, before the System Informer redesign. WDK retargeting is expressed through properties; source stays unchanged. All images are linked and disassembled only; no tool, check, installer or driver is executed.
+
+<!-- generated: KProcessHacker -->
+<!-- /generated -->
+
+### kphlib<a id='kphlib'></a>
+
+Process Hacker v2.39 kph.c with only the phlib support objects reached by its link. No ProcessHacker GUI executable is collected. All images are linked and disassembled only; no tool, check, installer or driver is executed.
+
+<!-- generated: kphlib -->
+<!-- /generated -->
+
+### WinPmem<a id='winpmem'></a>
+
+The original 1.6.2 client found in Rekall v1.2.0 (cfaf02d7, 2014-12-21), confirmed by the shipped PMEM_VERSION macro. No modern WinPmem substitution, CLI or embedded resources. All images are linked and disassembled only; no tool, check, installer or driver is executed.
+
+<!-- generated: WinPmem -->
+<!-- /generated -->
+
+### WinPmemDrv<a id='winpmemdrv'></a>
+
+The seven driver translation units listed in the historical pin’s SOURCES file. The already-shipped api.h is preserved, without regenerating its obfuscation key. All images are linked and disassembled only; no tool, check, installer or driver is executed.
+
+<!-- generated: WinPmemDrv -->
 <!-- /generated -->
