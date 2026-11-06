@@ -51,6 +51,7 @@ Libraries
 * [abseil](#abseil)
 * [re2](#re2)
 * [protobuf](#protobuf)
+* [nanopb](#nanopb)
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [libstdc++](#libstdcxx)
@@ -616,6 +617,19 @@ Generated with `scripts/build_corpus.py`; see `data/re2/provenance.json` for sou
 | re2 | 2022-06-01 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/re2/x86/mcrit/re2_2022-06-01_msvc143_x86_re2.dll.mcrit) / [x64 PE](data/re2/x64/mcrit/re2_2022-06-01_msvc143_x64_re2.dll.mcrit) | [x86 PE](data/re2/x86/smda/re2_2022-06-01_msvc143_x86_re2.dll.7z) / [x64 PE](data/re2/x64/smda/re2_2022-06-01_msvc143_x64_re2.dll.7z) |
 | re2 | 2025-11-05 | MinGW-w64 GCC 13 | [x86 PE](data/re2/x86/mcrit/re2_2025-11-05_mingw13_x86_re2.dll.mcrit) / [x64 PE](data/re2/x64/mcrit/re2_2025-11-05_mingw13_x64_re2.dll.mcrit) | [x86 PE](data/re2/x86/smda/re2_2025-11-05_mingw13_x86_re2.dll.7z) / [x64 PE](data/re2/x64/smda/re2_2025-11-05_mingw13_x64_re2.dll.7z) |
 | re2 | 2025-11-05 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/re2/x86/mcrit/re2_2025-11-05_msvc143_x86_re2.dll.mcrit) / [x64 PE](data/re2/x64/mcrit/re2_2025-11-05_msvc143_x64_re2.dll.mcrit) | [x86 PE](data/re2/x86/smda/re2_2025-11-05_msvc143_x86_re2.dll.7z) / [x64 PE](data/re2/x64/smda/re2_2025-11-05_msvc143_x64_re2.dll.7z) |
+<!-- /generated -->
+
+### nanopb<a id='nanopb'></a>
+
+nanopb is the small C implementation of the Protocol Buffers wire format used in firmware and embedded code, unrelated to the C++ library in protobuf above. Built as a DLL from `pb_common.c`, `pb_decode.c` and `pb_encode.c` with no `PB_*` options (upstream's default). The case for it is naming only, and a build with other options or `-Os` matches by MinHash rather than PicHash.  
+Generated with `scripts/build_corpus.py`; see `data/nanopb/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: nanopb -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| nanopb | 0.3.9.10 | MinGW-w64 GCC 13 | [x86 PE](data/nanopb/x86/mcrit/nanopb_0.3.9.10_mingw13_x86_libprotobuf-nanopb.dll.mcrit) / [x64 PE](data/nanopb/x64/mcrit/nanopb_0.3.9.10_mingw13_x64_libprotobuf-nanopb.dll.mcrit) | [x86 PE](data/nanopb/x86/smda/nanopb_0.3.9.10_mingw13_x86_libprotobuf-nanopb.dll.7z) / [x64 PE](data/nanopb/x64/smda/nanopb_0.3.9.10_mingw13_x64_libprotobuf-nanopb.dll.7z) |
+| nanopb | 0.4.5 | MinGW-w64 GCC 13 | [x86 PE](data/nanopb/x86/mcrit/nanopb_0.4.5_mingw13_x86_libprotobuf-nanopb.dll.mcrit) / [x64 PE](data/nanopb/x64/mcrit/nanopb_0.4.5_mingw13_x64_libprotobuf-nanopb.dll.mcrit) | [x86 PE](data/nanopb/x86/smda/nanopb_0.4.5_mingw13_x86_libprotobuf-nanopb.dll.7z) / [x64 PE](data/nanopb/x64/smda/nanopb_0.4.5_mingw13_x64_libprotobuf-nanopb.dll.7z) |
+| nanopb | 0.4.9.2 | MinGW-w64 GCC 13 | [x86 PE](data/nanopb/x86/mcrit/nanopb_0.4.9.2_mingw13_x86_libprotobuf-nanopb.dll.mcrit) / [x64 PE](data/nanopb/x64/mcrit/nanopb_0.4.9.2_mingw13_x64_libprotobuf-nanopb.dll.mcrit) | [x86 PE](data/nanopb/x86/smda/nanopb_0.4.9.2_mingw13_x86_libprotobuf-nanopb.dll.7z) / [x64 PE](data/nanopb/x64/smda/nanopb_0.4.9.2_mingw13_x64_libprotobuf-nanopb.dll.7z) |
 <!-- /generated -->
 
 ### nlohmann/json<a id='nlohmann_json'></a>
