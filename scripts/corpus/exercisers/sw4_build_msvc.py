@@ -74,12 +74,15 @@ def main():
                          % (stub_glob, len(found), sorted(os.listdir(d))))
 
     # /MD not /MT, no /GL, and /Zi so the PDB carries the static resolver's
-    # names. Two enum types the mingw side supplies with -D are in the
-    # Windows SDK, so nothing is needed for them here.
-    sh("cl /nologo /c /O2 /MD /Zi /I%s /Fd%s\\%s.pdb /Fo%s\\SW_c.obj %s\\SW.c"
-       % (d, d, stem, d, d))
-    sh("cl /nologo /c /O2 /MD /Zi /I%s /Fd%s\\%s.pdb /Fo%s\\exer.obj %s\\exer.c"
-       % (d, d, stem, d, d))
+    # names. The two enum types the mingw side supplies with -D are in the
+    # Windows SDK, so nothing is needed for them here; /FI supplies the one
+    # NT typedef the SDK omits. See sw4_msvc_compat.h.
+    compat = os.path.join(HERE, "sw4_msvc_compat.h")
+    cflags = ("/nologo /c /O2 /MD /Zi /FI\"%s\" /I%s" % (compat, d))
+    sh("cl %s /Fd%s\\%s.pdb /Fo%s\\SW_c.obj %s\\SW.c"
+       % (cflags, d, stem, d, d))
+    sh("cl %s /Fd%s\\%s.pdb /Fo%s\\exer.obj %s\\exer.c"
+       % (cflags, d, stem, d, d))
     sh("%s /nologo /c /Fo%s\\SW_asm.obj %s" % (assembler, d, found[0]))
 
     # /Brepro so two runs of one commit produce the same bytes; /OPT:NOREF

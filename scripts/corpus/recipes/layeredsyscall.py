@@ -42,7 +42,8 @@ Fixing either would mean editing upstream, which this corpus does not do.
 Built as the console EXE it is - ``demo.cpp`` carries ``main`` - so the MSVC
 startup glue is in the image and is subtracted by the measured baseline
 rather than by this recipe. ``#pragma comment(lib, "ntdll.lib")`` in
-demo.cpp supplies the import library, so no ``/DEFAULTLIB`` is needed here.
+demo.cpp supplies that import library, but nothing supplies user32, which
+``demofunction``'s ``MessageBox`` call needs, so the link names it.
 Nothing is run.
 """
 
@@ -63,7 +64,11 @@ _STEPS = (
     BuildStep("cl %s /FoFuncWrappers.obj FuncWrappers.cpp" % _CFLAGS),
     BuildStep("link /nologo /DEBUG /Brepro /OPT:NOREF /OPT:NOICF "
               "/INCREMENTAL:NO /PDB:ls.pdb /OUT:layeredsyscall.exe "
-              "demo.obj HookModule.obj FuncWrappers.obj"),
+              # user32.lib for MessageBoxW, which HookModule.cpp's
+              # demofunction calls: upstream's #pragma comment(lib, ...)
+              # covers ntdll only, so without it the link fails with
+              # "unresolved external symbol __imp_MessageBoxW".
+              "demo.obj HookModule.obj FuncWrappers.obj user32.lib"),
 )
 
 
