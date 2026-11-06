@@ -169,7 +169,11 @@ RECIPES = {
         artifacts=_X86_ARTIFACTS,
         toolchains=["msvc_x86"],
         build_flags=_FLAGS,
-        min_functions=15,
+        # Same floor as the x64 leg, for the same reason: these are the two
+        # WoW64 points, whose stubs are in the image but unreferenced, and a
+        # floor above what the smallest legitimate point measures is how a
+        # good artefact gets thrown away.
+        min_functions=9,
         notes=_NOTES,
     ),
 }
