@@ -16,6 +16,13 @@ _TOOLS = ("(where win_flex >nul 2>&1 && where win_bison >nul 2>&1) || "
 
 _UNPACK_SDK = "cmake -E tar xf {npcap_sdk}"
 
+# The SDK keeps the 32-bit import library in Lib and the 64-bit one in
+# Lib/x64. 1.10 and later FindPacket modules did not pick Lib/x64 on the
+# runner (the x64 link took Lib/Packet.lib, LNK4272, 24 unresolved), so the
+# right one is staged under a per-arch name and passed explicitly.
+_STAGE_LIB = ('if "{bitness}"=="64" (copy /Y Lib\\x64\\Packet.lib Packet-{arch}.lib) '
+              'else (copy /Y Lib\\Packet.lib Packet-{arch}.lib)')
+
 _CFLAGS = '-DCMAKE_C_FLAGS_RELEASE="/MD /O2 /Ob2 /DNDEBUG /Zi"'
 _LDFLAGS = ('-DCMAKE_SHARED_LINKER_FLAGS_RELEASE='
             '"/INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF /OPT:NOICF"')
@@ -23,14 +30,21 @@ _LDFLAGS = ('-DCMAKE_SHARED_LINKER_FLAGS_RELEASE='
 # USE_STATIC_RT defaults to ON on MSVC in all four versions and would put
 # /MT in the flags (1.9.1 and later rewrite /MD to /MT; 1.8.1 appends it).
 # PACKET_DLL_DIR (1.8.1, 1.9.x) and Packet_ROOT (1.10 and later) both point
-# at the SDK; the Find module picks Lib or Lib/x64 by pointer size.
+# at the SDK and Packet_LIBRARY / PACKET_LIBRARY at the staged library.
+# CMAKE_DISABLE_FIND_PACKAGE_OpenSSL keeps the runner's own OpenSSL out: 1.10
+# and later optionally use it, the x64 runner has one in Program Files
+# (pcap-new.c then fails on off_t) and the x86 one does not, so the two
+# legs would otherwise not be the same build.
 # LIBRARY_NAME=wpcap is the documented Windows override (1.8.1 hardcodes it).
 _CMAKE = ('cmake -S . -B build-{arch} -G "NMake Makefiles" '
           '-DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 '
           '-DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_SHARED_LIBS=ON '
           '-DUSE_STATIC_RT=OFF -DLIBRARY_NAME=wpcap '
           '-DPACKET_DLL_DIR={source_root}/npcap-sdk '
-          '-DPacket_ROOT={source_root}/npcap-sdk %s %s' % (_CFLAGS, _LDFLAGS))
+          '-DPacket_ROOT={source_root}/npcap-sdk '
+          '-DPacket_LIBRARY={source_root}/npcap-sdk/Packet-{arch}.lib '
+          '-DPACKET_LIBRARY={source_root}/npcap-sdk/Packet-{arch}.lib '
+          '-DCMAKE_DISABLE_FIND_PACKAGE_OpenSSL=ON %s %s' % (_CFLAGS, _LDFLAGS))
 
 
 def _libpcap_msvc(version, sha256, out_dir):
@@ -46,6 +60,7 @@ def _libpcap_msvc(version, sha256, out_dir):
             BuildStep(_TOOLS),
             BuildStep("cmake -E make_directory npcap-sdk"),
             BuildStep(_UNPACK_SDK, cwd="npcap-sdk"),
+            BuildStep(_STAGE_LIB, cwd="npcap-sdk"),
             BuildStep(_CMAKE),
             BuildStep("cmake --build build-{arch} --target wpcap"),
             BuildStep("dir build-{arch}%s" % out_dir.replace("/", "\\"),
