@@ -335,7 +335,9 @@ Generated with `scripts/build_corpus.py`; see `data/Jansson/provenance.json` for
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Jansson | 2.13.1 | MinGW-w64 GCC 13 | [x86 PE](data/Jansson/x86/mcrit/Jansson_2.13.1_mingw13_x86_libjansson.dll.mcrit) / [x64 PE](data/Jansson/x64/mcrit/Jansson_2.13.1_mingw13_x64_libjansson.dll.mcrit) | [x86 PE](data/Jansson/x86/smda/Jansson_2.13.1_mingw13_x86_libjansson.dll.7z) / [x64 PE](data/Jansson/x64/smda/Jansson_2.13.1_mingw13_x64_libjansson.dll.7z) |
+| Jansson | 2.13.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Jansson/x86/mcrit/Jansson_2.13.1_msvc143_x86_jansson.dll.mcrit) / [x64 PE](data/Jansson/x64/mcrit/Jansson_2.13.1_msvc143_x64_jansson.dll.mcrit) | [x86 PE](data/Jansson/x86/smda/Jansson_2.13.1_msvc143_x86_jansson.dll.7z) / [x64 PE](data/Jansson/x64/smda/Jansson_2.13.1_msvc143_x64_jansson.dll.7z) |
 | Jansson | 2.15.1 | MinGW-w64 GCC 13 | [x86 PE](data/Jansson/x86/mcrit/Jansson_2.15.1_mingw13_x86_libjansson.dll.mcrit) / [x64 PE](data/Jansson/x64/mcrit/Jansson_2.15.1_mingw13_x64_libjansson.dll.mcrit) | [x86 PE](data/Jansson/x86/smda/Jansson_2.15.1_mingw13_x86_libjansson.dll.7z) / [x64 PE](data/Jansson/x64/smda/Jansson_2.15.1_mingw13_x64_libjansson.dll.7z) |
+| Jansson | 2.15.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Jansson/x86/mcrit/Jansson_2.15.1_msvc143_x86_jansson.dll.mcrit) / [x64 PE](data/Jansson/x64/mcrit/Jansson_2.15.1_msvc143_x64_jansson.dll.mcrit) | [x86 PE](data/Jansson/x86/smda/Jansson_2.15.1_msvc143_x86_jansson.dll.7z) / [x64 PE](data/Jansson/x64/smda/Jansson_2.15.1_msvc143_x64_jansson.dll.7z) |
 <!-- /generated -->
 
 ### libcurl<a id='libcurl'></a>

@@ -40,7 +40,61 @@ give /MD /O2 /Ob2 /Zi, and at link /INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF
 against a CMake 4 runner for the 3.1 declared at 2.13.1; an unused cache entry
 elsewhere.
 
-Flags read back from the tracker logs: PENDING (filled after the runner build).
+Read back from the runner's tracker logs (windows-2022, MSVC 19.44.35229,
+v143), not assumed:
+  * HAS_NO_FORMAT_TRUNCATION: Failed, so -Wno-format-truncation is absent.
+  * the link line, verbatim apart from paths, at both tags and both archs:
+    `/dll /version:4.<minor> /machine:<x64|X86> /INCREMENTAL:NO /DEBUG
+    /Brepro /OPT:NOREF /OPT:NOICF /DEF:src/jansson.def` plus CMake's default
+    libraries, with no /LTCG; no /GL is passed anywhere. The compile line goes
+    through a response file that nmake does not echo even with
+    CMAKE_VERBOSE_MAKEFILE=ON (set here for the link line), so the compile
+    flags are the cache values above plus upstream's add_definitions.
+  * at 2.15.1 CMake's DSYMVER_WORKS and VSCRIPT_WORKS probes both pass under
+    cl and it appends `-Wl,--version-script,jansson.sym` to the shared linker
+    flags; link.exe answers `LNK4044: unrecognized option ... ignored`. A
+    harmless warning, not an obstacle, and nothing is patched.
+  * the DLLs are 52,224 bytes (x86, 2.13.1) up to 112,640 (x64, 2.15.1) with
+    PDBs of 0.85-0.88 MB, written to build-<arch>/bin as expected.
+
+Counted on the windows-2022 runner, kept + removed = image total (removed is
+the runner-side baseline's compiler-runtime filter, "dropped N compiler
+runtime functions"):
+
+                    kept    removed    image
+    2.13.1 x86       222      157       379
+    2.13.1 x64       217      150       367
+    2.15.1 x86       265      165       430
+    2.15.1 x64       259      154       413
+
+What the baseline removed is MSVC runtime glue: DllMain, _DllMainCRTStartup,
+_CRT_INIT, the __scrt_* startup/lock/onexit functions, the __castguard_*
+family, __report_gsfailure and friends, __GSHandlerCheck, __C_specific_handler,
+__SEH_prolog4/__SEH_epilog4 (x86) and the kernel32 import thunks. It is
+compiled into the DLL even under /MD (the static vcruntime startup), which is
+why the filter matters here.
+
+What survives, by name and PicHash: no unnamed function in any artefact. The
+named non-jansson survivors are one-instruction import thunks that all share
+PicHash 1253497258561142223 (GetModuleHandleA, SwitchToThread, fgetc, fwrite,
+localeconv, strerror, strtoll, plus __dclass at x86 and __fpe_flt_rounds at
+2.15.1), each below the 10-instruction floor of the cross-family check, so
+they are the generic thunk shape and not attributable code. Jansson's own
+statics (seed_from_windows_cryptoapi, generate_seed and so on) are real code.
+validate --deep over Jansson plus cJSON, lz4, q3vm, aPLib and donut: 0
+problems; 3 cross-family PicHashes at 10+ instructions, none a leak.
+
+MinGW against MSVC, PicHash overlap over functions of 10+ instructions (same
+tag, same arch; the MSVC side is the larger, the counts are as measured):
+
+                  mingw / msvc     shared
+    2.13.1 x86      118 / 166         0
+    2.13.1 x64      111 / 156         0
+    2.15.1 x86      140 / 205         0
+    2.15.1 x64      134 / 194         1
+
+So the pair is almost disjoint: the two compilers share essentially no exact
+function body, which is the case for holding the MSVC axis at all.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
