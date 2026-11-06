@@ -11,7 +11,7 @@
     "license": "curl (MIT-like)",
     "mcrit": "data/libcurl/x64/mcrit/libcurl_8.15.0_mingw13_x64_libcurl.dll.mcrit",
     "notes": "A second build against OpenSSL would be a genuinely different code shape and is worth adding once OpenSSL is in the corpus.",
-    "num_functions": 1572,
+    "num_functions": 1571,
     "removed_runtime_functions": [
       "DllEntryPoint",
       "DllMain",
@@ -132,6 +132,7 @@
       "qsort",
       "realloc",
       "register_frame_ctor",
+      "sprintf.constprop.0",
       "strchr",
       "strcmp",
       "strdup",
@@ -173,7 +174,7 @@
     "license": "curl (MIT-like)",
     "mcrit": "data/libcurl/x86/mcrit/libcurl_8.15.0_mingw13_x86_libcurl.dll.mcrit",
     "notes": "A second build against OpenSSL would be a genuinely different code shape and is worth adding once OpenSSL is in the corpus.",
-    "num_functions": 1453,
+    "num_functions": 1452,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
       "_DllMain@12",
@@ -302,6 +303,7 @@
       "_register_frame_ctor",
       "_setlocale",
       "_setlocale_codepage_hack",
+      "_sprintf.constprop.0",
       "_strchr",
       "_strcmp",
       "_strdup",
