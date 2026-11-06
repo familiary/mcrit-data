@@ -78,6 +78,14 @@
     },
     "toolchain": "mingw13_x64",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "1.0.18"
   },
   "libsodium_1.0.18_mingw13_x86_libsodium-23.dll": {
@@ -160,6 +168,14 @@
     },
     "toolchain": "mingw13_x86",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "1.0.18"
   },
   "libsodium_1.0.18_msvc143_x64_libsodium.dll": {
@@ -330,6 +346,14 @@
     },
     "toolchain": "msvc143_x64",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "1.0.18"
   },
   "libsodium_1.0.18_msvc143_x86_libsodium.dll": {
@@ -499,6 +523,14 @@
     },
     "toolchain": "msvc143_x86",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "1.0.18"
   },
   "libsodium_1.0.20_mingw13_x64_libsodium-26.dll": {
@@ -580,6 +612,14 @@
     },
     "toolchain": "mingw13_x64",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "1.0.20"
   },
   "libsodium_1.0.20_mingw13_x86_libsodium-26.dll": {
@@ -662,6 +702,14 @@
     },
     "toolchain": "mingw13_x86",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "1.0.20"
   },
   "libsodium_1.0.20_msvc143_x64_libsodium.dll": {
@@ -832,6 +880,14 @@
     },
     "toolchain": "msvc143_x64",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "1.0.20"
   },
   "libsodium_1.0.20_msvc143_x86_libsodium.dll": {
@@ -1001,6 +1057,14 @@
     },
     "toolchain": "msvc143_x86",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "1.0.20"
   }
 }
