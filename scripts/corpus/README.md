@@ -158,8 +158,10 @@ bodies the committed reports carry, hash for hash - `printf` at
 `15763949986211485148` (10), `vprintf` at `3515039425838154103` (21) and
 `7807335352819369265` (13).
 
-Four probe registrations, and 52 MSVC probe compilations on x64 against 53 on
-x86: the stdio source as a DLL and as an EXE, a plain console `main` that
+Four probe registrations, taking the MSVC run to 52 probe compilations on x64
+and 53 on x86 - the count `crt_glue` now reports, which includes the four
+sources it shares with the MinGW side: the stdio source as a DLL and as an
+EXE, a plain console `main` that
 prints linked the recipes' way, and `probe_md_exe.c`'s source relinked the
 same way so the broad EXE surface is measured non-incrementally as well. The
 MinGW and Linux baselines do not move - 3133 symbols on x86 and 2944 on x64,
@@ -170,25 +172,37 @@ line per toolchain, because the failure this file is most afraid of is a
 baseline that quietly got smaller and nothing in a fifty-thousand-line log
 said so.
 
-Fifteen of the sixteen artefacts in Lua, LuaJIT, MemoryModule, bzip2 and q3vm
-were rebuilt on the runner to measure it (the sixteenth, Lua 5.4.8 x86, lost
-its source download to a timeout). 36 functions left those fifteen, 12,326
-kept becoming 12,290: `__scrt_common_main_seh` out of Lua 5.1.5 x64, Lua
-5.4.8 x64, MemoryModule x64 and bzip2 x64; `printf` out of the four LuaJIT
-artefacts, both MemoryModule and both q3vm x64; `vprintf` and `vfprintf` out
-of the four LuaJIT artefacts; and `fflush` and `fputs` with them as thunks.
-Over those five families plus Hidden, CallObfuscator, libtiff and mbedTLS,
-`validate --deep` went from 12 cross-family hashes with one leakage finding -
-`__scrt_common_main_seh` across Hidden, Lua, MemoryModule and bzip2 - to 9
-with none.
+The sixteen artefacts of Lua, LuaJIT, MemoryModule, bzip2 and q3vm were
+rebuilt on the runner to measure what it costs them. 14 of the 16 change and
+38 functions leave, 13,498 kept becoming 13,460: `printf` from 8 artefacts -
+all four LuaJIT, both MemoryModule and both q3vm x64 - `vprintf` and
+`vfprintf` from the four LuaJIT, `__scrt_common_main_seh` from Lua 5.1.5 x64,
+Lua 5.4.8 x64, MemoryModule x64 and bzip2 x64, and `fflush` and `fputs` from
+ten and eight of them as thunks. Over those five families plus Hidden,
+CallObfuscator, libtiff and mbedTLS, `validate --deep` goes from 12
+cross-family hashes with one leakage finding - `__scrt_common_main_seh` across
+Hidden, Lua, MemoryModule and bzip2 - to 9 with none.
+
+The two that do not change are q3vm x86, and they are the honest edge of this
+round: q3vm builds with whole-program optimisation, its `printf` bodies are 23
+and 20 instructions where every other x86 artefact's is 17, and a probe built
+at `/O2` emits none of them. Those two bodies are single-family and were never
+leakage. The same is true of the 98-instruction `__scrt_common_main_seh` in
+q3vm x64 and the 109-instruction one in CallObfuscator, which is `wmain`'s
+startup object.
 
 Two things this round does not do, stated because the numbers above would
-otherwise be read as more than they are. The committed MSVC artefacts are not
-corrected by it: `refilter` can only re-apply a baseline this host can
-measure, and `msvc143_x86`/`msvc143_x64` do not exist on a Linux checkout, so
-every MSVC family is skipped there and the correction has to come from a
-rebuild on the runner. And it leaves the rest of the surface LuaJIT
-instantiates: its images carry the whole UCRT inline set, where `printf_s`,
+otherwise be read as more than they are. It does not correct the committed
+MSVC artefacts, and the measurement above is a measurement rather than an
+import: `refilter` can only re-apply a baseline this host can measure, and
+`msvc143_x86`/`msvc143_x64` do not exist on a Linux checkout, so it skips
+every MSVC family there - `refilter --dry-run` says so per toolchain - and the
+correction has to come from a rebuild of all 54 MSVC recipes per architecture
+on the runner, which is what a push touching `baseline.py` triggers. Nothing
+in `refilter` itself is MSVC-hostile; what it lacks is a host.
+
+And it leaves the rest of the surface LuaJIT instantiates: its images carry
+the whole UCRT inline set, where `printf_s`,
 `wprintf`, `wprintf_s`, `_printf_p` and `_wprintf_p` share `printf`'s body and
 `vfprintf_s`, `vfwprintf_s`, `vfscanf`, `vfwscanf`, `_vfprintf_p` and
 `_vfwprintf_p` share `vfprintf`'s, so both hashes stay in the cross-family
