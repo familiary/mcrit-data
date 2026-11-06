@@ -75,6 +75,13 @@ def _miniz_msvc(version, git_ref):
         build=[
             BuildStep(_CMAKE),
             BuildStep("cmake --build build-{arch} --target miniz"),
+            # NMake hides the cl and link command lines in response files,
+            # so the flags that were actually used are read back from the
+            # files CMake generated them into and printed to the build log.
+            BuildStep("type build-{arch}\\CMakeFiles\\miniz.dir\\flags.make",
+                      allow_failure=True),
+            BuildStep("type build-{arch}\\CMakeFiles\\miniz.dir\\link.txt",
+                      allow_failure=True),
             BuildStep("dir bin", allow_failure=True),
         ],
         artifacts=[Artifact(path="bin/miniz.dll", component="miniz.dll",
