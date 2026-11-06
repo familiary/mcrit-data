@@ -60,10 +60,35 @@ COMDAT so that /OPT:NOREF below can keep routines nothing calls. Link:
 name functions, a build without a timestamp, and no jump-thunk table: see
 bzip2_msvc.py for why /INCREMENTAL:NO has to be stated). user32.lib and
 advapi32.lib are the two libraries both upstream makefiles add. The flags are
-as written in this file; nothing in the build prints them back.
+as written in this file; the build log echoes the cl line but not a flag
+readback. cl 19.44.35229 (VS 2022 v143), SDK 10.0.26100.0.
 
-Measured against the MinGW artefacts: see the README for the committed
-counts and the MinGW/MSVC PicHash overlap at ten instructions or more.
+Measured, glue baseline applied (kept + removed = image):
+
+    zip.exe 3.0    x86  348 + 207 = 555    x64  348 + 213 = 561
+    unzip.exe 6.0  x86  238 + 195 = 433    x64  230 + 197 = 427
+
+(MinGW: zip 245 + 208 = 453 / 317 + 204 = 521, unzip 130 + 154 = 284 /
+213 + 149 = 362.) About a hundred of the kept functions in each x86 image are
+one-instruction import thunks (``_CreateFileA@28`` and the like) that the
+DLL runtime and kernel32/advapi32 imports leave behind; they are what the
+kept count has more of than MinGW's.
+
+Overlap with the MinGW artefacts of the same program and architecture, exact
+PicHash, functions of ten instructions or more (MinGW / MSVC / shared):
+
+    zip.exe    x86  189 / 223 / 0      x64  185 / 220 / 0
+    unzip.exe  x86  106 / 142 / 0      x64  107 / 138 / 0
+
+As with every other MSVC pass here, the same source compiled by the two
+compilers shares no hash at that size, so the MSVC build is new data for
+MSVC-built malware rather than a duplicate of the MinGW one.
+
+Glue survivors at ten instructions or more: none on x86. On x64 one,
+``__scrt_common_main_seh`` (99 instructions, PicHash 11855707620856894801) in
+both zip.exe and unzip.exe - the MSVC CRT startup routine already recorded
+in the README as the one finding the MSVC baseline does not remove. No
+unnamed function reaches ten instructions in any of the four images.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
