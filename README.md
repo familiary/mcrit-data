@@ -28,6 +28,7 @@ Compilers
 Libraries
 * [aPLib](#aplib)
 * [libzlib](#libzlib)
+* [argon2](#argon2)
 * [bzip2](#bzip2)
 * [cJSON](#cjson)
 * [libcurl](#libcurl)
@@ -297,6 +298,17 @@ The MinGW-w64 rows were built from unmodified upstream release tarballs with `sc
 | libzlib  | 2017-01-15 | 1.2.11  | MinGW-w64 GCC 13 | [x86 PE](data/libzlib/x86/mcrit/libzlib_1.2.11_mingw13_x86_zlib1.dll.mcrit) / [x64 PE](data/libzlib/x64/mcrit/libzlib_1.2.11_mingw13_x64_zlib1.dll.mcrit)   | [x86 PE](data/libzlib/x86/smda/libzlib_1.2.11_mingw13_x86_zlib1.dll.7z) / [x64 PE](data/libzlib/x64/smda/libzlib_1.2.11_mingw13_x64_zlib1.dll.7z)     |
 | libzlib  | 2022-10-13 | 1.2.13  | MinGW-w64 GCC 13 | [x86 PE](data/libzlib/x86/mcrit/libzlib_1.2.13_mingw13_x86_zlib1.dll.mcrit) / [x64 PE](data/libzlib/x64/mcrit/libzlib_1.2.13_mingw13_x64_zlib1.dll.mcrit)   | [x86 PE](data/libzlib/x86/smda/libzlib_1.2.13_mingw13_x86_zlib1.dll.7z) / [x64 PE](data/libzlib/x64/smda/libzlib_1.2.13_mingw13_x64_zlib1.dll.7z)     |
 | libzlib  | 2024-01-22 | 1.3.1   | MinGW-w64 GCC 13 | [x86 PE](data/libzlib/x86/mcrit/libzlib_1.3.1_mingw13_x86_zlib1.dll.mcrit) / [x64 PE](data/libzlib/x64/mcrit/libzlib_1.3.1_mingw13_x64_zlib1.dll.mcrit)     | [x86 PE](data/libzlib/x86/smda/libzlib_1.3.1_mingw13_x86_zlib1.dll.7z) / [x64 PE](data/libzlib/x64/smda/libzlib_1.3.1_mingw13_x64_zlib1.dll.7z)       |
+
+### argon2<a id='argon2'></a>
+
+The Argon2 password-hashing reference implementation (P-H-C, release 20190702), the code that RandomX and XMRig derive their own Argon2 from. Built from `src/opt.c`, the Makefile's default on x86, at the SSE2 baseline. libsodium bundles its own Argon2 (`data/libsodium`); it is a restructured copy that shares symbol names but no function PicHash with this one, so the two are complementary rather than duplicates. The portable `ref.c` differs from `opt.c` in two functions (`fill_block`, `fill_segment`) and is not built separately.  
+Generated with `scripts/build_corpus.py`; see `data/argon2/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: argon2 -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| argon2 | 20190702 | MinGW-w64 GCC 13 | [x86 PE](data/argon2/x86/mcrit/argon2_20190702_mingw13_x86_libargon2.dll.mcrit) / [x64 PE](data/argon2/x64/mcrit/argon2_20190702_mingw13_x64_libargon2.dll.mcrit) | [x86 PE](data/argon2/x86/smda/argon2_20190702_mingw13_x86_libargon2.dll.7z) / [x64 PE](data/argon2/x64/smda/argon2_20190702_mingw13_x64_libargon2.dll.7z) |
+<!-- /generated -->
 
 ### bzip2<a id='bzip2'></a>
 
