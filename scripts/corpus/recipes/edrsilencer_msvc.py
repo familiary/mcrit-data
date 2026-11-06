@@ -22,6 +22,12 @@ INITGUID. Upstream's three GUIDs are defined once. A harness header is
 forced into every compilation with /FI and includes windows.h and fwpmu.h
 first.
 
+The harness also renames upstream's three GUIDs to EDRS_UPSTREAM_*, after
+the SDK header has been read. The SDK header declares the FWPM_ names with
+an initializer in the same translation unit, so upstream's FWPM_ definitions
+collide with it; the EDRS_ names have no earlier declaration. Upstream's
+references are rewritten to match through the macro.
+
 Probe output (/showIncludes and /P, with allow_failure) is in the log, so a
 failing build still shows the include chain.
 
@@ -52,10 +58,15 @@ _STUB = ("python -c \"import os,glob;"
          "print('real fwpmu.h:',p);"
          "os.makedirs('edrs_inc',exist_ok=True);"
          "open('edrs_inc/fwpmu.h','w').write('#ifndef EDRS_FWPMU_STUB_ONCE\\n#define EDRS_FWPMU_STUB_ONCE\\n#include '+chr(34)+p+chr(34)+'\\n#endif\\n');"
-         "open('edrs_guid.h','w').write('#include <windows.h>\\n#include <fwpmu.h>\\n')\"")
+         "open('edrs_guid.h','w').write('#include <windows.h>\\n#include <fwpmu.h>\\n"
+         "#define FWPM_CONDITION_ALE_APP_ID EDRS_UPSTREAM_FWPM_CONDITION_ALE_APP_ID\\n"
+         "#define FWPM_LAYER_ALE_AUTH_CONNECT_V4 EDRS_UPSTREAM_FWPM_LAYER_ALE_AUTH_CONNECT_V4\\n"
+         "#define FWPM_LAYER_ALE_AUTH_CONNECT_V6 EDRS_UPSTREAM_FWPM_LAYER_ALE_AUTH_CONNECT_V6\\n')\"")
 
+# strcasecmp is POSIX; MSVC's CRT spells it _stricmp (same ASCII compare).
+# Mapped on the command line so upstream's call site is unchanged.
 _COMPILE = ("cl /nologo /O2 /MD /Zi /D_CRT_SECURE_NO_WARNINGS /I edrs_inc "
-            "/FIedrs_guid.h EDRSilencer.c utils.c "
+            "/Dstrcasecmp=_stricmp /FIedrs_guid.h EDRSilencer.c utils.c "
             "/link fwpuclnt.lib advapi32.lib /DEBUG /OPT:NOREF /OPT:NOICF "
             "/Brepro /INCREMENTAL:NO /OUT:EDRSilencer.exe /PDB:EDRSilencer.pdb")
 
