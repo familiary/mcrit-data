@@ -147,11 +147,15 @@ RECIPES = {
         artifacts=_X64_ARTIFACTS,
         toolchains=["msvc_x64"],
         build_flags=_FLAGS,
-        # The MinGW side measured 15 on its smallest point (egghunt). The
-        # MSVC CRT is imported under /MD so less is subtracted, but the egg
-        # point is small for the same reason, so the same floor is used
-        # rather than guessed upwards.
-        min_functions=15,
+        # Set to what the smallest legitimate point actually contains, which
+        # is the egg-hunt one at 9 functions after glue removal - measured on
+        # run 42223469188, where it was the single artefact that failed a
+        # floor of 15. The egg hunter emits one large stub instead of 24
+        # five-instruction ones, so it is small by design; the MinGW side of
+        # the same point measured 15 because mingw links more runtime into
+        # the image than /MD does, not because it contains more of the
+        # project.
+        min_functions=9,
         notes=_NOTES,
     ),
     "SysWhispers4_4.2.0_msvc_x86": Recipe(

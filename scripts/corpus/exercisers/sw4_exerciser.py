@@ -34,6 +34,18 @@ import sys
 
 def main():
     header, output, prefix = sys.argv[1], sys.argv[2], sys.argv[3]
+    # Optional fourth argument: a prefix whose declarations are NOT
+    # referenced. Needed for --arch wow64, whose MASM declares each stub as a
+    # bare "NAME PROC" with no parameter list, so under ".model flat,
+    # stdcall" ml decorates it @0 while the generated header declares it
+    # NTAPI and cl asks the linker for @16, @44 and so on. Nothing can match
+    # both, and the mismatch is in the generator's own output.
+    #
+    # Skipping the references costs nothing: the stub object is named on the
+    # link line rather than pulled from a library, and these recipes link
+    # /OPT:NOREF, so every PROC in it stays in the image whether anything
+    # refers to it or not.
+    skip = sys.argv[4] if len(sys.argv) > 4 else None
     text = open(header, encoding="utf-8", errors="replace").read()
 
     # EXTERN_C <ret> [NTAPI] <prefix><name>(<args>);  - the generator writes
@@ -66,6 +78,8 @@ def main():
     for name in names:
         if name == init:
             continue
+        if skip and name.startswith(skip):
+            continue
         lines.append("    corpus_sink = (void*)&%s;" % name)
     lines += [
         "    return acc + (corpus_sink != 0);",
@@ -74,8 +88,9 @@ def main():
     ]
     open(output, "w", encoding="utf-8").write("\n".join(lines))
     stubs = sum(1 for n in names if n.startswith(prefix + "Nt"))
-    print("%s: %d stubs, %d other entry points"
-          % (output, stubs, len(names) - stubs))
+    print("%s: %d stubs%s, %d other entry points"
+          % (output, stubs, " (not referenced)" if skip else "",
+             len(names) - stubs))
 
 
 main()

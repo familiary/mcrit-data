@@ -63,8 +63,11 @@ def main():
     sh("%s %s syswhispers.py %s --out-dir %s -o SW"
        % (sys.executable, os.path.join(HERE, "syswhispers_gen.py"),
           " ".join(gen_args), d), env=env)
-    sh("%s %s %s\\SW.h %s\\exer.c %s"
-       % (sys.executable, os.path.join(HERE, "sw4_exerciser.py"), d, d, a.prefix))
+    # wow64's stub symbols cannot be referenced from C; see sw4_exerciser.py.
+    skip = (" " + a.prefix + "Nt") if a.arch == "wow64" else ""
+    sh("%s %s %s\\SW.h %s\\exer.c %s%s"
+       % (sys.executable, os.path.join(HERE, "sw4_exerciser.py"), d, d,
+          a.prefix, skip))
     shutil.copy(os.path.join(HERE, "corpus_export.h"), d)
 
     assembler, stub_glob = _ASM[a.arch]
