@@ -54,6 +54,8 @@ Libraries
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [libstdc++](#libstdcxx)
+* [TinyXML](#tinyxml)
+* [TinyXML2](#tinyxml2)
 
 Runtimes
 * [Lua](#lua)
@@ -673,6 +675,32 @@ Generated with `scripts/build_corpus.py`; see `data/libstdc++/provenance.json` f
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libstdc++ | 13.2-mingw-w64 | MinGW-w64 GCC 13 | [x86 PE](data/libstdc++/x86/mcrit/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.mcrit) | [x86 PE](data/libstdc++/x86/smda/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.7z) |
+<!-- /generated -->
+
+### TinyXML<a id='tinyxml'></a>
+
+TinyXML is the original small C++ XML parser (SourceForge, final release 2.6.2). It is a different code base from TinyXML2: the two share one function of about 130 (`ConvertUTF32ToUTF8`), so they are separate families. Built as a non-STL shared library.  
+
+Generated with `scripts/build_corpus.py`; see `data/TinyXML/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: TinyXML -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| TinyXML | 2.6.2 | MinGW-w64 GCC 13 | [x86 PE](data/TinyXML/x86/mcrit/TinyXML_2.6.2_mingw13_x86_tinyxml.dll.mcrit) / [x64 PE](data/TinyXML/x64/mcrit/TinyXML_2.6.2_mingw13_x64_tinyxml.dll.mcrit) | [x86 PE](data/TinyXML/x86/smda/TinyXML_2.6.2_mingw13_x86_tinyxml.dll.7z) / [x64 PE](data/TinyXML/x64/smda/TinyXML_2.6.2_mingw13_x64_tinyxml.dll.7z) |
+<!-- /generated -->
+
+### TinyXML2<a id='tinyxml2'></a>
+
+TinyXML2 is Lee Thomason's rewrite of TinyXML, a single-file parser with a pooled allocator. Three releases spanning 2018 to current; neighbouring releases share 66 to 85% of their functions.  
+
+Generated with `scripts/build_corpus.py`; see `data/TinyXML2/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: TinyXML2 -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| TinyXML2 | 6.2.0 | MinGW-w64 GCC 13 | [x86 PE](data/TinyXML2/x86/mcrit/TinyXML2_6.2.0_mingw13_x86_tinyxml2.dll.mcrit) / [x64 PE](data/TinyXML2/x64/mcrit/TinyXML2_6.2.0_mingw13_x64_tinyxml2.dll.mcrit) | [x86 PE](data/TinyXML2/x86/smda/TinyXML2_6.2.0_mingw13_x86_tinyxml2.dll.7z) / [x64 PE](data/TinyXML2/x64/smda/TinyXML2_6.2.0_mingw13_x64_tinyxml2.dll.7z) |
+| TinyXML2 | 9.0.0 | MinGW-w64 GCC 13 | [x86 PE](data/TinyXML2/x86/mcrit/TinyXML2_9.0.0_mingw13_x86_tinyxml2.dll.mcrit) / [x64 PE](data/TinyXML2/x64/mcrit/TinyXML2_9.0.0_mingw13_x64_tinyxml2.dll.mcrit) | [x86 PE](data/TinyXML2/x86/smda/TinyXML2_9.0.0_mingw13_x86_tinyxml2.dll.7z) / [x64 PE](data/TinyXML2/x64/smda/TinyXML2_9.0.0_mingw13_x64_tinyxml2.dll.7z) |
+| TinyXML2 | 11.0.0 | MinGW-w64 GCC 13 | [x86 PE](data/TinyXML2/x86/mcrit/TinyXML2_11.0.0_mingw13_x86_tinyxml2.dll.mcrit) / [x64 PE](data/TinyXML2/x64/mcrit/TinyXML2_11.0.0_mingw13_x64_tinyxml2.dll.mcrit) | [x86 PE](data/TinyXML2/x86/smda/TinyXML2_11.0.0_mingw13_x86_tinyxml2.dll.7z) / [x64 PE](data/TinyXML2/x64/smda/TinyXML2_11.0.0_mingw13_x64_tinyxml2.dll.7z) |
 <!-- /generated -->
 
 ## Runtimes
