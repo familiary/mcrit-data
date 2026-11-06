@@ -47,8 +47,44 @@ CMake's own /INCREMENTAL:NO and adds /DEBUG /Brepro /OPT:NOREF /OPT:NOICF.
 See cjson_msvc.py for why the per-configuration variables are overridden
 rather than CMAKE_SHARED_LINKER_FLAGS.
 
-Measured counts, the MinGW/MSVC PicHash overlap and the runtime glue that
-survived are recorded below once the CI artefacts have been imported.
+Flags read back from the build log rather than assumed (CMake 3.31, MSVC
+19.44.35229, runner windows-2022). NMake keeps the cl and link lines in
+response files, so the recipe prints the files CMake generated them from.
+flags.make, both architectures: "/DWIN32 /D_WINDOWS /W3 /W3 /Zi /permissive-
+/MD /O2 /Ob2 /DNDEBUG" with -Dminiz_EXPORTS. The link line in build.make:
+"/dll /version:3.1 /machine:X86 (x64) /INCREMENTAL:NO /DEBUG /Brepro
+/OPT:NOREF /OPT:NOICF". No /GL, no /LTCG, no /MT. The DLL is 88,064 bytes
+with an 823,296-byte PDB (x86), and a first-try success on both legs: no
+obstacle turned up, and no source was patched.
+
+Counts (smda 5.0.2, mcrit 1.16.0): x86 holds 328 functions in the image, the
+glue baseline removes 137 and 191 are kept; x64 holds 334, removes 144 and
+keeps 190. Kept plus removed equals the image total. All kept functions are
+named. 181 (x86) and 180 (x64) are miniz's own (mz_*, tdefl_*, tinfl_*,
+miniz_*); 146 and 140 of the kept carry ten or more instructions, against
+130 and 121 in the MinGW artefacts. The removed set is the MSVC runtime
+glue: the DLL entry (_DllMainCRTStartup, dllmain_*), __scrt_* start-up and
+onexit machinery, __security_*/__GS* cookie code, __castguard_*, and CRT
+thunks the probes reach (malloc, free, memcpy, memset, fclose, fread, time).
+
+Glue survivors: ten per architecture, all one-instruction import thunks
+(jmp through the IAT) to stdio and filesystem functions that the glue probes
+do not call, each with PicHash 1165511d87767dcf. x86: __fseeki64, __ftelli64,
+__utime64, __wfopen_s, __wfreopen_s, __wstat64, _fflush, _fwrite, _remove,
+utime. x64: _fseeki64, _ftelli64, _utime64, _wfopen_s, _wfreopen_s,
+_wstat64, fflush, fwrite, remove, utime. They are not miniz code but carry
+no signal and are the same single hash MinGW's _utime thunk has; left in
+because the baseline is shared tooling.
+
+MinGW/MSVC overlap by PicHash, functions of ten or more instructions: none.
+0 of 127 (x86) and 0 of 119 (x64) distinct MinGW hashes occur in the MSVC
+artefact (143 and 138 distinct there). Over all sizes the shared hashes are
+four on x86 and five on x64 and all are at most eight instructions: the
+one-instruction thunk, mz_version, tdefl_get_adler32,
+tdefl_get_prev_return_status and, on x64,
+tdefl_write_image_to_png_file_in_memory.
+So the pair really is complementary: an MSVC-built sample gets no help from
+the MinGW reference and needs this one.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -77,7 +113,9 @@ def _miniz_msvc(version, git_ref):
             BuildStep("cmake --build build-{arch} --target miniz"),
             # NMake hides the cl and link command lines in response files,
             # so the flags that were actually used are read back from the
-            # files CMake generated them into (compile: flags.make, link: the inline response file in build.make) and printed to the build log.
+            # files CMake generated them into - flags.make for the compile,
+            # the inline response file in build.make for the link - and
+            # printed to the build log.
             BuildStep("type build-{arch}\\CMakeFiles\\miniz.dir\\flags.make",
                       allow_failure=True),
             BuildStep("type build-{arch}\\CMakeFiles\\miniz.dir\\build.make",

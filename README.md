@@ -444,6 +444,7 @@ Generated with `scripts/build_corpus.py`; see `data/miniz/provenance.json` for s
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | miniz | 3.1.0 | MinGW-w64 GCC 13 | [x86 PE](data/miniz/x86/mcrit/miniz_3.1.0_mingw13_x86_libminiz.dll.mcrit) / [x64 PE](data/miniz/x64/mcrit/miniz_3.1.0_mingw13_x64_libminiz.dll.mcrit) | [x86 PE](data/miniz/x86/smda/miniz_3.1.0_mingw13_x86_libminiz.dll.7z) / [x64 PE](data/miniz/x64/smda/miniz_3.1.0_mingw13_x64_libminiz.dll.7z) |
+| miniz | 3.1.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/miniz/x86/mcrit/miniz_3.1.0_msvc143_x86_miniz.dll.mcrit) / [x64 PE](data/miniz/x64/mcrit/miniz_3.1.0_msvc143_x64_miniz.dll.mcrit) | [x86 PE](data/miniz/x86/smda/miniz_3.1.0_msvc143_x86_miniz.dll.7z) / [x64 PE](data/miniz/x64/smda/miniz_3.1.0_msvc143_x64_miniz.dll.7z) |
 <!-- /generated -->
 
 ### mbedTLS<a id='mbedtls'></a>
