@@ -1,4 +1,21 @@
 # Analysis dependencies for scripts/build_corpus.py.
-# Pinned to the versions the current reference data was generated with.
-smda==4.8.0
-mcrit==1.9.0
+#
+# The families generated before 2026-11 were built with smda 4.8.0 and mcrit
+# 1.9.0, and their provenance records say so. Moving to the current releases
+# is safe for the two properties the corpus depends on, both checked rather
+# than assumed:
+#
+#   * mcrit 1.16.0 computes the same minhash and shingler config hashes as
+#     1.9.0 - d8e75568... and 7ae53d3b..., the values corpus/config.py
+#     requires - so a new export still matches every .mcrit already here.
+#   * smda 5.0.2 recovers the same functions at the same offsets with the
+#     same pic_hash as 4.8.0. Measured on an x64 ELF carrying eleven named
+#     functions plus link glue: 17 functions either way, every offset equal,
+#     all 17 pic_hashes equal. PicHashes are what cross-family comparison and
+#     the glue filter key on, so data generated either side of this bump is
+#     comparable.
+#
+# x86 was not re-measured locally (no 32-bit multilib on the host that made
+# this change); the Windows CI legs exercise it.
+smda==5.0.2
+mcrit==1.16.0
