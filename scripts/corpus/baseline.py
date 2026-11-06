@@ -2754,6 +2754,235 @@ __declspec(dllexport) int probe_msvcrt_eh_aligned(int selector,
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 """
 
+# MSVC only. The half of <stdio.h> that writes to a stream it was not handed:
+# printf, vprintf and vfprintf. _PROBE_MSVCRT_PRINTF above covers the
+# buffer-filling half and _PROBE_DLL calls fprintf, so the chain below
+# _vfprintf_l is already measured; what was never emitted by any MSVC probe is
+# the wrapper that reaches stdout, which is the one a program actually calls.
+#
+# It is the same mechanism _PROBE_MSVCRT_PRINTF records - under /MD these are
+# _CRT_STDIO_INLINE definitions in the UCRT header, so a body is compiled into
+# every object that uses one and the /DEBUG link keeps it - and it is the
+# largest single misattribution left on the MSVC side of this corpus. Measured
+# in the committed reports, before this probe: printf carries one body of 25
+# instructions on x64 under LuaJIT, MemoryModule, mbedTLS and q3vm, and one of
+# 17 on x86 under LuaJIT, MemoryModule and mbedTLS, all four of them the same
+# PicHash per architecture; vfprintf carries 19 instructions on x64 and 10 on
+# x86 under LuaJIT and libtiff; vprintf carries 21 and 13 under LuaJIT.
+#
+# The cross-family check does not fail on those today, and the reason is worth
+# writing down because it is not a reprieve: LuaJIT emits _printf_p and
+# _wprintf_p as well, whose bodies hash to the same value as printf's, so the
+# hash arrives at classify_collision carrying three names and is filed under
+# "the names differ between families". One family dropping stdio would turn it
+# into leakage. The names are Microsoft's either way.
+#
+# Measured on the runner, this probe emits exactly those bodies: printf at
+# PicHash 121597203084696572 (25 instructions) on x64 and 14739679411554417350
+# (17) on x86, vfprintf at 18319647447110778407 (19) and 15763949986211485148
+# (10), vprintf at 3515039425838154103 (21) and 7807335352819369265 (13) -
+# every one of them the hash the committed artefacts carry. Rebuilt, LuaJIT
+# drops printf, vprintf and vfprintf, MemoryModule and q3vm drop printf, and
+# fflush and fputs go with them as thunks.
+#
+# What it does not reach is the rest of the surface LuaJIT instantiates. Its
+# images carry the whole UCRT inline set - printf_s, wprintf, wprintf_s,
+# _printf_p and _wprintf_p share printf's body, and vfprintf_s, vfwprintf_s,
+# vfscanf, vfwscanf, _vfprintf_p and _vfwprintf_p share vfprintf's - so those
+# hashes stay in the cross-family census under LuaJIT's name until a probe
+# calls them too. That is forty-odd names, half of them wide, and it is a
+# measurement of its own rather than an addition to this one.
+#
+# Narrow only, and separate from the wide half for the reason
+# _PROBE_MSVCRT_PRINTF gives: a wrong guess about vswprintf's two UCRT
+# declarations must not cost printf. puts and fputs are in here as well
+# because they sit beside printf in every program that prints and cost
+# nothing; they are imports under /MD rather than inline bodies, so what they
+# contribute is their thunks.
+_PROBE_MSVCRT_STDIO = """\
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <windows.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+/* Read through a volatile pointer so no part of the format is a constant the
+   optimiser can fold into the wrapper. */
+static volatile const char *probe_msvcrt_stdio_format = "%s %d %s";
+
+static int probe_msvcrt_stdio_forward(const char *format, ...)
+{
+    va_list arguments;
+    int written;
+
+    /* Real varargs, started once per callee: handing a callee a va_list that
+       was never started is undefined behaviour, and a probe that relies on
+       undefined behaviour is not a measurement. */
+    va_start(arguments, format);
+    written = vprintf(format, arguments);
+    va_end(arguments);
+    va_start(arguments, format);
+    written += vfprintf(stderr, format, arguments);
+    va_end(arguments);
+    return written;
+}
+
+__declspec(dllexport) int probe_msvcrt_stdio_streams(const char *text)
+{
+    const char *format = (const char *)probe_msvcrt_stdio_format;
+    int total = 0;
+
+    total += printf(format, text, 1, text);
+    total += fprintf(stderr, format, text, 1, text);
+    total += probe_msvcrt_stdio_forward(format, text, 1, text);
+    total += puts(text);
+    total += fputs(text, stderr);
+    total += fflush(stdout);
+    return total;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# The EXE registration of the same source, derived the way _PROBE_EXE is
+# derived from _PROBE_DLL rather than registered as a second entry point: an
+# EXE needs a main, and the first version of this round registered the DLL
+# source as an EXE and got LNK1561 out of every run - which probe_failures
+# reported and failed the run for, which is what it is for.
+#
+# It is coverage rather than a fix, and the measurement says so: the wrapper
+# bodies are compiled from this translation unit, and probe_md.c and
+# probe_md_exe.c give fprintf the same PicHash (13953233625706420610 on x64),
+# so DLL and EXE do not differ for them. What the EXE adds is the startup set
+# beside them.
+_PROBE_MSVCRT_STDIO_EXE = _PROBE_MSVCRT_STDIO.replace(
+    "BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }",
+    "int main(int argc, char **argv)\n"
+    "{\n"
+    "    return probe_msvcrt_stdio_streams(argv[0]) + argc;\n"
+    "}")
+
+# The EXE form of the probe above, and the one thing in this file that is
+# shaped by what it has to match rather than by what it has to call.
+#
+# __scrt_common_main_seh is the MSVC CRT's x64 entry-point wrapper, 99
+# instructions, and it is the one leakage finding validate --deep fails on:
+# the same body sits under Hidden, Lua, MemoryModule and bzip2, with a second
+# of 98 in q3vm and a third of 109 in CallObfuscator, which is wmain's startup
+# object rather than main's. Its neighbours are all removed already -
+# __scrt_initialize_crt, __scrt_acquire_startup_lock, __scrt_fastfail and a
+# dozen more - so what the existing probe_md_exe.c registration measures is
+# the right object set, from the right CRT flavour, and still not this body.
+#
+# What the name does in the baseline turned out to be the useful question, and
+# it was measured rather than guessed: probe_md_exe.c emits
+# __scrt_common_main_seh at 95 instructions, PicHash 470324384558745095, which
+# is none of the three bodies in the corpus. The name was in the baseline all
+# along and only the body disagreed, so the filter - symbol *and* PicHash -
+# correctly kept the artefacts' copies.
+#
+# The cause is the link line, and the probe above proves it by elimination: the
+# same translation unit linked /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF emits
+# 11855707620856894801 at 99 instructions, which is exactly the leaking body,
+# while the incrementally linked registration beside it still emits 95. Every
+# MSVC recipe here passes /INCREMENTAL:NO and no probe did: link /DEBUG implies
+# /INCREMENTAL, and this file's own note on that flag records what it does to
+# an image - every call leaves through a table of five-byte jump thunks.
+# __scrt_common_main_seh is the only function in the startup chain carrying an
+# __except, so it is also the only one whose recovered extent follows the
+# layout rather than the bytes, which is why its neighbours matched and it did
+# not. On x86 the two links agree, at 14520804967954049952 and 112
+# instructions, and no x86 artefact carries the name - consistent with the
+# funclet being an x64 shape.
+#
+# Two registrations rather than one, because two things differed and both are
+# worth having measured:
+#
+#   * This source is a plain console main that prints, which is what Lua's,
+#     bzip2's and MemoryModule's are. exe_main.obj's invoke_main() is inlined
+#     into __scrt_common_main_seh and calls main there, so main is the one
+#     caller this body has, and probe_md_exe.c's main calls a 200-line
+#     exported function instead.
+#   * probe_md_exe_noincr.c is probe_md_exe.c's source relinked, so the whole
+#     broad EXE surface - 237 named functions on x64 against 351 from the
+#     incremental link - is measured non-incrementally too.
+#
+# Neither can lose anything: crt_glue maps a name to a set of PicHashes, so a
+# registration that measures the same body twice adds nothing and one that
+# measures a second body adds a member.
+#
+# What stays is the 98-instruction body in q3vm, which builds /GL, and the
+# 109-instruction one in CallObfuscator, which is wmain's startup object. Both
+# are single-family and neither has ever been leakage.
+_PROBE_MSVCRT_MAIN = """\
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <windows.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+static volatile const char *probe_msvcrt_main_format = "%s %d";
+
+static int probe_msvcrt_main_forward(const char *format, ...)
+{
+    va_list arguments;
+    int written;
+
+    va_start(arguments, format);
+    written = vprintf(format, arguments);
+    va_end(arguments);
+    return written;
+}
+
+int main(int argc, char **argv)
+{
+    const char *format = (const char *)probe_msvcrt_main_format;
+
+    return printf(format, argv[0], argc)
+         + probe_msvcrt_main_forward(format, argv[0], argc);
+}
+"""
+
+
+def _probe_command(toolchain, compiler, source, target, extra):
+    """The command line for one probe, with ``extra`` put where it belongs.
+
+    Three kinds of entry live in a probe's ``extra`` list and the MSVC side
+    has to tell them apart, because cl and link reject each other's options:
+
+    * ``-shared`` selects a DLL and is read by probe_command itself.
+    * Anything starting with ``/`` or ending in ``.lib`` is cl's, and goes in
+      front of the ``/link`` separator - a ``/MD`` or ``/std:c++20`` after it
+      is handed to the linker, which rejects it outright.
+    * ``link:/FLAG`` is the linker's, and goes after everything else, which
+      is after the separator. That spelling exists for /INCREMENTAL:NO: a
+      linker flag cannot be told from a compiler flag by its shape, and
+      /INCREMENTAL:NO spliced in front of /link is a cl option cl does not
+      have.
+    """
+    shared = "-shared" in extra
+    command = toolchain.probe_command(compiler, source, target, shared)
+    if toolchain.kind != "msvc":
+        return command + [flag for flag in extra if flag != "-shared"]
+    cl_arguments = [flag for flag in extra
+                    if flag.startswith("/") or flag.endswith(".lib")]
+    if cl_arguments and "/link" in command:
+        split = command.index("/link")
+        command[split:split] = cl_arguments
+    else:
+        command += cl_arguments
+    # After the cl arguments and after probe_command's own /DEBUG and /PDB,
+    # which are already on the linker's side of the separator.
+    return command + [flag[len("link:"):] for flag in extra
+                      if flag.startswith("link:")]
+
+
+# What every MSVC recipe in this repository passes to the linker and no probe
+# passed before it. /INCREMENTAL:NO because link /DEBUG implies /INCREMENTAL
+# and the /OPT:NO* forms do not suppress it; /OPT:NOREF and /OPT:NOICF to say
+# in the command line what /DEBUG already defaults to, so the probe's link is
+# the recipes' link rather than merely equivalent to it today.
+_MSVC_RECIPE_LINK = ["link:/INCREMENTAL:NO", "link:/OPT:NOREF",
+                     "link:/OPT:NOICF"]
+
 
 def _msvc_probes(toolchain):
     """The MSVC-only half of the baseline.
@@ -2802,6 +3031,24 @@ def _msvc_probes(toolchain):
          ["-shared", "/MD"]),
         (toolchain.cc, "probe_msvcrt_printf_wide.c", _PROBE_MSVCRT_PRINTF_WIDE,
          ["-shared", "/MD"]),
+        # Sixth round: the printf half of stdio, and the entry-point wrapper.
+        # Both sources' notes say what each is for; the registrations are four
+        # because the DLL and the EXE are different object sets here as
+        # everywhere else in this file, and because the EXE pair is what
+        # measures the link line rather than the translation unit.
+        (toolchain.cc, "probe_msvcrt_stdio.c", _PROBE_MSVCRT_STDIO,
+         ["-shared", "/MD"]),
+        (toolchain.cc, "probe_msvcrt_stdio_exe.c", _PROBE_MSVCRT_STDIO_EXE,
+         ["/MD"]),
+        (toolchain.cc, "probe_msvcrt_main.c", _PROBE_MSVCRT_MAIN,
+         ["/MD"] + _MSVC_RECIPE_LINK),
+        # And the broad EXE surface a second time, linked the way the recipes
+        # link rather than the way /DEBUG defaults. Same source as
+        # probe_md_exe.c, so nothing new is compiled and nothing can be lost:
+        # whatever this measures that the incremental link did not is a second
+        # PicHash added to a name the baseline already carries.
+        (toolchain.cc, "probe_md_exe_noincr.c", _PROBE_EXE,
+         ["/MD"] + _MSVC_RECIPE_LINK),
         # /O1 and /GS- are 7-Zip's own settings, and 7-Zip is the only family
         # here that carries __EH_prolog. The second registration drops /GS-
         # so that whichever of the two frame models cl picks, one of the runs
@@ -3009,21 +3256,7 @@ def crt_glue(toolchain_id):
             target = os.path.join(tmp, filename + ".out.exe")
             with open(source, "w") as handle:
                 handle.write(code)
-            shared = "-shared" in extra
-            command = toolchain.probe_command(compiler, source, target, shared)
-            if toolchain.kind == "msvc":
-                # cl's own options and any extra .lib have to go in front of
-                # the /link separator; everything after it belongs to the
-                # linker, which would reject /MD and /std:c++20 outright.
-                cl_arguments = [flag for flag in extra
-                                if flag.startswith("/") or flag.endswith(".lib")]
-                if cl_arguments and "/link" in command:
-                    split = command.index("/link")
-                    command[split:split] = cl_arguments
-                else:
-                    command += cl_arguments
-            else:
-                command += [flag for flag in extra if flag != "-shared"]
+            command = _probe_command(toolchain, compiler, source, target, extra)
             built = subprocess.run(command, capture_output=True, cwd=tmp,
                                    text=True, errors="replace")
             if built.returncode != 0:
@@ -3089,6 +3322,16 @@ def crt_glue(toolchain_id):
                                      "ProbeInterface", "ProbeImplementation",
                                      "ProbeArray", "ProbeEh"))]:
         glue.pop(name, None)
+    # One line a person reads at the top of a build log, because the failure
+    # this file is most afraid of is a baseline that quietly got smaller: the
+    # counts are the measured constants the README quotes, and a run whose
+    # number is below them filtered its artefacts against less than the
+    # corpus was filtered against. probe_failures already fails the run when
+    # a probe will not build; this says what the surviving probes measured,
+    # which is the number a reader can compare.
+    LOGGER.info("%s: glue baseline measured from %d probe(s): %d symbol(s), "
+                "%d PicHash(es)", toolchain_id, len(probes), len(glue),
+                sum(len(hashes) for hashes in glue.values()))
     return glue
 
 
