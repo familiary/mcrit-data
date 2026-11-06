@@ -63,6 +63,8 @@ Windows tools
 * [DiskCryptor](#diskcryptor)
 * [WinPmem](#winpmem)
 * [WinPmemDrv](#winpmemdrv)
+* [KProcessHacker](#kprocesshacker)
+* [kphlib](#kphlib)
 
 Runtimes
 * [Lua](#lua)
@@ -1123,4 +1125,18 @@ The seven driver translation units listed in the historical pin’s SOURCES file
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | WinPmemDrv | 1.6.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/WinPmemDrv/x64/mcrit/WinPmemDrv_1.6.2_msvc143_x64_winpmem.sys.mcrit) | [x64 PE](data/WinPmemDrv/x64/smda/WinPmemDrv_1.6.2_msvc143_x64_winpmem.sys.7z) |
+<!-- /generated -->
+
+### KProcessHacker<a id='kprocesshacker'></a>
+
+Process Hacker v2.39 `KProcessHacker.sys`, x64 only: the WDK 10.0.26100.0 kernel toolset has no Win32 target. Built from the upstream pin without source patches. Linked and disassembled only; never packaged, signed, installed or loaded.
+
+<!-- generated: KProcessHacker -->
+<!-- /generated -->
+
+### kphlib<a id='kphlib'></a>
+
+Process Hacker v2.39 `kph.c` client with only the phlib support objects its link reaches. No ProcessHacker GUI executable is collected. Linked and disassembled only; no driver interaction is exercised.
+
+<!-- generated: kphlib -->
 <!-- /generated -->
