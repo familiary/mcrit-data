@@ -33,7 +33,7 @@ def _stak(linux):
         ]
         artifact = Artifact(path="build-{arch}/bin/xmr-stak",
                             component="xmr-stak")
-        toolchains = ["linux_x86", "linux_x64"]
+        toolchains = ["linux_x64"]
     else:
         steps = deps.mingw_openssl() + [
             BuildStep("cmake -S . -B build-{arch} -DCMAKE_SYSTEM_NAME=Windows "
@@ -46,7 +46,7 @@ def _stak(linux):
         ]
         artifact = Artifact(path="build-{arch}/bin/xmr-stak.exe",
                             component="xmr-stak.exe")
-        toolchains = ["mingw_x86", "mingw_x64"]
+        toolchains = ["mingw_x64"]
     steps.append(BuildStep("cmake --build build-{arch} -j$(nproc)"))
     return Recipe(
         family="xmr-stak",

@@ -99,6 +99,28 @@ def mingw_libuv():
     ]
 
 
+def mingw_header_shim():
+    """Lower-case aliases for the four Windows headers XMRig spells with capitals.
+
+    src/base/tools/Chrono.cpp includes <Windows.h> (and App_win.cpp and
+    VirtualMemory_win.cpp <Shobjidl.h>, <Objbase.h> and <BaseTsd.h>), which a
+    case-sensitive cross-build cannot resolve: mingw-w64's files are
+    windows.h, shobjidl.h, objbase.h and basetsd.h. Changing the include
+    would be patching upstream. Symlinks in a directory of their own, passed
+    with -isystem, change nothing in the tree and nothing in the output - the
+    header that is read is the same file.
+    """
+    return BuildStep(
+        "rm -rf deps-{arch}/winhdr && mkdir -p deps-{arch}/winhdr && "
+        "for h in Windows.h Shobjidl.h Objbase.h BaseTsd.h; do "
+        "ln -s /usr/{host}/include/$(echo $h | tr A-Z a-z) "
+        "deps-{arch}/winhdr/$h; done")
+
+
+MINGW_SHIM_FLAGS = ('-DCMAKE_C_FLAGS="-isystem $PWD/deps-{arch}/winhdr" '
+                    '-DCMAKE_CXX_FLAGS="-isystem $PWD/deps-{arch}/winhdr"')
+
+
 # The two -D options a build that links these needs, in the spelling of
 # FindOpenSSL and of XMRig's FindUV. Spelled as absolute paths because the
 # build tree is a sibling of deps-<arch>, and because XMRig's FindUV would

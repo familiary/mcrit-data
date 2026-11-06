@@ -13,7 +13,8 @@ _CXXFLAGS = '-DCMAKE_CXX_FLAGS_RELEASE="/MD /O2 /Ob2 /DNDEBUG /Zi"'
 
 _LINK = ("link /nologo /DLL /OUT:build-{arch}\\randomx.dll "
          "/PDB:build-{arch}\\randomx.pdb " + deps.MSVC_LINK + " "
-         "/WHOLEARCHIVE:build-{arch}\\randomx.lib build-{arch}\\randomx.lib")
+         "/WHOLEARCHIVE:build-{arch}\\randomx.lib build-{arch}\\randomx.lib "
+         "advapi32.lib")
 
 
 def _randomx(version, tag):

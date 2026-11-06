@@ -31,7 +31,7 @@ RECIPES = {
         artifacts=[Artifact(path="build-{arch}/bin/xmr-stak.exe",
                             component="xmr-stak.exe",
                             pdb="build-{arch}/bin/xmr-stak.pdb")],
-        toolchains=["msvc_x86", "msvc_x64"],
+        toolchains=["msvc_x64"],
         build_flags="/MD /O2 /Ob2 /DNDEBUG /Zi (CMake Release, /Zi added); "
                     "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF "
                     "at link",

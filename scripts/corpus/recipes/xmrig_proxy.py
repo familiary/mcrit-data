@@ -41,13 +41,14 @@ def _proxy(linux):
         toolchains = ["linux_x86", "linux_x64"]
     else:
         steps = deps.mingw_openssl() + deps.mingw_libuv() + [
+            deps.mingw_header_shim(),
             BuildStep("cmake -S . -B build-{arch} -DCMAKE_SYSTEM_NAME=Windows "
                       "-DCMAKE_SYSTEM_PROCESSOR={platform} "
                       "-DCMAKE_C_COMPILER={cc} -DCMAKE_CXX_COMPILER={cxx} "
                       "-DCMAKE_RC_COMPILER={windres} "
                       "-DCMAKE_FIND_ROOT_PATH=/usr/{host} "
                       "-DCMAKE_BUILD_TYPE=Release "
-                      + deps.mingw_dep_options() + " "
+                      + deps.mingw_dep_options() + " " + deps.MINGW_SHIM_FLAGS + " "
                       + _LINK_RULE % " -shared-libgcc",
                       env={"CFLAGS": "", "CXXFLAGS": ""}),
         ]
