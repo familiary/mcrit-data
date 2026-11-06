@@ -1,9 +1,6 @@
-"""EDRSandblast reusable static API and core, x64 only.
+"""EDRSandblast reusable core and static API, built as an x64 DLL.
 
-Initial Windows probe: source/project inspection only. No upstream source edits.
-Open risks: modern SDK/WDK compatibility; PDB coverage; retained kernel/import
-glue and MSVC printf/startup wrappers. Every image is linked and disassembled
-only, never run, signed, installed or loaded.
+CI measurement, SMDA 4.8.0/MCRIT 1.9.0: 378 kept + 89 removed = 467 image functions; 240 have >=10 instructions with 227 unique PicHashes. The x64 reference complements its MinGW-free upstream MSVC build. Runtime printf/wprintf wrapper survives at 0x01b000030f8b5bfc. Vendored SysWhispers2 stubs are included as shipped. DLL is linked and disassembled only.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

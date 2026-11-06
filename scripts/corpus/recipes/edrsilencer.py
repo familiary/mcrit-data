@@ -1,19 +1,19 @@
 """EDRSilencer's two upstream C files; linked and disassembled, never run.
 
-The upstream README actually documents a MinGW x64 command. Both Intel
-architectures are tested here, and MSVC uses dynamic CRT with full PDBs.
-Only code reference data is retained; no filters are installed or exercised.
+The upstream README documents MinGW x64. Both Intel architectures produce
+separate useful code sets. The Windows 10.0.26100 SDK MSVC attempt failed
+because the SDK already initializes three GUIDs that upstream initializes
+again in utils.h. See scripts/corpus/README.md for the exact C2374 errors.
 
-Local measurements, SMDA 5.0.2 (functions >=10 instructions):
-  EDRSilencer_2024-11-03_mingw13_x64_EDRSilencer.exe: 69 kept + 143 removed = 212 image functions; 17 >=10, 17 unique PicHashes.
-  EDRSilencer_2024-11-03_mingw13_x86_EDRSilencer.exe: 38 kept + 152 removed = 190 image functions; 19 >=10, 19 unique PicHashes.
-  EDRSilencer_2024-11-03_mingw13_x64_EDRSilencer.exe vs EDRSilencer_2024-11-03_mingw13_x86_EDRSilencer.exe: 0 shared; 17/19 unique to each.
+CI measurements, SMDA 4.8.0/MCRIT 1.9.0 (functions >=10 instructions):
+  EDRSilencer_2024-11-03_mingw13_x64_EDRSilencer.exe: 69 kept + 143 removed = 212; 17 functions >=10, 17 unique PicHashes.
+  EDRSilencer_2024-11-03_mingw13_x86_EDRSilencer.exe: 38 kept + 152 removed = 190; 19 functions >=10, 19 unique PicHashes.
+  x64 versus x86: 0 shared; 17/19 unique to each.
 
-Named link/glue survivors:
-  EDRSilencer_2024-11-03_mingw13_x64_EDRSilencer.exe: none.
-  EDRSilencer_2024-11-03_mingw13_x86_EDRSilencer.exe: none.
-Unnamed import stubs are retained below the comparison floor. MSVC
-counts, survivors and overlap remain pending the Windows probe.
+Named runtime survivor: EDRSilencer_2024-11-03_mingw13_x86_EDRSilencer.exe
+  _swprintf.constprop.0 0x798993e50037fa94 (11 instructions).
+The x64 swprintf.constprop.0 (0xd0892c9781e77af5, 8 instructions) is below
+the comparison floor. All images are disassembled only; WFP is never changed.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -34,15 +34,5 @@ RECIPES = {
               "Windows SDK APIs are imported. Linked and disassembled only; "
               "never executed or used to modify Windows Filtering Platform.",
     ),
-    "EDRSilencer_2024-11-03_msvc": Recipe(
-        family="EDRSilencer", version="2024-11-03", source=_SOURCE,
-        upstream="https://github.com/netero1010/EDRSilencer", license="MIT",
-        build=[BuildStep("cl /nologo /O2 /MD /Zi /D_CRT_SECURE_NO_WARNINGS /FIwindows.h /FIfwpmu.h EDRSilencer.c utils.c /link fwpuclnt.lib advapi32.lib uuid.lib /DEBUG /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO /OUT:EDRSilencer.exe /PDB:EDRSilencer.pdb")],
-        artifacts=[Artifact(path="EDRSilencer.exe", component="EDRSilencer.exe", pdb="EDRSilencer.pdb")],
-        toolchains=["msvc_x86", "msvc_x64"],
-        build_flags="/O2 /MD /Zi /DEBUG /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO; /FIwindows.h /FIfwpmu.h; fwpuclnt.lib advapi32.lib uuid.lib",
-        notes="Both upstream translation units; Windows SDK APIs and CRT are "
-              "dynamic. Full linker PDB, no LTCG or incremental link. Linked "
-              "and disassembled only, never executed or used to modify WFP.",
-    ),
+
 }

@@ -1,0 +1,51 @@
+{
+  "WinPmemDrv_1.6.2_msvc143_x64_winpmem.sys": {
+    "architecture": "x64",
+    "build_flags": "Upstream SOURCES list, WDK 10.0.26100.0; /O2 /MD /Zi /GL- /kernel /Zl /GS /Dtry=__try /Dexcept=__except /DRIVER /NODEFAULTLIB /DEBUG /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO",
+    "built_artifact": "winpmem.sys",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "winpmem.sys",
+    "family": "WinPmemDrv",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "Apache-2.0",
+    "mcrit": "data/WinPmemDrv/x64/mcrit/WinPmemDrv_1.6.2_msvc143_x64_winpmem.sys.mcrit",
+    "notes": "Original 1.6.2-era driver from the same historical pin as the client. Only upstream's seven C units are compiled; its generated api.h is preserved. WDK has no x86 kernel target. Kernel runtime/import residue is retained when the user-mode baseline cannot match it. Never packaged, signed, installed, loaded or executed.",
+    "num_functions": 145,
+    "removed_runtime_functions": [
+      "ReadNoFence64",
+      "ReadPointerNoFence",
+      "__C_specific_handler",
+      "__GSHandlerCheck",
+      "__castguard_check_failure_debugbreak",
+      "__castguard_check_failure_fastfail",
+      "__castguard_check_failure_nop",
+      "__castguard_compat_check",
+      "__castguard_slow_path_check_debugbreak",
+      "__castguard_slow_path_check_fastfail",
+      "__castguard_slow_path_check_nop",
+      "__castguard_slow_path_compat_check",
+      "__security_check_cookie",
+      "_guard_check_icall_nop",
+      "_guard_dispatch_icall",
+      "_guard_dispatch_icall_nop",
+      "_guard_icall_checks_enforced",
+      "_guard_rf_checks_enforced",
+      "_guard_xfg_dispatch_icall_nop",
+      "_wcsnicmp",
+      "strcmp",
+      "wcschr"
+    ],
+    "sha256": "362eb5eba9c479a492ae70f766addc1f281128052ca070c4d0d0dfc7ddf78331",
+    "smda": "data/WinPmemDrv/x64/smda/WinPmemDrv_1.6.2_msvc143_x64_winpmem.sys.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "cfaf02d7b4f8b9853fec38ea86e7efd22e78bf6f",
+      "sha256": "e4ea411c282ba9239a3fe65339a500f99eb14cf26d5ff9e2248ea978f0b87e1b",
+      "url": "https://codeload.github.com/google/rekall/tar.gz/cfaf02d7b4f8b9853fec38ea86e7efd22e78bf6f"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://github.com/google/rekall/tree/cfaf02d7b4f8b9853fec38ea86e7efd22e78bf6f/tools/windows/winpmem",
+    "version": "1.6.2"
+  }
+}

@@ -1,10 +1,9 @@
-"""WinPmem 1.6.2 driver from Rekall 1.2.0; x64 WDK probe.
+"""WinPmem 1.6.2 driver from the pinned Rekall 1.2.0 archive.
 
-The seven C files are exactly the upstream SOURCES list. Its generated api.h
-is already shipped in the pinned archive; no obfuscation key is regenerated.
-Open risks: /kernel with the requested /MD, and 2014 headers against WDK
-10.0.26100.0. No source patch, ignored relocation or missing-symbol override.
-The image is never signed, installed, loaded or used for acquisition.
+CI measurement, SMDA 4.8.0/MCRIT 1.9.0: 145 kept + 22 removed = 167 image functions; 83 have >=10 instructions and 82 unique PicHashes. Runtime survivors are __GSHandlerCheckCommon 0x97f84a5c6fd03341, __cpu_features_init 0xb5acd6a5667fa85c and __security_init_cookie 0x27ee9bc531ac9b0e. The image is never signed, installed or loaded.
+
+Open risks:
+1. This source was tested with the runner's WDK 10.0.26100.0 only; other WDK versions may differ.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

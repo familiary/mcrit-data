@@ -1,9 +1,11 @@
-"""al-khaser check suite; measure Release /O2 and /Od separately.
+"""The complete al-khaser check suite, measuring optimized and unoptimized code.
 
-Initial Windows probe: source/project inspection only. No upstream source edits.
-Open risks: modern SDK/WDK compatibility; PDB coverage; retained kernel/import
-glue and MSVC printf/startup wrappers. Every image is linked and disassembled
-only, never run, signed, installed or loaded.
+CI measurements, SMDA 4.8.0/MCRIT 1.9.0 (functions >=10 instructions):
+  O2 x64 562+1505=2067, 301 functions/260 hashes; O2 x86 607+1482=2089, 319/282.
+  Od x64 1152+1469=2621, 618/435; Od x86 1224+1473=2697, 733/465.
+  O2 versus Od shares 3 hashes on x64 and 2 on x86; O2 x64/x86 share 1 and Od x64/x86 share 0. The hundreds of unique Od hashes justify that measurement axis.
+
+Runtime survivors include x64 __scrt_common_main_seh 0xd474b2694c31b2d9. The O2 x64 printf/wprintf wrapper is 0x01b000030f8b5bfc; O2 x86 printf/wprintf is 0xaaa5d2355288b00d. Od retains x64 _vfprintf_l/_vfwprintf_l 0xa660e2c3c67aa215 and printf/wprintf 0x824b303376e45f93; x86 _vfprintf_l/_vfwprintf_l 0x78d5e7411c7012b7 and printf/wprintf 0x0b340b9267eabc14. Every image is disassembled only; no check is run.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

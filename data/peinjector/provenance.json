@@ -354,5 +354,81 @@
     "toolchain": "mingw13_x86",
     "upstream": "https://github.com/JonDoNym/peinjector",
     "version": "2016-05-11"
+  },
+  "peinjector_2016-05-11_msvc143_x64_pefile_petool.dll": {
+    "architecture": "x64",
+    "build_flags": "/O2 /MD /Zi /DLL /NOENTRY kernel32.lib ucrt.lib vcruntime.lib msvcrt.lib /DEBUG /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO",
+    "built_artifact": "pefile_petool.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "pefile_petool.dll",
+    "family": "peinjector",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "Unlicense",
+    "mcrit": "data/peinjector/x64/mcrit/peinjector_2016-05-11_msvc143_x64_pefile_petool.dll.mcrit",
+    "notes": "MSVC collects only libpefile.c and libpetool.c. The obfuscator has a variable-length array rejected by cl (C2057/C2466/C2133), and libpeinfect requires it. No source is patched. No server, protocol code, minIni or executable wrapper; disassembly only.",
+    "num_functions": 15,
+    "removed_runtime_functions": [
+      "fclose",
+      "fopen",
+      "fread",
+      "free",
+      "fseek",
+      "ftell",
+      "malloc",
+      "memcpy",
+      "memmove",
+      "memset",
+      "realloc"
+    ],
+    "sha256": "1487faaa5314082ab96481feae7d0b89264d3791b8c012f1b8e9c31dae592e7d",
+    "smda": "data/peinjector/x64/smda/peinjector_2016-05-11_msvc143_x64_pefile_petool.dll.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "fc3a3a56573d8e1b7df8784c060ef2adadb7220b",
+      "git_ref": "fc3a3a56573d8e1b7df8784c060ef2adadb7220b",
+      "git_url": "https://github.com/JonDoNym/peinjector.git"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://github.com/JonDoNym/peinjector",
+    "version": "2016-05-11"
+  },
+  "peinjector_2016-05-11_msvc143_x86_pefile_petool.dll": {
+    "architecture": "x86",
+    "build_flags": "/O2 /MD /Zi /DLL /NOENTRY kernel32.lib ucrt.lib vcruntime.lib msvcrt.lib /DEBUG /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO",
+    "built_artifact": "pefile_petool.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
+    "component": "pefile_petool.dll",
+    "family": "peinjector",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "Unlicense",
+    "mcrit": "data/peinjector/x86/mcrit/peinjector_2016-05-11_msvc143_x86_pefile_petool.dll.mcrit",
+    "notes": "MSVC collects only libpefile.c and libpetool.c. The obfuscator has a variable-length array rejected by cl (C2057/C2466/C2133), and libpeinfect requires it. No source is patched. No server, protocol code, minIni or executable wrapper; disassembly only.",
+    "num_functions": 15,
+    "removed_runtime_functions": [
+      "_fclose",
+      "_fopen",
+      "_fread",
+      "_free",
+      "_fseek",
+      "_ftell",
+      "_malloc",
+      "_memcpy",
+      "_memmove",
+      "_memset",
+      "_realloc"
+    ],
+    "sha256": "bac8afda4e2a3f5ecfe5553c66ca54e71231607256f8e0f4b78dc62d8a93d194",
+    "smda": "data/peinjector/x86/smda/peinjector_2016-05-11_msvc143_x86_pefile_petool.dll.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "fc3a3a56573d8e1b7df8784c060ef2adadb7220b",
+      "git_ref": "fc3a3a56573d8e1b7df8784c060ef2adadb7220b",
+      "git_url": "https://github.com/JonDoNym/peinjector.git"
+    },
+    "toolchain": "msvc143_x86",
+    "upstream": "https://github.com/JonDoNym/peinjector",
+    "version": "2016-05-11"
   }
 }

@@ -1,9 +1,8 @@
-"""WinPmem 1.6.2 user-mode acquisition client from Rekall 1.2.0.
+"""WinPmem 1.6.2 client image from the pinned Rekall 1.2.0 source.
 
-Initial Windows probe: source/project inspection only. No upstream source edits.
-Open risks: modern SDK/WDK compatibility; PDB coverage; retained kernel/import
-glue and MSVC printf/startup wrappers. Every image is linked and disassembled
-only, never run, signed, installed or loaded.
+CI measurements, SMDA 4.8.0/MCRIT 1.9.0: x64 58 kept + 95 removed = 153; x86 58 + 85 = 143. Both retain 31 functions >=10 instructions and 31 unique PicHashes; cross-architecture overlap is 0.
+
+Named formatting/runtime survivors are x64 asprintf 0x3a5fd25ec0fe4cc8, aswprintf 0xc6f0ed3de3fb8d13, vwprintf 0x30c7edbbfc938177 and wprintf 0x01b000030f8b5bfc; x86 asprintf 0x639bfc2bc221685f, aswprintf 0x013adc10373d10ee, vwprintf 0x6c593a236b25c531 and wprintf 0xcc8ddc54a4d6fac6. Only the client translation unit is linked; no CLI, resources or embedded drivers are included. No acquisition is performed.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
