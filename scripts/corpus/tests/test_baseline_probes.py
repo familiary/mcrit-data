@@ -18,6 +18,7 @@ its result. Three things are worth holding still:
 """
 
 import os
+import re
 import sys
 import unittest
 
@@ -249,3 +250,112 @@ class IsGlueTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MsvcWideStdioProbeTest(unittest.TestCase):
+    """The wide and secure stdio wrappers, taken by address.
+
+    As above, nothing here builds anything: what can be held still on any
+    host is that the registrations exist, that every wrapper this round is
+    about is named in a source that takes its address, and that each flag
+    combination the measurement found necessary is still being built.
+    """
+
+    def _registered(self, arch):
+        return {filename: (code, extra) for _, filename, code, extra
+                in baseline._msvc_probes(_toolchain(arch=arch))}
+
+    def _wstdio(self, arch):
+        return {name: value for name, value in self._registered(arch).items()
+                if name.startswith("probe_msvcrt_wstdio_")}
+
+    def test_every_wrapper_of_the_round_is_named_in_some_source(self):
+        """Including the secure variants swprintf_s was the reason for."""
+        wanted = ("swprintf_s", "sprintf_s", "vswprintf_s", "vsprintf_s",
+                  "_snprintf_s", "_snwprintf_s", "snprintf", "fwprintf",
+                  "wprintf", "vwprintf", "vfwprintf", "_vfprintf_l",
+                  "_vfwprintf_l", "_vswprintf_l", "_sprintf_l",
+                  "_vsnwprintf_l", "_vswprintf_s_l", "wscanf")
+        for arch in ("x86", "x64"):
+            sources = "\n".join(code for code, _ in self._wstdio(arch).values())
+            for name in wanted:
+                self.assertIn("(probe_symbol)%s,\n" % name, sources,
+                              "%s on %s" % (name, arch))
+
+    def test_wrappers_are_taken_by_address_not_called(self):
+        """A call can be inlined away at /O2; an address cannot."""
+        for arch in ("x86", "x64"):
+            for filename, (code, _) in self._wstdio(arch).items():
+                self.assertIn("(probe_symbol)", code, filename)
+                self.assertNotIn("va_start", code, filename)
+
+    def test_every_group_name_is_unique_and_a_plain_identifier(self):
+        for tag, names in baseline._STDIO_GROUPS:
+            self.assertEqual(len(names), len(set(names)), tag)
+            for name in names:
+                self.assertTrue(name.replace("_", "a").isalnum(), name)
+
+    def test_every_probe_is_built_against_the_dll_runtime_and_linked_like_a_recipe(self):
+        for arch in ("x86", "x64"):
+            for filename, (_, extra) in self._wstdio(arch).items():
+                self.assertIn("/MD", extra, filename)
+                self.assertIn("link:/INCREMENTAL:NO", extra, filename)
+                self.assertIn("link:/OPT:NOREF", extra, filename)
+
+    def test_the_dll_registrations_have_a_dllmain_and_the_exe_has_a_main(self):
+        for arch in ("x86", "x64"):
+            for filename, (code, extra) in self._wstdio(arch).items():
+                if "-shared" in extra:
+                    self.assertIn("DllMain", code, filename)
+                else:
+                    self.assertEqual(filename, "probe_msvcrt_wstdio_exe.c")
+                    self.assertIn("int main(int argc, char **argv)", code)
+
+    def test_x64_swprintf_s_is_built_with_sdl(self):
+        """The 28-instruction body three families carry only exists under /sdl.
+
+        Measured: the same wrapper compiled without it is a different hash,
+        and that is the whole reason this body leaked out of BlackBone,
+        EDRSandblast and al-khaser.
+        """
+        registered = self._wstdio("x64")
+        self.assertIn("/sdl", registered["probe_msvcrt_wstdio_wide_string_sdl.c"][1])
+        self.assertIn("(probe_symbol)swprintf_s,",
+                      registered["probe_msvcrt_wstdio_wide_string_sdl.c"][0])
+
+    def test_x86_has_the_frame_pointer_flavours_x64_does_not_need(self):
+        """x86 wrappers gain push ebp / mov ebp,esp / pop ebp under /Oy-."""
+        x86 = self._wstdio("x86")
+        x64 = self._wstdio("x64")
+        self.assertIn("/Oy-", x86["probe_msvcrt_wstdio_wide_print_oy.c"][1])
+        self.assertIn("/Oy-", x86["probe_msvcrt_wstdio_wide_string_sdloy.c"][1])
+        for filename, (_, extra) in x64.items():
+            self.assertNotIn("/Oy-", extra, filename)
+
+    def test_the_od_flavour_is_built_for_both_architectures(self):
+        """al-khaser keeps an /Od image beside its /O2 one."""
+        self.assertIn("/Od", self._wstdio("x86")["probe_msvcrt_wstdio_misc_od.c"][1])
+        self.assertIn("/Od", self._wstdio("x64")["probe_msvcrt_wstdio_misc_odsdl.c"][1])
+
+    def test_the_plan_only_names_groups_that_exist(self):
+        groups = {tag for tag, _ in baseline._STDIO_GROUPS}
+        for arch, plan in baseline._STDIO_PLAN.items():
+            for flavour, flags, tags in plan:
+                self.assertTrue(set(tags) <= groups, (arch, flavour))
+
+    def test_the_new_probes_do_not_replace_an_existing_registration(self):
+        """Additive: the sixth round's probes are all still there."""
+        for arch in ("x86", "x64"):
+            registered = self._registered(arch)
+            for filename in ("probe_msvcrt_stdio.c", "probe_msvcrt_stdio_exe.c",
+                             "probe_msvcrt_main.c", "probe_md_exe_noincr.c",
+                             "probe_msvcrt_wide.c", "probe_msvcrt_printf.c"):
+                self.assertIn(filename, registered, arch)
+
+    def test_the_table_symbols_are_dropped_by_the_probe_prefix(self):
+        for arch in ("x86", "x64"):
+            for filename, (code, _) in self._wstdio(arch).items():
+                for word in re.findall(r"probe_\w+", code):
+                    if word != "probe_symbol":
+                        self.assertTrue(word.startswith("probe_msvcrt_"),
+                                        "%s: %s" % (filename, word))
