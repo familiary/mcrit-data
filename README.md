@@ -93,6 +93,17 @@ String obfuscation
 * [obfstr](#obfstr)
 * [Obfuscator4g3nt47](#obfuscator4g3nt47)
 
+Go libraries and tools
+* [yamux](#yamux)
+* [go_socks5](#go_socks5)
+* [golang_x_crypto](#golang_x_crypto)
+* [ecies_go](#ecies_go)
+* [iox](#iox)
+* [chisel](#chisel)
+* [revsocks](#revsocks)
+* [frp](#frp)
+* [suo5](#suo5)
+
 ## Compilers
 
 Reference code extracted from all files containing precompiled code found in installations for various compiler toolchains.
@@ -1039,4 +1050,120 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
+<!-- /generated -->
+
+## Go libraries and tools
+
+Go programs built from pinned upstream source with the host's go1.24.7 (`CGO_ENABLED=0 go build -trimpath`, unstripped, `GOTOOLCHAIN=local`) for windows/amd64, windows/386, linux/amd64 and linux/386. The Compiler column below names the C toolchain id that selects the target platform (MinGW-w64 for the PE builds, GCC for the ELF builds); the code was produced by the Go compiler, and each provenance record's notes give the Go version and the `go.sum` digest. The Go runtime and standard library are removed by symbol name (see the Go half in `scripts/corpus/README.md`); what remains is the project and **every `github.com/...` and `golang.org/x/...` package it links**, so an application's image carries its dependency closure under its own name. Where a dependency is a family here (yamux, go_socks5, golang_x_crypto) that family is what identifies the shared code, and the per-project paragraphs give the measured split. Counts are functions kept, as recorded in each `provenance.json`; the number removed is in `removed_runtime_functions`. Four builds per project because Windows and Linux x64 share 93 to 100 percent of their PicHashes of ten instructions or more (the Linux image adds the ELF container) while the x86 pairs share none, so every leg is a distinct reference.
+
+### hashicorp/yamux<a id='yamux'></a>
+
+The stream multiplexer under revsocks, frp (as a fork) and a number of backconnect tools; MPL-2.0. v0.1.2 is the tag revsocks pins. The artefact is an exerciser built inside the module (a Server and Client over `net.Pipe`, one echoed stream, `Ping`, `GoAway`), so every `github.com/hashicorp/yamux` symbol is the library's own: 77-78 of the 89-90 kept functions, with the exerciser's `main` and 8 unnamed assembly stubs. The Go runtime and standard library (2,190 to 2,273 functions per image) are removed by the Go filter. Four builds because the library is pure Go and `GOOS`/`GOARCH` are all it takes; the x64 Linux and Windows images share all 65 of the PicHashes of ten instructions or more, the x86 pair none, so the 32-bit Linux and Windows images are independent references.  
+Generated with `scripts/build_corpus.py`; see `data/yamux/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: yamux -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| yamux | 0.1.2 | GCC 13 (Linux, glibc) | [x86 ELF](data/yamux/x86/mcrit/yamux_0.1.2_gcc13_x86_yamux_exerciser.mcrit) / [x64 ELF](data/yamux/x64/mcrit/yamux_0.1.2_gcc13_x64_yamux_exerciser.mcrit) | [x86 ELF](data/yamux/x86/smda/yamux_0.1.2_gcc13_x86_yamux_exerciser.7z) / [x64 ELF](data/yamux/x64/smda/yamux_0.1.2_gcc13_x64_yamux_exerciser.7z) |
+| yamux | 0.1.2 | MinGW-w64 GCC 13 | [x86 PE](data/yamux/x86/mcrit/yamux_0.1.2_mingw13_x86_yamux_exerciser.mcrit) / [x64 PE](data/yamux/x64/mcrit/yamux_0.1.2_mingw13_x64_yamux_exerciser.mcrit) | [x86 PE](data/yamux/x86/smda/yamux_0.1.2_mingw13_x86_yamux_exerciser.7z) / [x64 PE](data/yamux/x64/smda/yamux_0.1.2_mingw13_x64_yamux_exerciser.7z) |
+<!-- /generated -->
+
+### armon/go-socks5 and the things-go fork<a id='go_socks5'></a>
+
+Naming-only evidence (ESET names go-socks5 as the proxy library of a sibling tool, no code); the value is that revsocks and chisel link the 2016 armon commit `e75332964ef5` and yggstack links the fork at `v0.1.0`, and their SOCKS5 functions would otherwise be attributed to those tools. The fork is genuine (its licence still reads "Copyright (c) 2014 Armon Dadgar") and keeps the original's server shape, so the two are one family told apart by version: `armon-e753329` (26 functions in the source, 40 to 49 kept) and `things-go-0.1.0` (89 to 92 kept, including the `statute` wire codecs and `bufferpool`). 21 of the fork's kept functions are named `main.*`: the compiler inlined the library's option closures into the exerciser's `main`. Armon has no go.mod, so the recipe adds the exerciser's go.mod and go.sum (x/net v0.35.0) beside the source. Of the armon build's 40 distinct PicHashes of ten instructions or more (linux/amd64), 33 are in chisel's image, 30 in revsocks's and 35 in frpc's; 12 are shared with the things-go build.  
+Generated with `scripts/build_corpus.py`; see `data/go_socks5/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: go_socks5 -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| go_socks5 | armon-e753329 | GCC 13 (Linux, glibc) | [x86 ELF](data/go_socks5/x86/mcrit/go_socks5_armon-e753329_gcc13_x86_go_socks5_exerciser.mcrit) / [x64 ELF](data/go_socks5/x64/mcrit/go_socks5_armon-e753329_gcc13_x64_go_socks5_exerciser.mcrit) | [x86 ELF](data/go_socks5/x86/smda/go_socks5_armon-e753329_gcc13_x86_go_socks5_exerciser.7z) / [x64 ELF](data/go_socks5/x64/smda/go_socks5_armon-e753329_gcc13_x64_go_socks5_exerciser.7z) |
+| go_socks5 | armon-e753329 | MinGW-w64 GCC 13 | [x86 PE](data/go_socks5/x86/mcrit/go_socks5_armon-e753329_mingw13_x86_go_socks5_exerciser.mcrit) / [x64 PE](data/go_socks5/x64/mcrit/go_socks5_armon-e753329_mingw13_x64_go_socks5_exerciser.mcrit) | [x86 PE](data/go_socks5/x86/smda/go_socks5_armon-e753329_mingw13_x86_go_socks5_exerciser.7z) / [x64 PE](data/go_socks5/x64/smda/go_socks5_armon-e753329_mingw13_x64_go_socks5_exerciser.7z) |
+| go_socks5 | things-go-0.1.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/go_socks5/x86/mcrit/go_socks5_things-go-0.1.0_gcc13_x86_go_socks5_exerciser.mcrit) / [x64 ELF](data/go_socks5/x64/mcrit/go_socks5_things-go-0.1.0_gcc13_x64_go_socks5_exerciser.mcrit) | [x86 ELF](data/go_socks5/x86/smda/go_socks5_things-go-0.1.0_gcc13_x86_go_socks5_exerciser.7z) / [x64 ELF](data/go_socks5/x64/smda/go_socks5_things-go-0.1.0_gcc13_x64_go_socks5_exerciser.7z) |
+| go_socks5 | things-go-0.1.0 | MinGW-w64 GCC 13 | [x86 PE](data/go_socks5/x86/mcrit/go_socks5_things-go-0.1.0_mingw13_x86_go_socks5_exerciser.mcrit) / [x64 PE](data/go_socks5/x64/mcrit/go_socks5_things-go-0.1.0_mingw13_x64_go_socks5_exerciser.mcrit) | [x86 PE](data/go_socks5/x86/smda/go_socks5_things-go-0.1.0_mingw13_x86_go_socks5_exerciser.7z) / [x64 PE](data/go_socks5/x64/smda/go_socks5_things-go-0.1.0_mingw13_x64_go_socks5_exerciser.7z) |
+<!-- /generated -->
+
+### golang.org/x/crypto<a id='golang_x_crypto'></a>
+
+v0.37.0, the version `ecies/go` v2.0.11 requires; newer releases ask for toolchains newer than go1.24. The exerciser calls ChaCha20, ChaCha20-Poly1305, XChaCha20-Poly1305, Poly1305, Salsa20, HKDF, PBKDF2, scrypt, argon2, bcrypt, SHA-3, BLAKE2, MD4, RIPEMD-160, Curve25519, NaCl box and secretbox, Blowfish, Twofish, CAST5, TEA and XTEA and runs an SSH client and server handshake over `net.Pipe`; 367 of the 592 kept linux/amd64 functions are `x/crypto/ssh`. Of this family's 498 distinct PicHashes of ten instructions or more, chisel's image holds 253, frps 289, suo5 116, frpc 63 and revsocks 39; those stay under the applications' names (a recipe cannot split one image across families) and this family is what identifies them. 7 `golang.org/x/sys/cpu` functions are the only dependency in the image.  
+Generated with `scripts/build_corpus.py`; see `data/golang_x_crypto/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: golang_x_crypto -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| golang_x_crypto | 0.37.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/golang_x_crypto/x86/mcrit/golang_x_crypto_0.37.0_gcc13_x86_x_crypto_exerciser.mcrit) / [x64 ELF](data/golang_x_crypto/x64/mcrit/golang_x_crypto_0.37.0_gcc13_x64_x_crypto_exerciser.mcrit) | [x86 ELF](data/golang_x_crypto/x86/smda/golang_x_crypto_0.37.0_gcc13_x86_x_crypto_exerciser.7z) / [x64 ELF](data/golang_x_crypto/x64/smda/golang_x_crypto_0.37.0_gcc13_x64_x_crypto_exerciser.7z) |
+| golang_x_crypto | 0.37.0 | MinGW-w64 GCC 13 | [x86 PE](data/golang_x_crypto/x86/mcrit/golang_x_crypto_0.37.0_mingw13_x86_x_crypto_exerciser.mcrit) / [x64 PE](data/golang_x_crypto/x64/mcrit/golang_x_crypto_0.37.0_mingw13_x64_x_crypto_exerciser.mcrit) | [x86 PE](data/golang_x_crypto/x86/smda/golang_x_crypto_0.37.0_mingw13_x86_x_crypto_exerciser.7z) / [x64 PE](data/golang_x_crypto/x64/smda/golang_x_crypto_0.37.0_mingw13_x64_x_crypto_exerciser.7z) |
+<!-- /generated -->
+
+### ecies/go<a id='ecies_go'></a>
+
+The ECIES wrapper the Prince ransomware lineage (Prince, Yurei, CrazyHunter) uses to seal a per-file ChaCha20 key; MIT, v2.0.11. With cgo off the library selects `decred/dcrd/dcrec/secp256k1/v4` v4.4.0: of the 75 kept linux/amd64 functions 17 are ecies/go's, 53 are decred's curve code (which has no family of its own here and so stays), 4 are `x/crypto/hkdf` (also in golang_x_crypto) and 1 is the exerciser's `main`. The Prince-specific `Encryptor` tree and the mirrors of the removed upstream repository are not covered; the library is pinned directly.  
+Generated with `scripts/build_corpus.py`; see `data/ecies_go/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: ecies_go -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| ecies_go | 2.0.11 | GCC 13 (Linux, glibc) | [x86 ELF](data/ecies_go/x86/mcrit/ecies_go_2.0.11_gcc13_x86_ecies_go_exerciser.mcrit) / [x64 ELF](data/ecies_go/x64/mcrit/ecies_go_2.0.11_gcc13_x64_ecies_go_exerciser.mcrit) | [x86 ELF](data/ecies_go/x86/smda/ecies_go_2.0.11_gcc13_x86_ecies_go_exerciser.7z) / [x64 ELF](data/ecies_go/x64/smda/ecies_go_2.0.11_gcc13_x64_ecies_go_exerciser.7z) |
+| ecies_go | 2.0.11 | MinGW-w64 GCC 13 | [x86 PE](data/ecies_go/x86/mcrit/ecies_go_2.0.11_mingw13_x86_ecies_go_exerciser.mcrit) / [x64 PE](data/ecies_go/x64/mcrit/ecies_go_2.0.11_mingw13_x64_ecies_go_exerciser.mcrit) | [x86 PE](data/ecies_go/x86/smda/ecies_go_2.0.11_mingw13_x86_ecies_go_exerciser.7z) / [x64 PE](data/ecies_go/x64/smda/ecies_go_2.0.11_mingw13_x64_ecies_go_exerciser.7z) |
+<!-- /generated -->
+
+### EddieIvan01/iox<a id='iox'></a>
+
+Port forwarder and SOCKS5 proxy used by Emperor Dragonfly, Bronze Starlight and the JadeProx operator; Synacktiv identified an obfuscated sample by its homemade cipher layer (`ExpandKey`, `shuffle`), which is `crypto/xchacha20.go` at lines 22 and 16 of commit `64235af`. The application itself is built (main, option, operate, netio, socks5, crypto with the vendored Yawning/chacha20, logger), because its only dependencies are `xtaci/smux` v1.5.14 (65 functions, a second stream multiplexer next to yamux) and `x/sys`. Upstream's module is called `iox`, which the Go filter would read as standard library and delete whole; the build rewrites the module path to `github.com/EddieIvan01/iox` and the import prefix and changes nothing else. Kept: 199 to 216 functions of 3,024 to 3,105 in the image.  
+Generated with `scripts/build_corpus.py`; see `data/iox/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: iox -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| iox | 0.4 | GCC 13 (Linux, glibc) | [x86 ELF](data/iox/x86/mcrit/iox_0.4_gcc13_x86_iox.mcrit) / [x64 ELF](data/iox/x64/mcrit/iox_0.4_gcc13_x64_iox.mcrit) | [x86 ELF](data/iox/x86/smda/iox_0.4_gcc13_x86_iox.7z) / [x64 ELF](data/iox/x64/smda/iox_0.4_gcc13_x64_iox.7z) |
+| iox | 0.4 | MinGW-w64 GCC 13 | [x86 PE](data/iox/x86/mcrit/iox_0.4_mingw13_x86_iox.mcrit) / [x64 PE](data/iox/x64/mcrit/iox_0.4_mingw13_x64_iox.mcrit) | [x86 PE](data/iox/x86/smda/iox_0.4_mingw13_x86_iox.7z) / [x64 PE](data/iox/x64/smda/iox_0.4_mingw13_x64_iox.7z) |
+<!-- /generated -->
+
+### jpillora/chisel<a id='chisel'></a>
+
+The TCP/UDP tunnel over HTTP and SSH that PYSA and others deploy, MIT. The application itself is built, as the evidence is the program (SentinelOne: DLLs "wrappers to leverage the project's client side code"). v1.10.1 is the newest tag the host's go1.24.7 builds; v1.11.0 onwards declares go 1.25. Of the 1,261 kept linux/amd64 functions 287 are `github.com/jpillora/chisel/...` and 30 are `main`; the rest is dependency code the Go filter keeps: `x/crypto/ssh` 358 and `acme`/`autocert` 155 (golang_x_crypto family), `gorilla/websocket` 115, `armon/go-socks5` 39 (go_socks5 family), `x/text` 45. By PicHash, 253 of golang_x_crypto's 498 distinct hashes of ten instructions or more and 33 of the armon build's 40 are in this image; chisel links no yamux (6 of yamux's 65 match, generic compiler shapes).  
+Generated with `scripts/build_corpus.py`; see `data/chisel/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: chisel -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| chisel | 1.10.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/chisel/x86/mcrit/chisel_1.10.1_gcc13_x86_chisel.mcrit) / [x64 ELF](data/chisel/x64/mcrit/chisel_1.10.1_gcc13_x64_chisel.mcrit) | [x86 ELF](data/chisel/x86/smda/chisel_1.10.1_gcc13_x86_chisel.7z) / [x64 ELF](data/chisel/x64/smda/chisel_1.10.1_gcc13_x64_chisel.7z) |
+| chisel | 1.10.1 | MinGW-w64 GCC 13 | [x86 PE](data/chisel/x86/mcrit/chisel_1.10.1_mingw13_x86_chisel.mcrit) / [x64 PE](data/chisel/x64/mcrit/chisel_1.10.1_mingw13_x64_chisel.mcrit) | [x86 PE](data/chisel/x86/smda/chisel_1.10.1_mingw13_x86_chisel.7z) / [x64 PE](data/chisel/x64/smda/chisel_1.10.1_mingw13_x64_chisel.7z) |
+<!-- /generated -->
+
+### kost/revsocks<a id='revsocks'></a>
+
+Reverse SOCKS5 over yamux, which ESET found copied into the MythicRatatoskr backdoor. MIT. The application itself is built, v2.9 (go 1.24.0; HEAD asks for go 1.25.0, which the host cannot build). Honest split, linux/amd64: 4,170 functions kept, 128 of them revsocks's own (package `main`), 88 unnamed, and the rest dependencies: `miekg/dns` 887, `google.golang.org/protobuf` about 2,100, `nhooyr.io/websocket` 134, `x/crypto` acme/autocert 156, `hashicorp/yamux` 79, `armon/go-socks5` 35. Of the yamux family's 65 distinct PicHashes of ten instructions or more, 58 are in this image; of the armon build's 40, 30; of golang_x_crypto's 498, 39.  
+Generated with `scripts/build_corpus.py`; see `data/revsocks/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: revsocks -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| revsocks | 2.9 | GCC 13 (Linux, glibc) | [x86 ELF](data/revsocks/x86/mcrit/revsocks_2.9_gcc13_x86_revsocks.mcrit) / [x64 ELF](data/revsocks/x64/mcrit/revsocks_2.9_gcc13_x64_revsocks.mcrit) | [x86 ELF](data/revsocks/x86/smda/revsocks_2.9_gcc13_x86_revsocks.7z) / [x64 ELF](data/revsocks/x64/smda/revsocks_2.9_gcc13_x64_revsocks.7z) |
+| revsocks | 2.9 | MinGW-w64 GCC 13 | [x86 PE](data/revsocks/x86/mcrit/revsocks_2.9_mingw13_x86_revsocks.mcrit) / [x64 PE](data/revsocks/x64/mcrit/revsocks_2.9_mingw13_x64_revsocks.mcrit) | [x86 PE](data/revsocks/x86/smda/revsocks_2.9_mingw13_x86_revsocks.7z) / [x64 PE](data/revsocks/x64/smda/revsocks_2.9_mingw13_x64_revsocks.7z) |
+<!-- /generated -->
+
+### fatedier/frp<a id='frp'></a>
+
+The fast reverse proxy of MITRE S1144 (Volt Typhoon, Magic Hound, AppleJeus, MirrorFace, Blue Mockingbird), Apache-2.0. v0.58.1 only, frpc and frps, both built as upstream's Makefile builds them (`-tags frpc` / `-tags frps`, without `-s -w`). A second version (v0.52.3, which the issue also names) is not included: eight artefacts are already 140 MB of reference data, and 90 percent of an image is dependency code. linux/amd64 frpc: 6,023 kept, 843 `github.com/fatedier/frp/...`, 165 unnamed, 627 `klauspost/reedsolomon`, 611 `quic-go`, 418 `pflag`, 255 `cobra`; frps: 9,961 kept, 1,491 frp's, plus `google.golang.org/protobuf` (1,101 in `internal/impl` alone), `prometheus/client_golang` (208), `x/crypto/ssh` (328). frp links `fatedier/yamux`, a fork of yamux: 58 of the yamux family's 65 PicHashes match, in both frpc and frps. `assets/frps/static` is empty upstream (the dashboard is built with npm), so the build adds one empty file for `go:embed`; no Go source is touched.  
+Generated with `scripts/build_corpus.py`; see `data/frp/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: frp -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| frp | 0.58.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/frp/x86/mcrit/frp_0.58.1_gcc13_x86_frpc.mcrit) / [x64 ELF](data/frp/x64/mcrit/frp_0.58.1_gcc13_x64_frpc.mcrit) | [x86 ELF](data/frp/x86/smda/frp_0.58.1_gcc13_x86_frpc.7z) / [x64 ELF](data/frp/x64/smda/frp_0.58.1_gcc13_x64_frpc.7z) |
+| frp | 0.58.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/frp/x86/mcrit/frp_0.58.1_gcc13_x86_frps.mcrit) / [x64 ELF](data/frp/x64/mcrit/frp_0.58.1_gcc13_x64_frps.mcrit) | [x86 ELF](data/frp/x86/smda/frp_0.58.1_gcc13_x86_frps.7z) / [x64 ELF](data/frp/x64/smda/frp_0.58.1_gcc13_x64_frps.7z) |
+| frp | 0.58.1 | MinGW-w64 GCC 13 | [x86 PE](data/frp/x86/mcrit/frp_0.58.1_mingw13_x86_frpc.mcrit) / [x64 PE](data/frp/x64/mcrit/frp_0.58.1_mingw13_x64_frpc.mcrit) | [x86 PE](data/frp/x86/smda/frp_0.58.1_mingw13_x86_frpc.7z) / [x64 PE](data/frp/x64/smda/frp_0.58.1_mingw13_x64_frpc.7z) |
+| frp | 0.58.1 | MinGW-w64 GCC 13 | [x86 PE](data/frp/x86/mcrit/frp_0.58.1_mingw13_x86_frps.mcrit) / [x64 PE](data/frp/x64/mcrit/frp_0.58.1_mingw13_x64_frps.mcrit) | [x86 PE](data/frp/x86/smda/frp_0.58.1_mingw13_x86_frps.7z) / [x64 PE](data/frp/x64/smda/frp_0.58.1_mingw13_x64_frps.7z) |
+<!-- /generated -->
+
+### zema1/suo5<a id='suo5'></a>
+
+HTTP-tunnel SOCKS5 proxy (Go client) seen by Synacktiv beside `suo5.aspx` and by Group-IB as "suo5 v2.1.0 downloaded directly from github". Only v2.1.0, the version the evidence names; the artefact is an exerciser over the CLI's code path (default config, `ctrl.Run`, the `netrans` frame codec), not the CLI. The ratio is poor and measured: of 2,324 kept linux/amd64 functions 221 are suo5's own (`suo5`, `ctrl`, `netrans`), 69 unnamed, and 574 are `refraction-networking/utls`, 178 `cloudflare/circl/hpke`, 161 `gobwas/glob`, 83 `klauspost/compress/zstd`, 51 `andybalholm/brotli`, 36 `go-gost/gosocks5`; no other family here carries utls. The tag's go.mod says `go 1.20` but its graph needs 1.21, so the build raises that directive and nothing else.  
+Generated with `scripts/build_corpus.py`; see `data/suo5/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: suo5 -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| suo5 | 2.1.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/suo5/x86/mcrit/suo5_2.1.0_gcc13_x86_suo5_exerciser.mcrit) / [x64 ELF](data/suo5/x64/mcrit/suo5_2.1.0_gcc13_x64_suo5_exerciser.mcrit) | [x86 ELF](data/suo5/x86/smda/suo5_2.1.0_gcc13_x86_suo5_exerciser.7z) / [x64 ELF](data/suo5/x64/smda/suo5_2.1.0_gcc13_x64_suo5_exerciser.7z) |
+| suo5 | 2.1.0 | MinGW-w64 GCC 13 | [x86 PE](data/suo5/x86/mcrit/suo5_2.1.0_mingw13_x86_suo5_exerciser.mcrit) / [x64 PE](data/suo5/x64/mcrit/suo5_2.1.0_mingw13_x64_suo5_exerciser.mcrit) | [x86 PE](data/suo5/x86/smda/suo5_2.1.0_mingw13_x86_suo5_exerciser.7z) / [x64 PE](data/suo5/x64/smda/suo5_2.1.0_mingw13_x64_suo5_exerciser.7z) |
 <!-- /generated -->
