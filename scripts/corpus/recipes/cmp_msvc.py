@@ -1,0 +1,110 @@
+"""cmp built with MSVC, beside the MinGW builds of the same tags.
+
+camgunz/cmp is compiled into c-toxcore and so into Crytox, and a Windows
+binary that carries it is built by whatever the host project uses - cl as
+often as gcc. data/cmp holds only the MinGW pair (v10, v20); these recipes add
+the same two tags under MSVC so a cl-built sample can match. The pins, the
+reasons for the two versions and the vendoring story are in cmp.py.
+
+A separate registry entry rather than another toolchain on the MinGW recipe,
+for the reason spelled out in sqlite3_msvc.py: one Recipe has one build list
+and these steps are cmd.exe, not sh.
+
+Build: cmp.c compiled directly with cl and linked to a DLL, the analogue of
+the MinGW recipe's single gcc line. No driver translation unit, no use of the
+Makefile or CMakeLists.txt (test/example harnesses).
+
+Exports, the one real decision. cmp.h has no export macro, and the MinGW
+build gets its exports for free because mingw-w64 exports every global of a
+DLL that declares none. link has no such mode, so a .def file is needed -
+and upstream must not be patched. The recipe generates it from the compiled
+object instead of from the header: a python step runs ``dumpbin /SYMBOLS
+cmp.obj``, keeps every defined External function and writes cmp.def (a
+build output next to the object, not an upstream file). That is the same
+rule as MinGW's - every non-static function, including the few file-local
+helpers upstream leaves non-static - rather than a hand-written list that
+could drift between v10 and v20. cmp has no non-static data (its version
+constants are ``static const``), so only functions are exported. On the
+32-bit leg dumpbin reports the cdecl leading underscore (``_cmp_init``) and
+the .def wants the undecorated name, so the step strips one underscore when
+{arch} is x86; cdecl is the only convention cmp uses, so there are no
+@N-decorated names to handle. Exported ordinals/names are what lets SMDA name
+the functions even before the PDB is consulted.
+
+Flags, from the corpus mandates: /MD (the DLL runtime is imported, so the CRT
+stays attributed to data/MSVC rather than being linked in as /MT would), /O2
+(implies /Ob2), /Zi with an explicit /Fd for the PDB, no /GL and no /LTCG,
+and at link /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF. MSBuild is
+not involved, so there is no props file and nothing for
+ForceImportBeforeCppTargets to carry: the overrides are the command line. The
+MinGW build is plain -O2 with no --gc-sections, so NOREF/NOICF keeps the pair
+comparable. The flags that actually ran are read back from the tracker log
+rather than assumed (see the README's MSVC section).
+
+Measurements: filled in after the runner build, see the section below.
+"""
+
+from ..recipe import Artifact, BuildStep, Recipe, Source
+
+
+# Written as a python -c one-liner with no braces and no double quotes, so it
+# survives both cmd.exe and the {placeholder} substitution. Only symbols that
+# dumpbin lists as defined (SECTn) functions ("()") with External linkage are
+# taken; UNDEF entries are the CRT imports and are skipped.
+_DEF = (
+    'python -c "'
+    "import subprocess;"
+    "o=subprocess.check_output(['dumpbin','/SYMBOLS','cmp.obj']).decode();"
+    "l=[x.split('|')[1].split()[0] for x in o.splitlines() "
+    "if ' SECT' in x and '() External' in x];"
+    "p='{arch}'=='x86';"
+    "n=sorted(set([s[1:] if p and s.startswith('_') else s for s in l]));"
+    "open('cmp.def','w').write('EXPORTS\\n'+'\\n'.join(n)+'\\n');"
+    "print(len(n),'exports')"
+    '"')
+
+_COMPILE = 'cl /nologo /c /O2 /MD /Zi /Fdcmp.pdb /Focmp.obj cmp.c'
+
+# /INCREMENTAL:NO because /DEBUG implies /INCREMENTAL and the /OPT:NO* forms
+# do not suppress it; see sqlite3_msvc.py for the jump-thunk measurement.
+_LINK = ('link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO '
+         '/OPT:NOREF /OPT:NOICF /DEF:cmp.def '
+         '/PDB:cmp.pdb /OUT:cmp.dll cmp.obj')
+
+_FLAGS = ("/O2 /MD /Zi (cmp.c compiled directly, no -DCMP_NO_FLOAT); "
+          "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link; "
+          "exports from a /DEF generated from the object's defined "
+          "external functions")
+
+
+def _cmp_msvc(version, git_ref):
+    return Recipe(
+        family="cmp",
+        version=version,
+        upstream="https://github.com/camgunz/cmp",
+        license="MIT",
+        source=Source(git_url="https://github.com/camgunz/cmp.git",
+                      git_ref=git_ref),
+        build=[
+            BuildStep(_COMPILE),
+            BuildStep(_DEF),
+            BuildStep(_LINK),
+            BuildStep("dir", allow_failure=True),
+        ],
+        artifacts=[Artifact(path="cmp.dll", component="cmp.dll",
+                            pdb="cmp.pdb")],
+        toolchains=["msvc_x86", "msvc_x64"],
+        build_flags=_FLAGS,
+        notes="The same two tags as the MinGW recipe, so the artefacts can "
+              "be compared directly. Upstream is unpatched; the export "
+              "table is generated at build time from the compiled object "
+              "because cmp.h has no export macro. Built against the DLL "
+              "runtime, so the MSVC C runtime is imported rather than "
+              "linked in and stays attributed to data/MSVC.",
+    )
+
+
+RECIPES = {
+    "cmp_10_msvc": _cmp_msvc("10", "v10"),
+    "cmp_20_msvc": _cmp_msvc("20", "v20"),
+}
