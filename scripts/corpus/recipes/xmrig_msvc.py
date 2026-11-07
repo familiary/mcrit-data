@@ -25,8 +25,8 @@ the x86 leg passes -DWITH_ASM=OFF, which is also what cpu.cmake does for any
 32-bit build; both randomx.cmake and asm.cmake then take their portable
 branches, the same sources the Linux and MinGW x86 artefacts use.
 
-Built on windows-2022: 14,384 functions on x64 and 14,600 on x86 after 2,300
-and 2,172 compiler-runtime functions were removed. About 5,800 of them are
+Built on windows-2022: 14,377 functions on x64 and 14,593 on x86 after 2,307
+and 2,179 compiler-runtime functions were removed. About 5,800 of them are
 `std::` instantiations; MSVC emits the standard library's templates into the
 image and /OPT:NOREF keeps every unreferenced COMDAT, so the count is four
 times the GCC one and describes an MSVC-built miner, not an inflation.

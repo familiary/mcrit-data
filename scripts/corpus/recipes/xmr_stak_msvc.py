@@ -6,7 +6,7 @@ CMake minimum of 3.4 is lifted with CMAKE_POLICY_VERSION_MINIMUM=3.5 because a
 CMake 4 refuses anything below 3.5. The CryptoNight main loops are MASM
 (xmr-stak-asm), assembled by ml64. OpenSSL is built from the pinned source and
 linked through its import libraries, with FindOpenSSL's MSVC cache entries
-preset as in xmrig_msvc.py. 4103 functions after 1832 removed as runtime.
+preset as in xmrig_msvc.py. 4101 functions after 1834 removed as runtime.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
