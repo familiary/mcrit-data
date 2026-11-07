@@ -39,12 +39,11 @@ import library; external props export the real callback from that executable.
 This preserves the callback without source edits or unresolved relocations.
 
 MSVC v143 measurements (same ten-instruction hash floor):
-  x86 meshservice kept 3028 + removed 248 = image 3276; 1842 unique PicHashes
-  x86 meshconsole kept 3156 + removed 238 = image 3394; 2031 unique PicHashes
-  x64 meshservice kept 2969 + removed 221 = image 3190; 1828 unique PicHashes
-  x64 meshconsole kept 3061 + removed 214 = image 3275; 1975 unique PicHashes
-All fifteen image-pair intersections are zero except x64 service/console,
-which share one hash: __scrt_common_main_seh a487ef4456111551 (99 instructions).
+  x86 meshservice kept 3020 + removed 256 = image 3276; 1838 unique PicHashes
+  x86 meshconsole kept 3140 + removed 254 = image 3394; 2021 unique PicHashes
+  x64 meshservice kept 2961 + removed 229 = image 3190; 1824 unique PicHashes
+  x64 meshconsole kept 3055 + removed 220 = image 3275; 1973 unique PicHashes
+All fifteen image-pair intersections are zero.
 Thus every compiler, architecture and component leg adds distinct coverage.
 MinGW's C++ probe fails at wincrypto.cpp:342 even with -fpermissive, jumping
 across BYTE ByteData initialization at line 277; the README records it.
@@ -58,68 +57,47 @@ bodies do not enter the family. This changes no upstream source.
 Windows dependency overlap: against the same eight OpenSSL 1.1.1w reports,
 x64 service shares one 13-instruction getter hash, 6176721668fbcd38:
 ILibWrapper_WebRTC_Connection_GetUserData versus DSA_get0_pqg. The other five
-images share zero. Against thirty libzlib reports, x64 service shares two
-Microsoft header wrappers, snprintf 42c0c340515c17a8 (29 instructions) and
-vsnprintf 265c6265fdc7760d (27); the other five images share zero. These are
-a differently named short getter coincidence and CRT glue, not retained
-OpenSSL/zlib project bodies.
+images share zero. Against thirty libzlib reports, the six
+images share zero (the Microsoft header wrappers snprintf and vsnprintf that
+x64 service once shared are now removed by the glue baseline). The OpenSSL
+overlap is a differently named short getter coincidence, not a retained
+OpenSSL/zlib project body.
 
-Named MSVC runtime/startup survivors follow. The stdio wrapper and x64
-__scrt_common_main_seh baseline gaps predate this family; the recipe records
-the surviving hashes and does not change shared filtering code.
+Named MSVC runtime/startup survivors follow. The wide-stdio glue baseline
+removes the x64 __scrt_common_main_seh, the __stdio_common_* thunks and most
+printf-family wrappers; the recipe records the hashes that still survive and
+does not change shared filtering code.
 
   x86 meshservice:
-    _vsprintf_s_l, _vswprintf_s_l 233074125c3b1229 (17)
     printf, printf_s 587caf596c74b028 (11)
     snprintf c8eb018529efac28 (8)
     sprintf_s, swprintf_s cf7e4f21e266437f (9)
-    _vsscanf_s_l 6fd8cadfbdc30d22 (13)
     sscanf_s, fprintf d4776fc60fd2074a (8)
     _snprintf_s 012a528127228513 (13)
-    _vsnprintf_s_l 921d7e3eadae5051 (18)
     _start 71b38a2da443c271 (35)
-    _vfprintf_s_l 82183debd18409e2 (10)
     __scrt_wide_argv_policy::configure_argv 9da69b39dcb9edec (5)
     __scrt_wide_environment_policy::initialize_environment 54b22cca4dddbd08 (1)
     wmainCRTStartup bb09143500f3ee48 (2)
-    ___stdio_common_vsnprintf_s, ___stdio_common_vfprintf_s 1165511d87767dcf (1)
 
   x86 meshconsole:
-    __local_stdio_printf_options, __local_stdio_scanf_options 47e95a93964df92b (5)
-    _vfprintf_l 78d5e7411c7012b7 (19)
-    _vsprintf_s_l, _vswprintf_s_l 31c2721be1e0ba75 (31)
-    printf 0b340b9267eabc14 (22)
-    snprintf 7d83e98bc411787a (21)
-    sprintf_s, swprintf_s 04a1721ed11edc8a (22)
-    vsnprintf 71eac5c16a0481be (31)
     _vsscanf_s_l a23b580451868775 (21)
     sscanf_s aa31b8f235f67d78 (19)
     vsscanf_s 368164c84ae07cc9 (13)
-    fprintf 66647533767282a9 (20)
-    _snprintf_s 02f4daa16c2fb7c1 (24)
-    _vsnprintf_s_l 9defc25b32c3e21f (33)
     __scrt_wide_argv_policy::configure_argv 9da69b39dcb9edec (5)
     __scrt_wide_environment_policy::initialize_environment 54b22cca4dddbd08 (1)
     wmainCRTStartup bb09143500f3ee48 (2)
-    ___stdio_common_vsnprintf_s 1165511d87767dcf (1)
 
   x64 meshservice:
     printf, printf_s 364aa9214bbcd05f (26)
-    snprintf 42c0c340515c17a8 (29)
-    sprintf_s, swprintf_s 1a3b110d3925a4b7 (28)
+    swprintf_s 1a3b110d3925a4b7 (28)
     sscanf_s fa2811009eef6517 (25)
     fprintf 50ed5dbd2b21d420 (23)
-    vsnprintf 265c6265fdc7760d (27)
-    _snprintf_s 9f98b5853818845e (32)
     _start 567e7e01896399a6 (33)
-    __scrt_common_main_seh a487ef4456111551 (99)
     __scrt_wide_environment_policy::initialize_environment 54b22cca4dddbd08 (1)
     wmainCRTStartup 8beba34a83410580 (4)
-    __stdio_common_vsnprintf_s, __stdio_common_vfprintf_s 1165511d87767dcf (1)
 
   x64 meshconsole:
-    _vfprintf_l a660e2c3c67aa215 (15)
-    _vsprintf_s_l, _vswprintf_s_l 7db6bea5ed90c301 (25)
+    _vsprintf_s_l 7db6bea5ed90c301 (25)
     printf 823a12839f8d8c54 (19)
     snprintf 14239a64fed105df (17)
     sprintf_s, swprintf_s c5483d3eb7105209 (19)
@@ -130,10 +108,8 @@ the surviving hashes and does not change shared filtering code.
     fprintf 3ab248a90fc6e83d (17)
     _snprintf_s 01b56146fe77909d (20)
     _vsnprintf_s_l f6eb157f14dc3e39 (27)
-    __scrt_common_main_seh a487ef4456111551 (99)
     __scrt_wide_environment_policy::initialize_environment 54b22cca4dddbd08 (1)
     wmainCRTStartup 8beba34a83410580 (4)
-    __stdio_common_vsnprintf_s 1165511d87767dcf (1)
 
 """
 
