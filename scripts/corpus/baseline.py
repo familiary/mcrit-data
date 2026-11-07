@@ -50,6 +50,17 @@ on this side rather than static executables:
 Nothing of glibc itself is in either list, which answers the question a
 glibc probe set would have been for: there is no glibc body in a dynamically
 linked .so to measure or to remove.
+
+Kernel-mode images are the fourth case and are kept apart from all of the
+above. A .sys has no ucrt or vcruntime; the WDK links its own memcpy/memset
+family, the /GS cookie and its failure reporters, GsDriverEntry and the
+guard-cast stubs into it, and ntstrsafe.h compiles its helpers into the unit
+that calls them. ``kernel_glue`` measures those from three driver builds (the
+WDK's msbuild project, the same without /GS, and cl /kernel with link
+/NODEFAULTLIB against BufferOverflowK.lib) and ``is_glue(..., kernel=True)``
+consults it only for a file whose name ends in .sys, in addition to the
+user-mode set, so no user-mode image is affected. See the section above
+``kernel_glue`` for what the probes call and what they deliberately do not.
 """
 
 import functools
