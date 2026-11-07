@@ -93,6 +93,9 @@ String obfuscation
 * [obfstr](#obfstr)
 * [Obfuscator4g3nt47](#obfuscator4g3nt47)
 
+Remote management
+* [MeshAgent](#meshagent)
+
 ## Compilers
 
 Reference code extracted from all files containing precompiled code found in installations for various compiler toolchains.
@@ -1039,4 +1042,16 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
+<!-- /generated -->
+
+## Remote management
+
+### MeshAgent<a id='meshagent'></a>
+
+[MeshAgent](https://github.com/Ylianst/MeshAgent) is the native agent for MeshCentral. These references pin commit `26846b1c7f0841d71938f6bebc96eef5a947d217` and cover the official Linux x86/x64 NOKVM configurations. OpenSSL, Duktape and zlib are shared dependencies, so their code is excluded from the agent reports. Windows coverage is being investigated separately. Source, compiler and dependency facts are recorded in `data/MeshAgent/provenance.json`.
+
+<!-- generated: MeshAgent -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| MeshAgent | 26846b1 | GCC 14 (Linux, glibc) | [x86 ELF](data/MeshAgent/x86/mcrit/MeshAgent_26846b1_gcc14_x86_meshagent-nokvm.mcrit) / [x64 ELF](data/MeshAgent/x64/mcrit/MeshAgent_26846b1_gcc14_x64_meshagent-nokvm.mcrit) | [x86 ELF](data/MeshAgent/x86/smda/MeshAgent_26846b1_gcc14_x86_meshagent-nokvm.7z) / [x64 ELF](data/MeshAgent/x64/smda/MeshAgent_26846b1_gcc14_x64_meshagent-nokvm.7z) |
 <!-- /generated -->

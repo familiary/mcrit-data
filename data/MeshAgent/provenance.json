@@ -1,0 +1,81 @@
+{
+  "MeshAgent_26846b1_gcc14_x64_meshagent-nokvm": {
+    "architecture": "x64",
+    "build_flags": "-O2 -g -fstack-protector -D_FORTIFY_SOURCE=2 -fno-strict-aliasing; ARCHID=20 NOKVM; DYNAMICTLS=1; STRIP=true",
+    "built_artifact": "meshagent_x86-64_nokvm",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "meshagent-nokvm",
+    "family": "MeshAgent",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "Apache-2.0",
+    "mcrit": "data/MeshAgent/x64/mcrit/MeshAgent_26846b1_gcc14_x64_meshagent-nokvm.mcrit",
+    "notes": "OpenSSL 1.1.1s and Duktape 2.6.0 from the pinned source tree, and host zlib, are shared dependencies, excluded from agent code. The reported deployments are primarily Windows; KVM status is unknown.",
+    "num_functions": 2681,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "_start",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "febe1d514c07ffc244b455847707c4f8ee5e5d579c724d5a41e7407a301fbd7f",
+    "smda": "data/MeshAgent/x64/smda/MeshAgent_26846b1_gcc14_x64_meshagent-nokvm.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "26846b1c7f0841d71938f6bebc96eef5a947d217",
+      "git_ref": "26846b1c7f0841d71938f6bebc96eef5a947d217",
+      "git_url": "https://github.com/Ylianst/MeshAgent.git"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://github.com/Ylianst/MeshAgent",
+    "version": "26846b1"
+  },
+  "MeshAgent_26846b1_gcc14_x86_meshagent-nokvm": {
+    "architecture": "x86",
+    "build_flags": "-O2 -g -m32 -fstack-protector -D_FORTIFY_SOURCE=2 -fno-strict-aliasing; ARCHID=19 NOKVM; DYNAMICTLS=1; STRIP=true",
+    "built_artifact": "meshagent_x86_nokvm",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "meshagent-nokvm",
+    "dependencies": {
+      "zlib32_dev": {
+        "archive": "zlib1g-dev_1.3.dfsg+really1.3.1-1+b1_i386.deb",
+        "sha256": "b5ca31bbc301f5f8be89ef90a1935c826bf562d6f6601e9169709366e3bad263",
+        "url": "https://deb.debian.org/debian/pool/main/z/zlib/zlib1g-dev_1.3.dfsg+really1.3.1-1+b1_i386.deb"
+      },
+      "zlib32_runtime": {
+        "archive": "zlib1g_1.3.dfsg+really1.3.1-1+b1_i386.deb",
+        "sha256": "8950c79b1ade51f53b2f37863aec532cfaca3dff315e28f0c5b53902425c41ed",
+        "url": "https://deb.debian.org/debian/pool/main/z/zlib/zlib1g_1.3.dfsg+really1.3.1-1+b1_i386.deb"
+      }
+    },
+    "family": "MeshAgent",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "Apache-2.0",
+    "mcrit": "data/MeshAgent/x86/mcrit/MeshAgent_26846b1_gcc14_x86_meshagent-nokvm.mcrit",
+    "notes": "OpenSSL 1.1.1s and Duktape 2.6.0 from the pinned source tree, and Debian zlib 1.3.1, are shared dependencies, excluded from agent code. The reported deployments are primarily Windows; KVM status is unknown.",
+    "num_functions": 3170,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.cx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "__x86.get_pc_thunk.si",
+      "frame_dummy"
+    ],
+    "sha256": "5504755a54c03d7390992fdf1870b8bf575dd4b82ff0042f5e97304801711de6",
+    "smda": "data/MeshAgent/x86/smda/MeshAgent_26846b1_gcc14_x86_meshagent-nokvm.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "26846b1c7f0841d71938f6bebc96eef5a947d217",
+      "git_ref": "26846b1c7f0841d71938f6bebc96eef5a947d217",
+      "git_url": "https://github.com/Ylianst/MeshAgent.git"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://github.com/Ylianst/MeshAgent",
+    "version": "26846b1"
+  }
+}

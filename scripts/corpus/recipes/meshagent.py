@@ -8,6 +8,30 @@ from the agent, which imports them instead. No upstream file is modified.
 
 The Linux NOKVM configuration is a coverage axis; reports do not establish
 whether deployed agents enabled KVM. Windows MSVC coverage remains pending.
+
+Linux GCC 14 measurements (functions of at least ten instructions for hashes):
+x64 keeps 2681 and removes 6, image total 2687; 1644 unique PicHashes.
+x86 keeps 3170 and removes 7, image total 3177; 1867 unique PicHashes.
+The architecture sets overlap in zero hashes, so both add coverage.
+Against the existing eight OpenSSL 1.1.1w MinGW/MSVC reports (18245 unique
+PicHashes) and thirty libzlib reports (1690), both agent architectures share
+zero hashes at the same ten-instruction floor. This confirms the shared
+dependency link excludes those reference bodies from the agent family.
+The x64 baseline leaves no named startup glue. The x86 survivors are:
+  _init                       9804c1d756bfb707 (11 instructions)
+  _start                      2e19b20ea4a953c6 (16)
+  deregister_tm_clones        7ef4698f13363aaa (18)
+  register_tm_clones          31f5bc65956e291f (26)
+  __do_global_dtors_aux        b829096cd918a093 (21)
+  __x86.get_pc_thunk.bp        7c99608cc56520ba (2)
+  __stack_chk_fail_local      82127b22b3f97bef (5)
+Their GOT-relative layouts differ from the measured baseline. These are
+recorded rather than removed by name, preserving the baseline contract.
+
+The source headers identify OpenSSL 1.1.1f, but strings in both committed
+Linux archives identify 1.1.1s; the archive version is recorded in provenance.
+The Windows recipe substitutes shared OpenSSL 1.1.1w and zlib 1.3.1 instead
+of attributing the committed static dependencies to MeshAgent.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -95,10 +119,10 @@ RECIPES = {
                 sha256="9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23")},
         build=_MSVC_DEPS + _MSVC_BUILD,
         artifacts=[Artifact(path="corpus-out/meshservice/MeshAgentService.exe",
-                            component="meshservice", is_library=False,
+                            component="meshservice", is_library=True,
                             pdb="corpus-out/meshservice/MeshAgentService.pdb"),
                    Artifact(path="corpus-out/meshconsole/MeshAgentConsole.exe",
-                            component="meshconsole", is_library=False,
+                            component="meshconsole", is_library=True,
                             pdb="corpus-out/meshconsole/MeshAgentConsole.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
         requires=["msbuild", "cl", "link", "nmake", "perl", "dumpbin"],
@@ -117,10 +141,11 @@ RECIPES = {
                       git_ref="26846b1c7f0841d71938f6bebc96eef5a947d217"),
         build=[BuildStep(_BUILD_DEPS), BuildStep(_BUILD)],
         artifacts=[Artifact(path="meshagent_x86-64_nokvm", component="meshagent-nokvm",
-                            is_library=False)],
+                            is_library=True)],
         toolchains=["linux_x64"],
         requires=["make"],
-        build_flags="-O2 -g; ARCHID=20 NOKVM; DYNAMICTLS=1; STRIP=true",
+        build_flags="-O2 -g -fstack-protector -D_FORTIFY_SOURCE=2 -fno-strict-aliasing; "
+                    "ARCHID=20 NOKVM; DYNAMICTLS=1; STRIP=true",
         notes="OpenSSL 1.1.1s and Duktape 2.6.0 from the pinned source tree, "
               "and host zlib, are shared dependencies, excluded from agent code. "
               "The reported deployments are primarily Windows; KVM status is unknown.",
@@ -149,10 +174,11 @@ RECIPES = {
                BuildStep(_BUILD_X86, env={
                    "LIBRARY_PATH": "{source_root}/corpus-zlib32/usr/lib/i386-linux-gnu"})],
         artifacts=[Artifact(path="meshagent_x86_nokvm", component="meshagent-nokvm",
-                            is_library=False)],
+                            is_library=True)],
         toolchains=["linux_x86"],
         requires=["make", "dpkg-deb"],
-        build_flags="-O2 -g -m32; ARCHID=19 NOKVM; DYNAMICTLS=1; STRIP=true",
+        build_flags="-O2 -g -m32 -fstack-protector -D_FORTIFY_SOURCE=2 -fno-strict-aliasing; "
+                    "ARCHID=19 NOKVM; DYNAMICTLS=1; STRIP=true",
         notes="OpenSSL 1.1.1s and Duktape 2.6.0 from the pinned source tree, "
               "and Debian zlib 1.3.1, are shared dependencies, excluded from agent code. "
               "The reported deployments are primarily Windows; KVM status is unknown.",
