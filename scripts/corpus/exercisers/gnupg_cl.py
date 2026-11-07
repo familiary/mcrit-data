@@ -258,7 +258,7 @@ def build_gpg_error(arch, src, work, prefix, diag=False):
     if os.path.exists(lock):
         os.remove(lock)
     cross = expand(mk, mk.get("mkheader_opts", "")).split()
-    rc, hdr = run([os.path.join(b, "mkheader.exe")] + cross + [triple, os.path.join(sdir, "gpg-error.h.in"),
+    rc, hdr = run([os.path.join(b, "mkheader.exe")] + cross + [triple, fwd(os.path.join(sdir, "gpg-error.h.in")),
                    "../config.h", version, vnum], cwd=b)
     with open(os.path.join(b, "gpg-error.h"), "wb") as f:
         f.write(hdr)
