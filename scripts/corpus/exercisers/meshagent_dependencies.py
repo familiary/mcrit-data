@@ -47,7 +47,7 @@ def props(args):
     libraries += [os.path.join(args.ssl, "libcrypto.lib"),
                   os.path.join(args.ssl, "libssl.lib"),
                   os.path.join(args.deps, "corpus-duktape.lib"),
-                  os.path.join(args.deps, "corpus-zlib.lib")]
+                  os.path.join(args.zlib, "zdll.lib")]
     ET.register_namespace("", namespace)
     root = ET.Element("{%s}Project" % namespace)
     properties = ET.SubElement(root, "PropertyGroup")
@@ -87,7 +87,7 @@ export_parser.add_argument("--arch", required=True)
 export_parser.add_argument("--output", required=True)
 export_parser.add_argument("objects", nargs="+")
 props_parser = commands.add_parser("props")
-for option in ("project", "platform", "name", "ssl", "deps", "output"):
+for option in ("project", "platform", "name", "ssl", "zlib", "deps", "output"):
     props_parser.add_argument("--" + option, required=True)
 arguments = parser.parse_args()
 exports(arguments) if arguments.command == "exports" else props(arguments)
