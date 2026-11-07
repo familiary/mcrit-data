@@ -19,21 +19,23 @@ props file overrides /MT, whole-program optimization and linker folding.
 MinGW/Linux MuPDF-direct builds would describe a different component and
 remain a separate maintainer choice.
 
-Windows probe 42337199081 built both architectures. x86: 11,176 kept plus
-253 removed equals 11,429 image functions (11,019 kept functions named).
-x64: 10,696 kept plus 246 removed equals 10,942 (10,670 kept named).
-Unique PicHashes at >=10 instructions: x86 8,906; x64 8,145; intersection 2.
+Windows run 42399432408, built against the wide-stdio glue baseline, built
+both architectures. x86: 11,167 kept plus 262 removed equals 11,429 image
+functions (11,010 kept functions named). x64: 10,693 kept plus 249 removed
+equals 10,942 (10,667 kept named).
+Unique PicHashes at >=10 instructions: x86 8,899; x64 8,144; intersection 2.
 Both architectures therefore add code shapes not present in the other.
 
 Overlap against all existing variants in each dependency family, again at
->=10 instructions: libzlib x86 54 / x64 36; bzip2 0 / 17; liblzma 0 / 1.
+>=10 instructions: libzlib x86 52 / x64 36; bzip2 0 / 17; liblzma 0 / 1.
 These are measured vendoring overlaps, not an attribution decision. There
 is no MinGW or Linux build of this exact Windows-only upstream DLL here.
 
-Measured runtime survivors: printf x86 PicHash 12296465484064796685 (20
-instructions), printf x64 121597203084696572 (25). These inline CRT wrappers
-survive the measured baseline; no shared tooling was changed. The x64
-printf survivor is the known MSVC baseline gap. The logged compile uses
+The printf-family wrappers that survived the earlier probe (x86 printf,
+PicHash 12296465484064796685, 20 instructions; x64 printf, PicHash
+121597203084696572, 25) are removed by the wide-stdio glue baseline, along
+with the x86 fprintf, snprintf, _snprintf, sprintf, sscanf and vsnprintf
+wrappers. The logged compile uses
 /Ox /MD without /GL. Link readback confirms /OPT:NOREF /OPT:NOICF /Brepro
 /INCREMENTAL:NO and no /LTCG activation (/LTCGOUT names only an output path).
 """
