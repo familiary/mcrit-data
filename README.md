@@ -587,7 +587,9 @@ Generated with `scripts/build_corpus.py`; see `data/Info-ZIP/provenance.json` fo
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Info-ZIP | 3.0 | MinGW-w64 GCC 13 | [x86 PE](data/Info-ZIP/x86/mcrit/Info-ZIP_3.0_mingw13_x86_zip.exe.mcrit) / [x64 PE](data/Info-ZIP/x64/mcrit/Info-ZIP_3.0_mingw13_x64_zip.exe.mcrit) | [x86 PE](data/Info-ZIP/x86/smda/Info-ZIP_3.0_mingw13_x86_zip.exe.7z) / [x64 PE](data/Info-ZIP/x64/smda/Info-ZIP_3.0_mingw13_x64_zip.exe.7z) |
+| Info-ZIP | 3.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Info-ZIP/x86/mcrit/Info-ZIP_3.0_msvc143_x86_zip.exe.mcrit) / [x64 PE](data/Info-ZIP/x64/mcrit/Info-ZIP_3.0_msvc143_x64_zip.exe.mcrit) | [x86 PE](data/Info-ZIP/x86/smda/Info-ZIP_3.0_msvc143_x86_zip.exe.7z) / [x64 PE](data/Info-ZIP/x64/smda/Info-ZIP_3.0_msvc143_x64_zip.exe.7z) |
 | Info-ZIP | 6.0 | MinGW-w64 GCC 13 | [x86 PE](data/Info-ZIP/x86/mcrit/Info-ZIP_6.0_mingw13_x86_unzip.exe.mcrit) / [x64 PE](data/Info-ZIP/x64/mcrit/Info-ZIP_6.0_mingw13_x64_unzip.exe.mcrit) | [x86 PE](data/Info-ZIP/x86/smda/Info-ZIP_6.0_mingw13_x86_unzip.exe.7z) / [x64 PE](data/Info-ZIP/x64/smda/Info-ZIP_6.0_mingw13_x64_unzip.exe.7z) |
+| Info-ZIP | 6.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Info-ZIP/x86/mcrit/Info-ZIP_6.0_msvc143_x86_unzip.exe.mcrit) / [x64 PE](data/Info-ZIP/x64/mcrit/Info-ZIP_6.0_msvc143_x64_unzip.exe.mcrit) | [x86 PE](data/Info-ZIP/x86/smda/Info-ZIP_6.0_msvc143_x86_unzip.exe.7z) / [x64 PE](data/Info-ZIP/x64/smda/Info-ZIP_6.0_msvc143_x64_unzip.exe.7z) |
 <!-- /generated -->
 
 ### PCRE<a id='pcre'></a>
