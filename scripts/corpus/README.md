@@ -587,6 +587,8 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| Pantegana full client (Go PE/ELF x86/x64) | [#71](https://github.com/r0ny123/mcrit-data/issues/71) | All four direct builds of the pinned v0.1.0 proxy archive fail with client/client.go:47:17: undefined: Asset. The archive lacks client/cert.go and cert/server.crt. The Makefile generates operator certificate assets using DOMAIN/IP and go-bindata. No certificates, configuration, generator or client were run. The independent fingerprinter.go helper is covered separately. |
+| Sliver unexpanded implant | [#37](https://github.com/r0ny123/mcrit-data/issues/37) | At commit 4c2e8d4bdac79eb7c22143d54f49025faac5d1e6, implant/sliver/main.go contains func {{.}} () with per-session template directives. Go 1.24.13 gofmt parsing reports main.go:38:6: expected 'IDENT', found '{'; main.go:38:12: missing parameter name. No configured implant, profile, server or generator was created or run; no direct go build is claimed. |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |

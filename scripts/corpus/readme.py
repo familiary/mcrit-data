@@ -128,6 +128,8 @@ def _compiler_label(entry):
         # The blob was compiled by whoever committed it, not by the toolchain
         # that happened to run the extraction.
         return "MSVC (as committed upstream)"
+    if compiler.startswith("Go "):
+        return compiler.split(";", 1)[0]
     if "mingw" in (entry.get("toolchain") or ""):
         version = compiler.split("(GCC)")[-1].strip().split("-")[0] if "(GCC)" in compiler else "?"
         return "MinGW-w64 GCC %s" % version

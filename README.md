@@ -1040,3 +1040,15 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
 <!-- /generated -->
+
+
+### Pantegana fingerprinting helpers
+
+Only the unmodified system-information helper is covered, with Go 1.24.13. The full client requires generated certificate assets and is not built.
+
+<!-- generated: Pantegana -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Pantegana | 0.1.0-go1.24.13-fingerprint | Go 1.24.13 | [x86 ELF](data/Pantegana/x86/mcrit/Pantegana_0.1.0-go1.24.13-fingerprint_gcc14_x86_fingerprint.mcrit) / [x64 ELF](data/Pantegana/x64/mcrit/Pantegana_0.1.0-go1.24.13-fingerprint_gcc14_x64_fingerprint.mcrit) | [x86 ELF](data/Pantegana/x86/smda/Pantegana_0.1.0-go1.24.13-fingerprint_gcc14_x86_fingerprint.7z) / [x64 ELF](data/Pantegana/x64/smda/Pantegana_0.1.0-go1.24.13-fingerprint_gcc14_x64_fingerprint.7z) |
+| Pantegana | 0.1.0-go1.24.13-fingerprint | Go 1.24.13 | [x86 PE](data/Pantegana/x86/mcrit/Pantegana_0.1.0-go1.24.13-fingerprint_mingw13_x86_fingerprint.mcrit) / [x64 PE](data/Pantegana/x64/mcrit/Pantegana_0.1.0-go1.24.13-fingerprint_mingw13_x64_fingerprint.mcrit) | [x86 PE](data/Pantegana/x86/smda/Pantegana_0.1.0-go1.24.13-fingerprint_mingw13_x86_fingerprint.7z) / [x64 PE](data/Pantegana/x64/smda/Pantegana_0.1.0-go1.24.13-fingerprint_mingw13_x64_fingerprint.7z) |
+<!-- /generated -->
