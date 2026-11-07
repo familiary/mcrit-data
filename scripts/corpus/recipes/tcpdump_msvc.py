@@ -35,6 +35,26 @@ set; the repeat is harmless), /O2 /Ob2 /Zi, no /GL and no /LTCG; link
 variables are overridden, not CMAKE_C_FLAGS / CMAKE_EXE_LINKER_FLAGS, so CMake's
 own initialisation (/machine on the 32-bit leg) stays in place; upstream's
 LINK_FLAGS (/delayload:wpcap.dll) is appended to those at link time.
+
+Measured on the committed artefacts (MSVC 19.44, kept + removed = image):
+x64 4.99.3 2114 + 193 = 2307, 4.99.5 1962 + 193 = 2155, 4.99.7 2056 + 198 =
+2254; x86 4.99.3 2113 + 204 = 2317, 4.99.5 1952 + 204 = 2156, 4.99.7 2054 + 210
+= 2264. Of the kept functions 1583-1609 have 10 or more instructions (999-1029
+distinct PicHashes), and 328-390 on x64 and 104-163 on x86 have one or two:
+import thunks (jmp through the IAT) and, at 4.99.7, the `__imp_load_*`
+delay-load thunks. PicHash overlap (10+ instructions) with the MinGW and ELF
+image of the same version is 0 on both architectures, and of MSVC against the
+MinGW images of other versions too, so the MSVC axis is new reference data.
+Between MSVC versions on x64: 4.99.3/4.99.5 786 (78% of the smaller),
+4.99.3/4.99.7 576 (57%), 4.99.5/4.99.7 619 (62%); on x86 769 (77%), 112 (11%)
+and 119 (12%).
+
+Glue that survives the baseline: no CRT- or SDK-named function of three to
+nine instructions other than, on x86 4.99.7, ReadAcquire and ReadPointerAcquire (7 instructions,
+PicHash 1188053738595351258) and _InlineInterlockedCompareExchangePointer (9,
+2389241439520967849); the rest are the import thunks (1 instruction, PicHash
+1253497258561142223) and the 4.99.7 delay-load thunks (2 instructions, PicHash
+5404308116032946042 on x64, 9181926168053310126 on x86).
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

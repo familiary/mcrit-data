@@ -102,9 +102,8 @@ other PE versions (functions of 10 or more instructions): x64 36% (4.99.0),
 39% (4.99.3), 56% (4.99.5); x86 9%, 9%, 10%. Against the 4.99.7 ELF: 0 on x64
 and 7 hashes on x86.
 
-Not built: MSVC. It is the compiler tcpdump's Windows port is written for, so
-it is the follow-up; it needs the Windows runner, and the tcpdump Windows port
-is not what the issue reports.
+MSVC is built by tcpdump_msvc.py (4.99.3, 4.99.5, 4.99.7), unpatched, against
+the same Npcap SDK import library.
 
 Measured on the artefacts (kept + removed = image): ELF x64 4.99.0 1101 + 7 =
 1108, 4.99.3 1106 + 7, 4.99.5 990 + 7, 4.99.7 992 + 7; ELF x86 4.99.0 1061 + 5,
