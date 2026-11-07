@@ -141,14 +141,16 @@ class Cl:
         return cmd
 
 
-def compile_all(srcs, builddir, includes, defines, extra_for=None, jobs=4):
+def compile_all(srcs, builddir, includes, defines, extra_for=None, jobs=4, force=None):
     """Compile (src, objname, cwd) in parallel; return (objects, failures)."""
     cl = Cl(None)
     ok, bad = [], []
 
     def one(item):
         src, obj, cwd = item
-        extra = (extra_for or {}).get(os.path.basename(src), ())
+        extra = list((extra_for or {}).get(os.path.basename(src), ()))
+        if force:
+            extra.append("/FI" + force)
         cmd = cl.compile_cmd(src, obj, includes(cwd), defines, extra)
         rc, out = run(cmd, cwd=cwd, timeout=600, check=False, quiet=True)
         return item, rc, out.decode("utf-8", "replace")
@@ -194,6 +196,52 @@ def awk(awkfile, infile, args=(), stdin=None, cwd=None):
     return run(cmd, cwd=cwd, input=stdin, quiet=True)[1]
 
 
+SHIM_H = r"""/* build-side compatibility for cl, written by gnupg_cl.py; upstream is not edited */
+#ifndef GNUPG_CL_SHIM_H
+#define GNUPG_CL_SHIM_H
+#include <stddef.h>
+#include <sys/types.h>
+#include <io.h>
+#include <process.h>
+#include <direct.h>
+#ifndef _SSIZE_T_DEFINED
+# define _SSIZE_T_DEFINED
+typedef ptrdiff_t ssize_t;
+#endif
+#ifndef STDIN_FILENO
+# define STDIN_FILENO 0
+# define STDOUT_FILENO 1
+# define STDERR_FILENO 2
+#endif
+#endif
+"""
+
+
+def make_shim(work, gpgerr_macro_function):
+    """Headers cl lacks (<unistd.h>, <sys/file.h>) and a forced-include file.
+
+    GPGRT_HAVE_MACRO_FUNCTION: libgpg-error's gpg-error.h only defines it for
+    GCC, but __FUNCTION__ is a cl builtin and visibility.c calls the internal
+    assert function with three arguments when it is not defined (a four
+    argument prototype), so the libgpg-error translation units get it
+    defined, after gpg-error.h has been read, by the forced include."""
+    d = os.path.join(work, "shim")
+    os.makedirs(os.path.join(d, "sys"), exist_ok=True)
+    with open(os.path.join(d, "gnupg_cl_shim.h"), "w") as f:
+        f.write(SHIM_H)
+    with open(os.path.join(d, "unistd.h"), "w") as f:
+        f.write('#include "gnupg_cl_shim.h"\n')
+    with open(os.path.join(d, "sys", "file.h"), "w") as f:
+        f.write("/* empty */\n")
+    with open(os.path.join(d, "gnupg_cl_fi.h"), "w") as f:
+        f.write('#include "gnupg_cl_shim.h"\n')
+        if gpgerr_macro_function:
+            f.write('#ifdef GNUPG_CL_FORCE_FUNC_MACRO\n#include "gpg-error.h"\n'
+                    '#undef GPGRT_HAVE_MACRO_FUNCTION\n'
+                    '#define GPGRT_HAVE_MACRO_FUNCTION 1\n#endif\n')
+    return d
+
+
 def host_gcc():
     """A MinGW gcc for mkheader.c, upstream's build-host helper: it includes
     <unistd.h>, which cl does not have. The helper only runs at build time and
@@ -211,7 +259,7 @@ def host_gcc():
     raise SystemExit("no gcc for mkheader.c")
 
 
-def build_gpg_error(arch, src, work, prefix, diag=False):
+def build_gpg_error(arch, src, work, prefix, diag=False, lenient=False):
     bld = os.path.join(work, "ge")
     if os.path.isdir(bld):
         shutil.rmtree(bld)
@@ -289,15 +337,22 @@ def build_gpg_error(arch, src, work, prefix, diag=False):
         say("libgpg-error: no C source for: %s" % " ".join(missing))
     defines = ["HAVE_CONFIG_H", "DLL_EXPORT",
                'LOCALEDIR="/usr/local/share/locale"', 'SYSCONFDIR="/usr/local/etc"']
-    ok, bad = compile_all(items, b, lambda cwd: [b, sdir, bld], defines)
+    shim = make_shim(work, True)
+    # only visibility.c needs it; it defines this macro itself before reading
+    # the header, so the command-line definition is the same definition
+    extra = {"visibility.c": ["/DGNUPG_CL_FORCE_FUNC_MACRO",
+                              "/D_GPGRT_INCL_BY_VISIBILITY_C=1"]}
+    ok, bad = compile_all(items, b, lambda cwd: [b, sdir, bld, shim], defines, extra,
+                          force=os.path.join(shim, "gnupg_cl_fi.h"))
     report("libgpg-error", bad)
-    if bad or missing:
-        raise SystemExit("libgpg-error: not every translation unit compiled")
     dll = os.path.join(b, "libgpg-error-0.dll")
-    rc = link_dll(dll, ok, SYSLIBS, os.path.join(b, "gpg-error.def"),
-                  implib=os.path.join(b, "gpg-error.lib"), cwd=b)
-    if rc:
-        raise SystemExit("libgpg-error: link failed")
+    failed = bool(bad or missing)
+    if not failed:
+        rc = link_dll(dll, ok, SYSLIBS, os.path.join(b, "gpg-error.def"),
+                      implib=os.path.join(b, "gpg-error.lib"), cwd=b)
+        failed = bool(rc)
+    if failed and not lenient:
+        raise SystemExit("libgpg-error: build incomplete")
     # the "install" libgcrypt's configure and compile look for
     for d in ("bin", "lib", "include", os.path.join("lib", "pkgconfig")):
         os.makedirs(os.path.join(prefix, d), exist_ok=True)
@@ -311,7 +366,7 @@ def build_gpg_error(arch, src, work, prefix, diag=False):
     old = os.path.join(prefix, "bin", "gpg-error-config-old")
     if os.path.exists(old):
         shutil.copyfile(old, os.path.join(prefix, "bin", "gpg-error-config"))
-    return dll
+    return None if failed else dll
 
 
 # ----------------------------------------------------------------- libgcrypt
@@ -359,22 +414,24 @@ def build_gcrypt(arch, src, work, prefix):
         say("libgcrypt: no C source for: %s" % " ".join(missing))
 
     inc = prefix + os.sep + "include"
+    shim = make_shim(work, False)
 
     def includes(cwd):
         sub = os.path.basename(cwd)
         out = [cwd, os.path.join(src, sub), bld, os.path.join(bld, "src"),
                os.path.join(src, "src"), os.path.join(bld, "mpi"),
-               os.path.join(src, "mpi"), inc]
+               os.path.join(src, "mpi"), inc, shim]
         return out
     # rndjent is compiled without optimisation upstream (its timing loop must
     # not be optimised away); the flag is the only change.
     extra = {"rndjent.c": ["/Od"], "jitterentropy-base.c": ["/Od"]}
-    ok, bad = compile_all(items, bld, includes, ["HAVE_CONFIG_H", "DLL_EXPORT"], extra)
+    ok, bad = compile_all(items, bld, includes, ["HAVE_CONFIG_H", "DLL_EXPORT"], extra,
+                          force=os.path.join(shim, "gnupg_cl_fi.h"))
     report("libgcrypt", bad)
     out_dir = os.path.join(bld, "src")
     dll = os.path.join(out_dir, "libgcrypt-20.dll")
     deff = os.path.join(src, "src", "libgcrypt.def")
-    if bad:
+    if bad or not os.path.isfile(os.path.join(prefix, "lib", "gpg-error.lib")):
         # link what compiled, so the unresolved set is on record too
         say("libgcrypt: linking the %d objects that compiled, for the record" % len(ok))
     rc = link_dll(dll, ok, [os.path.join(prefix, "lib", "gpg-error.lib")] + SYSLIBS,
@@ -398,7 +455,7 @@ def main():
         with tarfile.open(tar) as t:
             t.extractall(work)
         ge = glob.glob(os.path.join(work, "libgpg-error-*"))[0]
-        build_gpg_error(arch, ge, work, prefix, False)
+        build_gpg_error(arch, ge, work, prefix, False, lenient=True)
         build_gcrypt(arch, src, work, prefix)
     say("done")
 
