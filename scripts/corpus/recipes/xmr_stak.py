@@ -22,19 +22,17 @@ One source defect needs a compiler switch: xmrstak/misc/console.hpp uses FILE
 without including <cstdio> and does not compile with GCC 13 (`'FILE' does not
 name a type`), so the build passes -include cstdio. The file is not touched.
 
-Axes built: Linux x64 (here) and MSVC x64 (xmr_stak_msvc.py); at ten
-instructions or more they share 0 of 659 and 1346 PicHashes. 32-bit is
-impossible on every toolchain, by upstream's own declaration:
-cryptonight_aesni.h:52 is `#error You are trying to do a 32-bit build. This
-will all end in tears.` (reproduced here with -m32), and the MSVC x86 build
-died in MASM on the 64-bit registers of cryptonight_v8_main_loop_ivybridge
-_win64.inc (error A2006, undefined symbol r11, r8, rbp, r9, ...). MinGW x64
-does not build either without changing upstream: cryptonight_aesni.h:40
-defines a static inline _umul128 that conflicts with mingw-w64's own
-declaration ("declared 'extern' and later 'static'"; defining
-__INTRINSIC_DEFINED__umul128 does not help, the prototype comes from
-elsewhere), and jext.hpp:60 includes <byteswap.h>, a glibc header. Both are in
-the "Targets investigated but not built" table.
+Axes built: Linux x64 (here), MSVC x64 (xmr_stak_msvc.py) and MinGW x64 and
+x86 (xmr_stak_mingw.py). At ten instructions or more Linux and MSVC x64 share
+0 of 659 and 1346 PicHashes. 32-bit is unsupported by upstream's own
+declaration: cryptonight_aesni.h:52 is `#error You are trying to do a 32-bit
+build. This will all end in tears.` (reproduced here with -m32). The MSVC x86
+build died in MASM on the 64-bit registers of cryptonight_v8_main_loop_ivybridge
+_win64.inc (error A2006, undefined symbol r11, r8, rbp, r9, ...). The MinGW
+pair is built from a recipe-patched tree (a renamed static _umul128 that
+conflicts with mingw-w64's extern declaration, and for x86 the #error removed
+and the 64-bit assembly replaced by stubs), so those two images are not
+byte-identical to unmodified upstream; xmr_stak_mingw.py has the exact diffs.
 
 Overlap: 99 of the Linux x64 artefact's PicHashes are in data/XMRig and 99 in
 data/xmrig-proxy (rapidjson, std::), 452 and 385 on MSVC x64.
