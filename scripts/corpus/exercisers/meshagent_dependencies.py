@@ -19,7 +19,7 @@ def exports(args):
             if "UNDEF" in line or "External" not in line or "|" not in line:
                 continue
             name = line.split("|", 1)[1].strip().split()[0]
-            if name.startswith(("@", "?", "__", ".")):
+            if name.startswith(("@", "?", ".")):
                 continue
             if args.arch == "x86" and name.startswith("_"):
                 name = name[1:]
