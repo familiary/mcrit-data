@@ -3665,12 +3665,16 @@ NTSTATUS ProbeKernelFrame(PUCHAR input, SIZE_T length, PVOID context)
 # with. Address-taking is the same device the wide-stdio round used: a call
 # can be expanded in line, an address cannot, and for an inline function in a
 # header it is what makes cl emit a body to be named at all.
+# memchr, wcslen, wcscmp, wcscpy and wcscat are not here: the first measurement
+# (run 42402246098, WDK 10.0.26100.0) listed them, and each of the five units
+# failed to compile there. Only their one-instruction import thunks would have
+# been measured, which is not what this baseline is for, so they were taken
+# out rather than fixed.
 _KERNEL_CRT_NAMES = (
-    "memcpy", "memmove", "memset", "memcmp", "memchr",
+    "memcpy", "memmove", "memset", "memcmp",
     "strlen", "strcmp", "strncmp", "strcpy", "strncpy", "strcat", "strchr",
     "strrchr", "strstr",
-    "wcslen", "wcscmp", "wcsncmp", "wcscpy", "wcsncpy", "wcscat", "wcschr",
-    "wcsrchr", "wcsstr",
+    "wcsncmp", "wcsncpy", "wcschr", "wcsrchr", "wcsstr",
 )
 
 _KERNEL_NTDDK_NAMES = ("RtlFailFast",)
@@ -3818,7 +3822,19 @@ def _wdk_layout():
 
 
 def _tail(completed, limit=3000):
-    return ((completed.stdout or "") + (completed.stderr or "")).strip()[-limit:]
+    """What a failed tool said: its error lines, or failing that its tail.
+
+    cl prints a warning per unit (C4117 for the reserved _KERNEL_MODE define
+    on every one of them), so the last 3000 characters of a 110-unit compile
+    are all warnings and say nothing about the five that failed. The error
+    lines are what a reader needs.
+    """
+    text = ((completed.stdout or "") + (completed.stderr or "")).strip()
+    errors = [line.strip() for line in text.splitlines()
+              if re.search(r"\b(?:fatal )?error [A-Z]+\d+", line)]
+    if errors:
+        return "\n".join(errors[:60])[-limit:]
+    return text[-limit:]
 
 
 def _kernel_probe_images(toolchain_id, tmp, layout):
@@ -3978,8 +3994,13 @@ def kernel_glue(toolchain_id):
                         "symbol(s)", toolchain_id, flavour, layout[4],
                         len(list(report.getFunctions())), len(glue) - before)
     glue.pop("DriverEntry", None)
+    # ??_C@_ is an MSVC string-literal COMDAT that sits in a code section and
+    # disassembles as a function. The two the probes emit are "" and L"": data
+    # that any code using the literal carries, not the runtime's, so they are
+    # not baseline - the same reason the playbook gives for not counting them
+    # as the driver's own functions.
     for name in [name for name in glue
-                 if name.startswith(("ProbeKernel", "_ProbeKernel"))]:
+                 if name.startswith(("ProbeKernel", "_ProbeKernel", "??_C@_"))]:
         glue.pop(name, None)
     LOGGER.info("%s: kernel glue baseline measured from %d image(s): %d "
                 "symbol(s), %d PicHash(es)", toolchain_id, len(images),

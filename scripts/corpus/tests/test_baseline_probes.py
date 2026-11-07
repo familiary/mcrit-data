@@ -576,13 +576,13 @@ class KernelGlueMeasurementTest(unittest.TestCase):
         self.assertEqual(baseline.probe_failures(), {})
 
     def test_a_unit_that_does_not_compile_is_reported_and_the_rest_are_kept(self):
-        self._fake(missing_object=("sym_memchr",))
+        self._fake(missing_object=("sym_wcsstr",))
         self.assertEqual(self._images(), ["cl_link", "wdm", "wdm_nogs"])
         self.assertEqual(baseline.probe_failures(),
-                         {"t": ["kernel/sym_memchr.c"]})
+                         {"t": ["kernel/sym_wcsstr.c"]})
         for command in self.commands:
             if command[0] == "link":
-                self.assertNotIn("obj\\sym_memchr.obj", command)
+                self.assertNotIn("obj\\sym_wcsstr.obj", command)
 
     def test_a_unit_that_does_not_link_is_dropped_everywhere_and_reported(self):
         self._fake(link_failures=("sym_strstr",))
@@ -617,4 +617,81 @@ class KernelGlueMeasurementTest(unittest.TestCase):
         finally:
             baseline.get_toolchain = original
         self.assertEqual(baseline.probe_failures(), {})
+
+    def test_the_failure_log_keeps_the_errors_and_not_the_warning_noise(self):
+        noise = "\n".join("src\\u%d.c: warning C4117: reserved" % n
+                          for n in range(400))
+        out = noise + "\nsrc\\sym_x.c(3): error C2065: 'x': undeclared identifier\n" + noise
+        completed = baseline.subprocess.CompletedProcess([], 2, out, "")
+        text = baseline._tail(completed)
+        self.assertIn("error C2065", text)
+        self.assertNotIn("C4117", text)
+        quiet = baseline.subprocess.CompletedProcess([], 1, "no diagnostics", "")
+        self.assertEqual(baseline._tail(quiet), "no diagnostics")
+
+
+class KernelGlueResultTest(unittest.TestCase):
+    """What kernel_glue keeps of what the probe images contain."""
+
+    class Function(object):
+        def __init__(self, name, pic_hash, num_instructions):
+            self.function_name = name
+            self.pic_hash = pic_hash
+            self.num_instructions = num_instructions
+
+    def setUp(self):
+        baseline.kernel_glue.cache_clear()
+        import corpus.smdaify as smdaify
+        self.smdaify = smdaify
+        self._saved = (baseline._wdk_layout, baseline._kernel_probe_images,
+                       smdaify.disassemble)
+        F = self.Function
+        functions = [
+            F("memcpy", 1, 152), F("__security_init_cookie", 2, 12),
+            F("DriverEntry", 3, 4), F("ProbeKernelFrame", 4, 68),
+            F("ProbeKernelFrame$fin$0", 5, 9),
+            F("??_C@_00CNPNBAHC@@FNODOBFM@", 6, 2),
+            F("ZwClose", 7, 1), F("RtlInitUnicodeString", 7, 1),
+            F("__chkstk", 7, 1), F("memcmp", 7, 1), F("", 8, 5),
+            F("RtlUnicodeStringPrintf", 9, 51),
+        ]
+
+        class Report(object):
+            def getFunctions(self_inner):
+                return functions
+        baseline._wdk_layout = lambda: ("km", "crt", "shared", "lib", "10.0")
+        baseline._kernel_probe_images = lambda toolchain_id, tmp, layout: [
+            ("wdm", "x.sys", "x.pdb"), ("cl_link", "y.sys", "y.pdb")]
+        smdaify.disassemble = lambda path, pdb_path="": Report()
+        self._get = baseline.get_toolchain
+        baseline.get_toolchain = lambda toolchain_id: _toolchain(arch="x64")
+
+    def tearDown(self):
+        baseline.get_toolchain = self._get
+        (baseline._wdk_layout, baseline._kernel_probe_images,
+         self.smdaify.disassemble) = self._saved
+        baseline.kernel_glue.cache_clear()
+        baseline._PROBE_FAILURES.clear()
+
+    def test_the_runtime_is_kept_and_the_probes_own_code_is_not(self):
+        glue = baseline.kernel_glue("t")
+        for name in ("memcpy", "__security_init_cookie",
+                     "RtlUnicodeStringPrintf"):
+            self.assertIn(name, glue)
+        for name in ("DriverEntry", "ProbeKernelFrame", "ProbeKernelFrame$fin$0",
+                     "??_C@_00CNPNBAHC@@FNODOBFM@", ""):
+            self.assertNotIn(name, glue)
+
+    def test_a_one_instruction_thunk_is_kept_only_in_the_runtimes_namespace(self):
+        glue = baseline.kernel_glue("t")
+        self.assertIn("__chkstk", glue)
+        self.assertIn("memcmp", glue)
+        self.assertNotIn("ZwClose", glue)
+        self.assertNotIn("RtlInitUnicodeString", glue)
+
+    def test_a_missing_wdk_is_a_recorded_failure_and_an_empty_baseline(self):
+        baseline._wdk_layout = lambda: None
+        baseline.kernel_glue.cache_clear()
+        self.assertEqual(baseline.kernel_glue("t"), {})
+        self.assertEqual(baseline.probe_failures(), {"t": ["kernel/wdk"]})
 
