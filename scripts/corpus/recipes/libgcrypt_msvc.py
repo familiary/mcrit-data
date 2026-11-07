@@ -52,6 +52,48 @@ __thread=__declspec(thread) with HAVE_GCC_STORAGE_CLASS__THREAD=1 (1.11.3's
 fips.c refuses to compile without thread-local storage), and
 strcasecmp=_stricmp, strncasecmp=_strnicmp.
 
+Further build-side measures, none of which edits a source file:
+  * configure cache values `ac_cv_type_pid_t=yes` and `ac_cv_func_memmove`,
+    `strtoul`, `atexit`, `raise`, `strerror`, `rand`, `stricmp` = yes: its link
+    tests misreport these CRT functions under cl, and g10lib.h would then
+    rename memmove to bcopy (an unresolved external);
+  * mpi/config.links did not select the standard multi-precision primitives in
+    this configure run (mpih-add1, -sub1, -mul1, -mul2, -mul3, -lshift,
+    -rshift are missing from the generated mpi/Makefile, so the DLL lacked
+    _gcry_mpih_add_n and its relatives); the driver adds mpi/generic/<name>.c
+    for each, which is the file config.links chooses when assembler modules are
+    off;
+  * src/hwf-x86.c (1.8.14 lists it for every x86 host) is compiled with
+    /D__x86_64__ (/D__i386__ on x86); without a GCC CPU macro it #errors, and
+    with only that macro (no __GNUC__) it compiles its CPUID-less fallback,
+    which reports no hardware features;
+  * the amd64 `.S` modules that 1.8.14's configure adds for every x86_64 host
+    even with --disable-asm are not assembled (24 on x64; 2 ARM ones are
+    listed on both), and nothing in the C code calls them.
+
+Not built: libgcrypt 1.10.4 and 1.11.3 (x86 and x64). Every translation unit
+compiles except src/hwfeatures.c, where cl 19.44.35229 aborts with
+`fatal error C1001: Internal compiler error.` (`INTERNAL COMPILER ERROR in
+'...\\cl.exe'`) under the default options and again with /Od, /O1 and /Od /GS-;
+1.8.14's hwfeatures.c, which lacks the sysconfdir and hwf.deny code, compiles.
+The link of the other objects then ends with unresolved
+_gcry_get_hw_features, _gcry_detect_hw_features, _gcry_enum_hw_features,
+_gcry_disable_hw_feature (and _gcry_get_sysconfdir in 1.11.3).
+
+Measured on the artefacts (kept + removed = every function in the image; the
+removed count is the compiler and CRT glue the baseline recognised):
+
+    1.8.14  x86 PE 1787 + 160 = 1947    x64 PE 1788 + 165 = 1953
+
+PicHash overlap of the functions with 10 or more instructions between these
+images and the MinGW and ELF images of the same version and architecture:
+x64 0 of 934 (MinGW) and 0 of 975 (ELF), x86 2 of 857 (MinGW, 0.2%) and 0 of
+1059 (ELF); libgpg-error 1.35 and 1.61 share 0 with their MinGW and ELF builds
+on both architectures. The code surface differs in the two ways stated at the
+top (generic C instead of assembler and hardware-accelerated paths, compiled by
+cl instead of gcc, plus the edits below), so the images are separate reference
+data rather than duplicates.
+
 The edits as applied (unified diffs, context 1):
 
   ## libgcrypt-1.8.14
@@ -164,4 +206,9 @@ def _gc(version):
     )
 
 
-RECIPES = {"libgcrypt_%s_msvc" % v: _gc(v) for v in _SHA256}
+# Only 1.8.14 links. 1.10.4 and 1.11.3 compile every translation unit but one
+# and stop on src/hwfeatures.c (see "Not built" in the docstring), so they are
+# not registered: a registered recipe that cannot finish would fail every
+# all-msvc run. Add the versions back here when that file compiles.
+_BUILT = ("1.8.14",)
+RECIPES = {"libgcrypt_%s_msvc" % v: _gc(v) for v in _BUILT}
