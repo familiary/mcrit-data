@@ -58,10 +58,10 @@ handled in this corpus.
 Overlaps, measured by PicHash over functions of ten instructions or more
 (counts of distinct hashes; the artefacts are the four built here):
 
-  * with TightVNC: 88 on x86 and 107 on x64, of 5325 and 5065 UltraVNC
+  * with TightVNC: 84 on x86 and 107 on x64, of 5314 and 5059 UltraVNC
     hashes. That is the RFB code both inherit, plus the zlib and libjpeg
     they both link.
-  * with data/libzlib: 5 (x86) and 79 (x64); with data/liblzma 287 and 257;
+  * with data/libzlib: 4 (x86) and 79 (x64); with data/liblzma 287 and 257;
     with data/libsodium 140 and 113, all from the vcpkg libraries. The zlib
     functions are the ones the deep check fails on: 59 PicHashes share one
     symbol name across TightVNC, UltraVNC and libzlib (`deflate`, `inflate`,
@@ -72,13 +72,13 @@ Overlaps, measured by PicHash over functions of ten instructions or more
   * with the lzo 2.10 reference data (MinGW and MSVC, the lzo branches): 0
     on x86 and 8 on x64 against the MSVC build, from miniLZO.
 
-Glue that survives the baseline, by name: 6 to 55 kept functions per
+Glue that survives the baseline, by name: 6 to 47 kept functions per
 artefact carry a name that the baseline removed from another of these
 artefacts (their hash differs, so the name-and-PicHash rule keeps them).
 They are MSVC STL and CRT inline instantiations - `std::vector<...>`,
-`__std_remove_4`, `fprintf`/`sprintf`/`_snwprintf_s`, `ATL::AtlThrowImpl` and
+`__std_remove_4`, `wmemchr`/`wmemcmp` in vncviewer x86, `ATL::AtlThrowImpl` and
 `ATL::CAtlException` in winvnc x86 - not project code. The x86 artefacts
-also carry unnamed exception funclets (503 and 853 unnamed of 6268 and 7598).
+also carry unnamed exception funclets (503 and 853 unnamed of 6252 and 7582).
 
 Forced from the command line, because the projects ask for the opposite:
 /MT -> /MD, /GL and /LTCG off (the projects' Link AdditionalOptions carry a

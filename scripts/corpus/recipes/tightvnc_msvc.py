@@ -30,14 +30,14 @@ the exes (zlib, libjpeg); there is no external dependency and no DirectX SDK
 reference in the vcxproj files. No source patch.
 
 Overlaps, measured by PicHash over functions of ten instructions or more:
-88 (x86) and 107 (x64) hashes shared with UltraVNC, of 4087 and 3963 here;
+84 (x86) and 107 (x64) hashes shared with UltraVNC, of 4083 and 3961 here;
 73 (x86) and 63 (x64) with data/libzlib, from the in-tree zlib 1.2.13 the
 exes link statically, and none with liblzma or libsodium. Those zlib
 functions are among the 59 PicHashes `validate --deep` fails on (TightVNC,
 UltraVNC and libzlib share one symbol name for each); see ultravnc_msvc.py.
 Kept functions per artefact whose name another artefact's baseline removed:
-8 on x64 and 26 on x86, STL and CRT inline instantiations. The x86 server
-has 3505 unnamed functions of 8149 (exception funclets).
+8 on x64 and 23 on x86, STL and CRT inline instantiations. The x86 server
+has 3505 unnamed functions of 8143 (exception funclets).
 
 Flags forced from the command line, because the projects ask for the
 opposite: /MT -> /MD (the CRT is imported rather than linked, so it stays
