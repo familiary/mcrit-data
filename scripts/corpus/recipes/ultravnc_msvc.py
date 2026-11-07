@@ -21,7 +21,7 @@ recorded so it is not repeated:
     2017-06-10). No commit carries 1.2.1.3.
   * 1.2.1.4 (and 1.2.1.2) do not build: libjpeg-turbo-win\\ lacks the private
     headers its own .c files include (jdcoefct.h, jdmainct.h, jdmaster.h,
-    jdsample.h; error C1083).
+    jdsample.h; error C1083). (Superseded: see the second pass; it builds.)
   * 1.2.1.5 has them and its viewer and server solutions are otherwise
     buildable (nasm installed, Windows SDK 10.0 selected, winvnc.sln copied
     without its duplicate-named installer projects), but the in-tree Info-ZIP
@@ -30,7 +30,8 @@ recorded so it is not repeated:
     again under 10.0.19041.0, on x86 and x64 alike, and nothing else in the
     tree fails. Both UltraVNC executables reference that project, so neither
     is produced. It is in the README's not-built table.
-  * 1.8.3.0 and later cannot be fetched by this pipeline: eab6d20a moved the
+  * (Superseded: see the second pass.) 1.8.3.0 and later cannot be
+    fetched by this pipeline: eab6d20a moved the
     3rdparty/noVNC submodule to commit b493d9bb, which noVNC no longer serves,
     and fetch.py updates submodules. 1.8.2.9 is the newest release that can
     be.
@@ -158,19 +159,49 @@ unmodified upstream. Every change, with its reason:
     error C3861: 'LCMapStringEx': identifier not found` (run 42411877665, the
     only error of that project). The generated props file defines the same two
     macros as Release|Win32 does for winvnc* projects on x64.
-  * 1.2.1.4 (b4034d51) is not built. The `jdcoefct.h` error (C1083) is
-    resolvable: the tree's jdcoefct.c, jdmaster.c and jdsample.c are
-    byte-identical to libjpeg-turbo 1.5.1 (1.5.0 differs in two) though
-    jconfig.h says 1.4.2, and the four private headers jdcoefct.h, jdmainct.h,
-    jdmaster.h and jdsample.h were never committed (1.2.1.5 adds them,
-    byte-identical to the 1.5.0-1.5.3 tags); supplied from commit cb88e5da
-    (tag 1.5.1) as a build-side include directory, that error went away. The
-    tree is nonetheless a half-committed state: the winvnc link failed with 13
-    unresolved externals (zlib: `_compress`, `_uncompress`, `_adler32`,
-    `_deflate`, `_deflateEnd`, `_deflateParams`, `_deflateInit2_`, ... because
-    zlib-1.2.11\\contrib\\vstudio\\vc10\\x86\\ZlibStatRelease\\zlibstat.lib is not
-    produced by its sln) and the jpeg SIMD asm files of 1.2.1.5 are absent.
-    1.2.1.5 is the buildable neighbour, so 1.2.1.4 is not carried.
+  * 1.8.3.0 (36c2389f, "1.8.3.0") builds like 1.8.3.1: same noVNC pin, same
+    two workarounds, both executables, x86 and x64 (run 42417689317). Its
+    images are not carried in data/ because they are almost the same code as
+    versions that are: PicHash overlap (functions of 10+ instructions,
+    distinct hashes) is 99.97% against 1.8.2.9 for the x86 viewer (3528 of
+    3529), 97.0% for the x64 viewer, 98.8% / 95.4% for the x86 / x64 server
+    against 1.8.2.9 and 99.8% / 98.2% against 1.8.3.1. The recipe is kept so
+    the images can be rebuilt; kept / removed / total were 6252 / 1587 / 7839
+    (x86 viewer), 6023 / 1611 / 7634 (x64 viewer), 7590 / 1662 / 9252 (x86
+    server), 7189 / 1722 / 8911 (x64 server).
+  * 1.2.1.4 (b4034d51) builds, both executables, x86 and x64 (run
+    42419034988), with three more things the tree does not supply, on top of
+    the 1.2.1.5 workarounds (1)-(6) above (which remove the d3dx9.h,
+    std::string and buildtime.obj errors recorded earlier for this commit):
+    (a) the four private libjpeg headers jdcoefct.h, jdmainct.h, jdmaster.h and
+    jdsample.h (`C1083`) were never committed (the tree's jdcoefct.c, jdmaster.c
+    and jdsample.c are byte-identical to libjpeg-turbo 1.5.1; jconfig.h says
+    1.4.2): copied into libjpeg-turbo-win\\ from commit cb88e5da (tag 1.5.1);
+    (b) the same holds for the SIMD Huffman sources that
+    libjpeg-turbo-winv12.vcxproj lists as CustomBuild items and jsimd_i386.c /
+    jsimd_x86_64.c call (jchuffsse2.asm, jchuff-sse2-64.asm and
+    jpeg_nbits_table.inc): copied from the same tag; all seven files are
+    byte-identical to what 1.2.1.5 commits (jchuff-sse2.asm is named
+    jchuffsse2.asm there; tags 1.5.2 and 1.5.3 differ in that one file);
+    (c) winvncv12.vcxproj imports ..\\packages\\Libjpeg-Turbo.1.5.15\\build\\
+    native\\Libjpeg-Turbo.targets and raises `error : This project references
+    NuGet package(s) that are missing on this computer` (no packages.config or
+    restore exists in the tree; 1.2.1.5 drops the import): the package
+    (libjpeg-turbo.1.5.15.nupkg, sha256 e6ba0d68...e2e9, nuget.org) is fetched
+    by hash and its build\\ directory unpacked there. Under v143 its targets add
+    one include directory and link nothing (they link only for v120 and v140).
+    The "13 unresolved externals" (zlib `_compress`, `_deflate`, ...) of the
+    earlier diagnostic (run 42410253107) did not recur: winvncv12.vcxproj of
+    this commit has a ProjectReference to
+    zlib-1.2.11\\contrib\\vstudio\\vc10\\zlibstatv12.vcxproj, which the solution
+    builds and links, so no zlib workaround is applied; I cannot say why that
+    run lacked the library. Kept / removed / total: 2577 / 1513 / 4090
+    (x86 viewer), 2335 / 1521 / 3856 (x64 viewer), 3874 / 1560 / 5434 (x86
+    server), 3562 / 1584 / 5146 (x64 server). Not carried in data/: against
+    1.2.1.5 the PicHash overlap is 95.1% / 88.8% (x86 / x64 viewer, of 1436
+    and 1245 hashes) and 96.7% / 93.0% (server, of 2000 and 1790), 93.8% over
+    the four images together (6068 of 6471 hashes). The recipe is kept for
+    rebuilding.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
