@@ -9,6 +9,8 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 _VERSIONS = {
     "2.3.0": ("arti-client", "0.42.0",
               "16739ee6ad4ee11073a8d12c34a911ea72977c5ce4abbb21a1f7cf5955f22a01"),
+    "1.1.13": ("arti-client", "0.14.0",
+               "7ffd8cfa3b2bdbeefd4a8d8656a3763b53275fdd61e5aaf77821e3fec05f11b4"),
 }
 
 _UPSTREAM = "https://gitlab.torproject.org/tpo/core/arti"
