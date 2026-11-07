@@ -1048,10 +1048,12 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 
 ### MeshAgent<a id='meshagent'></a>
 
-[MeshAgent](https://github.com/Ylianst/MeshAgent) is the native agent for MeshCentral. These references pin commit `26846b1c7f0841d71938f6bebc96eef5a947d217` and cover the official Linux x86/x64 NOKVM configurations. OpenSSL, Duktape and zlib are shared dependencies, so their code is excluded from the agent reports. Windows coverage is being investigated separately. Source, compiler and dependency facts are recorded in `data/MeshAgent/provenance.json`.
+[MeshAgent](https://github.com/Ylianst/MeshAgent) is the native agent for MeshCentral. These references pin commit `26846b1c7f0841d71938f6bebc96eef5a947d217` and cover the official Linux x86/x64 NOKVM configurations. OpenSSL, Duktape and zlib are shared dependencies, so their code is excluded from the agent reports. MSVC x86/x64 references cover the service and console with upstream Windows KVM support. Console retains upstream `/Od` with runtime checks and Just My Code disabled. The MSVC table rows list console first, service second; the recipe records runtime survivors and overlap measurements. Source, compiler and dependency facts are recorded in `data/MeshAgent/provenance.json`.
 
 <!-- generated: MeshAgent -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | MeshAgent | 26846b1 | GCC 14 (Linux, glibc) | [x86 ELF](data/MeshAgent/x86/mcrit/MeshAgent_26846b1_gcc14_x86_meshagent-nokvm.mcrit) / [x64 ELF](data/MeshAgent/x64/mcrit/MeshAgent_26846b1_gcc14_x64_meshagent-nokvm.mcrit) | [x86 ELF](data/MeshAgent/x86/smda/MeshAgent_26846b1_gcc14_x86_meshagent-nokvm.7z) / [x64 ELF](data/MeshAgent/x64/smda/MeshAgent_26846b1_gcc14_x64_meshagent-nokvm.7z) |
+| MeshAgent | 26846b1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/MeshAgent/x86/mcrit/MeshAgent_26846b1_msvc143_x86_meshconsole.mcrit) / [x64 PE](data/MeshAgent/x64/mcrit/MeshAgent_26846b1_msvc143_x64_meshconsole.mcrit) | [x86 PE](data/MeshAgent/x86/smda/MeshAgent_26846b1_msvc143_x86_meshconsole.7z) / [x64 PE](data/MeshAgent/x64/smda/MeshAgent_26846b1_msvc143_x64_meshconsole.7z) |
+| MeshAgent | 26846b1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/MeshAgent/x86/mcrit/MeshAgent_26846b1_msvc143_x86_meshservice.mcrit) / [x64 PE](data/MeshAgent/x64/mcrit/MeshAgent_26846b1_msvc143_x64_meshservice.mcrit) | [x86 PE](data/MeshAgent/x86/smda/MeshAgent_26846b1_msvc143_x86_meshservice.7z) / [x64 PE](data/MeshAgent/x64/smda/MeshAgent_26846b1_msvc143_x64_meshservice.7z) |
 <!-- /generated -->
