@@ -285,12 +285,23 @@ _PROBE_EXE = _PROBE_DLL.replace(
 # this file: that probe already works, and a probe that fails to build does
 # not fail the family being built - it silently shrinks the baseline.
 _PROBE_STDIO = """\
+/* winsock2.h before windows.h, or windows.h pulls in winsock.h and the two
+   headers redeclare the same structures. ws2tcpip.h is here for
+   gai_strerrorA and gai_strerrorW only, which mingw-w64 defines as static
+   __inline wrappers over FormatMessage: they are compiled into every
+   translation unit that calls them, so any library resolving a getaddrinfo
+   error carries a body for them under its own name. OpenSSL, libevent and
+   boringssl all did. No -lws2_32 is needed, because nothing here calls a
+   function that is actually in the import library. */
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <windows.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 /* Read through a volatile pointer so the format is not a constant the
    optimiser can specialise the wrapper on. See the note above. */
@@ -419,6 +430,18 @@ __declspec(dllexport) size_t probe_stdio_strings(char *destination,
     return strlen(destination);
 }
 
+/* Read through a volatile so the error code is not a constant the optimiser
+   could fold the wrapper on, the same reason probe_stdio_format is volatile. */
+static volatile int probe_stdio_gai_error = WSAHOST_NOT_FOUND;
+
+__declspec(dllexport) size_t probe_stdio_gai(void)
+{
+    const char *narrow = gai_strerrorA(probe_stdio_gai_error);
+    const wchar_t *wide = gai_strerrorW(probe_stdio_gai_error);
+
+    return strlen(narrow) + wcslen(wide);
+}
+
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 """
 
@@ -437,6 +460,153 @@ _PROBE_STDIO_EXE = _PROBE_STDIO.replace(
     "           + probe_stdio_convert(argv[0])\n"
     "           + (int)probe_stdio_strings(buffer, argv[0]);\n"
     "}")
+
+# MinGW only: libmingwex and msvcrt entry points that neither probe above
+# reaches, each found wearing a library's family name in committed data or in
+# a family waiting to be published.
+#
+#   * stat() is not an msvcrt import on mingw-w64. The CRT wraps it (and
+#     _wstat64i32 on x64, _stat on x86) with a path fix-up in front of the
+#     real call, and the wrapper is 145-167 instructions: protobuf, libxml2
+#     and miniz all carried it. The 64-bit-time variants and _stat32 (x86
+#     only; there is no such import on x64, and a probe that fails to link
+#     measures nothing) are plain import thunks, measured for completeness.
+#   * gettimeofday is libmingwex's mingw_gettimeofday under a second name,
+#     and drags in getntptimeofday. libevent, the x86 libstdc++ sample and
+#     Jansson all carry the pair.
+#   * cbrt and log2 are libmingwex bodies like the floor and sin of
+#     _PROBE_DLL, and are reached through a volatile pointer for the reason
+#     given there: GCC knows both as builtins. Duktape and abseil carry them.
+#   * setjmp is a macro over msvcrt's _setjmp (x64) or _setjmp3 (x86); only
+#     the import thunk is in the image. Lua, libpng and cryptopp carry it.
+#
+# Nothing here is compiled from this translation unit, so the bodies do not
+# depend on the optimisation level and one -O2 build measures them. A separate
+# source on the standing rule in this file: the probes above already work.
+_PROBE_LIBC = """\
+#include <windows.h>
+#include <math.h>
+#include <setjmp.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <wchar.h>
+
+static jmp_buf probe_libc_jump;
+
+__declspec(dllexport) int probe_libc_files(const char *path, const wchar_t *wide)
+{
+    struct stat plain;
+    struct _stat64i32 mixed;
+    struct _stat64 wide64;
+    int total = 0;
+
+    total += stat(path, &plain);
+    total += _stat64i32(path, &mixed);
+    total += _wstat64i32(wide, &mixed);
+    total += _stat64(path, &wide64);
+    total += _wstat64(wide, &wide64);
+#ifndef _WIN64
+    {
+        struct _stat32 narrow;
+        total += _stat32(path, &narrow);
+    }
+#endif
+    return total;
+}
+
+__declspec(dllexport) int probe_libc_misc(double value)
+{
+    volatile double (*const dd[])(double) = {cbrt, log2};
+    struct timeval now;
+    double accumulated = 0.0;
+    size_t index;
+
+    for (index = 0; index < sizeof(dd) / sizeof(dd[0]); index++)
+        accumulated += dd[index](value);
+    if (gettimeofday(&now, NULL) != 0)
+        return -1;
+    if (setjmp(probe_libc_jump))
+        return 1;
+    return (int)accumulated + (int)now.tv_usec;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# MinGW only, and the header wrappers _PROBE_STDIO cannot produce because of
+# how it calls them. snprintf, sprintf and sscanf are static inline in
+# mingw-w64's stdio.h, so their body is compiled in whatever translation unit
+# calls them and GCC shapes it by the call sites it can see:
+#
+#   * every call passing the same constant argument gives a clone,
+#     sprintf.constprop.0, with that argument folded in;
+#   * any call passing a value it cannot see gives the plain body, sprintf.
+#
+# One translation unit gets one or the other per function, never both, and
+# _PROBE_DLL and _PROBE_STDIO between them only ever produced the clone for
+# snprintf and sscanf and only the plain body for sprintf. That is why plain
+# snprintf sat in 26 libuv, libxml2 and libzlib artefacts, sscanf in OpenSSL
+# and libxml2, and sprintf.constprop.0 in Lua, LuaJIT, OpenSSL, libcurl and
+# libtiff. So this source is registered twice, with and without
+# PROBE_STDIO_FMT_CONSTANT.
+#
+# And twice more at -Os, because the wrapper's shape follows the optimisation
+# level as _PROBE_STDIO's note says, and Duktape builds at upstream's -Os: on
+# x86 its snprintf, sprintf and sscanf.constprop.0 match none of the -O2
+# bodies. -O3, which every CMake Release recipe here actually compiles at, was
+# measured as well and gives the -O2 bodies exactly, so it is not registered.
+#
+# And once with __USE_MINGW_ANSI_STDIO=0, which is what a library gets when it
+# asks for msvcrt's own printf: sprintf and sscanf are then not wrappers but
+# msvcrt imports, and only their one-instruction thunks are in the image -
+# OpenSSL, cJSON, libuv and libxml2 carry them. snprintf stays a wrapper in
+# that mode, over _vsnprintf, and comes out with the same PicHash as the -O2
+# build, so that registration adds only the thunks.
+#
+# The clone is per call site, not per function: snprintf.constprop.0 has a
+# dozen distinct bodies in the committed data, one for each combination of
+# arguments a library happens to fold. Only the one with constant size and
+# format is reproduced here - it is what libtiff carries - and the rest stay
+# where they are; a probe cannot guess a library's call sites.
+_PROBE_STDIO_FMT = """\
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+
+#ifdef PROBE_STDIO_FMT_CONSTANT
+__declspec(dllexport) int probe_stdio_fmt(char *destination, const char *text,
+                                          int number)
+{
+    char scanned[64];
+    int total = 0;
+
+    total += snprintf(destination, 32, "%d", number);
+    total += sprintf(destination, "%d", number);
+    total += sscanf(text, "%63s", scanned);
+    return total;
+}
+#else
+/* Volatile for the reason probe_stdio_format is: a size or format the
+   optimiser can see is one it will fold into a clone. */
+static volatile const char *probe_stdio_fmt_format = "%s %d";
+static volatile size_t probe_stdio_fmt_size = 64;
+
+__declspec(dllexport) int probe_stdio_fmt(char *destination, const char *text,
+                                          int number)
+{
+    const char *format = (const char *)probe_stdio_fmt_format;
+    char scanned[64];
+    int total = 0;
+
+    total += snprintf(destination, probe_stdio_fmt_size, format, text, number);
+    total += sprintf(destination, format, text, number);
+    total += sscanf(text, format, scanned, &number);
+    return total;
+}
+#endif
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
 
 # Anything linked with g++ drags in libstdc++ and the GCC unwinder, which are
 # far larger than the C runtime and belong to the compiler just the same.
@@ -2584,6 +2754,447 @@ __declspec(dllexport) int probe_msvcrt_eh_aligned(int selector,
 BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
 """
 
+# MSVC only. The half of <stdio.h> that writes to a stream it was not handed:
+# printf, vprintf and vfprintf. _PROBE_MSVCRT_PRINTF above covers the
+# buffer-filling half and _PROBE_DLL calls fprintf, so the chain below
+# _vfprintf_l is already measured; what was never emitted by any MSVC probe is
+# the wrapper that reaches stdout, which is the one a program actually calls.
+#
+# It is the same mechanism _PROBE_MSVCRT_PRINTF records - under /MD these are
+# _CRT_STDIO_INLINE definitions in the UCRT header, so a body is compiled into
+# every object that uses one and the /DEBUG link keeps it - and it is the
+# largest single misattribution left on the MSVC side of this corpus. Measured
+# in the committed reports, before this probe: printf carries one body of 25
+# instructions on x64 under LuaJIT, MemoryModule, mbedTLS and q3vm, and one of
+# 17 on x86 under LuaJIT, MemoryModule and mbedTLS, all four of them the same
+# PicHash per architecture; vfprintf carries 19 instructions on x64 and 10 on
+# x86 under LuaJIT and libtiff; vprintf carries 21 and 13 under LuaJIT.
+#
+# The cross-family check does not fail on those today, and the reason is worth
+# writing down because it is not a reprieve: LuaJIT emits _printf_p and
+# _wprintf_p as well, whose bodies hash to the same value as printf's, so the
+# hash arrives at classify_collision carrying three names and is filed under
+# "the names differ between families". One family dropping stdio would turn it
+# into leakage. The names are Microsoft's either way.
+#
+# Measured on the runner, this probe emits exactly those bodies: printf at
+# PicHash 121597203084696572 (25 instructions) on x64 and 14739679411554417350
+# (17) on x86, vfprintf at 18319647447110778407 (19) and 15763949986211485148
+# (10), vprintf at 3515039425838154103 (21) and 7807335352819369265 (13) -
+# every one of them the hash the committed artefacts carry. Rebuilt, LuaJIT
+# drops printf, vprintf and vfprintf, MemoryModule and q3vm drop printf, and
+# fflush and fputs go with them as thunks.
+#
+# What it does not reach is the rest of the surface LuaJIT instantiates. Its
+# images carry the whole UCRT inline set - printf_s, wprintf, wprintf_s,
+# _printf_p and _wprintf_p share printf's body, and vfprintf_s, vfwprintf_s,
+# vfscanf, vfwscanf, _vfprintf_p and _vfwprintf_p share vfprintf's - so those
+# hashes stay in the cross-family census under LuaJIT's name until a probe
+# calls them too. That is forty-odd names, half of them wide, and it is a
+# measurement of its own rather than an addition to this one.
+#
+# Narrow only, and separate from the wide half for the reason
+# _PROBE_MSVCRT_PRINTF gives: a wrong guess about vswprintf's two UCRT
+# declarations must not cost printf. puts and fputs are in here as well
+# because they sit beside printf in every program that prints and cost
+# nothing; they are imports under /MD rather than inline bodies, so what they
+# contribute is their thunks.
+_PROBE_MSVCRT_STDIO = """\
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <windows.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+/* Read through a volatile pointer so no part of the format is a constant the
+   optimiser can fold into the wrapper. */
+static volatile const char *probe_msvcrt_stdio_format = "%s %d %s";
+
+static int probe_msvcrt_stdio_forward(const char *format, ...)
+{
+    va_list arguments;
+    int written;
+
+    /* Real varargs, started once per callee: handing a callee a va_list that
+       was never started is undefined behaviour, and a probe that relies on
+       undefined behaviour is not a measurement. */
+    va_start(arguments, format);
+    written = vprintf(format, arguments);
+    va_end(arguments);
+    va_start(arguments, format);
+    written += vfprintf(stderr, format, arguments);
+    va_end(arguments);
+    return written;
+}
+
+__declspec(dllexport) int probe_msvcrt_stdio_streams(const char *text)
+{
+    const char *format = (const char *)probe_msvcrt_stdio_format;
+    int total = 0;
+
+    total += printf(format, text, 1, text);
+    total += fprintf(stderr, format, text, 1, text);
+    total += probe_msvcrt_stdio_forward(format, text, 1, text);
+    total += puts(text);
+    total += fputs(text, stderr);
+    total += fflush(stdout);
+    return total;
+}
+
+BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }
+"""
+
+# The EXE registration of the same source, derived the way _PROBE_EXE is
+# derived from _PROBE_DLL rather than registered as a second entry point: an
+# EXE needs a main, and the first version of this round registered the DLL
+# source as an EXE and got LNK1561 out of every run - which probe_failures
+# reported and failed the run for, which is what it is for.
+#
+# It is coverage rather than a fix, and the measurement says so: the wrapper
+# bodies are compiled from this translation unit, and probe_md.c and
+# probe_md_exe.c give fprintf the same PicHash (13953233625706420610 on x64),
+# so DLL and EXE do not differ for them. What the EXE adds is the startup set
+# beside them.
+_PROBE_MSVCRT_STDIO_EXE = _PROBE_MSVCRT_STDIO.replace(
+    "BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, LPVOID reserved) { return TRUE; }",
+    "int main(int argc, char **argv)\n"
+    "{\n"
+    "    return probe_msvcrt_stdio_streams(argv[0]) + argc;\n"
+    "}")
+
+# The EXE form of the probe above, and the one thing in this file that is
+# shaped by what it has to match rather than by what it has to call.
+#
+# __scrt_common_main_seh is the MSVC CRT's x64 entry-point wrapper, 99
+# instructions, and it is the one leakage finding validate --deep fails on:
+# the same body sits under Hidden, Lua, MemoryModule and bzip2, with a second
+# of 98 in q3vm and a third of 109 in CallObfuscator, which is wmain's startup
+# object rather than main's. Its neighbours are all removed already -
+# __scrt_initialize_crt, __scrt_acquire_startup_lock, __scrt_fastfail and a
+# dozen more - so what the existing probe_md_exe.c registration measures is
+# the right object set, from the right CRT flavour, and still not this body.
+#
+# What the name does in the baseline turned out to be the useful question, and
+# it was measured rather than guessed: probe_md_exe.c emits
+# __scrt_common_main_seh at 95 instructions, PicHash 470324384558745095, which
+# is none of the three bodies in the corpus. The name was in the baseline all
+# along and only the body disagreed, so the filter - symbol *and* PicHash -
+# correctly kept the artefacts' copies.
+#
+# The cause is the link line, and the probe above proves it by elimination: the
+# same translation unit linked /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF emits
+# 11855707620856894801 at 99 instructions, which is exactly the leaking body,
+# while the incrementally linked registration beside it still emits 95. Every
+# MSVC recipe here passes /INCREMENTAL:NO and no probe did: link /DEBUG implies
+# /INCREMENTAL, and this file's own note on that flag records what it does to
+# an image - every call leaves through a table of five-byte jump thunks.
+# __scrt_common_main_seh is the only function in the startup chain carrying an
+# __except, so it is also the only one whose recovered extent follows the
+# layout rather than the bytes, which is why its neighbours matched and it did
+# not. On x86 the two links agree, at 14520804967954049952 and 112
+# instructions, and no x86 artefact carries the name - consistent with the
+# funclet being an x64 shape.
+#
+# Two registrations rather than one, because two things differed and both are
+# worth having measured:
+#
+#   * This source is a plain console main that prints, which is what Lua's,
+#     bzip2's and MemoryModule's are. exe_main.obj's invoke_main() is inlined
+#     into __scrt_common_main_seh and calls main there, so main is the one
+#     caller this body has, and probe_md_exe.c's main calls a 200-line
+#     exported function instead.
+#   * probe_md_exe_noincr.c is probe_md_exe.c's source relinked, so the whole
+#     broad EXE surface - 237 named functions on x64 against 351 from the
+#     incremental link - is measured non-incrementally too.
+#
+# Neither can lose anything: crt_glue maps a name to a set of PicHashes, so a
+# registration that measures the same body twice adds nothing and one that
+# measures a second body adds a member.
+#
+# What stays is the 98-instruction body in q3vm, which builds /GL, and the
+# 109-instruction one in CallObfuscator, which is wmain's startup object. Both
+# are single-family and neither has ever been leakage.
+_PROBE_MSVCRT_MAIN = """\
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <windows.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+static volatile const char *probe_msvcrt_main_format = "%s %d";
+
+static int probe_msvcrt_main_forward(const char *format, ...)
+{
+    va_list arguments;
+    int written;
+
+    va_start(arguments, format);
+    written = vprintf(format, arguments);
+    va_end(arguments);
+    return written;
+}
+
+int main(int argc, char **argv)
+{
+    const char *format = (const char *)probe_msvcrt_main_format;
+
+    return printf(format, argv[0], argc)
+         + probe_msvcrt_main_forward(format, argv[0], argc);
+}
+"""
+
+
+# MSVC only. The rest of the UCRT's inline stdio surface, wide and narrow.
+#
+# swprintf_s was the finding: PicHash 10336305819058912646, 28 instructions,
+# under BlackBone, EDRSandblast and al-khaser, the one hash validate --deep
+# still failed on after the sixth round. It was never a missing name.
+# _PROBE_MSVCRT_WIDE has called swprintf_s since the third round, and measured
+# on the runner it emits one at 28 instructions on x64 as well - PicHash
+# 13530071051526633694. Same name, same length, another hash, which is the
+# case the symbol-and-PicHash filter exists to keep. The same wrapper built
+# with /sdl emits 10336305819058912646 exactly, and no other flavour does:
+# BlackBone's x64 configuration is documented as /sdl, and the other two
+# reproduce only with it. The filter was right to keep the artefacts' copies
+# and the probe was the part that was wrong.
+#
+# Which flags decide a body was measured, not read off the recipes. Every
+# flavour in _STDIO_PLAN is there because it reproduced a hash an artefact
+# carries, and the flavours that did not were dropped from the plan:
+#
+#   * /sdl on x64 (swprintf_s above) and, on x86, /sdl with /Oy- for
+#     al-khaser's /O2 swprintf_s (19 instructions).
+#   * /Oy- on x86 only. Keeping the frame pointer adds push ebp / mov ebp,esp
+#     / pop ebp to every x86 wrapper, and that is exactly the difference
+#     between the 20-instruction printf and wprintf in DiskCryptor and
+#     al-khaser and the 17 everything built with cl's defaults emits.
+#     BlackBone's fprintf (14 against 11) agrees. x64 has no frame-pointer
+#     option, so x64 has no /Oy- flavour.
+#   * /Od, because al-khaser is built twice and its /Od image carries the
+#     wrappers un-inlined at 22 instructions on x86 and 25 on x64 (/Od /sdl).
+#   * /Gs0 on x64 and /O1 on x64, which are OpenSSL's and libzlib's, found by
+#     trying them against the survivors that nothing else reproduced; and
+#     /std:c++20 as C++, which is how VX-API and protobuf compile the same
+#     printf and wprintf into 22 instructions on x64 instead of 25.
+#
+# The wrappers are taken by address rather than called, for the reason
+# _PROBE_MSVCRT_WIDE's note gives for the narrow set, and the groups are
+# separate translation units so a name a future SDK stops declaring takes
+# down one group and probe_failures names which. Several of the groups exist
+# because a callee arrives with its caller: the print groups carry
+# _vfprintf_l, the scan groups carry _vfscanf_l, and one probe image holds
+# every body in the chain.
+#
+# What this does not reproduce is recorded in scripts/corpus/README.md next
+# to the numbers, not here.
+_STDIO_TABLE_HEAD = """\
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <windows.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <time.h>
+#include <wchar.h>
+
+typedef void (*probe_symbol)(void);
+
+"""
+
+_STDIO_NARROW_PRINT = (
+    "printf", "vprintf", "fprintf", "vfprintf",
+    "_printf_l", "_vprintf_l", "_fprintf_l", "_vfprintf_l",
+    "printf_s", "vprintf_s", "fprintf_s", "vfprintf_s",
+    "_printf_s_l", "_vprintf_s_l", "_fprintf_s_l", "_vfprintf_s_l",
+    "_printf_p", "_vprintf_p", "_fprintf_p", "_vfprintf_p",
+    "_printf_p_l", "_vprintf_p_l", "_fprintf_p_l", "_vfprintf_p_l")
+_STDIO_NARROW_STRING = (
+    "sprintf", "vsprintf", "snprintf", "vsnprintf", "_snprintf", "_vsnprintf",
+    "sprintf_s", "vsprintf_s", "_snprintf_s", "_vsnprintf_s",
+    "_sprintf_l", "_vsprintf_l", "_snprintf_l", "_vsnprintf_l",
+    "_sprintf_s_l", "_vsprintf_s_l", "_snprintf_s_l", "_vsnprintf_s_l",
+    "_sprintf_p", "_vsprintf_p", "_sprintf_p_l", "_vsprintf_p_l",
+    "_scprintf", "_vscprintf", "_scprintf_l", "_vscprintf_l",
+    "_scprintf_p", "_vscprintf_p")
+_STDIO_WIDE_PRINT = (
+    "wprintf", "vwprintf", "fwprintf", "vfwprintf",
+    "_wprintf_l", "_vwprintf_l", "_fwprintf_l", "_vfwprintf_l",
+    "wprintf_s", "vwprintf_s", "fwprintf_s", "vfwprintf_s",
+    "_wprintf_s_l", "_vwprintf_s_l", "_fwprintf_s_l", "_vfwprintf_s_l",
+    "_wprintf_p", "_vwprintf_p", "_fwprintf_p", "_vfwprintf_p",
+    "_wprintf_p_l", "_vwprintf_p_l", "_fwprintf_p_l", "_vfwprintf_p_l")
+_STDIO_WIDE_STRING = (
+    "swprintf", "vswprintf", "swprintf_s", "vswprintf_s",
+    "_snwprintf", "_vsnwprintf", "_snwprintf_s", "_vsnwprintf_s",
+    "_swprintf_s_l", "_vswprintf_s_l", "_snwprintf_l", "_vsnwprintf_l",
+    "_snwprintf_s_l", "_vsnwprintf_s_l")
+_STDIO_WIDE_STRING_X = (
+    "_swprintf", "_vswprintf", "_swprintf_c", "_vswprintf_c",
+    "_swprintf_c_l", "_vswprintf_c_l", "_swprintf_p", "_vswprintf_p",
+    "_swprintf_p_l", "_vswprintf_p_l", "_vswprintf_l", "_swprintf_l",
+    "_scwprintf", "_vscwprintf", "_scwprintf_l", "_vscwprintf_l",
+    "_scwprintf_p", "_vscwprintf_p")
+_STDIO_PRINT_X = (
+    "_snprintf_c", "_snprintf_c_l", "_vsnprintf_c", "_vsnprintf_c_l",
+    "vsnprintf_s", "__swprintf_l", "__vswprintf_l",
+    "_scprintf_p_l", "_scwprintf_p_l")
+_STDIO_SCAN = (
+    "scanf", "wscanf", "fscanf", "fwscanf", "sscanf", "swscanf",
+    "vfscanf", "vfwscanf", "vsscanf", "vswscanf",
+    "scanf_s", "wscanf_s", "fscanf_s", "fwscanf_s", "sscanf_s", "swscanf_s",
+    "_vfscanf_l", "_vfwscanf_l")
+_STDIO_SCAN_L = (
+    "_scanf_l", "_wscanf_l", "_scanf_s_l", "_wscanf_s_l",
+    "_fscanf_l", "_fwscanf_l", "_fscanf_s_l", "_fwscanf_s_l",
+    "_sscanf_l", "_swscanf_l", "_sscanf_s_l", "_swscanf_s_l",
+    "_snscanf", "_snwscanf", "_snscanf_l", "_snwscanf_l",
+    "_snscanf_s", "_snwscanf_s", "_snscanf_s_l", "_snwscanf_s_l")
+_STDIO_VSCAN = (
+    "vscanf", "vwscanf", "vscanf_s", "vwscanf_s", "vfscanf_s", "vfwscanf_s",
+    "vswscanf_s", "_vscanf_l", "_vwscanf_l", "_vscanf_s_l", "_vwscanf_s_l",
+    "_vsscanf_l", "_vsnwscanf_l", "_vsnwscanf_s_l")
+_STDIO_MISC = (
+    "localtime_s", "gmtime_s", "__local_stdio_printf_options",
+    "__local_stdio_scanf_options")
+
+# Each source is its own translation unit and its own probe: a name that a
+# future SDK stops declaring takes down one group, not the lot, and
+# probe_failures names the group that went.
+_STDIO_GROUPS = (
+    ("narrow_print", _STDIO_NARROW_PRINT),
+    ("narrow_string", _STDIO_NARROW_STRING),
+    ("wide_print", _STDIO_WIDE_PRINT),
+    ("wide_string", _STDIO_WIDE_STRING),
+    ("wide_string_x", _STDIO_WIDE_STRING_X),
+    ("print_x", _STDIO_PRINT_X),
+    ("scan", _STDIO_SCAN),
+    ("scan_l", _STDIO_SCAN_L),
+    ("vscan", _STDIO_VSCAN),
+    ("misc", _STDIO_MISC),
+)
+
+# Which groups are built under which flags, per architecture. Every entry is
+# there because the probe it names emitted a body that an artefact carries
+# (see the note above); a combination that emitted nothing new is not listed.
+# The flags are the ones the artefacts' own projects turn out to have used,
+# worked out from which probe flavour reproduced which hash, not read off the
+# recipes.
+_STDIO_ALL = tuple(tag for tag, _ in _STDIO_GROUPS if tag != "misc")
+_STDIO_PLAN = {
+    "x86": (
+        ("", [], _STDIO_ALL),
+        ("oy", ["/Oy-"], ("narrow_print", "narrow_string", "wide_print",
+                           "wide_string", "scan")),
+        ("sdl", ["/sdl"], ("narrow_print", "narrow_string", "wide_print",
+                           "wide_string", "wide_string_x", "scan")),
+        ("sdloy", ["/sdl", "/Oy-"], ("narrow_print", "narrow_string",
+                                     "wide_print", "wide_string", "scan")),
+        ("od", ["/Od"], ("narrow_print", "narrow_string", "wide_print",
+                         "wide_string", "wide_string_x", "print_x", "misc")),
+    ),
+    "x64": (
+        ("", [], _STDIO_ALL),
+        ("sdl", ["/sdl"], _STDIO_ALL),
+        ("odsdl", ["/Od", "/sdl"], ("narrow_print", "wide_print",
+                                    "wide_string", "misc")),
+        ("gs0", ["/Gs0"], ("narrow_print", "narrow_string")),
+        ("o1", ["/O1"], ("narrow_string",)),
+    ),
+}
+
+# The same print groups as C++ under /std:c++20, x64 only. VX-API and
+# protobuf are the two families that build that way, and their wrappers are
+# a different body from the C one (22 instructions against 25); the x86
+# registration of the same source emitted nothing an artefact carries.
+_STDIO_CXX20 = ("narrow_print", "wide_print")
+
+
+def _stdio_table_source(tag, names, exe=False):
+    """C source whose only content is the address of every name in ``names``.
+
+    The address is the point. Called, a UCRT inline wrapper is inlined at
+    /O2 or not depending on the caller, and an inline the compiler can see
+    through is an inline the baseline never gets a body for; with its address
+    taken it is emitted as a function in its own right, every time.
+    """
+    entries = "".join("    (probe_symbol)%s,\n" % name for name in names)
+    if exe:
+        tail = ("int main(int argc, char **argv)\n{\n"
+                "    return probe_msvcrt_%s_symbols[argc] != 0;\n}\n" % tag)
+    else:
+        tail = ("BOOL WINAPI DllMain(HINSTANCE h, DWORD reason, "
+                "LPVOID reserved) { return TRUE; }\n")
+    return (_STDIO_TABLE_HEAD +
+            "__declspec(dllexport) probe_symbol probe_msvcrt_%s_symbols[] = {\n"
+            "%s};\n\n%s" % (tag, entries, tail))
+
+
+def _msvc_stdio_probes(toolchain):
+    """The probe registrations for the groups above, as _msvc_probes wants."""
+    names = dict(_STDIO_GROUPS)
+    probes = []
+    for flavour, flags, tags in _STDIO_PLAN[toolchain.arch]:
+        for tag in tags:
+            filename = "probe_msvcrt_wstdio_%s%s.c" % (
+                tag, "_" + flavour if flavour else "")
+            probes.append((toolchain.cc, filename,
+                           _stdio_table_source("wstdio_" + tag, names[tag]),
+                           ["-shared", "/MD"] + flags + _MSVC_RECIPE_LINK))
+    if toolchain.arch == "x64":
+        for tag in _STDIO_CXX20:
+            probes.append((toolchain.cxx,
+                           "probe_msvcrt_wstdio_%s_cpp20.cpp" % tag,
+                           _stdio_table_source("wstdio_" + tag, names[tag]),
+                           ["-shared", "/MD", "/EHsc", "/std:c++20"]
+                           + _MSVC_RECIPE_LINK))
+    # One EXE registration, for the reason _PROBE_MSVCRT_STDIO_EXE gives: an
+    # executable is a different object set. The bodies it contributes are the
+    # DLL's, hash for hash, so it carries the two print groups and no more.
+    probes.append((toolchain.cc, "probe_msvcrt_wstdio_exe.c",
+                   _stdio_table_source("wstdio_exe",
+                                       _STDIO_NARROW_PRINT + _STDIO_WIDE_PRINT,
+                                       exe=True),
+                   ["/MD"] + _MSVC_RECIPE_LINK))
+    return probes
+
+
+def _probe_command(toolchain, compiler, source, target, extra):
+    """The command line for one probe, with ``extra`` put where it belongs.
+
+    Three kinds of entry live in a probe's ``extra`` list and the MSVC side
+    has to tell them apart, because cl and link reject each other's options:
+
+    * ``-shared`` selects a DLL and is read by probe_command itself.
+    * Anything starting with ``/`` or ending in ``.lib`` is cl's, and goes in
+      front of the ``/link`` separator - a ``/MD`` or ``/std:c++20`` after it
+      is handed to the linker, which rejects it outright.
+    * ``link:/FLAG`` is the linker's, and goes after everything else, which
+      is after the separator. That spelling exists for /INCREMENTAL:NO: a
+      linker flag cannot be told from a compiler flag by its shape, and
+      /INCREMENTAL:NO spliced in front of /link is a cl option cl does not
+      have.
+    """
+    shared = "-shared" in extra
+    command = toolchain.probe_command(compiler, source, target, shared)
+    if toolchain.kind != "msvc":
+        return command + [flag for flag in extra if flag != "-shared"]
+    cl_arguments = [flag for flag in extra
+                    if flag.startswith("/") or flag.endswith(".lib")]
+    if cl_arguments and "/link" in command:
+        split = command.index("/link")
+        command[split:split] = cl_arguments
+    else:
+        command += cl_arguments
+    # After the cl arguments and after probe_command's own /DEBUG and /PDB,
+    # which are already on the linker's side of the separator.
+    return command + [flag[len("link:"):] for flag in extra
+                      if flag.startswith("link:")]
+
+
+# What every MSVC recipe in this repository passes to the linker and no probe
+# passed before it. /INCREMENTAL:NO because link /DEBUG implies /INCREMENTAL
+# and the /OPT:NO* forms do not suppress it; /OPT:NOREF and /OPT:NOICF to say
+# in the command line what /DEBUG already defaults to, so the probe's link is
+# the recipes' link rather than merely equivalent to it today.
+_MSVC_RECIPE_LINK = ["link:/INCREMENTAL:NO", "link:/OPT:NOREF",
+                     "link:/OPT:NOICF"]
+
 
 def _msvc_probes(toolchain):
     """The MSVC-only half of the baseline.
@@ -2632,6 +3243,24 @@ def _msvc_probes(toolchain):
          ["-shared", "/MD"]),
         (toolchain.cc, "probe_msvcrt_printf_wide.c", _PROBE_MSVCRT_PRINTF_WIDE,
          ["-shared", "/MD"]),
+        # Sixth round: the printf half of stdio, and the entry-point wrapper.
+        # Both sources' notes say what each is for; the registrations are four
+        # because the DLL and the EXE are different object sets here as
+        # everywhere else in this file, and because the EXE pair is what
+        # measures the link line rather than the translation unit.
+        (toolchain.cc, "probe_msvcrt_stdio.c", _PROBE_MSVCRT_STDIO,
+         ["-shared", "/MD"]),
+        (toolchain.cc, "probe_msvcrt_stdio_exe.c", _PROBE_MSVCRT_STDIO_EXE,
+         ["/MD"]),
+        (toolchain.cc, "probe_msvcrt_main.c", _PROBE_MSVCRT_MAIN,
+         ["/MD"] + _MSVC_RECIPE_LINK),
+        # And the broad EXE surface a second time, linked the way the recipes
+        # link rather than the way /DEBUG defaults. Same source as
+        # probe_md_exe.c, so nothing new is compiled and nothing can be lost:
+        # whatever this measures that the incremental link did not is a second
+        # PicHash added to a name the baseline already carries.
+        (toolchain.cc, "probe_md_exe_noincr.c", _PROBE_EXE,
+         ["/MD"] + _MSVC_RECIPE_LINK),
         # /O1 and /GS- are 7-Zip's own settings, and 7-Zip is the only family
         # here that carries __EH_prolog. The second registration drops /GS-
         # so that whichever of the two frame models cl picks, one of the runs
@@ -2669,6 +3298,7 @@ def _msvc_probes(toolchain):
         probes.append(
             (toolchain.cc, "probe_msvcrt_helpers_x87.c", _PROBE_MSVCRT_HELPERS,
              ["-shared", "/MD", "/arch:IA32"]))
+    probes += _msvc_stdio_probes(toolchain)
     # Which templates the STL headers instantiate depends on the language
     # version, and the two recipes disagree: vxapi.py builds /std:c++20 and
     # BlackBone's own Release(DLL) project asks for /std:c++latest. Both are
@@ -2800,11 +3430,34 @@ def crt_glue(toolchain_id):
             # optimisation level, and Obfuscator is the one recipe here that
             # builds at -O0. crt_glue maps a name to a *set* of PicHashes,
             # so a second flavour only ever adds members to that set.
+            # -lws2_32 is for gai_strerrorA/W and is not optional: mingw-w64
+            # does not inline them, it ships them as compiled objects inside
+            # libws2_32.a, so the probe has to link that archive to get a body
+            # for them the way OpenSSL, libevent and boringssl do. Without it
+            # the probe does not build at all, which probe_failures reports
+            # and which would otherwise have quietly dropped the whole stdio
+            # surface out of this baseline.
             probes += [
-                (toolchain.cc, "probe_stdio.c", _PROBE_STDIO, ["-shared"]),
-                (toolchain.cc, "probe_stdio_exe.c", _PROBE_STDIO_EXE, []),
+                (toolchain.cc, "probe_stdio.c", _PROBE_STDIO,
+                 ["-shared", "-lws2_32"]),
+                (toolchain.cc, "probe_stdio_exe.c", _PROBE_STDIO_EXE,
+                 ["-lws2_32"]),
                 (toolchain.cc, "probe_stdio_exe_o0.c", _PROBE_STDIO_EXE,
-                 ["-O0"]),
+                 ["-O0", "-lws2_32"]),
+                (toolchain.cc, "probe_libc.c", _PROBE_LIBC, ["-shared"]),
+                # Plain and cloned header wrappers, at -O2 and at -Os, and
+                # msvcrt's own; see the note above _PROBE_STDIO_FMT for why
+                # all five.
+                (toolchain.cc, "probe_stdio_fmt.c", _PROBE_STDIO_FMT,
+                 ["-shared"]),
+                (toolchain.cc, "probe_stdio_fmt_const.c", _PROBE_STDIO_FMT,
+                 ["-shared", "-DPROBE_STDIO_FMT_CONSTANT"]),
+                (toolchain.cc, "probe_stdio_fmt_os.c", _PROBE_STDIO_FMT,
+                 ["-shared", "-Os"]),
+                (toolchain.cc, "probe_stdio_fmt_const_os.c", _PROBE_STDIO_FMT,
+                 ["-shared", "-Os", "-DPROBE_STDIO_FMT_CONSTANT"]),
+                (toolchain.cc, "probe_stdio_fmt_msvcrt.c", _PROBE_STDIO_FMT,
+                 ["-shared", "-D__USE_MINGW_ANSI_STDIO=0"]),
             ]
     glue = {}
     # Set before the loop, so that a toolchain whose probes all built is
@@ -2816,21 +3469,7 @@ def crt_glue(toolchain_id):
             target = os.path.join(tmp, filename + ".out.exe")
             with open(source, "w") as handle:
                 handle.write(code)
-            shared = "-shared" in extra
-            command = toolchain.probe_command(compiler, source, target, shared)
-            if toolchain.kind == "msvc":
-                # cl's own options and any extra .lib have to go in front of
-                # the /link separator; everything after it belongs to the
-                # linker, which would reject /MD and /std:c++20 outright.
-                cl_arguments = [flag for flag in extra
-                                if flag.startswith("/") or flag.endswith(".lib")]
-                if cl_arguments and "/link" in command:
-                    split = command.index("/link")
-                    command[split:split] = cl_arguments
-                else:
-                    command += cl_arguments
-            else:
-                command += [flag for flag in extra if flag != "-shared"]
+            command = _probe_command(toolchain, compiler, source, target, extra)
             built = subprocess.run(command, capture_output=True, cwd=tmp,
                                    text=True, errors="replace")
             if built.returncode != 0:
@@ -2872,11 +3511,12 @@ def crt_glue(toolchain_id):
     # helpers and classes of their own, and a hand-kept list is exactly the
     # kind that acquires a gap - the one name that is forgotten becomes a
     # function this repository starts deleting out of somebody's library.
-    # All but one of these prefixes cannot reach a MinGW baseline at all:
+    # All but two of these prefixes cannot reach a MinGW baseline at all:
     # the sources that define them are only ever compiled by cl.
     #
-    # probe_stdio_ is the exception, and is a prefix from the start rather
-    # than a list for the reason the note above gives: GCC does emit
+    # probe_stdio_ and probe_libc_ are the exceptions, and are prefixes from
+    # the start rather than a list for the reason the note above gives: GCC
+    # does emit
     # `probe_stdio_forward.constprop.0` and `.cold` partitions, and a list
     # would miss them the way it misses probe_vscprintf's today.
     #
@@ -2888,12 +3528,23 @@ def crt_glue(toolchain_id):
     for name in [name for name in glue
                  if name.startswith(("probe_atl_", "_probe_atl_",
                                      "probe_stdio_", "_probe_stdio_",
+                                     "probe_libc_", "_probe_libc_",
                                      "probe_msvcrt_", "_probe_msvcrt_",
                                      "probe_stl_", "_probe_stl_",
                                      "probe_linux_", "_probe_linux_",
                                      "ProbeInterface", "ProbeImplementation",
                                      "ProbeArray", "ProbeEh"))]:
         glue.pop(name, None)
+    # One line a person reads at the top of a build log, because the failure
+    # this file is most afraid of is a baseline that quietly got smaller: the
+    # counts are the measured constants the README quotes, and a run whose
+    # number is below them filtered its artefacts against less than the
+    # corpus was filtered against. probe_failures already fails the run when
+    # a probe will not build; this says what the surviving probes measured,
+    # which is the number a reader can compare.
+    LOGGER.info("%s: glue baseline measured from %d probe(s): %d symbol(s), "
+                "%d PicHash(es)", toolchain_id, len(probes), len(glue),
+                sum(len(hashes) for hashes in glue.values()))
     return glue
 
 
