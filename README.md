@@ -93,6 +93,12 @@ String obfuscation
 * [obfstr](#obfstr)
 * [Obfuscator4g3nt47](#obfuscator4g3nt47)
 
+Cryptominers
+* [RandomX](#randomx)
+* [XMRig](#xmrig)
+* [xmrig-proxy](#xmrig-proxy)
+* [xmr-stak](#xmr-stak)
+
 ## Compilers
 
 Reference code extracted from all files containing precompiled code found in installations for various compiler toolchains.
@@ -1039,4 +1045,58 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
+<!-- /generated -->
+
+### RandomX<a id='randomx'></a>
+
+RandomX is the proof-of-work behind Monero and a good deal of CPU mining, built from upstream tevador/RandomX at v1.2.1 and v2.0.1 and linked into a shared object or DLL. XMRig carries its own fork of it (see XMRig below), so this family is what answers a Monero reference miner or another miner that embeds RandomX rather than XMRig. Argon2d and Blake2b are RandomX's own copies and are filed here. On x64 the JIT is compiled in; the x86 artefacts are the interpreter. Built with `-DARCH=default`: no `-march=native`, AES-NI and AVX2 are chosen at run time.  
+Generated with `scripts/build_corpus.py`; see `data/RandomX/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: RandomX -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| RandomX | 1.2.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/RandomX/x86/mcrit/RandomX_1.2.1_gcc13_x86_librandomx.so.mcrit) / [x64 ELF](data/RandomX/x64/mcrit/RandomX_1.2.1_gcc13_x64_librandomx.so.mcrit) | [x86 ELF](data/RandomX/x86/smda/RandomX_1.2.1_gcc13_x86_librandomx.so.7z) / [x64 ELF](data/RandomX/x64/smda/RandomX_1.2.1_gcc13_x64_librandomx.so.7z) |
+| RandomX | 1.2.1 | MinGW-w64 GCC 13 | [x86 PE](data/RandomX/x86/mcrit/RandomX_1.2.1_mingw13_x86_randomx.dll.mcrit) / [x64 PE](data/RandomX/x64/mcrit/RandomX_1.2.1_mingw13_x64_randomx.dll.mcrit) | [x86 PE](data/RandomX/x86/smda/RandomX_1.2.1_mingw13_x86_randomx.dll.7z) / [x64 PE](data/RandomX/x64/smda/RandomX_1.2.1_mingw13_x64_randomx.dll.7z) |
+| RandomX | 1.2.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/RandomX/x86/mcrit/RandomX_1.2.1_msvc143_x86_randomx.dll.mcrit) / [x64 PE](data/RandomX/x64/mcrit/RandomX_1.2.1_msvc143_x64_randomx.dll.mcrit) | [x86 PE](data/RandomX/x86/smda/RandomX_1.2.1_msvc143_x86_randomx.dll.7z) / [x64 PE](data/RandomX/x64/smda/RandomX_1.2.1_msvc143_x64_randomx.dll.7z) |
+| RandomX | 2.0.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/RandomX/x86/mcrit/RandomX_2.0.1_gcc13_x86_librandomx.so.mcrit) / [x64 ELF](data/RandomX/x64/mcrit/RandomX_2.0.1_gcc13_x64_librandomx.so.mcrit) | [x86 ELF](data/RandomX/x86/smda/RandomX_2.0.1_gcc13_x86_librandomx.so.7z) / [x64 ELF](data/RandomX/x64/smda/RandomX_2.0.1_gcc13_x64_librandomx.so.7z) |
+| RandomX | 2.0.1 | MinGW-w64 GCC 13 | [x86 PE](data/RandomX/x86/mcrit/RandomX_2.0.1_mingw13_x86_randomx.dll.mcrit) / [x64 PE](data/RandomX/x64/mcrit/RandomX_2.0.1_mingw13_x64_randomx.dll.mcrit) | [x86 PE](data/RandomX/x86/smda/RandomX_2.0.1_mingw13_x86_randomx.dll.7z) / [x64 PE](data/RandomX/x64/smda/RandomX_2.0.1_mingw13_x64_randomx.dll.7z) |
+| RandomX | 2.0.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/RandomX/x86/mcrit/RandomX_2.0.1_msvc143_x86_randomx.dll.mcrit) / [x64 PE](data/RandomX/x64/mcrit/RandomX_2.0.1_msvc143_x64_randomx.dll.mcrit) | [x86 PE](data/RandomX/x86/smda/RandomX_2.0.1_msvc143_x86_randomx.dll.7z) / [x64 PE](data/RandomX/x64/smda/RandomX_2.0.1_msvc143_x64_randomx.dll.7z) |
+<!-- /generated -->
+
+### XMRig<a id='xmrig'></a>
+
+XMRig 6.25.0 miner, stock configuration with the GPU backends and hwloc off, linked against shared libuv and OpenSSL so neither is in the image. RandomX, Argon2, llhttp, libethash and the other trees under `src/3rdparty` are compiled in and filed here; `data/RandomX` overlaps with the RandomX part. The ELF and PE builds carry no libstdc++: XMRig's `-static` link flags are removed, not accepted. MSVC counts are about four times the GCC ones because MSVC instantiates the standard library's templates into the image.  
+Generated with `scripts/build_corpus.py`; see `data/XMRig/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: XMRig -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| XMRig | 6.25.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/XMRig/x86/mcrit/XMRig_6.25.0_gcc13_x86_xmrig.mcrit) / [x64 ELF](data/XMRig/x64/mcrit/XMRig_6.25.0_gcc13_x64_xmrig.mcrit) | [x86 ELF](data/XMRig/x86/smda/XMRig_6.25.0_gcc13_x86_xmrig.7z) / [x64 ELF](data/XMRig/x64/smda/XMRig_6.25.0_gcc13_x64_xmrig.7z) |
+| XMRig | 6.25.0 | MinGW-w64 GCC 13 | [x86 PE](data/XMRig/x86/mcrit/XMRig_6.25.0_mingw13_x86_xmrig.exe.mcrit) / [x64 PE](data/XMRig/x64/mcrit/XMRig_6.25.0_mingw13_x64_xmrig.exe.mcrit) | [x86 PE](data/XMRig/x86/smda/XMRig_6.25.0_mingw13_x86_xmrig.exe.7z) / [x64 PE](data/XMRig/x64/smda/XMRig_6.25.0_mingw13_x64_xmrig.exe.7z) |
+| XMRig | 6.25.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/XMRig/x86/mcrit/XMRig_6.25.0_msvc143_x86_xmrig.exe.mcrit) / [x64 PE](data/XMRig/x64/mcrit/XMRig_6.25.0_msvc143_x64_xmrig.exe.mcrit) | [x86 PE](data/XMRig/x86/smda/XMRig_6.25.0_msvc143_x86_xmrig.exe.7z) / [x64 PE](data/XMRig/x64/smda/XMRig_6.25.0_msvc143_x64_xmrig.exe.7z) |
+<!-- /generated -->
+
+### xmrig-proxy<a id='xmrig-proxy'></a>
+
+xmrig-proxy 6.26.0, the stratum proxy: XMRig's `src/base` plus the proxy and network layers, with no mining backend. Between 8% (Linux x86) and 76% (MSVC x64) of its functions of ten instructions or more also appear in `data/XMRig`; see the recipe docstring for the numbers.  
+Generated with `scripts/build_corpus.py`; see `data/xmrig-proxy/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: xmrig-proxy -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| xmrig-proxy | 6.26.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/xmrig-proxy/x86/mcrit/xmrig-proxy_6.26.0_gcc13_x86_xmrig-proxy.mcrit) / [x64 ELF](data/xmrig-proxy/x64/mcrit/xmrig-proxy_6.26.0_gcc13_x64_xmrig-proxy.mcrit) | [x86 ELF](data/xmrig-proxy/x86/smda/xmrig-proxy_6.26.0_gcc13_x86_xmrig-proxy.7z) / [x64 ELF](data/xmrig-proxy/x64/smda/xmrig-proxy_6.26.0_gcc13_x64_xmrig-proxy.7z) |
+| xmrig-proxy | 6.26.0 | MinGW-w64 GCC 13 | [x86 PE](data/xmrig-proxy/x86/mcrit/xmrig-proxy_6.26.0_mingw13_x86_xmrig-proxy.exe.mcrit) / [x64 PE](data/xmrig-proxy/x64/mcrit/xmrig-proxy_6.26.0_mingw13_x64_xmrig-proxy.exe.mcrit) | [x86 PE](data/xmrig-proxy/x86/smda/xmrig-proxy_6.26.0_mingw13_x86_xmrig-proxy.exe.7z) / [x64 PE](data/xmrig-proxy/x64/smda/xmrig-proxy_6.26.0_mingw13_x64_xmrig-proxy.exe.7z) |
+| xmrig-proxy | 6.26.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/xmrig-proxy/x86/mcrit/xmrig-proxy_6.26.0_msvc143_x86_xmrig-proxy.exe.mcrit) / [x64 PE](data/xmrig-proxy/x64/mcrit/xmrig-proxy_6.26.0_msvc143_x64_xmrig-proxy.exe.mcrit) | [x86 PE](data/xmrig-proxy/x86/smda/xmrig-proxy_6.26.0_msvc143_x86_xmrig-proxy.exe.7z) / [x64 PE](data/xmrig-proxy/x64/smda/xmrig-proxy_6.26.0_msvc143_x64_xmrig-proxy.exe.7z) |
+<!-- /generated -->
+
+### xmr-stak<a id='xmr-stak'></a>
+
+xmr-stak 2.10.8, CPU backend only, an independent implementation rather than a fork of XMRig. Linux x64 and MSVC x64 only: upstream refuses to compile 32-bit (`#error You are trying to do a 32-bit build`) and MinGW needs source changes.  
+Generated with `scripts/build_corpus.py`; see `data/xmr-stak/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: xmr-stak -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| xmr-stak | 2.10.8 | GCC 13 (Linux, glibc) | [x64 ELF](data/xmr-stak/x64/mcrit/xmr-stak_2.10.8_gcc13_x64_xmr-stak.mcrit) | [x64 ELF](data/xmr-stak/x64/smda/xmr-stak_2.10.8_gcc13_x64_xmr-stak.7z) |
+| xmr-stak | 2.10.8 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/xmr-stak/x64/mcrit/xmr-stak_2.10.8_msvc143_x64_xmr-stak.exe.mcrit) | [x64 PE](data/xmr-stak/x64/smda/xmr-stak_2.10.8_msvc143_x64_xmr-stak.exe.7z) |
 <!-- /generated -->
