@@ -1040,3 +1040,16 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
 <!-- /generated -->
+
+### SoftEther VPN<a id="softethervpn"></a>
+
+Stable 4.44-9807-rtm Linux source builds.
+
+<!-- corpus:SoftEtherVPN:start -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| SoftEtherVPN | 4.44-9807-rtm | GCC 14 (Linux, glibc) | [x86 ELF](data/SoftEtherVPN/x86/mcrit/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpnbridge.mcrit) | [x86 ELF](data/SoftEtherVPN/x86/smda/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpnbridge.7z) |
+| SoftEtherVPN | 4.44-9807-rtm | GCC 14 (Linux, glibc) | [x86 ELF](data/SoftEtherVPN/x86/mcrit/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpnclient.mcrit) / [x64 ELF](data/SoftEtherVPN/x64/mcrit/SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpnclient.mcrit) | [x86 ELF](data/SoftEtherVPN/x86/smda/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpnclient.7z) / [x64 ELF](data/SoftEtherVPN/x64/smda/SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpnclient.7z) |
+| SoftEtherVPN | 4.44-9807-rtm | GCC 14 (Linux, glibc) | [x86 ELF](data/SoftEtherVPN/x86/mcrit/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpncmd.mcrit) / [x64 ELF](data/SoftEtherVPN/x64/mcrit/SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpncmd.mcrit) | [x86 ELF](data/SoftEtherVPN/x86/smda/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpncmd.7z) / [x64 ELF](data/SoftEtherVPN/x64/smda/SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpncmd.7z) |
+| SoftEtherVPN | 4.44-9807-rtm | GCC 14 (Linux, glibc) | [x86 ELF](data/SoftEtherVPN/x86/mcrit/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpnserver.mcrit) / [x64 ELF](data/SoftEtherVPN/x64/mcrit/SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpnserver.mcrit) | [x86 ELF](data/SoftEtherVPN/x86/smda/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpnserver.7z) / [x64 ELF](data/SoftEtherVPN/x64/smda/SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpnserver.7z) |
+<!-- corpus:SoftEtherVPN:end -->
