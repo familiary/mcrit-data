@@ -55,8 +55,8 @@ Nothing is patched.
 Counts on the runner, kept + removed = image, summed over components
 (x86 | x64); removed is the baseline's compiler-runtime filter:
 
-    2.8.3  6223+435=6658 | 6179+455=6634   3.3.6  6882+439=7321 | 6906+459=7365
-    3.9.2  6959+466=7425 | 6975+481=7456   4.4.0  7017+456=7473 | 6987+480=7467
+    2.8.3  6217+441=6658 | 6177+457=6634   3.3.6  6876+445=7321 | 6904+461=7365
+    3.9.2  6949+476=7425 | 6973+483=7456   4.4.0  7007+466=7473 | 6985+482=7467
 
 Unlike MinGW, libtls is carried at 3.3.6 too (329 functions x64): the MSVC
 import library keeps it from linking libcrypto and libssl in.
@@ -64,7 +64,7 @@ import library keeps it from linking libcrypto and libssl in.
 PicHash overlap, libcrypto + libssl, 10+ instructions, MSVC against MinGW
 (x64 | x86): 2.8.3 8 | 0, 3.3.6 10 | 0, 3.9.2 1 | 0, 4.4.0 0 | 0; against
 Linux 0 | 0 except 3.3.6 x64 with 1. Sizes of the MSVC sets are 3010-3507
-(x64) and 3387-3870 (x86) hashes, so the MSVC axis shares essentially nothing
+(x64) and 3383-3866 (x86) hashes, so the MSVC axis shares essentially nothing
 with the other two and is new reference data.
 
 Glue survivors, by name and PicHash: none that is MSVC runtime. The kept
