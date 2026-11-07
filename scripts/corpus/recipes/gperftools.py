@@ -103,4 +103,30 @@ RECIPES = {
               "Pre-seeding the cache variable skips the probe and no source "
               "file is modified.",
     ),
+    "gperftools_2.18.1_linux": Recipe(
+        family="gperftools",
+        version="2.18.1",
+        upstream="https://github.com/gperftools/gperftools",
+        license="BSD-3-Clause",
+        source=Source(git_url="https://github.com/gperftools/gperftools.git",
+                      git_ref="gperftools-2.18.1"),
+        build=[
+            BuildStep("cmake -S . -B build-{arch} -DCMAKE_C_COMPILER={cc} "
+                      "-DCMAKE_CXX_COMPILER={cxx} -DCMAKE_BUILD_TYPE=Release "
+                      "-DBUILD_SHARED_LIBS=ON "
+                      "-Dgperftools_build_benchmark=OFF -DBUILD_TESTING=OFF"),
+            BuildStep("cmake --build build-{arch} -j$(nproc)"),
+        ],
+        artifacts=[Artifact(path="build-{arch}/libtcmalloc_minimal.so",
+                            component="tcmalloc_minimal.so")],
+        toolchains=["linux_x86", "linux_x64"],
+        build_flags="-O3 -DNDEBUG (CMake Release), shared build, "
+                    "tcmalloc_minimal only",
+        notes="The ELF counterpart of gperftools_2.18.1: the same pinned "
+              "tag and the same tcmalloc_minimal library, built with the "
+              "host GCC for x86 (-m32) and x86-64. Nothing is patched and "
+              "no configure variable is overridden; the nanosleep "
+              "workaround of the MinGW recipe is specific to mingw-w64's "
+              "header layout.",
+    ),
 }

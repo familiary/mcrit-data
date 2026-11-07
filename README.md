@@ -762,6 +762,7 @@ Generated with `scripts/build_corpus.py`; see `data/gperftools/provenance.json` 
 <!-- generated: gperftools -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| gperftools | 2.18.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/gperftools/x86/mcrit/gperftools_2.18.1_gcc13_x86_tcmalloc_minimal.so.mcrit) / [x64 ELF](data/gperftools/x64/mcrit/gperftools_2.18.1_gcc13_x64_tcmalloc_minimal.so.mcrit) | [x86 ELF](data/gperftools/x86/smda/gperftools_2.18.1_gcc13_x86_tcmalloc_minimal.so.7z) / [x64 ELF](data/gperftools/x64/smda/gperftools_2.18.1_gcc13_x64_tcmalloc_minimal.so.7z) |
 | gperftools | 2.18.1 | MinGW-w64 GCC 13 | [x86 PE](data/gperftools/x86/mcrit/gperftools_2.18.1_mingw13_x86_tcmalloc_minimal.dll.mcrit) / [x64 PE](data/gperftools/x64/mcrit/gperftools_2.18.1_mingw13_x64_tcmalloc_minimal.dll.mcrit) | [x86 PE](data/gperftools/x86/smda/gperftools_2.18.1_mingw13_x86_tcmalloc_minimal.dll.7z) / [x64 PE](data/gperftools/x64/smda/gperftools_2.18.1_mingw13_x64_tcmalloc_minimal.dll.7z) |
 <!-- /generated -->
 
