@@ -29,16 +29,20 @@ Open risks, in the order they bite:
 5. The project declares TargetVersion=Windows8; WDK 10.0.26100 rejects it and
    Windows8.1 gives MSB4044 on ValidNTTargetVersions, so Windows10 is passed.
 
-6. WDK 10.0.26100 reports C4703 (potentially uninitialized local pointer
-   variable) as an error in thread.c(148), process.c(132) and process.c(238).
-   Run 42401145014 showed the cl.exe line already carries /WX- /sdl- /wd4703
-   (and /wd4703 again through _CL_), with no /we switch, and the error
-   remained, so a command-line switch cannot lower it: something in the
-   translation unit raises it after the command line is read (the diagnostic
-   step greps the WDK headers for 4703). The generated forced-include
-   kph_fi_*.h, which includes <ntifs.h> first, therefore ends with
-   #pragma warning(disable:4703). C4703 is the only warning downgraded; the
-   three sites are out-parameter handles assigned on the success path.
+6. ROOT CAUSE of C4703 (thread.c(148), process.c(132), process.c(238)):
+   the WDK header shared\warning.h line 28 is `#pragma warning(error:4703)`
+   (found by the diagnostic step, run 42401510808). It is not /WX, /sdl or a
+   /we switch: the cl.exe line of run 42401145014 carried /WX- /sdl- /wd4703
+   (and /wd4703 again through _CL_) and the error remained, and
+   WindowsDriver.Shared.Props:75 TreatWarningAsError=true is overridden by the
+   props. warning.h is re-included by WDK headers, so a pragma in the forced
+   include (kph_fi_*.h, after <ntifs.h>) is overridden again afterwards:
+   run 42401510808 with that pragma still failed. Not yet tried: put a
+   shadow shared\warning.h without that line first on the include path (a
+   build-environment override, no upstream source touched), or a forced
+   include that predefines warning.h's own guard if it has one. C4703 is the
+   only warning at issue; the three sites are out-parameter handles assigned
+   on the success path.
 
 Driver images are never packaged, signed, installed or loaded. This is a
 disassembly reference only.
