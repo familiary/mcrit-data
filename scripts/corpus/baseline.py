@@ -3955,7 +3955,7 @@ def kernel_glue(toolchain_id):
                        "the kernel-mode baseline is empty", toolchain_id)
         _PROBE_FAILURES[toolchain_id].append("kernel/wdk")
         return {}
-    dump = os.environ.get("CORPUS_BASELINE_DUMP")
+    dump = os.environ.get("CORPUS_BASELINE_DUMP", "1")
     glue = {}
     with tempfile.TemporaryDirectory() as tmp:
         images = _kernel_probe_images(toolchain_id, tmp, layout)
