@@ -35,6 +35,7 @@ Libraries
 * [liblzma](#liblzma)
 * [libsodium](#libsodium)
 * [libtomcrypt](#libtomcrypt)
+* [kphlib](#kphlib)
 * [libuv](#libuv)
 * [libxml2](#libxml2)
 * [lz4](#lz4)
@@ -391,6 +392,17 @@ Generated with `scripts/build_corpus.py`; see `data/libtomcrypt/provenance.json`
 |----------|---------|----------|-------|------|
 | libtomcrypt | 1.18.2 | MinGW-w64 GCC 13 | [x86 PE](data/libtomcrypt/x86/mcrit/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.mcrit) / [x64 PE](data/libtomcrypt/x64/mcrit/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.mcrit) | [x86 PE](data/libtomcrypt/x86/smda/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.7z) / [x64 PE](data/libtomcrypt/x64/smda/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.7z) |
 | libtomcrypt | 1.18.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libtomcrypt/x86/mcrit/libtomcrypt_1.18.2_msvc143_x86_libtomcrypt.dll.mcrit) / [x64 PE](data/libtomcrypt/x64/mcrit/libtomcrypt_1.18.2_msvc143_x64_libtomcrypt.dll.mcrit) | [x86 PE](data/libtomcrypt/x86/smda/libtomcrypt_1.18.2_msvc143_x86_libtomcrypt.dll.7z) / [x64 PE](data/libtomcrypt/x64/smda/libtomcrypt_1.18.2_msvc143_x64_libtomcrypt.dll.7z) |
+<!-- /generated -->
+
+### kphlib<a id='kphlib'></a>
+
+kphlib is the user-mode client layer of Process Hacker 2.39 (`kph.c` plus the `phlib` support it reaches) that talks to the KProcessHacker driver.  
+Generated with `scripts/build_corpus.py`; see `data/kphlib/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: kphlib -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| kphlib | 2.39 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/kphlib/x86/mcrit/kphlib_2.39_msvc143_x86_kphlib.dll.mcrit) / [x64 PE](data/kphlib/x64/mcrit/kphlib_2.39_msvc143_x64_kphlib.dll.mcrit) | [x86 PE](data/kphlib/x86/smda/kphlib_2.39_msvc143_x86_kphlib.dll.7z) / [x64 PE](data/kphlib/x64/smda/kphlib_2.39_msvc143_x64_kphlib.dll.7z) |
 <!-- /generated -->
 
 ### libuv<a id='libuv'></a>
