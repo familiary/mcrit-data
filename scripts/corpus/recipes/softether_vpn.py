@@ -4,6 +4,22 @@ The Stable release supplies vpnserver, vpnbridge, vpnclient and vpncmd. Its
 Linux makefile preserves ELF symbols. The two development packages below
 supply readline and ncurses headers and shared-library links on hosts that
 do not install them globally; neither library is copied into the reports.
+
+Coverage (unique PicHashes, functions with at least 10 instructions):
+x64 server/client/cmd: 4306/4305/4305; server-client and server-cmd
+share 4300, client-cmd share 4298. x86 server/bridge/client/cmd:
+5043/5043/5042/5040; server-bridge share 5041 (two distinct hashes each),
+server-client 1460, server-cmd 708, bridge-client 1460, bridge-cmd 708,
+client-cmd 543. Every x86/x64 pair shares zero, justifying both axes.
+The preliminary x64 bridge shared all 4922 qualifying hashes with the
+preliminary server; it adds no coverage and is omitted.
+
+Glue survivors: x86 __x86.get_pc_thunk.bp PicHash 8978313489863221434
+in all four reports; x86 client _init PicHash 14231244029028250083.
+No named startup glue survives in the x64 reports. These are reported
+rather than changing the shared baseline. Windows builds failed before
+producing a symbol-bearing image, so no MSVC overlap is available.
+
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
