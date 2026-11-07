@@ -28,16 +28,16 @@ and ``test.c`` is a BOF test object, not a program, so the two commands are
 reproduced directly with ``{cc}`` instead of invoking ``make``.
 
 Measured: kept + removed = total is 175 (35 + 140) on x86 and 190 (56 + 134)
-on x64 for MinGW, 215 (44 + 171) and 216 (45 + 171) for MSVC. The project's own
+on x64 for MinGW, 215 (42 + 173) and 216 (42 + 174) for MSVC. The project's own
 code is 30 functions on MinGW x86 and 33 on MSVC (which keeps ``starts_with``,
 ``coff_symbol_is_defined`` and ``coff_symbol_is_external`` as separate bodies
 where GCC inlines them; ``printf``/``vprintf`` wrappers are runtime and
 are not counted). Well above the floor of eight, so the tracker issue's worry did not
 materialise and no ``min_functions`` is set. MinGW against MSVC PicHash overlap
-at 10+ instructions: 0 shared of 24 and 28 on x86, the same on x64. Survivors
-by name: ``printf``/``vprintf``/``strtok``/``strncpy_s`` stubs and import
-thunks, and on MSVC x64 ``__scrt_common_main_seh``; unnamed ``___chkstk_ms`` on
-MinGW.
+at 10+ instructions: 0 shared of 24 and 26 on x86, and of 24 and 25 on x64.
+Survivors by name: ``strtok``/``strncpy_s`` stubs and import thunks; the
+``printf``/``vprintf`` stubs and, on MSVC x64, ``__scrt_common_main_seh`` are
+removed by the MSVC glue baseline; unnamed ``___chkstk_ms`` on MinGW.
 
 The Makefile's ``nix`` target builds the same sources for Linux; it is a
 ``-DDEBUG`` test harness for the COFF parser (the Win32 resolver and the
