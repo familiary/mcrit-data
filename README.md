@@ -93,6 +93,10 @@ String obfuscation
 * [obfstr](#obfstr)
 * [Obfuscator4g3nt47](#obfuscator4g3nt47)
 
+Go applications
+* [yggdrasil](#yggdrasil)
+* [yggstack](#yggstack)
+
 ## Compilers
 
 Reference code extracted from all files containing precompiled code found in installations for various compiler toolchains.
@@ -1039,4 +1043,34 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
+<!-- /generated -->
+
+## Go applications
+
+Go programs built from pinned upstream source for windows/amd64, windows/386, linux/amd64 and linux/386 (`CGO_ENABLED=0 go build -trimpath`, unstripped). The Compiler column names the C toolchain id that selects the target platform (MinGW-w64 for the PE builds, GCC for the ELF builds); the code was produced by the Go compiler, and each provenance record's notes give the Go version and the `go.sum` digest. The Go runtime and standard library are removed by symbol name (see the Go half in `scripts/corpus/README.md`); what remains is the project and **every module it links**.
+
+### yggdrasil-network/yggdrasil-go<a id='yggdrasil'></a>
+
+The mesh node MythicRatatoskr (UAC-0099 / Sandworm) is based on; ESET says "based on yggstack" but cites yggdrasil-go files, so both are built. LGPL-3.0 with a linking exception, recorded as a fact. v0.5.15 (commit `2c7f050fc539`), the tag yggstack 1.0.6 requires; `cmd/yggdrasil` and `cmd/yggdrasilctl`, built with go1.26.0 (the tag declares go 1.26.0; the host's go1.24.7 cannot build it, so the toolchain is pinned by `GOTOOLCHAIN=go1.26.0`, not `local`). Kept + removed = total: yggdrasil 2,481 + 8,429 = 10,910 (windows/amd64), 2,576 + 8,633 = 11,209 (windows/386), 2,890 + 8,700 = 11,590 (linux/amd64), 2,894 + 8,694 = 11,588 (linux/386); yggdrasilctl 1,235 + 7,349, 1,226 + 7,488, 1,220 + 7,487, 1,198 + 7,476. The node's own code is a small part of the kept functions (399 of 2,890 on linux/amd64); the rest is quic-go (935), ironwood (321), x/net, websocket, netlink and the other dependencies, and yggdrasilctl is mostly goccy/go-json and tablewriter. The two 64-bit images of a program share 87 to 95 percent of their PicHashes of ten instructions or more, the 32-bit pairs none. `wintun.dll` is not harvested.  
+Generated with `scripts/build_corpus.py`; see `data/yggdrasil/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: yggdrasil -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| yggdrasil | 0.5.15 | GCC 13 (Linux, glibc) | [x86 ELF](data/yggdrasil/x86/mcrit/yggdrasil_0.5.15_gcc13_x86_yggdrasil.mcrit) / [x64 ELF](data/yggdrasil/x64/mcrit/yggdrasil_0.5.15_gcc13_x64_yggdrasil.mcrit) | [x86 ELF](data/yggdrasil/x86/smda/yggdrasil_0.5.15_gcc13_x86_yggdrasil.7z) / [x64 ELF](data/yggdrasil/x64/smda/yggdrasil_0.5.15_gcc13_x64_yggdrasil.7z) |
+| yggdrasil | 0.5.15 | GCC 13 (Linux, glibc) | [x86 ELF](data/yggdrasil/x86/mcrit/yggdrasil_0.5.15_gcc13_x86_yggdrasilctl.mcrit) / [x64 ELF](data/yggdrasil/x64/mcrit/yggdrasil_0.5.15_gcc13_x64_yggdrasilctl.mcrit) | [x86 ELF](data/yggdrasil/x86/smda/yggdrasil_0.5.15_gcc13_x86_yggdrasilctl.7z) / [x64 ELF](data/yggdrasil/x64/smda/yggdrasil_0.5.15_gcc13_x64_yggdrasilctl.7z) |
+| yggdrasil | 0.5.15 | MinGW-w64 GCC 13 | [x86 PE](data/yggdrasil/x86/mcrit/yggdrasil_0.5.15_mingw13_x86_yggdrasil.mcrit) / [x64 PE](data/yggdrasil/x64/mcrit/yggdrasil_0.5.15_mingw13_x64_yggdrasil.mcrit) | [x86 PE](data/yggdrasil/x86/smda/yggdrasil_0.5.15_mingw13_x86_yggdrasil.7z) / [x64 PE](data/yggdrasil/x64/smda/yggdrasil_0.5.15_mingw13_x64_yggdrasil.7z) |
+| yggdrasil | 0.5.15 | MinGW-w64 GCC 13 | [x86 PE](data/yggdrasil/x86/mcrit/yggdrasil_0.5.15_mingw13_x86_yggdrasilctl.mcrit) / [x64 PE](data/yggdrasil/x64/mcrit/yggdrasil_0.5.15_mingw13_x64_yggdrasilctl.mcrit) | [x86 PE](data/yggdrasil/x86/smda/yggdrasil_0.5.15_mingw13_x86_yggdrasilctl.7z) / [x64 PE](data/yggdrasil/x64/smda/yggdrasil_0.5.15_mingw13_x64_yggdrasilctl.7z) |
+<!-- /generated -->
+
+### yggdrasil-network/yggstack<a id='yggstack'></a>
+
+The user-space wrapper around yggdrasil-go (SOCKS and TCP forwarding over gVisor netstack); LGPL-3.0 with a linking exception. Tag 1.0.6 (commit `91fc38063dd7`), go1.26.0. yggdrasil-go v0.5.15 is linked as a module, so every yggstack image contains the node core: 1,899 of yggdrasil's 2,111 linux/amd64 PicHashes (1,773 of 1,889 on windows/amd64, 770 and 716 on the 32-bit images) are also here, which makes a yggstack match a yggdrasil match plus gVisor. Kept + removed = total: 5,556 + 8,500 = 14,056 (windows/amd64), 5,824 + 8,707 = 14,531 (windows/386), 6,037 + 8,685 = 14,722 (linux/amd64), 6,022 + 8,681 = 14,703 (linux/386); on linux/amd64 2,875 of the kept are `gvisor.dev/gvisor`, 935 quic-go, and only 48 are yggstack's own. Overlap with the Go families on the same axis: golang_x_crypto 17 to 28, chisel 33 to 42, go_socks5 (things-go) 5 to 13, yamux 1 to 2.  
+Generated with `scripts/build_corpus.py`; see `data/yggstack/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: yggstack -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| yggstack | 1.0.6 | GCC 13 (Linux, glibc) | [x86 ELF](data/yggstack/x86/mcrit/yggstack_1.0.6_gcc13_x86_yggstack.mcrit) / [x64 ELF](data/yggstack/x64/mcrit/yggstack_1.0.6_gcc13_x64_yggstack.mcrit) | [x86 ELF](data/yggstack/x86/smda/yggstack_1.0.6_gcc13_x86_yggstack.7z) / [x64 ELF](data/yggstack/x64/smda/yggstack_1.0.6_gcc13_x64_yggstack.7z) |
+| yggstack | 1.0.6 | MinGW-w64 GCC 13 | [x86 PE](data/yggstack/x86/mcrit/yggstack_1.0.6_mingw13_x86_yggstack.mcrit) / [x64 PE](data/yggstack/x64/mcrit/yggstack_1.0.6_mingw13_x64_yggstack.mcrit) | [x86 PE](data/yggstack/x86/smda/yggstack_1.0.6_mingw13_x86_yggstack.7z) / [x64 PE](data/yggstack/x64/smda/yggstack_1.0.6_mingw13_x64_yggstack.7z) |
 <!-- /generated -->
