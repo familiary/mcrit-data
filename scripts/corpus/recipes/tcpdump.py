@@ -73,25 +73,44 @@ redistributed or used in other software without special permission from the
 Nmap Project. That text is about Npcap (driver and DLLs), which this build
 neither contains nor redistributes; whether compiling against the SDK headers
 and import library is covered is a question for the maintainer, and is why the
-SDK is fetched at build time and not stored. 4.99.7 does not build with MinGW:
-its FindPCAP.cmake sets the linker option /delayload:wpcap.dll (MSVC link.exe
-syntax) and ld stops with "cannot find /delayload:wpcap.dll"; a variable the
-module sets itself cannot be overridden from the command line, so it would
-need a patch. 4.99.6 was not tried. 4.99.0, 4.99.3 and 4.99.5 build.
+SDK is fetched at build time and not stored. 4.99.0, 4.99.3 and 4.99.5 build
+unmodified. 4.99.6 was not tried.
+
+4.99.7 needs a recipe-applied patch. Its cmake/Modules/FindPCAP.cmake sets, on
+Windows, the MSVC link.exe option `/delayload:wpcap.dll` as PCAP_LINK_FLAGS
+(a normal variable the module sets itself, so it cannot be overridden from
+the command line; tcpdump's CMakeLists.txt passes it to LINK_FLAGS) and adds
+`delayimp.lib` to PCAP_LIBRARIES; GNU ld stops with "cannot find
+/delayload:wpcap.dll". The recipe edits the unpacked source before cmake runs
+(sed on cmake/Modules/FindPCAP.cmake, nothing committed):
+
+    -    set(PCAP_LINK_FLAGS /delayload:wpcap.dll)
+    +    set(PCAP_LINK_FLAGS "")
+    -    set(PCAP_LIBRARIES ${PCAP_LIBRARIES} delayimp.lib)
+    +    # delayimp.lib dropped
+
+Effect: wpcap.dll is an ordinary load-time import of the PE and not
+delay-loaded, so the import table differs from an MSVC build; no tcpdump code
+is changed (the SetDllDirectory call in main() is source and still compiled).
+The 4.99.7 MinGW images are therefore NOT byte-identical to a build of
+unmodified upstream, which does not build with MinGW at all.
 PicHash overlap between the PE and ELF artefacts of the same version is 0 on
 x64 and 5-7 hashes (about 1%) on x86; between PE versions 4.99.0/4.99.3 81-84%
 and 4.99.5 against either 50-59% on x64 and 20-22% on x86, so the PE axis is
-new reference data and three versions are kept.
+new reference data and four versions are kept. The 4.99.7 PE against the
+other PE versions (functions of 10 or more instructions): x64 36% (4.99.0),
+39% (4.99.3), 56% (4.99.5); x86 9%, 9%, 10%. Against the 4.99.7 ELF: 0 on x64
+and 7 hashes on x86.
 
-Not built: MSVC. It is the compiler tcpdump's Windows port is written for
-and the only one that builds 4.99.7, so it is the follow-up; it needs the
-Windows runner, and the tcpdump Windows port is not what the issue reports.
+Not built: MSVC. It is the compiler tcpdump's Windows port is written for, so
+it is the follow-up; it needs the Windows runner, and the tcpdump Windows port
+is not what the issue reports.
 
 Measured on the artefacts (kept + removed = image): ELF x64 4.99.0 1101 + 7 =
 1108, 4.99.3 1106 + 7, 4.99.5 990 + 7, 4.99.7 992 + 7; ELF x86 4.99.0 1061 + 5,
 4.99.3 1066 + 5, 4.99.5 998 + 5, 4.99.7 1002 + 7; PE x64 4.99.0 694 + 187,
-4.99.3 669 + 188, 4.99.5 604 + 191; PE x86 4.99.0 772 + 187, 4.99.3 748 + 188,
-4.99.5 684 + 191. About three quarters of an ELF artefact's functions carry a symbol (the rest are
+4.99.3 669 + 188, 4.99.5 604 + 191, 4.99.7 608 + 191; PE x86 4.99.0 772 + 187,
+4.99.3 748 + 188, 4.99.5 684 + 191, 4.99.7 683 + 193. About three quarters of an ELF artefact's functions carry a symbol (the rest are
 PLT stubs and anonymous pieces), well above the 50% gate.
 
 Glue that survives the baseline, by name and PicHash: on the four ELF x86
@@ -99,8 +118,8 @@ artefacts _init (11 instructions), deregister_tm_clones (18),
 register_tm_clones (26), __do_global_dtors_aux (21) and __stack_chk_fail_local
 (5), each with a different PicHash per image (the GOT delta), plus the
 two-instruction __x86.get_pc_thunk.bp/.cx/.si and, on one of them, _start (16).
-The x64 artefacts have none. The PE artefacts keep `_main`, which is
-tcpdump's own entry point.
+The x64 artefacts have none. The PE artefacts keep `_main`/`main`, which is
+tcpdump's own entry point, and the 1-3 instruction `___p___argv`/`__p___argv`.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -147,7 +166,22 @@ def _tcpdump(version, sha256):
     )
 
 
-def _tcpdump_pe(version, sha256):
+# 4.99.7 only. Recipe-applied patch to cmake/Modules/FindPCAP.cmake (see the
+# docstring): drop the MSVC link.exe option and the delayimp.lib import library.
+_FINDPCAP_SED = (
+    "sed -i -e 's|^\\( *\\)set(PCAP_LINK_FLAGS /delayload:wpcap.dll)|"
+    "\\1set(PCAP_LINK_FLAGS \"\")|' "
+    "-e 's|^\\( *\\)set(PCAP_LIBRARIES .*delayimp.lib)|\\1# delayimp.lib dropped|' "
+    "cmake/Modules/FindPCAP.cmake && "
+    "test $(grep -c 'delayimp.lib dropped\\|PCAP_LINK_FLAGS \"\"' "
+    "cmake/Modules/FindPCAP.cmake) = 2")
+
+
+def _tcpdump_pe(version, sha256, patch_findpcap=False):
+    patched = ("; 4.99.7 only: cmake/Modules/FindPCAP.cmake patched by the "
+               "recipe (sed: PCAP_LINK_FLAGS /delayload:wpcap.dll -> empty, "
+               "delayimp.lib dropped from PCAP_LIBRARIES), so wpcap.dll is "
+               "load-time and not delay-loaded") if patch_findpcap else ""
     return Recipe(
         family="tcpdump",
         version=version,
@@ -158,6 +192,7 @@ def _tcpdump_pe(version, sha256):
         extra_sources={"npcap_sdk": _NPCAP_SDK},
         build=[
             BuildStep("unzip -q -o {npcap_sdk} -d npcap-sdk"),
+        ] + ([BuildStep(_FINDPCAP_SED)] if patch_findpcap else []) + [
             BuildStep(
                 "cmake -S . -B build-{arch} -DCMAKE_SYSTEM_NAME=Windows "
                 "-DCMAKE_C_COMPILER={cc} -DCMAKE_RC_COMPILER={windres} "
@@ -173,13 +208,18 @@ def _tcpdump_pe(version, sha256):
         toolchains=["mingw_x86", "mingw_x64"],
         requires=["unzip", "perl"],
         build_flags="-O3 (CMake Release), WITH_CRYPTO=OFF, linked against the "
-                    "Npcap SDK 1.17 wpcap.lib",
+                    "Npcap SDK 1.17 wpcap.lib" + patched,
         notes="MinGW build of the Windows port: imports Npcap's wpcap.dll, "
               "libpcap is not in the image. Built against the Npcap SDK "
               "1.17 import library, fetched at build time and not stored "
-              "(licence terms in the recipe docstring). 4.99.7 does not "
-              "build with MinGW (/delayload linker flag). Not the MSVC "
-              "build tcpdump's Windows port is written for.",
+              "(licence terms in the recipe docstring). Not the MSVC "
+              "build tcpdump's Windows port is written for."
+              + (" 4.99.7 only: built from upstream source modified by "
+                 "a recipe-applied sed on cmake/Modules/FindPCAP.cmake "
+                 "(MSVC /delayload:wpcap.dll link option and delayimp.lib "
+                 "removed, which GNU ld rejects); the image is NOT "
+                 "byte-identical to a build of unmodified upstream."
+                 if patch_findpcap else ""),
     )
 
 
@@ -198,3 +238,7 @@ for _name, _version in (("4.99.0", "8cf2f17a9528774a7b41060323be8b73f76024f7778f
                         ("4.99.3", "ad75a6ed3dc0d9732945b2e5483cb41dc8b4b528a169315e499c6861952e73b3"),
                         ("4.99.5", "8c75856e00addeeadf70dad67c9ff3dd368536b2b8563abf6854d7c764cd3adb")):
     RECIPES["tcpdump_%s" % _name] = _tcpdump_pe(_name, _version)
+
+RECIPES["tcpdump_4.99.7"] = _tcpdump_pe(
+    "4.99.7", "8be364e28d3b745ef1459b385cd2f4bc0e1ebad7a5d2ebdf70071d6c9b5b9a54",
+    patch_findpcap=True)
