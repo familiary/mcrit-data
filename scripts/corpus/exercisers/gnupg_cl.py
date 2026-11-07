@@ -161,7 +161,7 @@ def compile_all(srcs, builddir, includes, defines, extra_for=None, jobs=4, force
                 ok.append(os.path.join(item[2], item[1]))
             else:
                 errs = [l for l in out.splitlines() if re.search(r"error|fatal", l)]
-                bad.append((item[0], errs[:8]))
+                bad.append((item[0], errs[:12]))
     return ok, bad
 
 
@@ -204,6 +204,7 @@ SHIM_H = r"""/* build-side compatibility for cl, written by gnupg_cl.py; upstrea
 #include <io.h>
 #include <process.h>
 #include <direct.h>
+#include <malloc.h>
 #include <sys/stat.h>
 /* gcrypt.h declares these two the same way for every non-GNU compiler */
 typedef long ssize_t;
@@ -244,6 +245,8 @@ def make_shim(work, gpgerr_macro_function):
         f.write('#include "gnupg_cl_shim.h"\n')
     with open(os.path.join(d, "sys", "file.h"), "w") as f:
         f.write("/* empty */\n")
+    with open(os.path.join(d, "sys", "time.h"), "w") as f:
+        f.write("/* empty: the code that needs it is under HAVE_GETTIMEOFDAY */\n")
     with open(os.path.join(d, "gnupg_cl_fi.h"), "w") as f:
         f.write('#include "gnupg_cl_shim.h"\n')
     if gpgerr_macro_function:
@@ -253,6 +256,75 @@ def make_shim(work, gpgerr_macro_function):
                     '#undef GPGRT_HAVE_MACRO_FUNCTION\n'
                     '#define GPGRT_HAVE_MACRO_FUNCTION 1\n#include "visibility.c"\n')
     return d
+
+
+# ----------------------------------------------------------- build-tree edits
+#
+# cl has no variable-length arrays (C99 6.7.5.2), and these are the only
+# places in the translation units that are built here that need them (found
+# by compiling every one of them with gcc -Wvla). They are edited in the build
+# tree, never in a committed tree, and every edit is printed as a unified diff
+# into the build log. The image is therefore NOT byte-identical to a build of
+# unmodified upstream. Each edit keeps the object's size and semantics:
+#   * constant bound: the array size is rewritten as the constant expression
+#     its operands already are (cipher-ccm.c: blocksize is the constant 16;
+#     mpi/ec.c: wsize is (256 + BITS_PER_MPI_LIMB - 1) / BITS_PER_MPI_LIMB);
+#   * run-time bound: the array becomes a pointer to _alloca() storage of the
+#     same element count, which is what the compiler does for a VLA (function
+#     lifetime, stack, no free) - sntrup761.c and mceliece6688128f.c.
+# The arrays are never used with sizeof, which was checked.
+PATCHES = [
+    ("cipher/cipher-ccm.c",
+     "  unsigned char tmp[blocksize];\n",
+     "  unsigned char tmp[16]; /* blocksize */\n"),
+    ("mpi/ec.c",
+     "  mpi_limb_t n[wsize + 1];\n  mpi_limb_t s[wsize + 1];\n",
+     "  mpi_limb_t n[(256 + BITS_PER_MPI_LIMB - 1) / BITS_PER_MPI_LIMB + 1];\n"
+     "  mpi_limb_t s[(256 + BITS_PER_MPI_LIMB - 1) / BITS_PER_MPI_LIMB + 1];\n"),
+    ("cipher/mceliece6688128f.c",
+     "  int32 temp[2*n];\n  int16 pi_test[n], diff;\n",
+     "  int32 *temp = (int32 *) _alloca (sizeof (int32) * (2*n));\n"
+     "  int16 *pi_test = (int16 *) _alloca (sizeof (int16) * n);\n  int16 diff;\n"),
+    ("cipher/sntrup761.c",
+     "      uint16_t R2[(len + 1) / 2];\n      uint16_t M2[(len + 1) / 2];\n"
+     "      uint16_t bottomr[len / 2];\n      uint32_t bottomt[len / 2];\n",
+     "      uint16_t *R2 = (uint16_t *) _alloca (sizeof (uint16_t) * ((len + 1) / 2));\n"
+     "      uint16_t *M2 = (uint16_t *) _alloca (sizeof (uint16_t) * ((len + 1) / 2));\n"
+     "      uint16_t *bottomr = (uint16_t *) _alloca (sizeof (uint16_t) * (len / 2));\n"
+     "      uint32_t *bottomt = (uint32_t *) _alloca (sizeof (uint32_t) * (len / 2));\n"),
+    ("cipher/sntrup761.c",
+     "      uint16_t R2[(len + 1) / 2];\n      uint16_t M2[(len + 1) / 2];\n      long long i;\n",
+     "      uint16_t *R2 = (uint16_t *) _alloca (sizeof (uint16_t) * ((len + 1) / 2));\n"
+     "      uint16_t *M2 = (uint16_t *) _alloca (sizeof (uint16_t) * ((len + 1) / 2));\n      long long i;\n"),
+    ("cipher/sntrup761.c",
+     "  unsigned char x[inlen + 1];\n",
+     "  unsigned char *x = (unsigned char *) _alloca (inlen + 1);\n"),
+]
+
+
+def apply_patches(src):
+    import difflib
+    applied = []
+    for rel, old, new in PATCHES:
+        path = os.path.join(src, *rel.split("/"))
+        if not os.path.isfile(path):
+            continue
+        with open(path, newline="") as f:
+            text = f.read()
+        crlf = "\r\n" in text
+        o, n = (old.replace("\n", "\r\n"), new.replace("\n", "\r\n")) if crlf else (old, new)
+        if text.count(o) != 1:
+            continue
+        out = text.replace(o, n)
+        with open(path, "w", newline="") as f:
+            f.write(out)
+        diff = "".join(difflib.unified_diff(text.replace("\r\n", "\n").splitlines(True),
+                                            out.replace("\r\n", "\n").splitlines(True),
+                                            "a/" + rel, "b/" + rel, n=1))
+        print("PATCH applied to %s:\n%s" % (rel, diff), flush=True)
+        applied.append(rel)
+    say("source edits applied to: %s" % (", ".join(applied) or "none"))
+    return applied
 
 
 def host_gcc():
@@ -326,7 +398,7 @@ def build_gpg_error(arch, src, work, prefix, diag=False, lenient=False):
     shutil.copyfile(os.path.join(b, "gpg-error.h"), os.path.join(b, "gpgrt.h"))
     # gpg-error.def (needs config.h, hence the preprocessor)
     shutil.copyfile(os.path.join(sdir, "gpg-error.def.in"), os.path.join(b, "_gpg-error.def.h"))
-    rc, d = run(["cl", "/nologo", "/EP"] + cc_inc + ["_gpg-error.def.h"], cwd=b)
+    rc, d = run(["cl", "/nologo", "/EP"] + cc_inc + ["_gpg-error.def.h"], cwd=b, merge=False)
     with open(os.path.join(b, "gpg-error.def"), "wb") as f:
         f.write(b"\n".join(l for l in d.splitlines() if not l.startswith(b"#")) + b"\n")
     # older releases include this from w32 code
@@ -348,7 +420,7 @@ def build_gpg_error(arch, src, work, prefix, diag=False, lenient=False):
         items.append((s, os.path.splitext(os.path.basename(o))[0] + ".obj", b))
     if missing:
         say("libgpg-error: no C source for: %s" % " ".join(missing))
-    defines = ["HAVE_CONFIG_H", "DLL_EXPORT",
+    defines = ["HAVE_CONFIG_H", "DLL_EXPORT", "strcasecmp=_stricmp", "strncasecmp=_strnicmp",
                'LOCALEDIR="/usr/local/share/locale"', 'SYSCONFDIR="/usr/local/etc"']
     shim = make_shim(work, True)
     # only visibility.c needs it; it defines this macro itself before reading
@@ -382,6 +454,18 @@ def build_gpg_error(arch, src, work, prefix, diag=False, lenient=False):
     return None if failed else dll
 
 
+def gen_gost_sb(bld, src):
+    """cipher/gost-sb.h is generated at build time by a build-host program."""
+    c = os.path.join(src, "cipher", "gost-s-box.c")
+    if not os.path.isfile(c):
+        return
+    gcc = host_gcc()
+    d = os.path.join(bld, "cipher")
+    run([gcc, "-O0", "-o", "gost-s-box.exe", c], cwd=d)
+    run([os.path.join(d, "gost-s-box.exe"), "gost-sb.h"], cwd=d)
+    say("gost-sb.h generated (%d bytes)" % os.path.getsize(os.path.join(d, "gost-sb.h")))
+
+
 # ----------------------------------------------------------------- libgcrypt
 
 def build_gcrypt(arch, src, work, prefix):
@@ -392,7 +476,10 @@ def build_gcrypt(arch, src, work, prefix):
     say("libgcrypt: configure")
     cmd = [os.path.join(MSYS, "bash.exe"), fwd(os.path.join(HERE, "gnupg_cl.sh")),
            arch, src, bld, os.path.join(work, "gcinst"), "--"] + OPTS_GC + \
-          ["--with-libgpg-error-prefix=" + fwd(prefix)]
+          ["--with-libgpg-error-prefix=" + fwd(prefix),
+           # AC_TYPE_PID_T would #define pid_t __int64 on Win64, against the
+           # `typedef int pid_t` that gcrypt.h itself makes for non-GNU compilers
+           "ac_cv_type_pid_t=yes"]
     env = dict(os.environ, MSYS2_PATH_TYPE="inherit",
                GNUPG_EXTRA_PATH=os.path.join(prefix, "bin"))
     rc, out = run(cmd, timeout=1800, check=False, env=env)
@@ -400,9 +487,11 @@ def build_gcrypt(arch, src, work, prefix):
     if rc:
         raise SystemExit("libgcrypt configure failed")
 
-    libs = []   # (subdir, [obj names])
     items = []
     missing = []
+    asm_skipped = []
+    patched = apply_patches(src)
+    gen_gost_sb(bld, src)
     for sub in ("compat", "mpi", "cipher", "random", "src"):
         mkp = os.path.join(bld, sub, "Makefile")
         if not os.path.isfile(mkp):
@@ -415,14 +504,19 @@ def build_gcrypt(arch, src, work, prefix):
                 if s is not None and s.endswith(".rc"):
                     say("libgcrypt: %s is a resource, not compiled" % o)
                     continue
-                if s is None or s.endswith((".S", ".s")):
+                if s is not None and s.endswith((".S", ".s")):
+                    asm_skipped.append("%s/%s" % (sub, o))
+                    continue
+                if s is None:
                     missing.append("%s/%s" % (sub, o))
                     continue
                 oname = os.path.splitext(os.path.basename(o))[0]
                 if sub == "src" and oname.startswith("libgcrypt_la-"):
                     oname = oname[len("libgcrypt_la-"):]
                 items.append((s, sub + "-" + oname + ".obj", os.path.join(bld, sub)))
-    say("libgcrypt: %d objects from upstream's Makefiles" % (len(items) + len(missing)))
+    say("libgcrypt: %d objects from upstream's Makefiles, %d GNU-syntax assembler modules "
+        "not assembled by cl (the C code does not reference them: no USE_*_ASM is defined): %s"
+        % (len(items) + len(missing) + len(asm_skipped), len(asm_skipped), " ".join(asm_skipped)))
     if missing:
         say("libgcrypt: no C source for: %s" % " ".join(missing))
 
@@ -439,7 +533,8 @@ def build_gcrypt(arch, src, work, prefix):
     # not be optimised away); the flag is the only change.
     extra = {"rndjent.c": ["/Od"], "jitterentropy-base.c": ["/Od"]}
     ok, bad = compile_all(items, bld, includes, ["HAVE_CONFIG_H", "DLL_EXPORT",
-                           "HAVE_GCC_STORAGE_CLASS__THREAD=1", "__thread=__declspec(thread)"], extra,
+                           "HAVE_GCC_STORAGE_CLASS__THREAD=1", "__thread=__declspec(thread)",
+                           "strcasecmp=_stricmp", "strncasecmp=_strnicmp"], extra,
                           force=os.path.join(shim, "gnupg_cl_fi.h"))
     report("libgcrypt", bad)
     out_dir = os.path.join(bld, "src")

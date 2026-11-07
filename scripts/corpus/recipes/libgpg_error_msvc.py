@@ -1,9 +1,8 @@
 """libgpg-error built with cl, beside the MinGW and ELF builds of the same release.
 
-Only 1.35 is registered. 1.61 gets as far as the link and stops on one
-unresolved external (see "Not built" below), and libgcrypt does not build at
-all; both are recorded in "Targets investigated but not built" in
-scripts/corpus/README.md.
+Registered: 1.35 and 1.61 (x86 and x64). The libgcrypt family is built against
+the same sources by libgcrypt_msvc.py, which calls this driver for its
+dependency.
 
 Why not `make`. Upstream is autotools only. Under MSYS2 on the windows-2022
 runner `make` never compiles an object: configure is run as
@@ -50,11 +49,9 @@ ssize_t on x64 where MinGW's is 64, and x86 uses cl's calling-convention and
 CRT-import conventions. The DLL imports the UCRT/VCRT (/MD) where the MinGW DLL
 imports msvcrt.
 
-Not built: 1.61. Same driver, 26 of 26 translation units compile, and the link
-stops with `libgpg_error_la-argparse.obj : error LNK2019: unresolved
-external symbol strcasecmp referenced in function handle_meta_user`; cl has
-strcasecmp only as _stricmp. A command-line define would address it; it has not
-been run.
+1.61 and 1.35 are both registered. 1.61 compiles with `strcasecmp=_stricmp` and
+`strncasecmp=_strnicmp` defined on the command line (cl has only the underscore
+names; 1.61's argparse.c calls strcasecmp). No libgpg-error source is edited.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -87,4 +84,4 @@ def _ge(version):
     )
 
 
-RECIPES = {"libgpg-error_%s_msvc" % v: _ge(v) for v in ("1.35",)}
+RECIPES = {"libgpg-error_%s_msvc" % v: _ge(v) for v in _SHA256}
