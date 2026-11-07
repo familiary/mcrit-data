@@ -337,7 +337,7 @@
     "architecture": "x64",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), PNG_INTEL_SSE on (upstream's default on x86/amd64); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x64/libpng16.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "libpng16.dll",
     "dependencies": {
       "zlib_archive": {
@@ -347,12 +347,12 @@
       }
     },
     "family": "libpng",
-    "generated": "2026-09-23",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "libpng-2.0",
     "mcrit": "data/libpng/x64/mcrit/libpng_1.6.50_msvc143_x64_libpng16.dll.mcrit",
     "notes": "Imports zlib 1.3.1 from an MSVC-built zdll.lib rather than linking it statically, so this sample contains libpng code only - the MinGW artefact of this family was measured carrying 62 functions of zlib before the same fix was applied there. Upstream's projects/vstudio solution is deliberately not used: it compiles zlib into the same image. The staged zlib1.dll is a build input and is not itself recorded as an artefact. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. Two differences from the MinGW sibling beyond the compiler: this build has libpng's Intel SSE2 filters, which upstream enables by default on x86 and amd64 and which the cross build never reached because CMAKE_SYSTEM_PROCESSOR is empty there; and it is /O2 /Ob2 from CMake's MSVC Release where the MinGW one is -O3.",
-    "num_functions": 558,
+    "num_functions": 557,
     "removed_runtime_functions": [
       "DisableThreadLibraryCalls",
       "DllMain",
@@ -485,6 +485,7 @@
       "dllmain_dispatch",
       "dllmain_raw",
       "fclose",
+      "fflush",
       "find_pe_section",
       "floor",
       "fopen",
@@ -503,7 +504,7 @@
       "strlen",
       "terminate"
     ],
-    "sha256": "63ce50f8af9364e5fe5012234be6c09db2c8f208df9fdfd320bf36559710a86e",
+    "sha256": "37415df3ecc719973cf91507cbc92e3cddfcdf3d26bb905bd26c8ef4045be91e",
     "smda": "data/libpng/x64/smda/libpng_1.6.50_msvc143_x64_libpng16.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -519,7 +520,7 @@
     "architecture": "x86",
     "build_flags": "/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), PNG_INTEL_SSE on (upstream's default on x86/amd64); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link",
     "built_artifact": "build-x86/libpng16.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x86",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "libpng16.dll",
     "dependencies": {
       "zlib_archive": {
@@ -529,12 +530,12 @@
       }
     },
     "family": "libpng",
-    "generated": "2026-09-23",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "libpng-2.0",
     "mcrit": "data/libpng/x86/mcrit/libpng_1.6.50_msvc143_x86_libpng16.dll.mcrit",
     "notes": "Imports zlib 1.3.1 from an MSVC-built zdll.lib rather than linking it statically, so this sample contains libpng code only - the MinGW artefact of this family was measured carrying 62 functions of zlib before the same fix was applied there. Upstream's projects/vstudio solution is deliberately not used: it compiles zlib into the same image. The staged zlib1.dll is a build input and is not itself recorded as an artefact. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. Two differences from the MinGW sibling beyond the compiler: this build has libpng's Intel SSE2 filters, which upstream enables by default on x86 and amd64 and which the cross build never reached because CMAKE_SYSTEM_PROCESSOR is empty there; and it is /O2 /Ob2 from CMake's MSVC Release where the MinGW one is -O3.",
-    "num_functions": 561,
+    "num_functions": 560,
     "removed_runtime_functions": [
       "DllMain",
       "NtCurrentTeb",
@@ -651,6 +652,7 @@
       "_dtoul3_legacy",
       "_except_handler4",
       "_fclose",
+      "_fflush",
       "_filter_x86_sse2_floating_point_exception_default",
       "_floor",
       "_fopen",
@@ -702,7 +704,7 @@
       "gmtime",
       "is_potentially_valid_image_base"
     ],
-    "sha256": "8b1d223b49d13167f4298f37a9c8a696e7006138edc7143a4818d6ff1371c66a",
+    "sha256": "31073b134363c8ed2e10a2a66a99c6756f58f50f83b9930d6affb87ecda2d4fc",
     "smda": "data/libpng/x86/smda/libpng_1.6.50_msvc143_x86_libpng16.dll.7z",
     "smda_version": "4.8.0",
     "source": {
