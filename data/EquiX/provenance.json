@@ -348,12 +348,12 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "equix-hashx.dll",
     "family": "EquiX",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/EquiX/x64/mcrit/EquiX_tor-0.4.8.25_msvc143_x64_equix-hashx.dll.mcrit",
     "notes": "Compiled from Tor 0.4.8.25's vendored HashX and Equi-X C sources with the consumer's eight-byte HashX output size. Only the C translation units in src/ext/include.am are included; upstream source is unchanged. MSVC's intrinsics header is force-included with corrected architecture-test macros for program_exec.c, avoiding its x64 parse error without changing the source.",
-    "num_functions": 89,
+    "num_functions": 88,
     "removed_runtime_functions": [
       "GetCurrentProcess",
       "IsProcessorFeaturePresent",
@@ -403,7 +403,8 @@
       "free",
       "malloc",
       "memcpy",
-      "memset"
+      "memset",
+      "printf"
     ],
     "sha256": "f230215abdbd7f0d2a29d7241e15784b7d687f06d8dc526088b10519ddf5f1bc",
     "smda": "data/EquiX/x64/smda/EquiX_tor-0.4.8.25_msvc143_x64_equix-hashx.dll.7z",
@@ -424,12 +425,12 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "equix-hashx.dll",
     "family": "EquiX",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/EquiX/x86/mcrit/EquiX_tor-0.4.8.25_msvc143_x86_equix-hashx.dll.mcrit",
     "notes": "Compiled from Tor 0.4.8.25's vendored HashX and Equi-X C sources with the consumer's eight-byte HashX output size. Only the C translation units in src/ext/include.am are included; upstream source is unchanged. MSVC's intrinsics header is force-included with corrected architecture-test macros for program_exec.c, avoiding its x64 parse error without changing the source.",
-    "num_functions": 88,
+    "num_functions": 87,
     "removed_runtime_functions": [
       "ReadNoFence",
       "ReadPointerNoFence",
@@ -473,7 +474,8 @@
       "_malloc",
       "_memcpy",
       "_memset",
-      "_vfprintf_l"
+      "_vfprintf_l",
+      "printf"
     ],
     "sha256": "86712d7819e6ad07d6b03f598080020d23faa79aa6cae391885ab246871c4a64",
     "smda": "data/EquiX/x86/smda/EquiX_tor-0.4.8.25_msvc143_x86_equix-hashx.dll.7z",

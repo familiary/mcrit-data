@@ -12,9 +12,9 @@ no Equi-X or HashX symbols. This yields the candidate's ~73 functions without
 duplicating them under the Tor family.
 
 Image totals are kept+removed=total: Linux x86 67+7=74 and x64 50+5=55;
-MinGW x86 36+114=150 and x64 48+108=156; MSVC x86 88+43=131 and x64 89+49=138.
+MinGW x86 36+114=150 and x64 48+108=156; MSVC x86 87+44=131 and x64 88+50=138.
 Functions with >=10 instructions / distinct PicHashes: Linux x86 38/38, x64
-29/29; MinGW x86 33/33, x64 26/26; MSVC x86 62/59, x64 55/52. The only
+29/29; MinGW x86 33/33, x64 26/26; MSVC x86 61/58, x64 54/51. The only
 cross-build overlap at this floor is Linux/MinGW x86: three shared hashes
 (35 Linux-only and 30 MinGW-only), ``hashx_siphash_rng_init`` (12052320502482513257),
 ``build_solution`` (12171589145970997990), and ``build_solution_stage2``
@@ -26,9 +26,10 @@ GCC x86 startup glue survives with these names and PicHashes: ``_init``
 ``register_tm_clones`` 12965823927437490162, and
 ``__do_global_dtors_aux`` 2827890300630113428.
 
-The MSVC ``printf`` wrapper survives with PicHash 14739679411554417350 on x86
-and 121597203084696572 on x64; ``vprintf`` and ``__scrt_common_main_seh`` do
-not appear in either image.
+The MSVC ``printf`` wrapper (PicHash 14739679411554417350 on x86 and
+121597203084696572 on x64) is removed by the glue baseline once its stdio
+probes cover it; ``vprintf`` and ``__scrt_common_main_seh`` do not appear in
+either image.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
