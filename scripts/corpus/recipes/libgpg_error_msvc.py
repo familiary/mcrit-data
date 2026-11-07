@@ -7,7 +7,7 @@ _PY = "python {repo}/scripts/corpus/exercisers/gnupg_cl.py {arch} gpg-error {sou
 
 
 def _ge(version):
-    env = {"GNUPG_CL_DIAG": "1"} if version == "1.61" else {}
+    env = {}
     return Recipe(
         family="libgpg-error", version=version, upstream="https://gnupg.org/",
         license="LGPL-2.1-or-later",

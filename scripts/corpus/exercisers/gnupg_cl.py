@@ -194,6 +194,23 @@ def awk(awkfile, infile, args=(), stdin=None, cwd=None):
     return run(cmd, cwd=cwd, input=stdin, quiet=True)[1]
 
 
+def host_gcc():
+    """A MinGW gcc for mkheader.c, upstream's build-host helper: it includes
+    <unistd.h>, which cl does not have. The helper only runs at build time and
+    is not part of any artefact."""
+    g = shutil.which("gcc")
+    if g:
+        return g
+    for d in (r"C:\mingw64\bin", r"C:\msys64\mingw64\bin", r"C:\msys64\ucrt64\bin",
+              r"C:\ProgramData\mingw64\mingw64\bin"):
+        if os.path.isfile(os.path.join(d, "gcc.exe")):
+            return os.path.join(d, "gcc.exe")
+    w = shutil.which("windres")
+    if w and os.path.isfile(os.path.join(os.path.dirname(w), "gcc.exe")):
+        return os.path.join(os.path.dirname(w), "gcc.exe")
+    raise SystemExit("no gcc for mkheader.c")
+
+
 def build_gpg_error(arch, src, work, prefix, diag=False):
     bld = os.path.join(work, "ge")
     if os.path.isdir(bld):
@@ -233,7 +250,9 @@ def build_gpg_error(arch, src, work, prefix, diag=False):
     with open(os.path.join(b, "code-from-errno.h"), "wb") as f:
         f.write(awk(os.path.join(sdir, "mkerrcodes2.awk"), None, stdin=tab))
     # gpg-error.h / gpgrt.h
-    run(["cl", "/nologo", "/MD", "/I" + b, "/I" + sdir, "/Femkheader.exe",
+    gcc = host_gcc()
+    say("mkheader.c with " + gcc)
+    run([gcc, "-g", "-O0", "-I" + b, "-I" + sdir, "-o", "mkheader.exe",
          os.path.join(sdir, "mkheader.c")], cwd=b)
     lock = os.path.join(b, "lock-obj-pub.native.h")
     if os.path.exists(lock):
