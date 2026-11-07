@@ -3671,7 +3671,8 @@ NTSTATUS ProbeKernelFrame(PUCHAR input, SIZE_T length, PVOID context)
 # been measured, which is not what this baseline is for, so they were taken
 # out rather than fixed.
 _KERNEL_CRT_NAMES = (
-    "memcpy", "memmove", "memset", "memcmp",
+    "memcpy", "memmove", "memset", "memcmp", "memchr", "wcslen", "wcscmp",
+    "wcscpy", "wcscat",
     "strlen", "strcmp", "strncmp", "strcpy", "strncpy", "strcat", "strchr",
     "strrchr", "strstr",
     "wcsncmp", "wcsncpy", "wcschr", "wcsrchr", "wcsstr",
