@@ -540,6 +540,7 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| Havoc Demon | [#19](https://github.com/r0ny123/mcrit-data/issues/19) | Not built: at commit c84f7755a8b1c0f737576bdd3a0e982a296012f1, teamserver/pkg/common/builder/builder.go calls PatchConfig() and supplies CONFIG_BYTES from the listener configuration before compiling. No operator configuration, listener, server or payload was generated. This is an inspected build prerequisite, not a claimed compiler failure. |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |
