@@ -50,11 +50,11 @@ def say(*a):
     print("[%s]" % time.strftime("%H:%M:%S", time.gmtime()), *a, flush=True)
 
 
-def run(cmd, cwd=None, timeout=900, input=None, check=True, quiet=False, env=None):
+def run(cmd, cwd=None, timeout=900, input=None, check=True, quiet=False, env=None, merge=True):
     """Run a command, return (rc, stdout-bytes). stderr is merged in."""
     t = time.time()
     p = subprocess.run(cmd, cwd=cwd, input=input, stdout=subprocess.PIPE,
-                       stderr=subprocess.STDOUT, timeout=timeout, env=env)
+                       stderr=subprocess.STDOUT if merge else subprocess.DEVNULL, timeout=timeout, env=env)
     if not quiet:
         say("rc=%d %.1fs %s" % (p.returncode, time.time() - t,
                                 " ".join(cmd) if isinstance(cmd, list) else cmd))
@@ -193,7 +193,7 @@ def report(tag, bad):
 def awk(awkfile, infile, args=(), stdin=None, cwd=None):
     exe = os.path.join(MSYS, "awk.exe")
     cmd = [exe] + list(args) + ["-f", fwd(awkfile)] + ([fwd(infile)] if infile else [])
-    return run(cmd, cwd=cwd, input=stdin, quiet=True)[1]
+    return run(cmd, cwd=cwd, input=stdin, quiet=True, merge=False)[1]
 
 
 SHIM_H = r"""/* build-side compatibility for cl, written by gnupg_cl.py; upstream is not edited */
@@ -204,9 +204,20 @@ SHIM_H = r"""/* build-side compatibility for cl, written by gnupg_cl.py; upstrea
 #include <io.h>
 #include <process.h>
 #include <direct.h>
-#ifndef _SSIZE_T_DEFINED
-# define _SSIZE_T_DEFINED
-typedef ptrdiff_t ssize_t;
+#include <sys/stat.h>
+/* gcrypt.h declares these two the same way for every non-GNU compiler */
+typedef long ssize_t;
+typedef int pid_t;
+#ifndef F_OK
+# define F_OK 0
+# define X_OK 1
+# define W_OK 2
+# define R_OK 4
+#endif
+#ifndef S_IRUSR
+# define S_IRUSR _S_IREAD
+# define S_IWUSR _S_IWRITE
+# define S_IXUSR _S_IEXEC
 #endif
 #ifndef STDIN_FILENO
 # define STDIN_FILENO 0
@@ -235,10 +246,12 @@ def make_shim(work, gpgerr_macro_function):
         f.write("/* empty */\n")
     with open(os.path.join(d, "gnupg_cl_fi.h"), "w") as f:
         f.write('#include "gnupg_cl_shim.h"\n')
-        if gpgerr_macro_function:
-            f.write('#ifdef GNUPG_CL_FORCE_FUNC_MACRO\n#include "gpg-error.h"\n'
+    if gpgerr_macro_function:
+        with open(os.path.join(d, "visibility_cl.c"), "w") as f:
+            f.write('#include <config.h>\n#include <stdarg.h>\n#include <stdlib.h>\n'
+                    '#define _GPGRT_INCL_BY_VISIBILITY_C 1\n#include "gpgrt-int.h"\n'
                     '#undef GPGRT_HAVE_MACRO_FUNCTION\n'
-                    '#define GPGRT_HAVE_MACRO_FUNCTION 1\n#endif\n')
+                    '#define GPGRT_HAVE_MACRO_FUNCTION 1\n#include "visibility.c"\n')
     return d
 
 
@@ -294,7 +307,7 @@ def build_gpg_error(arch, src, work, prefix, diag=False, lenient=False):
         f.write(awk(os.path.join(sdir, "mkerrcodes.awk"), None, stdin=grepped))
     run(["cl", "/nologo", "/MD", "/I" + b, "/I" + sdir, "/Femkerrcodes.exe",
          os.path.join(sdir, "mkerrcodes.c")], cwd=b)
-    rc, tab = run([os.path.join(b, "mkerrcodes.exe")], cwd=b)
+    rc, tab = run([os.path.join(b, "mkerrcodes.exe")], cwd=b, merge=False)
     with open(os.path.join(b, "code-from-errno.h"), "wb") as f:
         f.write(awk(os.path.join(sdir, "mkerrcodes2.awk"), None, stdin=tab))
     # gpg-error.h / gpgrt.h
@@ -307,7 +320,7 @@ def build_gpg_error(arch, src, work, prefix, diag=False, lenient=False):
         os.remove(lock)
     cross = expand(mk, mk.get("mkheader_opts", "")).split()
     rc, hdr = run([os.path.join(b, "mkheader.exe")] + cross + [triple, fwd(os.path.join(sdir, "gpg-error.h.in")),
-                   "../config.h", version, vnum], cwd=b)
+                   "../config.h", version, vnum], cwd=b, merge=False)
     with open(os.path.join(b, "gpg-error.h"), "wb") as f:
         f.write(hdr)
     shutil.copyfile(os.path.join(b, "gpg-error.h"), os.path.join(b, "gpgrt.h"))
@@ -340,9 +353,9 @@ def build_gpg_error(arch, src, work, prefix, diag=False, lenient=False):
     shim = make_shim(work, True)
     # only visibility.c needs it; it defines this macro itself before reading
     # the header, so the command-line definition is the same definition
-    extra = {"visibility.c": ["/DGNUPG_CL_FORCE_FUNC_MACRO",
-                              "/D_GPGRT_INCL_BY_VISIBILITY_C=1"]}
-    ok, bad = compile_all(items, b, lambda cwd: [b, sdir, bld, shim], defines, extra,
+    items = [(os.path.join(shim, "visibility_cl.c"), "visibility.obj", b)
+             if os.path.basename(i[0]) == "visibility.c" else i for i in items]
+    ok, bad = compile_all(items, b, lambda cwd: [b, sdir, bld, shim], defines,
                           force=os.path.join(shim, "gnupg_cl_fi.h"))
     report("libgpg-error", bad)
     dll = os.path.join(b, "libgpg-error-0.dll")
@@ -425,7 +438,8 @@ def build_gcrypt(arch, src, work, prefix):
     # rndjent is compiled without optimisation upstream (its timing loop must
     # not be optimised away); the flag is the only change.
     extra = {"rndjent.c": ["/Od"], "jitterentropy-base.c": ["/Od"]}
-    ok, bad = compile_all(items, bld, includes, ["HAVE_CONFIG_H", "DLL_EXPORT"], extra,
+    ok, bad = compile_all(items, bld, includes, ["HAVE_CONFIG_H", "DLL_EXPORT",
+                           "HAVE_GCC_STORAGE_CLASS__THREAD=1", "__thread=__declspec(thread)"], extra,
                           force=os.path.join(shim, "gnupg_cl_fi.h"))
     report("libgcrypt", bad)
     out_dir = os.path.join(bld, "src")
