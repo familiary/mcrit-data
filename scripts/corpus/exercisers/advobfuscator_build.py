@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import shutil
 import shlex
 import subprocess
 from pathlib import Path
@@ -11,6 +12,53 @@ from pathlib import Path
 def _run(command: list[str], root: Path) -> None:
     print("+ " + subprocess.list2cmdline(command), flush=True)
     subprocess.run(command, cwd=root, check=True)
+
+
+# GCC 13 cannot deduce the class-type template parameter of the C++20
+# string-literal operators from the literal (class template argument deduction
+# for a non-type template parameter): "no matching function for call to
+# operator""_obf_bytes<...>()" and the same for _obf. The MinGW current build
+# therefore compiles a patched COPY of the two headers (the upstream checkout
+# is not modified) whose literal operators take a structural character-array
+# wrapper and construct the unchanged ObfuscatedBytes/ObfuscatedString from it.
+_LITERAL_PATCHES = {
+    "bytes.h": (
+        """  template<ObfuscatedBytes block>
+  consteval auto operator""_obf_bytes() { return block; }""",
+        """  template<std::size_t N>
+  struct ObfBytesLiteral {
+    constexpr ObfBytesLiteral(const char (&str)[N]) { for(std::size_t i = 0; i < N; ++i) chars[i] = str[i]; }
+    char chars[N];
+  };
+
+  template<ObfBytesLiteral lit>
+  consteval auto operator""_obf_bytes() { return ObfuscatedBytes<sizeof(lit.chars)>(lit.chars); }"""),
+    "string.h": (
+        """  template<ObfuscatedString str>
+  consteval auto operator ""_obf() { return str; }""",
+        """  template<std::size_t N>
+  struct ObfStringLiteral {
+    constexpr ObfStringLiteral(const char (&str)[N]) { for(std::size_t i = 0; i < N; ++i) chars[i] = str[i]; }
+    char chars[N];
+  };
+
+  template<ObfStringLiteral lit>
+  consteval auto operator ""_obf() { return ObfuscatedString<sizeof(lit.chars)>(lit.chars); }"""),
+}
+
+
+def _patched_include(root: Path) -> Path:
+    target = root / "build" / "include-gcc13"
+    if target.exists():
+        shutil.rmtree(target)
+    shutil.copytree(root / "include", target)
+    for name, (old, new) in _LITERAL_PATCHES.items():
+        path = target / "advobfuscator" / name
+        text = path.read_text()
+        if old not in text:
+            raise SystemExit("literal-operator patch does not apply to %s" % name)
+        path.write_text(text.replace(old, new, 1))
+    return target
 
 
 def build(args: argparse.Namespace) -> Path:
@@ -61,7 +109,9 @@ def build(args: argparse.Namespace) -> Path:
     if legacy:
         command += ["-DADV_LEGACY", "-I" + str(root / "Lib")]
     else:
-        command.append("-I" + str(root / "include"))
+        include = (_patched_include(root) if args.flavor == "mingw"
+                   else root / "include")
+        command.append("-I" + str(include))
     command += ["-o", str(output), str(source)]
     _run(command, root)
     return output
