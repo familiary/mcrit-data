@@ -357,7 +357,7 @@ Generated with `scripts/build_corpus.py`; see `data/libevent/provenance.json` fo
 
 ### libgcrypt<a id='libgcrypt'></a>
 
-libgcrypt is the crypto library of GnuPG 2.x, shipped as libgcrypt-20.dll by Gpg4win and as libgcrypt.so.20 by Linux distributions. Three versions: 1.8.14 (older line), 1.10.4 (long-term-support line) and 1.11.3 (current). Each is built as a shared library for MinGW-w64 and for Linux (ELF, glibc), x86 and x64, with upstream's assembler modules on, and links the paired libgpg-error rather than containing it. No MSVC build: upstream is autotools-only and cl does not complete it, see `scripts/corpus/README.md`.  
+libgcrypt is the crypto library of GnuPG 2.x, shipped as libgcrypt-20.dll by Gpg4win and as libgcrypt.so.20 by Linux distributions. Three versions: 1.8.14 (older line), 1.10.4 (long-term-support line) and 1.11.3 (current). Each is built as a shared library for MinGW-w64 and for Linux (ELF, glibc), x86 and x64, with upstream's assembler modules on, and links the paired libgpg-error rather than containing it. No MSVC build: see "Targets investigated but not built" in `scripts/corpus/README.md`.  
 Generated with `scripts/build_corpus.py`; see `data/libgcrypt/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: libgcrypt -->
@@ -373,7 +373,7 @@ Generated with `scripts/build_corpus.py`; see `data/libgcrypt/provenance.json` f
 
 ### libgpg-error<a id='libgpg-error'></a>
 
-libgpg-error provides the GnuPG error codes and the gpgrt runtime, and is imported by libgcrypt, GnuPG, libassuan and gpgme. Two versions, 1.35 and 1.61, shared library for MinGW-w64 and Linux (ELF, glibc), x86 and x64. The libgcrypt family links these builds of it.  
+libgpg-error provides the GnuPG error codes and the gpgrt runtime, and is imported by libgcrypt, GnuPG, libassuan and gpgme. Two versions, 1.35 and 1.61, shared library for MinGW-w64 and Linux (ELF, glibc), x86 and x64; 1.35 also built with MSVC (cl, `/MD`, without upstream's `make`, which cannot run on the Windows runner), x86 and x64. The libgcrypt family links these builds of it.  
 Generated with `scripts/build_corpus.py`; see `data/libgpg-error/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: libgpg-error -->
@@ -381,6 +381,7 @@ Generated with `scripts/build_corpus.py`; see `data/libgpg-error/provenance.json
 |----------|---------|----------|-------|------|
 | libgpg-error | 1.35 | GCC 13 (Linux, glibc) | [x86 ELF](data/libgpg-error/x86/mcrit/libgpg-error_1.35_gcc13_x86_libgpg-error.so.mcrit) / [x64 ELF](data/libgpg-error/x64/mcrit/libgpg-error_1.35_gcc13_x64_libgpg-error.so.mcrit) | [x86 ELF](data/libgpg-error/x86/smda/libgpg-error_1.35_gcc13_x86_libgpg-error.so.7z) / [x64 ELF](data/libgpg-error/x64/smda/libgpg-error_1.35_gcc13_x64_libgpg-error.so.7z) |
 | libgpg-error | 1.35 | MinGW-w64 GCC 13 | [x86 PE](data/libgpg-error/x86/mcrit/libgpg-error_1.35_mingw13_x86_libgpg-error-0.dll.mcrit) / [x64 PE](data/libgpg-error/x64/mcrit/libgpg-error_1.35_mingw13_x64_libgpg-error-0.dll.mcrit) | [x86 PE](data/libgpg-error/x86/smda/libgpg-error_1.35_mingw13_x86_libgpg-error-0.dll.7z) / [x64 PE](data/libgpg-error/x64/smda/libgpg-error_1.35_mingw13_x64_libgpg-error-0.dll.7z) |
+| libgpg-error | 1.35 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libgpg-error/x86/mcrit/libgpg-error_1.35_msvc143_x86_libgpg-error-0.dll.mcrit) / [x64 PE](data/libgpg-error/x64/mcrit/libgpg-error_1.35_msvc143_x64_libgpg-error-0.dll.mcrit) | [x86 PE](data/libgpg-error/x86/smda/libgpg-error_1.35_msvc143_x86_libgpg-error-0.dll.7z) / [x64 PE](data/libgpg-error/x64/smda/libgpg-error_1.35_msvc143_x64_libgpg-error-0.dll.7z) |
 | libgpg-error | 1.61 | GCC 13 (Linux, glibc) | [x86 ELF](data/libgpg-error/x86/mcrit/libgpg-error_1.61_gcc13_x86_libgpg-error.so.mcrit) / [x64 ELF](data/libgpg-error/x64/mcrit/libgpg-error_1.61_gcc13_x64_libgpg-error.so.mcrit) | [x86 ELF](data/libgpg-error/x86/smda/libgpg-error_1.61_gcc13_x86_libgpg-error.so.7z) / [x64 ELF](data/libgpg-error/x64/smda/libgpg-error_1.61_gcc13_x64_libgpg-error.so.7z) |
 | libgpg-error | 1.61 | MinGW-w64 GCC 13 | [x86 PE](data/libgpg-error/x86/mcrit/libgpg-error_1.61_mingw13_x86_libgpg-error-0.dll.mcrit) / [x64 PE](data/libgpg-error/x64/mcrit/libgpg-error_1.61_mingw13_x64_libgpg-error-0.dll.mcrit) | [x86 PE](data/libgpg-error/x86/smda/libgpg-error_1.61_mingw13_x86_libgpg-error-0.dll.7z) / [x64 PE](data/libgpg-error/x64/smda/libgpg-error_1.61_mingw13_x64_libgpg-error-0.dll.7z) |
 <!-- /generated -->
