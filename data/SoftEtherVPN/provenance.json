@@ -1,0 +1,521 @@
+{
+  "SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpnclient": {
+    "architecture": "x64",
+    "build_flags": "-O2 -fsigned-char; GCC 14 compatibility diagnostics: -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion",
+    "built_artifact": "bin/vpnclient/vpnclient",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "vpnclient",
+    "dependencies": {
+      "ncurses_deb": {
+        "archive": "libncurses-dev_6.5+20250216-2_amd64.deb",
+        "sha256": "6bd7804e243fc08e2a2af380c341998bb6d21dd35550588ecc430d7c488a410d",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses-dev_6.5+20250216-2_amd64.deb"
+      },
+      "ncurses_runtime_deb": {
+        "archive": "libncurses6_6.5+20250216-2_amd64.deb",
+        "sha256": "e00cbcc8c0826993f881f492c05f33ba8d79b5375dc5a2ab59c82e0c7b9179a9",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses6_6.5+20250216-2_amd64.deb"
+      },
+      "readline_deb": {
+        "archive": "libreadline-dev_8.2-6_amd64.deb",
+        "sha256": "7ebffb08d6874dbed13665911fd43f2f7782d1ea55dd8f5399077c44a47ab123",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline-dev_8.2-6_amd64.deb"
+      },
+      "readline_runtime_deb": {
+        "archive": "libreadline8t64_8.2-6_amd64.deb",
+        "sha256": "eeadf2b5e755c9f183883feea2d9b5b28560284275d5f54d3e55d0923b1d0967",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline8t64_8.2-6_amd64.deb"
+      },
+      "tinfo_deb": {
+        "archive": "libtinfo6_6.5+20250216-2_amd64.deb",
+        "sha256": "8b9f6a7983e9418564e48a627518de4c03917b56efe68d7f3e93bd8fffa1cc10",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libtinfo6_6.5+20250216-2_amd64.deb"
+      }
+    },
+    "family": "SoftEtherVPN",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "Apache-2.0",
+    "mcrit": "data/SoftEtherVPN/x64/mcrit/SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpnclient.mcrit",
+    "notes": "Stable 4.x RTM; the tracker report does not pin a narrower version.",
+    "num_functions": 6342,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "e82c5471668ca03eba96dabcedea238cec5e1a1ba9d0761e8eb298550eb2879f",
+    "smda": "data/SoftEtherVPN/x64/smda/SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpnclient.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "ed17437af9719ac66acab30faa29e375d613c35f",
+      "git_ref": "ed17437af9719ac66acab30faa29e375d613c35f",
+      "git_url": "https://github.com/SoftEtherVPN/SoftEtherVPN_Stable.git"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://github.com/SoftEtherVPN/SoftEtherVPN_Stable",
+    "version": "4.44-9807-rtm"
+  },
+  "SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpncmd": {
+    "architecture": "x64",
+    "build_flags": "-O2 -fsigned-char; GCC 14 compatibility diagnostics: -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion",
+    "built_artifact": "bin/vpncmd/vpncmd",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "vpncmd",
+    "dependencies": {
+      "ncurses_deb": {
+        "archive": "libncurses-dev_6.5+20250216-2_amd64.deb",
+        "sha256": "6bd7804e243fc08e2a2af380c341998bb6d21dd35550588ecc430d7c488a410d",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses-dev_6.5+20250216-2_amd64.deb"
+      },
+      "ncurses_runtime_deb": {
+        "archive": "libncurses6_6.5+20250216-2_amd64.deb",
+        "sha256": "e00cbcc8c0826993f881f492c05f33ba8d79b5375dc5a2ab59c82e0c7b9179a9",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses6_6.5+20250216-2_amd64.deb"
+      },
+      "readline_deb": {
+        "archive": "libreadline-dev_8.2-6_amd64.deb",
+        "sha256": "7ebffb08d6874dbed13665911fd43f2f7782d1ea55dd8f5399077c44a47ab123",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline-dev_8.2-6_amd64.deb"
+      },
+      "readline_runtime_deb": {
+        "archive": "libreadline8t64_8.2-6_amd64.deb",
+        "sha256": "eeadf2b5e755c9f183883feea2d9b5b28560284275d5f54d3e55d0923b1d0967",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline8t64_8.2-6_amd64.deb"
+      },
+      "tinfo_deb": {
+        "archive": "libtinfo6_6.5+20250216-2_amd64.deb",
+        "sha256": "8b9f6a7983e9418564e48a627518de4c03917b56efe68d7f3e93bd8fffa1cc10",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libtinfo6_6.5+20250216-2_amd64.deb"
+      }
+    },
+    "family": "SoftEtherVPN",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "Apache-2.0",
+    "mcrit": "data/SoftEtherVPN/x64/mcrit/SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpncmd.mcrit",
+    "notes": "Stable 4.x RTM; the tracker report does not pin a narrower version.",
+    "num_functions": 6341,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "2fd64497e70b8149bee5bb86088039f60a2a76d4b93d6633eabcb18466743f47",
+    "smda": "data/SoftEtherVPN/x64/smda/SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpncmd.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "ed17437af9719ac66acab30faa29e375d613c35f",
+      "git_ref": "ed17437af9719ac66acab30faa29e375d613c35f",
+      "git_url": "https://github.com/SoftEtherVPN/SoftEtherVPN_Stable.git"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://github.com/SoftEtherVPN/SoftEtherVPN_Stable",
+    "version": "4.44-9807-rtm"
+  },
+  "SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpnserver": {
+    "architecture": "x64",
+    "build_flags": "-O2 -fsigned-char; GCC 14 compatibility diagnostics: -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion",
+    "built_artifact": "bin/vpnserver/vpnserver",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "vpnserver",
+    "dependencies": {
+      "ncurses_deb": {
+        "archive": "libncurses-dev_6.5+20250216-2_amd64.deb",
+        "sha256": "6bd7804e243fc08e2a2af380c341998bb6d21dd35550588ecc430d7c488a410d",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses-dev_6.5+20250216-2_amd64.deb"
+      },
+      "ncurses_runtime_deb": {
+        "archive": "libncurses6_6.5+20250216-2_amd64.deb",
+        "sha256": "e00cbcc8c0826993f881f492c05f33ba8d79b5375dc5a2ab59c82e0c7b9179a9",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses6_6.5+20250216-2_amd64.deb"
+      },
+      "readline_deb": {
+        "archive": "libreadline-dev_8.2-6_amd64.deb",
+        "sha256": "7ebffb08d6874dbed13665911fd43f2f7782d1ea55dd8f5399077c44a47ab123",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline-dev_8.2-6_amd64.deb"
+      },
+      "readline_runtime_deb": {
+        "archive": "libreadline8t64_8.2-6_amd64.deb",
+        "sha256": "eeadf2b5e755c9f183883feea2d9b5b28560284275d5f54d3e55d0923b1d0967",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline8t64_8.2-6_amd64.deb"
+      },
+      "tinfo_deb": {
+        "archive": "libtinfo6_6.5+20250216-2_amd64.deb",
+        "sha256": "8b9f6a7983e9418564e48a627518de4c03917b56efe68d7f3e93bd8fffa1cc10",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libtinfo6_6.5+20250216-2_amd64.deb"
+      }
+    },
+    "family": "SoftEtherVPN",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "Apache-2.0",
+    "mcrit": "data/SoftEtherVPN/x64/mcrit/SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpnserver.mcrit",
+    "notes": "Stable 4.x RTM; the tracker report does not pin a narrower version.",
+    "num_functions": 6345,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "d440a05528652226afa6416a99de5cb73e671f325f8f761698bcd32f2aeacfed",
+    "smda": "data/SoftEtherVPN/x64/smda/SoftEtherVPN_4.44-9807-rtm_gcc14_x64_vpnserver.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "ed17437af9719ac66acab30faa29e375d613c35f",
+      "git_ref": "ed17437af9719ac66acab30faa29e375d613c35f",
+      "git_url": "https://github.com/SoftEtherVPN/SoftEtherVPN_Stable.git"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://github.com/SoftEtherVPN/SoftEtherVPN_Stable",
+    "version": "4.44-9807-rtm"
+  },
+  "SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpnclient": {
+    "architecture": "x86",
+    "build_flags": "-O2 -m32 -fsigned-char; GCC 14 compatibility diagnostics: -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion",
+    "built_artifact": "bin/vpnclient/vpnclient",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "vpnclient",
+    "dependencies": {
+      "ncurses32_deb": {
+        "archive": "libncurses-dev_6.5+20250216-2_i386.deb",
+        "sha256": "9e7e2189dbe0b0440eb1e808ad78b6d6f410a12ea19cd34e118fb4cd03bad495",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses-dev_6.5+20250216-2_i386.deb"
+      },
+      "ncurses32_runtime_deb": {
+        "archive": "libncurses6_6.5+20250216-2_i386.deb",
+        "sha256": "c7d36a0324dcd06127d8e730e9c219c5950def935da0e362fd2506a1b92bda55",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses6_6.5+20250216-2_i386.deb"
+      },
+      "ncurses_deb": {
+        "archive": "libncurses-dev_6.5+20250216-2_amd64.deb",
+        "sha256": "6bd7804e243fc08e2a2af380c341998bb6d21dd35550588ecc430d7c488a410d",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses-dev_6.5+20250216-2_amd64.deb"
+      },
+      "ncurses_runtime_deb": {
+        "archive": "libncurses6_6.5+20250216-2_amd64.deb",
+        "sha256": "e00cbcc8c0826993f881f492c05f33ba8d79b5375dc5a2ab59c82e0c7b9179a9",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses6_6.5+20250216-2_amd64.deb"
+      },
+      "readline32_deb": {
+        "archive": "libreadline-dev_8.2-6_i386.deb",
+        "sha256": "7e73ca3460f4f01a6c8978642a2cba60fe0816e6a59acebb892adc264ab5eedd",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline-dev_8.2-6_i386.deb"
+      },
+      "readline32_runtime_deb": {
+        "archive": "libreadline8t64_8.2-6_i386.deb",
+        "sha256": "87f68eeeadde39bc92baff9928b8d392b48b03a45f8027173dcfc46670cd1912",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline8t64_8.2-6_i386.deb"
+      },
+      "readline_deb": {
+        "archive": "libreadline-dev_8.2-6_amd64.deb",
+        "sha256": "7ebffb08d6874dbed13665911fd43f2f7782d1ea55dd8f5399077c44a47ab123",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline-dev_8.2-6_amd64.deb"
+      },
+      "readline_runtime_deb": {
+        "archive": "libreadline8t64_8.2-6_amd64.deb",
+        "sha256": "eeadf2b5e755c9f183883feea2d9b5b28560284275d5f54d3e55d0923b1d0967",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline8t64_8.2-6_amd64.deb"
+      },
+      "ssl32_deb": {
+        "archive": "libssl-dev_3.5.7-1~deb13u3_i386.deb",
+        "sha256": "a78cd670a342b73ef4015361c1343f6b82da046c287057d7f0ddbf7ba996ca1b",
+        "url": "https://deb.debian.org/debian/pool/main/o/openssl/libssl-dev_3.5.7-1~deb13u3_i386.deb"
+      },
+      "ssl32_runtime_deb": {
+        "archive": "libssl3t64_3.5.7-1~deb13u3_i386.deb",
+        "sha256": "c6988eab4110e14aa7306a9b32356bc9b699f7f657acdc0211a458f6d91819b5",
+        "url": "https://deb.debian.org/debian/pool/main/o/openssl/libssl3t64_3.5.7-1~deb13u3_i386.deb"
+      },
+      "tinfo32_deb": {
+        "archive": "libtinfo6_6.5+20250216-2_i386.deb",
+        "sha256": "3488ab080c07056b2ddef81f3d75fac7358ebfd63ac04a224fa87571152f39b7",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libtinfo6_6.5+20250216-2_i386.deb"
+      },
+      "tinfo_deb": {
+        "archive": "libtinfo6_6.5+20250216-2_amd64.deb",
+        "sha256": "8b9f6a7983e9418564e48a627518de4c03917b56efe68d7f3e93bd8fffa1cc10",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libtinfo6_6.5+20250216-2_amd64.deb"
+      },
+      "zlib32_deb": {
+        "archive": "zlib1g-dev_1.3.dfsg+really1.3.1-1+b1_i386.deb",
+        "sha256": "b5ca31bbc301f5f8be89ef90a1935c826bf562d6f6601e9169709366e3bad263",
+        "url": "https://deb.debian.org/debian/pool/main/z/zlib/zlib1g-dev_1.3.dfsg+really1.3.1-1+b1_i386.deb"
+      },
+      "zlib32_runtime_deb": {
+        "archive": "zlib1g_1.3.dfsg+really1.3.1-1+b1_i386.deb",
+        "sha256": "8950c79b1ade51f53b2f37863aec532cfaca3dff315e28f0c5b53902425c41ed",
+        "url": "https://deb.debian.org/debian/pool/main/z/zlib/zlib1g_1.3.dfsg+really1.3.1-1+b1_i386.deb"
+      },
+      "zstd32_deb": {
+        "archive": "libzstd1_1.5.7+dfsg-1_i386.deb",
+        "sha256": "305f0ab5f16552c44906b3f3f6e9ad3eb33f6f857c3347fdf3bd987abd6989a9",
+        "url": "https://deb.debian.org/debian/pool/main/libz/libzstd/libzstd1_1.5.7+dfsg-1_i386.deb"
+      }
+    },
+    "family": "SoftEtherVPN",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "Apache-2.0",
+    "mcrit": "data/SoftEtherVPN/x86/mcrit/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpnclient.mcrit",
+    "notes": "Native hamcore builder supplies the same resource archive before the i386 build.",
+    "num_functions": 6685,
+    "removed_runtime_functions": [
+      "__divdi3",
+      "__divmoddi4",
+      "__udivdi3",
+      "__umoddi3",
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.cx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "__x86.get_pc_thunk.si",
+      "frame_dummy"
+    ],
+    "sha256": "38e2a75cce901f0b0f15d13f143042fadaa52f21b9314df4af6acdbabfb306b7",
+    "smda": "data/SoftEtherVPN/x86/smda/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpnclient.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "ed17437af9719ac66acab30faa29e375d613c35f",
+      "git_ref": "ed17437af9719ac66acab30faa29e375d613c35f",
+      "git_url": "https://github.com/SoftEtherVPN/SoftEtherVPN_Stable.git"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://github.com/SoftEtherVPN/SoftEtherVPN_Stable",
+    "version": "4.44-9807-rtm"
+  },
+  "SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpncmd": {
+    "architecture": "x86",
+    "build_flags": "-O2 -m32 -fsigned-char; GCC 14 compatibility diagnostics: -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion",
+    "built_artifact": "bin/vpncmd/vpncmd",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "vpncmd",
+    "dependencies": {
+      "ncurses32_deb": {
+        "archive": "libncurses-dev_6.5+20250216-2_i386.deb",
+        "sha256": "9e7e2189dbe0b0440eb1e808ad78b6d6f410a12ea19cd34e118fb4cd03bad495",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses-dev_6.5+20250216-2_i386.deb"
+      },
+      "ncurses32_runtime_deb": {
+        "archive": "libncurses6_6.5+20250216-2_i386.deb",
+        "sha256": "c7d36a0324dcd06127d8e730e9c219c5950def935da0e362fd2506a1b92bda55",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses6_6.5+20250216-2_i386.deb"
+      },
+      "ncurses_deb": {
+        "archive": "libncurses-dev_6.5+20250216-2_amd64.deb",
+        "sha256": "6bd7804e243fc08e2a2af380c341998bb6d21dd35550588ecc430d7c488a410d",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses-dev_6.5+20250216-2_amd64.deb"
+      },
+      "ncurses_runtime_deb": {
+        "archive": "libncurses6_6.5+20250216-2_amd64.deb",
+        "sha256": "e00cbcc8c0826993f881f492c05f33ba8d79b5375dc5a2ab59c82e0c7b9179a9",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses6_6.5+20250216-2_amd64.deb"
+      },
+      "readline32_deb": {
+        "archive": "libreadline-dev_8.2-6_i386.deb",
+        "sha256": "7e73ca3460f4f01a6c8978642a2cba60fe0816e6a59acebb892adc264ab5eedd",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline-dev_8.2-6_i386.deb"
+      },
+      "readline32_runtime_deb": {
+        "archive": "libreadline8t64_8.2-6_i386.deb",
+        "sha256": "87f68eeeadde39bc92baff9928b8d392b48b03a45f8027173dcfc46670cd1912",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline8t64_8.2-6_i386.deb"
+      },
+      "readline_deb": {
+        "archive": "libreadline-dev_8.2-6_amd64.deb",
+        "sha256": "7ebffb08d6874dbed13665911fd43f2f7782d1ea55dd8f5399077c44a47ab123",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline-dev_8.2-6_amd64.deb"
+      },
+      "readline_runtime_deb": {
+        "archive": "libreadline8t64_8.2-6_amd64.deb",
+        "sha256": "eeadf2b5e755c9f183883feea2d9b5b28560284275d5f54d3e55d0923b1d0967",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline8t64_8.2-6_amd64.deb"
+      },
+      "ssl32_deb": {
+        "archive": "libssl-dev_3.5.7-1~deb13u3_i386.deb",
+        "sha256": "a78cd670a342b73ef4015361c1343f6b82da046c287057d7f0ddbf7ba996ca1b",
+        "url": "https://deb.debian.org/debian/pool/main/o/openssl/libssl-dev_3.5.7-1~deb13u3_i386.deb"
+      },
+      "ssl32_runtime_deb": {
+        "archive": "libssl3t64_3.5.7-1~deb13u3_i386.deb",
+        "sha256": "c6988eab4110e14aa7306a9b32356bc9b699f7f657acdc0211a458f6d91819b5",
+        "url": "https://deb.debian.org/debian/pool/main/o/openssl/libssl3t64_3.5.7-1~deb13u3_i386.deb"
+      },
+      "tinfo32_deb": {
+        "archive": "libtinfo6_6.5+20250216-2_i386.deb",
+        "sha256": "3488ab080c07056b2ddef81f3d75fac7358ebfd63ac04a224fa87571152f39b7",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libtinfo6_6.5+20250216-2_i386.deb"
+      },
+      "tinfo_deb": {
+        "archive": "libtinfo6_6.5+20250216-2_amd64.deb",
+        "sha256": "8b9f6a7983e9418564e48a627518de4c03917b56efe68d7f3e93bd8fffa1cc10",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libtinfo6_6.5+20250216-2_amd64.deb"
+      },
+      "zlib32_deb": {
+        "archive": "zlib1g-dev_1.3.dfsg+really1.3.1-1+b1_i386.deb",
+        "sha256": "b5ca31bbc301f5f8be89ef90a1935c826bf562d6f6601e9169709366e3bad263",
+        "url": "https://deb.debian.org/debian/pool/main/z/zlib/zlib1g-dev_1.3.dfsg+really1.3.1-1+b1_i386.deb"
+      },
+      "zlib32_runtime_deb": {
+        "archive": "zlib1g_1.3.dfsg+really1.3.1-1+b1_i386.deb",
+        "sha256": "8950c79b1ade51f53b2f37863aec532cfaca3dff315e28f0c5b53902425c41ed",
+        "url": "https://deb.debian.org/debian/pool/main/z/zlib/zlib1g_1.3.dfsg+really1.3.1-1+b1_i386.deb"
+      },
+      "zstd32_deb": {
+        "archive": "libzstd1_1.5.7+dfsg-1_i386.deb",
+        "sha256": "305f0ab5f16552c44906b3f3f6e9ad3eb33f6f857c3347fdf3bd987abd6989a9",
+        "url": "https://deb.debian.org/debian/pool/main/libz/libzstd/libzstd1_1.5.7+dfsg-1_i386.deb"
+      }
+    },
+    "family": "SoftEtherVPN",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "Apache-2.0",
+    "mcrit": "data/SoftEtherVPN/x86/mcrit/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpncmd.mcrit",
+    "notes": "Native hamcore builder supplies the same resource archive before the i386 build.",
+    "num_functions": 6697,
+    "removed_runtime_functions": [
+      "__divdi3",
+      "__divmoddi4",
+      "__udivdi3",
+      "__umoddi3",
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.cx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "__x86.get_pc_thunk.si",
+      "frame_dummy"
+    ],
+    "sha256": "6e4318ed867afc32bc43664882a35e8b97768bb18e4edb4e7154c6abdf137803",
+    "smda": "data/SoftEtherVPN/x86/smda/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpncmd.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "ed17437af9719ac66acab30faa29e375d613c35f",
+      "git_ref": "ed17437af9719ac66acab30faa29e375d613c35f",
+      "git_url": "https://github.com/SoftEtherVPN/SoftEtherVPN_Stable.git"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://github.com/SoftEtherVPN/SoftEtherVPN_Stable",
+    "version": "4.44-9807-rtm"
+  },
+  "SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpnserver": {
+    "architecture": "x86",
+    "build_flags": "-O2 -m32 -fsigned-char; GCC 14 compatibility diagnostics: -Wno-error=incompatible-pointer-types -Wno-error=implicit-function-declaration -Wno-error=int-conversion",
+    "built_artifact": "bin/vpnserver/vpnserver",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "vpnserver",
+    "dependencies": {
+      "ncurses32_deb": {
+        "archive": "libncurses-dev_6.5+20250216-2_i386.deb",
+        "sha256": "9e7e2189dbe0b0440eb1e808ad78b6d6f410a12ea19cd34e118fb4cd03bad495",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses-dev_6.5+20250216-2_i386.deb"
+      },
+      "ncurses32_runtime_deb": {
+        "archive": "libncurses6_6.5+20250216-2_i386.deb",
+        "sha256": "c7d36a0324dcd06127d8e730e9c219c5950def935da0e362fd2506a1b92bda55",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses6_6.5+20250216-2_i386.deb"
+      },
+      "ncurses_deb": {
+        "archive": "libncurses-dev_6.5+20250216-2_amd64.deb",
+        "sha256": "6bd7804e243fc08e2a2af380c341998bb6d21dd35550588ecc430d7c488a410d",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses-dev_6.5+20250216-2_amd64.deb"
+      },
+      "ncurses_runtime_deb": {
+        "archive": "libncurses6_6.5+20250216-2_amd64.deb",
+        "sha256": "e00cbcc8c0826993f881f492c05f33ba8d79b5375dc5a2ab59c82e0c7b9179a9",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libncurses6_6.5+20250216-2_amd64.deb"
+      },
+      "readline32_deb": {
+        "archive": "libreadline-dev_8.2-6_i386.deb",
+        "sha256": "7e73ca3460f4f01a6c8978642a2cba60fe0816e6a59acebb892adc264ab5eedd",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline-dev_8.2-6_i386.deb"
+      },
+      "readline32_runtime_deb": {
+        "archive": "libreadline8t64_8.2-6_i386.deb",
+        "sha256": "87f68eeeadde39bc92baff9928b8d392b48b03a45f8027173dcfc46670cd1912",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline8t64_8.2-6_i386.deb"
+      },
+      "readline_deb": {
+        "archive": "libreadline-dev_8.2-6_amd64.deb",
+        "sha256": "7ebffb08d6874dbed13665911fd43f2f7782d1ea55dd8f5399077c44a47ab123",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline-dev_8.2-6_amd64.deb"
+      },
+      "readline_runtime_deb": {
+        "archive": "libreadline8t64_8.2-6_amd64.deb",
+        "sha256": "eeadf2b5e755c9f183883feea2d9b5b28560284275d5f54d3e55d0923b1d0967",
+        "url": "https://deb.debian.org/debian/pool/main/r/readline/libreadline8t64_8.2-6_amd64.deb"
+      },
+      "ssl32_deb": {
+        "archive": "libssl-dev_3.5.7-1~deb13u3_i386.deb",
+        "sha256": "a78cd670a342b73ef4015361c1343f6b82da046c287057d7f0ddbf7ba996ca1b",
+        "url": "https://deb.debian.org/debian/pool/main/o/openssl/libssl-dev_3.5.7-1~deb13u3_i386.deb"
+      },
+      "ssl32_runtime_deb": {
+        "archive": "libssl3t64_3.5.7-1~deb13u3_i386.deb",
+        "sha256": "c6988eab4110e14aa7306a9b32356bc9b699f7f657acdc0211a458f6d91819b5",
+        "url": "https://deb.debian.org/debian/pool/main/o/openssl/libssl3t64_3.5.7-1~deb13u3_i386.deb"
+      },
+      "tinfo32_deb": {
+        "archive": "libtinfo6_6.5+20250216-2_i386.deb",
+        "sha256": "3488ab080c07056b2ddef81f3d75fac7358ebfd63ac04a224fa87571152f39b7",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libtinfo6_6.5+20250216-2_i386.deb"
+      },
+      "tinfo_deb": {
+        "archive": "libtinfo6_6.5+20250216-2_amd64.deb",
+        "sha256": "8b9f6a7983e9418564e48a627518de4c03917b56efe68d7f3e93bd8fffa1cc10",
+        "url": "https://deb.debian.org/debian/pool/main/n/ncurses/libtinfo6_6.5+20250216-2_amd64.deb"
+      },
+      "zlib32_deb": {
+        "archive": "zlib1g-dev_1.3.dfsg+really1.3.1-1+b1_i386.deb",
+        "sha256": "b5ca31bbc301f5f8be89ef90a1935c826bf562d6f6601e9169709366e3bad263",
+        "url": "https://deb.debian.org/debian/pool/main/z/zlib/zlib1g-dev_1.3.dfsg+really1.3.1-1+b1_i386.deb"
+      },
+      "zlib32_runtime_deb": {
+        "archive": "zlib1g_1.3.dfsg+really1.3.1-1+b1_i386.deb",
+        "sha256": "8950c79b1ade51f53b2f37863aec532cfaca3dff315e28f0c5b53902425c41ed",
+        "url": "https://deb.debian.org/debian/pool/main/z/zlib/zlib1g_1.3.dfsg+really1.3.1-1+b1_i386.deb"
+      },
+      "zstd32_deb": {
+        "archive": "libzstd1_1.5.7+dfsg-1_i386.deb",
+        "sha256": "305f0ab5f16552c44906b3f3f6e9ad3eb33f6f857c3347fdf3bd987abd6989a9",
+        "url": "https://deb.debian.org/debian/pool/main/libz/libzstd/libzstd1_1.5.7+dfsg-1_i386.deb"
+      }
+    },
+    "family": "SoftEtherVPN",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "Apache-2.0",
+    "mcrit": "data/SoftEtherVPN/x86/mcrit/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpnserver.mcrit",
+    "notes": "Native hamcore builder supplies the same resource archive before the i386 build.",
+    "num_functions": 6702,
+    "removed_runtime_functions": [
+      "__divdi3",
+      "__divmoddi4",
+      "__udivdi3",
+      "__umoddi3",
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.cx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "__x86.get_pc_thunk.si",
+      "frame_dummy"
+    ],
+    "sha256": "40371358971310c899e77945e74470fc97387e47a12a4dcb059b3cba550a8326",
+    "smda": "data/SoftEtherVPN/x86/smda/SoftEtherVPN_4.44-9807-rtm_gcc14_x86_vpnserver.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "ed17437af9719ac66acab30faa29e375d613c35f",
+      "git_ref": "ed17437af9719ac66acab30faa29e375d613c35f",
+      "git_url": "https://github.com/SoftEtherVPN/SoftEtherVPN_Stable.git"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://github.com/SoftEtherVPN/SoftEtherVPN_Stable",
+    "version": "4.44-9807-rtm"
+  }
+}
