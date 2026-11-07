@@ -137,7 +137,7 @@ RECIPES = {
                    Artifact(path="corpus-out/meshconsole/MeshAgentConsole.exe",
                             component="meshconsole", is_library=True,
                             pdb="corpus-out/meshconsole/MeshAgentConsole.pdb")],
-        toolchains=["msvc_x86", "msvc_x64"],
+        toolchains=["msvc_x86"],
         requires=["msbuild", "cl", "link", "nmake", "perl", "dumpbin", "tar", "lib"],
         build_flags="upstream Release /MD /Zi /Brepro /OPT:NOREF /OPT:NOICF "
                     "/INCREMENTAL:NO; whole program optimization disabled",
