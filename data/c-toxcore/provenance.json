@@ -404,12 +404,12 @@
       }
     },
     "family": "c-toxcore",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "GPL-3.0-or-later",
     "mcrit": "data/c-toxcore/x64/mcrit/c-toxcore_0.2.12_msvc143_x64_toxcore.dll.mcrit",
     "notes": "The combined libtoxcore (toxcore, toxencryptsave, events and groups), toxav off (libvpx and opus are not families here). libsodium 1.0.20 is built from the pinned tarball and linked dynamically, so only its import thunks are present; the vendored cmp (TokTok/cmp submodule, 0.2.18 and later) is linked as a separate throwaway library so it stays attributed to data/cmp. See the recipe docstring for the separation measurement. Crytox evidence is structural (K7 Labs, Zscaler); no function-level match is published.",
-    "num_functions": 1133,
+    "num_functions": 1132,
     "removed_runtime_functions": [
       "DisableThreadLibraryCalls",
       "DllMain",
@@ -557,6 +557,7 @@
       "memcpy",
       "memmove",
       "memset",
+      "printf",
       "qsort",
       "realloc",
       "snprintf",
@@ -600,12 +601,12 @@
       }
     },
     "family": "c-toxcore",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "GPL-3.0-or-later",
     "mcrit": "data/c-toxcore/x86/mcrit/c-toxcore_0.2.12_msvc143_x86_toxcore.dll.mcrit",
     "notes": "The combined libtoxcore (toxcore, toxencryptsave, events and groups), toxav off (libvpx and opus are not families here). libsodium 1.0.20 is built from the pinned tarball and linked dynamically, so only its import thunks are present; the vendored cmp (TokTok/cmp submodule, 0.2.18 and later) is linked as a separate throwaway library so it stays attributed to data/cmp. See the recipe docstring for the separation measurement. Crytox evidence is structural (K7 Labs, Zscaler); no function-level match is published.",
-    "num_functions": 1135,
+    "num_functions": 1134,
     "removed_runtime_functions": [
       "DllMain",
       "NtCurrentTeb",
@@ -770,6 +771,7 @@
       "find_pe_section",
       "fprintf",
       "is_potentially_valid_image_base",
+      "printf",
       "snprintf",
       "sprintf",
       "time",
@@ -1193,7 +1195,7 @@
       }
     },
     "family": "c-toxcore",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "GPL-3.0-or-later",
     "mcrit": "data/c-toxcore/x64/mcrit/c-toxcore_0.2.18_msvc143_x64_toxcore.dll.mcrit",
@@ -1385,7 +1387,7 @@
       }
     },
     "family": "c-toxcore",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "GPL-3.0-or-later",
     "mcrit": "data/c-toxcore/x86/mcrit/c-toxcore_0.2.18_msvc143_x86_toxcore.dll.mcrit",
@@ -1980,7 +1982,7 @@
       }
     },
     "family": "c-toxcore",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "GPL-3.0-or-later",
     "mcrit": "data/c-toxcore/x64/mcrit/c-toxcore_0.2.24_msvc143_x64_toxcore.dll.mcrit",
@@ -2173,7 +2175,7 @@
       }
     },
     "family": "c-toxcore",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "GPL-3.0-or-later",
     "mcrit": "data/c-toxcore/x86/mcrit/c-toxcore_0.2.24_msvc143_x86_toxcore.dll.mcrit",
