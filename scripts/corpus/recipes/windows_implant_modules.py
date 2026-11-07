@@ -25,15 +25,22 @@ _LINK = ('/DLL /NOENTRY /FORCE:UNRESOLVED /DEBUG /Brepro '
 
 
 def _analysis_steps(selection, includes, defines):
-    # A response file keeps the compiler invocation below cmd.exe's limit.
+    # Numbered object files preserve TUs that share a basename.
     prepare = (
-        "from pathlib import Path; "
+        "from pathlib import Path; import json; "
         "Path('corpus_obj').mkdir(exist_ok=True); "
         "files=" + selection + "; "
         "assert files, 'no module source files selected'; "
-        "assert len(files)==len(set(p.stem for p in files)), 'duplicate object names'; "
-        "Path('corpus_sources.rsp').write_text(chr(10).join(chr(34)+str(p)+chr(34) for p in files)); "
+        "assert all(p.is_file() for p in files), 'missing module source'; "
+        "Path('corpus_sources.json').write_text(json.dumps([str(p) for p in files])); "
         "print('Module sources:',len(files))"
+    )
+    compile_sources = (
+        "from pathlib import Path; import json,subprocess; "
+        "files=json.loads(Path('corpus_sources.json').read_text()); "
+        "[subprocess.run(['cl']+'" + _FLAGS + ' ' + includes + ' ' + defines +
+        "'.split()+['/Focorpus_obj/'+str(i)+'.obj','/Fdcorpus_compile.pdb',p],"
+        "check=True) for i,p in enumerate(files)]"
     )
     link = (
         "from pathlib import Path; import subprocess; "
@@ -44,8 +51,7 @@ def _analysis_steps(selection, includes, defines):
     )
     return [
         BuildStep('python -c "' + prepare + '"'),
-        BuildStep('cl ' + _FLAGS + ' ' + includes + ' ' + defines +
-                  ' /Focorpus_obj/ /Fdcorpus_compile.pdb @corpus_sources.rsp'),
+        BuildStep('python -c "' + compile_sources + '"'),
         BuildStep('python -c "' + link + '"'),
     ]
 
