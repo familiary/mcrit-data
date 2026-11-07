@@ -1,6 +1,6 @@
 """WinPmem 1.6.2 driver from the pinned Rekall 1.2.0 archive.
 
-CI measurement, SMDA 4.8.0/MCRIT 1.9.0: 145 kept + 22 removed = 167 image functions; 83 have >=10 instructions and 82 unique PicHashes. Runtime survivors are __GSHandlerCheckCommon 0x97f84a5c6fd03341, __cpu_features_init 0xb5acd6a5667fa85c and __security_init_cookie 0x27ee9bc531ac9b0e. The image is never signed, installed or loaded.
+CI measurement, SMDA 4.8.0/MCRIT 1.9.0: 132 kept + 35 removed = 167 image functions; 73 have >=10 instructions and 72 unique PicHashes. The kernel-mode glue baseline removes __GSHandlerCheckCommon, __cpu_features_init and __security_init_cookie, which the earlier measurement kept, so none survives as a kept function. The image is never signed, installed or loaded.
 
 Open risks:
 1. This source was tested with the runner's WDK 10.0.26100.0 only; other WDK versions may differ.
