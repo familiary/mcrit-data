@@ -184,8 +184,8 @@ RECIPES = {
         "removed), x64 290 of 470 (180), 197 and 198 of them ten "
         "instructions or more, all named. 55 of its 145 distinct x64 hashes "
         "(x86 56 of 149) are also in the /O2 build of the later commit and "
-        "none is in the Makefile or MinGW builds. Not built with MinGW: "
-        "v4.0.1's detours.h does not compile under GCC."),
+        "none is in the Makefile or MinGW builds. Its MinGW counterpart "
+        "needs a patched tree and is the Detours_4.0.1 recipe."),
     "Detours_2026-09-29-nmake_msvc": _nmake(
         "2026-09-29-nmake", _COMMIT),
 }

@@ -37,14 +37,55 @@ x86_64-w64-mingw32-g++ 13 compile all seven objects with no error, the only
 diagnostic being a macro redefinition because detours.h defines
 ERROR_DYNAMIC_CODE_BLOCKED, which mingw-w64's winerror.h already carries.
 
-Pinned to a commit and not to v4.0.1 in this recipe. The tag (2018-04-06) is
-MIT already, and the MSVC recipes build it, but it does not compile under
-GCC: v4.0.1's detours.h guards its LONG_PTR, ULONG_PTR, SYMBOL_INFO and
-IMAGEHLP_MODULE64 typedefs on _MSC_VER < 1299, which is true of any compiler
-that does not define _MSC_VER, and each one is a "conflicting declaration"
-against mingw-w64's own. Defining _MSC_VER on the command line would make GCC
-claim to be something it is not, so that leg is not built. Checked on both
-architectures.
+Two recipes. Detours_2026-09-29 is the pinned commit and builds with no
+change to upstream. Detours_4.0.1 is the last tagged release (2018-04-06, MIT)
+and does not compile under GCC as shipped, so it is built with a generated
+shim header plus four recipe-time edits to the build tree. The image is
+therefore NOT byte-identical to a build of unmodified upstream, and the
+maintainer authorised that for this target. What was tried, in order:
+
+1. The recorded failure. v4.0.1's detours.h guards its LONG_PTR, ULONG_PTR,
+   SYMBOL_INFO and IMAGEHLP_MODULE64 typedefs on _MSC_VER < 1299, which is
+   true of any compiler that does not define _MSC_VER, and each is a
+   "conflicting declaration" against mingw-w64's own. Solved without touching
+   the header: a force-included shim (-include detours_mingw_shim.h) includes
+   windows.h, imagehlp.h, strsafe.h, intsafe.h and crtdbg.h first and then
+   defines _MSC_VER as 1299 for the duration of one #include "src/detours.h",
+   and undefines it again. At 1299 the guard is false, and every other
+   _MSC_VER test in the sources (>= 1310, >= 1900, > 1400) gives the answer it
+   gives with the macro undefined, which is what the commit's MinGW build
+   sees. Every mingw-w64 header is included before the define, and the .cpp
+   files see the macro undefined; only the text of detours.h itself is
+   parsed with it set.
+2. SEH. v4.0.1 has no GCC support for __try/__except (20 uses, detours.cpp
+   and modules.cpp); the pinned commit handles that in detours.h with
+   "#define __try" and "#define __except(x) if (0)". The shim carries the same
+   two lines, after detours.h, so the guarded bodies are compiled and the
+   handlers are not. This is the same rendering the pinned commit's MinGW
+   build has.
+3. Command-line defines: -DDETOURS_INTERNAL (the .cpp files define it just
+   before including detours.h, which the force-include has already read) and
+   -D_CRT_STDIO_ARBITRARY_WIDE_SPECIFIERS=1 (detours.h otherwise #errors
+   because windows.h pulled in stdio.h first), -fpermissive, and
+   -Isrc. The shim also forward-declares Detour::CImageImportName, which
+   image.cpp names in a friend declaration before defining it; GCC does not
+   treat that as a declaration, MSVC does.
+4. creatwth.cpp: GCC 13 rejects "goto Cleanup" jumping over initialised
+   locals ("jump to label 'Cleanup' ... crosses initialization of ..."), a
+   hard error that -fpermissive does not downgrade. The one patch to
+   upstream source is a sed that splits seven declarations into a
+   declaration and an assignment on the same line (line numbers unchanged):
+       959  HANDLE hProcess = OpenProcess(...)  ->  HANDLE hProcess; hProcess = OpenProcess(...)
+       968  DWORD cSize = ...                   ->  DWORD cSize; cSize = ...
+       969  DWORD cOffset = 0;                  ->  DWORD cOffset; cOffset = 0;
+       1043 DWORD cSize = 4;                    ->  DWORD cSize; cSize = 4;
+       1065 _Field_range_(0, cSize - 4) DWORD cOffset = 0;
+                                                ->  ... DWORD cOffset; cOffset = 0;
+       1167 DWORD nLen = GetEnvironmentVariableA(...)
+       1263 DWORD nLen = GetEnvironmentVariableW(...)
+   The step greps the result and fails if fewer than seven lines changed.
+   The object code is the same program; only where the stores are is a
+   source-level matter.
 
 Measured, on the pinned commit (kept + removed = total):
 x86 266 + 53 = 319, x64 272 + 54 = 326, of which 188 and 163 are ten
@@ -67,6 +108,20 @@ any other strsafe.h user does too. __gxx_personality_seh0 (x64) and
 ___cxa_throw_bad_array_new_length, ___register_frame_info and
 ___deregister_frame_info (x86) are one-instruction import thunks, PicHash
 1253497258561142223 like every other one-instruction thunk in the corpus.
+Measured, on v4.0.1 (kept + removed = total): x86 198 + 53 = 251, x64
+245 + 54 = 299, of which 168 and 147 are ten instructions or more. 197 of 198
+(x86) and 195 of 245 (x64) kept functions are named; the 50 unnamed x64
+functions are one-instruction kernel32 import thunks, PicHash
+1253497258561142223. PicHash overlap at the ten-instruction floor: 0 with the
+v4.0.1 MSVC /O2 build and with the other MSVC builds on both architectures; 32
+of 115 distinct x86 hashes and 29 of 106 distinct x64 hashes are shared with the
+MinGW build of the 2026-09-29 commit (the same compiler over the code the two
+versions have in common). Survivors the baseline does not remove: the strsafe
+inline wrappers StringCchPrintfA/W as in the commit build (x64 14085129435439527288
+and 12930795469493728535, x86 7892978127956841229 and 4477995129465285485) and
+one-instruction import thunks (operator new/delete, __gxx_personality_seh0,
+___cxa_throw_bad_array_new_length, ___register_frame_info,
+___deregister_frame_info), all PicHash 1253497258561142223.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -83,6 +138,45 @@ _COMPILE = " && ".join(
     "-c src/%s.cpp -o %s.o" % (o, o) for o in _OBJS)
 _LINK = ("{cxx} -shared -shared-libgcc -o detours.dll %s"
          % " ".join(o + ".o" for o in _OBJS))
+
+# v4.0.1 (see the docstring): the shim is written by the recipe, the sed
+# splits seven initialised declarations in creatwth.cpp, and the grep makes
+# the step fail loudly if upstream's text is not what this expects.
+_SHIM_LINES = [
+    "#ifndef DETOURS_MINGW_SHIM_H",
+    "#define DETOURS_MINGW_SHIM_H",
+    "#define _ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE 1",
+    "#include <windows.h>",
+    "#include <imagehlp.h>",
+    "#include <strsafe.h>",
+    "#include <intsafe.h>",
+    "#include <crtdbg.h>",
+    "#define _MSC_VER 1299",
+    '#include "src/detours.h"',
+    "#undef _MSC_VER",
+    "#define __try",
+    "#define __except(x) if (0)",
+    "namespace Detour { class CImageImportName; }",
+    "#endif",
+]
+_WRITE_SHIM = "printf '%s\\n' " + " ".join(
+    "'%s'" % line for line in _SHIM_LINES) + " > detours_mingw_shim.h"
+_SPLIT = [
+    ("HANDLE hProcess = ", "HANDLE hProcess; hProcess = "),
+    ("DWORD cSize = ", "DWORD cSize; cSize = "),
+    ("DWORD cOffset = ", "DWORD cOffset; cOffset = "),
+    ("DWORD nLen = ", "DWORD nLen; nLen = "),
+]
+_PATCH = ("sed -i " + " ".join(
+    "-e 's/%s/%s/'" % (a, b) for a, b in _SPLIT)
+    + " src/creatwth.cpp && test \"$(grep -c "
+    "'; hProcess = \\|; cSize = \\|; cOffset = \\|; nLen = ' "
+    "src/creatwth.cpp)\" = 7")
+_COMPILE_401 = " && ".join(
+    "{cxx} -O2 -fpermissive -Isrc -include detours_mingw_shim.h "
+    "-DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x501 -DDETOUR_DEBUG=0 "
+    "-DDETOURS_INTERNAL -D_CRT_STDIO_ARBITRARY_WIDE_SPECIFIERS=1 "
+    "-c src/%s.cpp -o %s.o" % (o, o) for o in _OBJS)
 
 RECIPES = {
     "Detours_2026-09-29": Recipe(
@@ -113,14 +207,54 @@ RECIPES = {
               "present. The rest of the image is one-instruction kernel32 "
               "import thunks and the strsafe.h inline wrappers "
               "StringCchPrintfA/W, which are Windows SDK code rather than "
-              "Detours'. v4.0.1 is not built with MinGW because its "
-              "detours.h redeclares LONG_PTR, ULONG_PTR, SYMBOL_INFO and "
-              "IMAGEHLP_MODULE64 whenever _MSC_VER is undefined, and the "
-              "only way past that is to pretend to be MSVC. The PicHash "
+              "Detours'. v4.0.1 builds with MinGW only from a patched "
+              "tree, as the separate Detours_4.0.1 recipe. The PicHash "
               "overlap with the MSVC builds of the same commit is zero at "
               "the ten-instruction floor on both architectures. Evidence "
               "behind the family is structural only: Kaspersky names "
               "Detours and DetourTransactionCommitEx in the SharkLoader "
               "chain and publishes no matched function.",
+    ),
+    "Detours_4.0.1": Recipe(
+        family="Detours",
+        version="4.0.1",
+        upstream="https://github.com/microsoft/Detours",
+        license="MIT, Copyright (c) Microsoft Corporation",
+        source=Source(git_url="https://github.com/microsoft/Detours.git",
+                      git_ref="v4.0.1"),
+        build=[BuildStep(_WRITE_SHIM), BuildStep(_PATCH),
+               BuildStep(_COMPILE_401), BuildStep(_LINK)],
+        artifacts=[Artifact(path="detours.dll", component="detours.dll")],
+        toolchains=["mingw_x86", "mingw_x64"],
+        build_flags="-O2 -fpermissive -shared -shared-libgcc; -DWIN32_LEAN_AND_MEAN "
+                    "-D_WIN32_WINNT=0x501 -DDETOUR_DEBUG=0 -DDETOURS_INTERNAL "
+                    "-D_CRT_STDIO_ARBITRARY_WIDE_SPECIFIERS=1; force-included "
+                    "generated shim detours_mingw_shim.h (windows.h first, "
+                    "then detours.h with _MSC_VER=1299 for that include only, "
+                    "then #define __try / __except(x) if (0)); sed on "
+                    "creatwth.cpp splitting 7 initialised declarations that "
+                    "goto Cleanup crosses",
+        notes="The v4.0.1 tag (2018-04-06, MIT), built with MinGW as seven "
+              "objects linked into one DLL. PATCHED BUILD: this image is NOT "
+              "byte-identical to a build of unmodified upstream. v4.0.1 does "
+              "not compile under GCC as shipped; the recipe generates a shim "
+              "header that is force-included (it includes the mingw-w64 "
+              "headers, then detours.h with _MSC_VER defined as 1299 for that "
+              "one include so its LONG_PTR, ULONG_PTR, SYMBOL_INFO and "
+              "IMAGEHLP_MODULE64 typedefs, guarded on _MSC_VER < 1299, are "
+              "skipped; it then defines __try as nothing and __except(x) as "
+              "if (0), as the later upstream commit does for MinGW) and edits "
+              "the build tree once: a sed in creatwth.cpp splits seven "
+              "initialised declarations (hProcess, cSize x2, cOffset x2, "
+              "nLen x2) into declaration plus assignment because GCC 13 "
+              "rejects goto Cleanup across them. SEH handlers are compiled "
+              "out, so the guarded bodies are present and the __except "
+              "paths are not. Measured: x86 198 functions kept of 251 (53 "
+              "MinGW runtime removed), x64 245 of 299 (54 removed), 168 and "
+              "147 of them ten instructions or more; 197 of 198 and 195 of "
+              "245 named, the rest one-instruction import thunks. PicHash "
+              "overlap at the ten-instruction floor: zero with every MSVC "
+              "build; 32 (x86) and 29 (x64) distinct hashes shared with the "
+              "MinGW build of the 2026-09-29 commit.",
     ),
 }
