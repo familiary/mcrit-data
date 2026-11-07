@@ -51,12 +51,12 @@ Decisions, each read from the CMakeLists of the pinned tarballs.
     versions; it is corrected to the above and the pair matches.
 
 Measured on the artefacts (kept + removed = image):
-    1.8.1   x86 615 + 155 = 770     x64 613 + 162 = 775
-    1.9.1   x86 681 + 159 = 840     x64 678 + 165 = 843
-    1.10.5  x86 718 + 165 = 883     x64 717 + 171 = 888
-    1.11.0  x86 674 + 157 = 831     x64 667 + 162 = 829
+    1.8.1   x86 606 + 164 = 770     x64 604 + 171 = 775
+    1.9.1   x86 675 + 165 = 840     x64 672 + 171 = 843
+    1.10.5  x86 715 + 168 = 883     x64 714 + 174 = 888
+    1.11.0  x86 671 + 160 = 831     x64 664 + 165 = 829
 (Removed are the MSVC runtime, Win32 and stdio functions the baseline
-recognises; 155-171 per image, the CRT startup code a /MD DLL carries.)
+recognises; 160-174 per image, the CRT startup code a /MD DLL carries.)
 
 Exported API against the MinGW build: identical. The exported name sets of
 wpcap.dll and pcap.dll are the same for 1.9.1 (115), 1.10.5 (117) and
@@ -65,26 +65,28 @@ families is code generation, not interface. 1.8.1 exports 112.
 
 PicHash overlap of the 10+ instruction functions between the MinGW and MSVC
 artefact of the same version and architecture is 0 in all twelve pairs
-(1.9.1 x86 0 of 422 MSVC / 326 MinGW, x64 0 of 419 / 301; 1.10.5 x86 0 of
-448 / 351, x64 0 of 445 / 326; 1.11.0 x86 0 of 434 / 317, x64 0 of 426 /
+(1.9.1 x86 0 of 419 MSVC / 326 MinGW, x64 0 of 416 / 301; 1.10.5 x86 0 of
+447 / 351, x64 0 of 444 / 326; 1.11.0 x86 0 of 433 / 317, x64 0 of 425 /
 293), the same result as every earlier MSVC pass: the MSVC data is new
 reference data, not a duplicate of the MinGW data.
 
 Glue that survives the baseline, by name. Each kept artefact still holds
-about 75-108 one-instruction import thunks (a `jmp [IAT slot]`) that the
+about 73-106 one-instruction import thunks (a `jmp [IAT slot]`) that the
 linker emits for imported functions: the Npcap Packet* family (32 names,
 PacketOpenAdapter, PacketGetNetInfoEx, ... PacketSetTimestampMode), and CRT,
 Win32 and Winsock imports (_strdup, _fdopen, _fileno, _setmode, _close,
 _open_osfhandle, _wfopen, _ftelli64, _wcserror_s, __intrinsic_setjmp/_setjmp3,
-longjmp, clearerr, feof, ferror, fflush, fwrite, getc, puts, rewind,
+longjmp, clearerr, feof, ferror, fwrite, getc, rewind,
 setvbuf, isspace, strtoul, strncpy_s, strerror_s, LoadLibraryA, GetVersion,
 SetEvent, FormatMessageW, GetSystemDirectoryA, WSAStartup, WSACleanup,
 getaddrinfo, freeaddrinfo, gethostbyname, getprotobyname, inet_pton, htonl,
-ntohl, ntohs). Their PicHash is 1165511d87767dcf on both architectures (72
-of the 75 one-instruction functions on 1.11.0 x86, 67 of 78 on x64; the x64
-ones that are not it, 458924a8d07e5d36 x8 and d38af1f639c8eb6d x3, are
-libpcap's own one-line functions such as pcap_free_datalinks). They are not
-removed because the baseline is shared tooling this pass does not edit.
+ntohl, ntohs). fflush and puts (_fflush and _puts on x86) are no longer kept:
+the wide-stdio baseline removes them from every image of this pass. Their
+PicHash is 1165511d87767dcf on both architectures (70 of the 73
+one-instruction functions on 1.11.0 x86, 65 of 76 on x64; the x64 ones that
+are not it, 458924a8d07e5d36 x8 and d38af1f639c8eb6d x3, are libpcap's own
+one-line functions such as pcap_free_datalinks). They are not removed because
+the baseline is shared tooling this pass does not edit.
 Names with a `$+0x...` suffix (6-14 on x86, 0-1 on x64, e.g. gen_scode$+0x749)
 are SMDA entries inside a libpcap function and are libpcap code.
 
