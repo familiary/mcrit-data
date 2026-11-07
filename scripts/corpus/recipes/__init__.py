@@ -10,6 +10,9 @@ import pkgutil
 
 
 _REGISTRY = None
+# Recipe name -> the module file (basename without .py) that defines it, so CI
+# can turn "these files changed in this push" into "build these recipes".
+_ORIGIN = {}
 
 
 def _load():
@@ -25,6 +28,7 @@ def _load():
             if name in registry:
                 raise KeyError("duplicate recipe name %r" % name)
             registry[name] = recipe
+            _ORIGIN[name] = module_info.name
     _REGISTRY = registry
     return registry
 
@@ -38,3 +42,9 @@ def get(name):
     if name not in registry:
         raise KeyError("unknown recipe %r, have: %s" % (name, ", ".join(sorted(registry))))
     return registry[name]
+
+
+def module_of(name):
+    """Module (file basename without .py) that defines recipe ``name``."""
+    _load()
+    return _ORIGIN[name]
