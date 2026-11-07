@@ -57,10 +57,10 @@ Counted on the runner, kept + removed = image total (removed is the
 baseline's compiler-runtime filter):
 
                     kept    removed    image
-    TinyXML 2.6.2   x86  266   166   432      x64  321   173   494
-    TinyXML2 6.2.0  x86  471   177   648      x64  478   183   661
-    TinyXML2 9.0.0  x86  491   177   668      x64  500   181   681
-    TinyXML2 11.0.0 x86  493   177   670      x64  502   181   683
+    TinyXML 2.6.2   x86  260   172   432      x64  315   179   494
+    TinyXML2 6.2.0  x86  463   185   648      x64  470   191   661
+    TinyXML2 9.0.0  x86  483   185   668      x64  492   189   681
+    TinyXML2 11.0.0 x86  485   185   670      x64  494   189   683
 
 What the baseline removed is MSVC runtime glue (DllMain, _DllMainCRTStartup,
 the __scrt_* and __castguard_* families, __GSHandlerCheck and so on). What
@@ -69,27 +69,24 @@ non-TinyXML survivors are the UCRT's inline stdio wrappers, compiled into the
 DLL because the headers define them inline, plus import thunks:
   - one-instruction thunks, all PicHash 1253497258561142223: fopen_s, ferror,
     fputc, fgetc, fwrite, isalpha, isdigit, isspace, isalnum, tolower, atof,
-    atoi, __stdio_common_vsnprintf_s and, at x64, _fseeki64/_ftelli64 (the
-    x86 names carry a leading underscore). Below the 10-instruction floor.
-  - 10+ instruction wrappers: vsnprintf_s / _vsnprintf_s (x86 4459759386411083615,
-    x64 17148774425584255660), _vsnprintf_s_l (x86 5041835696237107364, x64
-    1498956780003838507), _vsscanf_s_l (x86 8059414595489697058, x64
-    2697921591418893498), sscanf_s (x86 9435645412979247388, x64
-    12704080054257707107), vsscanf_s (x86 9481955067755469391, x64
-    12233240881603539681), and in TinyXML2 printf (x86 14739679411554417350,
-    x64 121597203084696572) and vfprintf (x86 15763949986211485148, x64
-    18319647447110778407); in TinyXML v1 the _snprintf_s<N> templates
-    (N=32/64/256) and three operator+ (TiXmlString concatenation, real
-    project code, 33-97 instructions). Reported, not patched: the baseline is
-    shared tooling.
+    atoi and, at x64, _fseeki64/_ftelli64 (the x86 names carry a leading
+    underscore). Below the 10-instruction floor.
+  - 10+ instruction wrappers, in TinyXML v1 only: the _snprintf_s<N> templates
+    (N=32/64/256; 29 instructions at x64, 16 at x86) and three operator+
+    (TiXmlString concatenation, real project code, 33-97 instructions).
+    Reported, not patched: the baseline is shared tooling.
+  - removed by the wide-stdio glue baseline, so absent from every artefact
+    built with it: vsnprintf_s, _vsnprintf_s, _vsnprintf_s_l, _vsscanf_s_l,
+    sscanf_s, vsscanf_s, __stdio_common_vsnprintf_s, and in TinyXML2 printf
+    and vfprintf.
 
 MinGW against MSVC, PicHash overlap over functions of 10+ instructions (same
 version, same arch; mingw / msvc counts):
 
-    TinyXML 2.6.2   x86 134 / 152   x64 115 / 153     shared 0 and 0
-    TinyXML2 6.2.0  x86 171 / 209   x64 146 / 216     shared 0 and 0
-    TinyXML2 9.0.0  x86 179 / 218   x64 153 / 225     shared 0 and 0
-    TinyXML2 11.0.0 x86 181 / 220   x64 156 / 227     shared 0 and 0
+    TinyXML 2.6.2   x86 134 / 147   x64 115 / 148     shared 0 and 0
+    TinyXML2 6.2.0  x86 171 / 202   x64 146 / 209     shared 0 and 0
+    TinyXML2 9.0.0  x86 179 / 211   x64 153 / 218     shared 0 and 0
+    TinyXML2 11.0.0 x86 181 / 213   x64 156 / 220     shared 0 and 0
 
 The pair shares no exact function body, which is the case for holding the
 MSVC axis at all. validate --deep (these families plus cJSON, lz4, q3vm,
