@@ -237,7 +237,7 @@ _PROPS_1_2 = (
     "'<WholeProgramOptimization>false</WholeProgramOptimization>'"
     "'<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>'"
     "'<AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)corpusdx"
-    "\\build\\native\\include;@p(AdditionalIncludeDirectories)"
+    "/build/native/include;@p(AdditionalIncludeDirectories)"
     "</AdditionalIncludeDirectories>'"
     "'</ClCompile><Link>'"
     "'<GenerateDebugInformation>true</GenerateDebugInformation>'"
