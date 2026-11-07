@@ -321,9 +321,10 @@ What is not reproduced, and so is not registered:
   `_vsscanf_l`: `/Gs0` reproduces the narrow `sprintf`/`fprintf` family and
   was not tried on the wide and scan groups; this is one more measurement,
   not an obstacle.
-* libzlib x86 `_snprintf` and `_vsnprintf`, q3vm x86 `printf` (23) and
-  `fprintf` (17) - q3vm builds `/GL` - and wowGrail x86 `printf` (33): no
-  flavour tried reproduces them. LuaJIT x86 `_vwscanf_s_l` (8 instructions) is
+* libzlib x86 `_snprintf` and `_vsnprintf`, q3vm v1.3.1 x86 `printf` and
+  `fprintf` - q3vm builds `/GL` - and wowGrail x86 `printf` (33): no
+  flavour tried reproduces them; the 2026-03-06 q3vm x86 pair did leave in the
+  rebuild, which is what put that image below the function floor. LuaJIT x86 `_vwscanf_s_l` (8 instructions) is
   a fragment of a wrapper rather than the wrapper.
 * The startup bodies, which are not stdio: DiskCryptor's x86
   `__scrt_common_main_seh$+0x124` (`0xb6f9895ed1a726a6`) and the
@@ -332,12 +333,18 @@ What is not reproduced, and so is not registered:
 * The kernel-mode glue (`memcpy`, `memset`, `__security_init_cookie`, ...) is
   a separate gap and untouched.
 
-Like the sixth round this does not correct the committed MSVC artefacts. A
-Windows rebuild and re-import of every family with MSVC data is needed for the
-removals to land. Four of the five families above - EDRSandblast, al-khaser,
-DiskCryptor and WinPmem - come from #78 and have never been filtered by the
-sixth round's baseline either, so their rebuild is the first time the whole
-glue set is applied to them.
+What the seventh round did to the corpus, measured by an all-msvc wave on
+this branch (run 42333283878, with the sixth round's data as the baseline to
+compare against): 20 of the 114 MSVC images change and 653 functions move
+from kept to removed, with no kept count rising anywhere. LuaJIT accounts for
+619 of them (the count includes one-instruction thunks), then OpenSSL 9,
+Lua 6, cJSON 4, libzlib 4, NTTITONHeavensGate 3, and BlackBone, VX-API and q3vm
+2 each, protobuf and wowGrail 1. The 2026-03-06 q3vm x86 image is the one that
+matters beyond the numbers: its `printf` and `fprintf` leave it and it keeps
+six functions of its own, below the default floor of eight, so that recipe
+sets `min_functions` to the six it has. v1.3.1 x86 is unchanged. The #78
+families (EDRSandblast, al-khaser, DiskCryptor, WinPmem, EDRSilencer) were
+rebuilt on their own branches against this baseline and are imported there.
 
 The deep check fails on one kind of collision only - the kind every round
 above was found by, one symbol name repeated across every family sharing the
