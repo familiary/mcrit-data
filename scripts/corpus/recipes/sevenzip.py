@@ -56,7 +56,21 @@ _LICENSE_26 = ("LGPL-2.1-or-later, with unRAR restriction; "
                "BSD-3-Clause; C/Xxh64.c BSD-2-Clause")
 
 
-def _sevenzip(version, code, sha256, license, extra=""):
+# The SFX stubs are further targets of the same recipe: 7zS.sfx from
+# CPP/7zip/Bundles/SFXSetup (the GUI stub) and 7zS2.sfx from C/Util/SfxSetup
+# (the small LZMA-SDK one). Neither directory has a makefile.gcc, so the
+# build is the helper script in exercisers/, which reads the object list and
+# the -DZ7_* switches out of upstream's nmake makefile and compiles with the
+# flags 7zip_gcc.mak uses for MinGW - nothing in the tree is modified.
+# {unicode} is what 23.01 still takes from Build.mak (it passes -DUNICODE
+# -D_UNICODE to every file) and what 26.03 defines in its headers instead.
+_SFX = ("bash {repo}/scripts/corpus/exercisers/sevenzip_sfx_gcc.sh {prefix} "
+        '%s "%s" %s %s')
+_SFX_STUBS = (("CPP/7zip/Bundles/SFXSetup", "sfx_7zS", "7zS.sfx"),
+              ("C/Util/SfxSetup", "sfx_7zS2", "7zS2.sfx"))
+
+
+def _sevenzip(version, code, sha256, license, extra="", unicode=""):
     return Recipe(
         family="7-Zip",
         version=version,
@@ -66,16 +80,25 @@ def _sevenzip(version, code, sha256, license, extra=""):
                       sha256=sha256),
         build=[
             BuildStep(_MAKE % extra, cwd="CPP/7zip/Bundles/Format7zF"),
-        ],
+        ] + [BuildStep(_SFX % (directory, unicode, out, name))
+             for directory, out, name in _SFX_STUBS],
         artifacts=[Artifact(path="CPP/7zip/Bundles/Format7zF/b/g_{asm_arch}/7z.dll",
-                            component="7z.dll")],
+                            component="7z.dll")] +
+                  [Artifact(path="%s/%s" % (out, name), component=name)
+                   for _, out, name in _SFX_STUBS],
         toolchains=["mingw_x86", "mingw_x64"],
         build_flags="-O2, hand-written assembly disabled (needs asmc)",
         notes="USE_ASM= omits the assembly LZMA/AES/CRC/SHA fast paths, which "
               "need the MASM-syntax asmc assembler; nasm cannot substitute. "
               "Upstream's makefile strips the binary and compiles with "
               "-Werror; both are turned off, neither changes the emitted "
-              "code.",
+              "code. 7zS.sfx and 7zS2.sfx are the SFX stubs: neither has a "
+              "makefile.gcc, so their object lists and -DZ7_* switches are "
+              "read from upstream's nmake makefiles and built with the same "
+              "flags, linked -static -mwindows as 7zip_gcc.mak does for "
+              "MinGW. The one thing added around them is a forwarding "
+              "CommCtrl.h in the output directory, because the GUI code "
+              "includes it in capitals and MinGW's header is lower case.",
     )
 
 
@@ -84,7 +107,7 @@ RECIPES = {
     "7-Zip_23.01": _sevenzip(
         "23.01", "2301",
         "356071007360e5a1824d9904993e8b2480b51b570e8c9faf7c0f58ebe4bf9f74",
-        _LICENSE_23, extra=_LIB2_LOWERCASE),
+        _LICENSE_23, extra=_LIB2_LOWERCASE, unicode="-DUNICODE -D_UNICODE"),
     # Current.
     "7-Zip_26.03": _sevenzip(
         "26.03", "2603",

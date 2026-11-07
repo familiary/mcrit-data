@@ -135,7 +135,52 @@ _NOTES = (
     "which is upstream's arrangement rather than this recipe's and matches "
     "what the MinGW artefacts already do. Built against the DLL runtime, so "
     "the MSVC C runtime is imported rather than linked in and stays "
-    "attributed to data/MSVC. No external dependencies.")
+    "attributed to data/MSVC. No external dependencies. 7zS.sfx "
+    "(CPP/7zip/Bundles/SFXSetup, the GUI stub) and 7zS2.sfx "
+    "(C/Util/SfxSetup, the small LZMA-SDK stub) are built by the same "
+    "nmake path; upstream links both with the static C runtime, which this "
+    "corpus does not do for any MSVC artefact, so they are -MD like 7z.dll.")
+
+
+# The SFX stubs are further targets of the same recipe, built exactly as 7z.dll
+# is. What differs, all read from upstream:
+#
+#   * CPP/Build.mak selects -MT unless MY_DYNAMIC_LINK is set, and neither stub
+#     makefile sets it, so upstream's own SFX stubs carry the static MSVC C
+#     runtime. This corpus mandates -MD for every MSVC artefact so that the
+#     runtime stays attributed to data/MSVC, so MY_DYNAMIC_LINK=1 is passed
+#     as it is for 7z.dll. The stub that results imports the DLL runtime and
+#     is not the self-contained file upstream ships; what it contains of
+#     7-Zip is the same.
+#   * there is no DEF_FILE, so Build.mak links an executable (MY_FIXED, a
+#     /STACK reservation) and LFLAGS needs no -DLL. LFLAGS is still left alone
+#     for the reason above and the extra linker switches ride on LIBS. The GUI
+#     stub also needs gdi32, comctl32 and comdlg32, which Build.mak does not
+#     list; unreferenced import libraries add no imports, so all three are
+#     named rather than guessed at.
+_SFX_LIBS = ('"LIBS=oleaut32.lib ole32.lib user32.lib advapi32.lib shell32.lib '
+             'gdi32.lib comctl32.lib comdlg32.lib '
+             '-DEBUG -PDB:{asm_arch}\\%s.pdb -Brepro -OPT:NOREF -OPT:NOICF"')
+_SFX_NMAKE = ("nmake -f makefile PLATFORM={asm_arch} MY_DYNAMIC_LINK=1 "
+              "CFLAGS_WARN_LEVEL=-W0 %s %%s" % _CFLAGS_COMMON)
+_SFX_STUBS = (("CPP/7zip/Bundles/SFXSetup", "7zS.sfx", "7zS"),
+              ("C/Util/SfxSetup", "7zS2.sfx", "7zS2"))
+
+
+def _sfx_steps():
+    steps = []
+    for directory, _, pdb in _SFX_STUBS:
+        cwd = directory.replace("/", "\\")
+        steps.append(BuildStep(_SFX_NMAKE % (_SFX_LIBS % pdb), cwd=cwd))
+        steps.append(BuildStep("dir {asm_arch}", cwd=cwd, allow_failure=True))
+    return steps
+
+
+def _sfx_artifacts():
+    return [Artifact(path="%s/{asm_arch}/%s" % (directory, name),
+                     component=name,
+                     pdb="%s/{asm_arch}/%s.pdb" % (directory, pdb))
+            for directory, name, pdb in _SFX_STUBS]
 
 
 def _sevenzip_msvc(version, code, sha256, license):
@@ -157,11 +202,12 @@ def _sevenzip_msvc(version, code, sha256, license):
             # workflow prints on failure.
             BuildStep("dir {asm_arch}", cwd="CPP/7zip/Bundles/Format7zF",
                       allow_failure=True),
-        ],
+        ] + _sfx_steps(),
         artifacts=[Artifact(
             path="CPP/7zip/Bundles/Format7zF/{asm_arch}/7z.dll",
             component="7z.dll",
-            pdb="CPP/7zip/Bundles/Format7zF/{asm_arch}/7z.pdb")],
+            pdb="CPP/7zip/Bundles/Format7zF/{asm_arch}/7z.pdb")
+        ] + _sfx_artifacts(),
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags=_BUILD_FLAGS,
         notes=_NOTES,
