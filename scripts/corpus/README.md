@@ -540,6 +540,7 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| AdaptixC2 beacon agent | #80 | Deferred for the unresolved maintainer scope decision explicitly raised in the issue: a complete post-exploitation agent rather than a reusable component. No build was attempted, so there is no build error to report. The issue identifies commit `a4b80bf370f704d6843e69433bfb5c06274f57df` in reporting, and separately tracks the reusable miniz dependency in #81. |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |
