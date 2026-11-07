@@ -49,8 +49,8 @@ MinGW artefact.
 
 Measurements (first Windows run, cl 19.44, all four tags green on both legs).
 
-* Counts, kept + removed = image total. x64: 2.0 96 + 152 = 248, 2.1 95 + 152
-  = 247, 2.2.3 98 + 154 = 252, 2.3.3 97 + 154 = 251. x86: 96 + 144 = 240,
+* Counts, kept + removed = image total. x64: 2.0 95 + 153 = 248, 2.1 95 + 152
+  = 247, 2.2.3 98 + 154 = 252, 2.3.3 97 + 154 = 251. x86: 95 + 145 = 240,
   95 + 144 = 239, 98 + 146 = 244, 97 + 146 = 243. The removed ones are the
   CRT startup, security-cookie and castguard code and the UCRT stdio inlines
   (``fprintf``, ``snprintf``, ``vsnprintf``, ``sscanf``).
@@ -70,15 +70,15 @@ Measurements (first Windows run, cl 19.44, all four tags green on both legs).
 * MinGW against MSVC, PicHashes of functions of ten or more instructions,
   same tag and architecture: x86 0 of 63-67 (MinGW) / 65-66 (MSVC) shared in
   every tag, x64 0 in 2.1, 2.2.3 and 2.3.3 and 1 in 2.0. Across all four
-  tags: x86 0 of 138 / 134, x64 1 of 129 / 137. As with every earlier MSVC
+  tags: x86 0 of 138 / 133, x64 1 of 129 / 136. As with every earlier MSVC
   family the two code generators share essentially nothing, so these
   artefacts add a second, disjoint reference rather than duplicating one.
-* Glue survivors at ten or more instructions: ``printf`` in 2.0 only, x86
-  PicHash 14739679411554417350 (17 instructions) and x64 121597203084696572
-  (25). 2.0's stdio calls reach UCRT's inline ``printf``, whose compiled copy
-  the baseline does not match. It is shared with MemoryModule (two families,
-  below the three that ``validate --deep`` reports), so it is recorded here
-  rather than fixed in ``baseline.py``.
+* Glue survivors: the first run left ``printf`` at ten or more instructions
+  in 2.0 only (x86 PicHash 14739679411554417350, 17 instructions; x64
+  121597203084696572, 25), reached through UCRT's inline ``printf``. The
+  wide-stdio glue baseline (scripts/corpus/baseline.py) now removes both; the
+  re-import against it (run 42341850811) moved them to the removed side, which
+  is why the 2.0 counts above are the re-imported ones.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
