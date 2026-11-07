@@ -540,6 +540,7 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| MuPDF-direct MinGW/Linux and later SumatraPDF versions | #67 | Not selected while the maintainer weighs the exact SumatraPDF DLL with bundled dependencies against a MuPDF-only build with system dependencies. SumatraPDF 3.3.3 libmupdf.dll is covered on MSVC x86/x64. The report names 3.3.3 and a countermeasure after 3.4.3; it does not establish a second exact campaign version. No build error is claimed for these unattempted alternatives. The issue also records licensing as a maintainer decision. |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |

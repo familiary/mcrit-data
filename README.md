@@ -54,6 +54,7 @@ Libraries
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [libstdc++](#libstdcxx)
+* [MuPDF / SumatraPDF](#mupdf)
 
 Runtimes
 * [Lua](#lua)
@@ -673,6 +674,16 @@ Generated with `scripts/build_corpus.py`; see `data/libstdc++/provenance.json` f
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libstdc++ | 13.2-mingw-w64 | MinGW-w64 GCC 13 | [x86 PE](data/libstdc++/x86/mcrit/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.mcrit) | [x86 PE](data/libstdc++/x86/smda/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.7z) |
+<!-- /generated -->
+
+### MuPDF / SumatraPDF<a id='mupdf'></a>
+
+SumatraPDF 3.3.3's unmodified `libmupdf.dll`, built with MSVC for x86 and x64. The DLL includes MuPDF and its bundled font, codec and archive libraries. Accepting that vendoring depth remains the maintainer decision recorded in tracker issue #67; the recipe records measured overlap with existing zlib, bzip2 and LZMA data. The threat report establishes the DLL/version structurally and does not identify modified upstream functions.
+
+<!-- generated: MuPDF -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| MuPDF | SumatraPDF-3.3.3 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/MuPDF/x86/mcrit/MuPDF_SumatraPDF-3.3.3_msvc143_x86_libmupdf.mcrit) / [x64 PE](data/MuPDF/x64/mcrit/MuPDF_SumatraPDF-3.3.3_msvc143_x64_libmupdf.mcrit) | [x86 PE](data/MuPDF/x86/smda/MuPDF_SumatraPDF-3.3.3_msvc143_x86_libmupdf.7z) / [x64 PE](data/MuPDF/x64/smda/MuPDF_SumatraPDF-3.3.3_msvc143_x64_libmupdf.7z) |
 <!-- /generated -->
 
 ## Runtimes
