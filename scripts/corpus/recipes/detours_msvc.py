@@ -51,7 +51,7 @@ Measured (kept + removed = total; ten instructions or more in brackets):
 
   commit /O2        x86 321 + 174 = 495 (221)    x64 324 + 181 = 505 (218)
   v4.0.1 /O2        x86 287 + 173 = 460 (197)    x64 290 + 180 = 470 (198)
-  commit nmake /Od  x86 385 + 168 = 553 (286)    x64 333 + 175 = 508 (277)
+  commit nmake /Od  x86 382 + 171 = 553 (284)    x64 332 + 176 = 508 (276)
 
 Every kept function is named (PDB symbols). The removed ones are MSVC runtime
 that /MD still links statically. Detours' own code is the CDetourDis*, CImage*,
@@ -63,12 +63,15 @@ from the Windows SDK compiled into detours.cpp, so any consumer carries them:
 /O2 commit and v4.0.1 x64 14609153554826729091 and 11995049151350133856, x86
 5167829856593231400 and 17855045609201516648; nmake build x64
 5028736481919831228 and 3143614553131410775, x86 17713316887944295158 and
-6400887483420132758. The unoptimised build additionally keeps the UCRT stdio
+6400887483420132758. The unoptimised build additionally kept the UCRT stdio
 inline wrappers /Od does not fold away: _vsnprintf and _vsnwprintf (x64
 17774970396563084508, x86 7719431429195281600), _vsnprintf_l and
 _vsnwprintf_l (x64 11262974418567998103, x86 15628369269008054154) and, on x86
-only, __local_stdio_printf_options (5181772436194851115). _vsnprintf and
-_vsnwprintf share one PicHash because they are the same body.
+only, __local_stdio_printf_options (5181772436194851115). The wide-stdio glue
+baseline now removes _vsnwprintf on x64, and _vsnprintf, _vsnwprintf and
+__local_stdio_printf_options on x86; _vsnprintf on x64 and the _l pair on both
+architectures still survive. _vsnprintf and _vsnwprintf share one PicHash
+because they are the same body.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -144,16 +147,19 @@ def _nmake(version, ref):
               "built Detours as shipped. The Makefile also builds the "
               "Itanium, ARM and ARM64 objects; the seven x86 and x64 ones "
               "are linked into a DLL here, because upstream's static "
-              "detours.lib cannot be read. Measured: x86 385 functions kept "
-              "of 553 (168 MSVC runtime removed), x64 333 of 508 (175), 286 "
-              "and 277 of them ten instructions or more, all named. The "
+              "detours.lib cannot be read. Measured: x86 382 functions kept "
+              "of 553 (171 MSVC runtime removed), x64 332 of 508 (176), 284 "
+              "and 276 of them ten instructions or more, all named. The "
               "PicHash overlap with the /O2 build, the v4.0.1 build and the "
               "MinGW build is zero at the ten-instruction floor on both "
               "architectures. Unoptimised code keeps the UCRT stdio inline "
               "wrappers (_vsnprintf, _vsnwprintf and their _l forms, and "
               "__local_stdio_printf_options on x86) that the optimiser "
               "folds away in the other builds; they are SDK code, not "
-              "Detours', and the baseline does not remove them.")
+              "Detours'. The wide-stdio glue baseline removes _vsnwprintf "
+              "on x64 and _vsnprintf, _vsnwprintf and "
+              "__local_stdio_printf_options on x86; _vsnprintf on x64 and "
+              "the _l forms on both architectures survive.")
 
 
 RECIPES = {
