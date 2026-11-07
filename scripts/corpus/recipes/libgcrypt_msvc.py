@@ -210,5 +210,5 @@ def _gc(version):
 # and stop on src/hwfeatures.c (see "Not built" in the docstring), so they are
 # not registered: a registered recipe that cannot finish would fail every
 # all-msvc run. Add the versions back here when that file compiles.
-_BUILT = ("1.8.14",)
+_BUILT = ("1.8.14", "1.10.4", "1.11.3")
 RECIPES = {"libgcrypt_%s_msvc" % v: _gc(v) for v in _BUILT}
