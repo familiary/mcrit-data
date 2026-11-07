@@ -71,24 +71,38 @@ Further build-side measures, none of which edits a source file:
     even with --disable-asm are not assembled (24 on x64; 2 ARM ones are
     listed on both), and nothing in the C code calls them.
 
-Not built: libgcrypt 1.10.4 and 1.11.3 (x86 and x64). Every translation unit
-compiles except src/hwfeatures.c, where cl 19.44.35229 aborts with
-`fatal error C1001: Internal compiler error.` (`INTERNAL COMPILER ERROR in
-'...\\cl.exe'`) under the default options and again with /Od, /O1 and /Od /GS-;
-1.8.14's hwfeatures.c, which lacks the sysconfdir and hwf.deny code, compiles.
-The link of the other objects then ends with unresolved
-_gcry_get_hw_features, _gcry_detect_hw_features, _gcry_enum_hw_features,
-_gcry_disable_hw_feature (and _gcry_get_sysconfdir in 1.11.3).
+hwfeatures.c in 1.10.4 and 1.11.3. cl 19.44.35229 aborted on src/hwfeatures.c
+with `fatal error C1001: Internal compiler error.` at every optimiser setting.
+The driver compiles ten variants of that one file in the build log; the result
+(run 42408972437, x86 and x64, both versions) is that the crash is the table
+`hwflist[] = { ... }`: with --disable-asm HAVE_CPU_ARCH_X86 is not defined, the
+`#if defined(HAVE_CPU_ARCH_X86) ... #elif ... #endif` chain leaves the
+initialiser empty, and cl cannot compile an empty brace list for an array of
+structs. Removing the hwf.deny parser, or the _gcry_get_sysconfdir code, or
+both, still crashes; /std:c11, /Zc:preprocessor, /Od /Zi and /d2SSAOptimizer-
+still crash; `/DHAVE_CPU_ARCH_X86=1` for that one file compiles. That is a
+command-line define and edits no source. Its consequences, stated exactly: the
+table gets its x86 rows (padlock, AES-NI, ... names) so `--disable-hw-feature`
+style names are accepted, and _gcry_detect_hw_features calls
+_gcry_hwf_detect_x86, which src/hwf-x86.c provides; that file is compiled
+(with /D__x86_64__ or /D__i386__, as for 1.8.14) without CPUID code and
+reports no features. 1.8.14 is not affected (its table has unconditional rows).
+So the 1.10.4 and 1.11.3 images contain src/hwf-x86.c and a populated feature
+name table that the generic --disable-asm build would not otherwise have.
 
 Measured on the artefacts (kept + removed = every function in the image; the
 removed count is the compiler and CRT glue the baseline recognised):
 
     1.8.14  x86 PE 1787 + 160 = 1947    x64 PE 1788 + 165 = 1953
+    1.10.4  x86 PE 2243 + 162 = 2405    x64 PE 2253 + 167 = 2420
+    1.11.3  x86 PE 2722 + 162 = 2884    x64 PE 2724 + 163 = 2887
 
 PicHash overlap of the functions with 10 or more instructions between these
 images and the MinGW and ELF images of the same version and architecture:
-x64 0 of 934 (MinGW) and 0 of 975 (ELF), x86 2 of 857 (MinGW, 0.2%) and 0 of
-1059 (ELF); libgpg-error 1.35 and 1.61 share 0 with their MinGW and ELF builds
+1.8.14 x64 0 of 934 (MinGW) and 0 of 975 (ELF), x86 2 of 857 (MinGW, 0.2%) and
+0 of 1059 (ELF); 1.10.4 x64 3 of 1164 (0.3%) and 0 of 1208, x86 2 of 1063 and
+0 of 1282; 1.11.3 x64 3 of 1408 and 0 of 1447, x86 2 of 1240 and 0 of 1464;
+libgpg-error 1.35 and 1.61 share 0 with their MinGW and ELF builds
 on both architectures. The code surface differs in the two ways stated at the
 top (generic C instead of assembler and hardware-accelerated paths, compiled by
 cl instead of gcc, plus the edits below), so the images are separate reference
@@ -206,9 +220,5 @@ def _gc(version):
     )
 
 
-# Only 1.8.14 links. 1.10.4 and 1.11.3 compile every translation unit but one
-# and stop on src/hwfeatures.c (see "Not built" in the docstring), so they are
-# not registered: a registered recipe that cannot finish would fail every
-# all-msvc run. Add the versions back here when that file compiles.
-_BUILT = ("1.8.14",)
+_BUILT = ("1.8.14", "1.10.4", "1.11.3")
 RECIPES = {"libgcrypt_%s_msvc" % v: _gc(v) for v in _BUILT}
