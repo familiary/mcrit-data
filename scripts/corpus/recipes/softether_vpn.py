@@ -76,12 +76,12 @@ _STAGE_X64 = ("mkdir -p deps64 && " + " && ".join(
 
 _ARTIFACTS = [
     Artifact(path="bin/%s/%s" % (component, component), component=component,
-             is_library=False)
+             is_library=True)
     for component in ("vpnserver", "vpnclient", "vpncmd")
 ]
 _ARTIFACTS_X86 = _ARTIFACTS[:1] + [
     Artifact(path="bin/vpnbridge/vpnbridge", component="vpnbridge",
-             is_library=False)
+             is_library=True)
 ] + _ARTIFACTS[1:]
 
 RECIPES = {
