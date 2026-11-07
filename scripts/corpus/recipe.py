@@ -26,6 +26,12 @@ class Source:
     # Directory inside the archive that holds the source, if it is not the
     # single top level directory the archive unpacks to.
     strip_prefix: Optional[str] = None
+    # A git source normally has its submodules checked out and recorded. Set
+    # False for a project whose submodule pin is not served by its upstream any
+    # more (a force-pushed or deleted commit) when the submodule contributes
+    # no code to the artefacts: the submodule is then left uninitialised, which
+    # ``git submodule status`` records in the provenance with a leading ``-``.
+    submodules: bool = True
 
 
 @dataclass
