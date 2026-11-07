@@ -89,49 +89,81 @@ off (it implies /OPT:REF), the post-build signtool step disabled
 not have), toolset v143 in place of v142, Windows SDK 10.0, and at link /DEBUG
 /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF.
 
-Second pass (PR #69, the three versions that first did not build). The
+Second pass (PR #69: the versions that first did not build). The
 maintainer authorised recipe-applied workarounds for them; none edits an
 upstream file, and each image is therefore NOT byte-identical to a build of
 unmodified upstream. Every change, with its reason:
 
-  * 1.8.3.2 (c757708e, the head of upstream's default branch; the commit
-    message is "1.8.3.2").
-    The fetch step failed on `git submodule update`: `fatal: remote error:
-    upload-pack: not our ref b493d9bbb599fa4d9a0e5ea4bde957dd812384e7`, the
-    3rdparty/noVNC pin of 1.8.3.0 and every later commit, which noVNC does
-    not serve. noVNC contributes no code to either executable: the vcxproj
-    lists its files as `<None Include>` and winvnc.rc embeds 55 of its .js
-    files as `JS` resources for the web viewer. So (a) Source(submodules=False)
-    skips the submodule fetch (a new, off-by-default Source option; the
-    provenance still records the pin, uninitialised, as `-b493d9bb...`), and
-    (b) noVNC commit 7c36fabe599e053c5a81e98e091ac636f6c1e174, the pin of
-    1.8.2.9 and a commit noVNC serves, is fetched through extra_sources and
-    copied to 3rdparty\\noVNC so the 55 resource files exist (all 55 are in
-    that commit; v1.7.0 lacks core/clipboard.js, master has all 55). The
-    resource section of winvnc.exe therefore carries the web viewer scripts
-    of that older noVNC, not of b493d9bb. Code is unaffected.
-  * 1.2.1.5 (9761329e). `zipunzip_src\\zip20\\windll\\visualc\\lib\\zip32.vcxproj`
-    failed with 240 errors from winnt.h, `error C2143: syntax error: missing
-    ':' before 'constant'`. Cause, found by reading winnt.h of SDK
-    10.0.26100: the ARM64 unwind-data struct declares a bit-field
-    `DWORD CR : 2;`, and Info-ZIP's zip.h has `#define CR 13` (and `LF 10`),
-    which every .c of the project includes before <windows.h> is parsed, so
-    the field becomes `DWORD 13 : 2;`. Fix: the generated props file adds
-    `<ForcedIncludeFiles>windows.h</ForcedIncludeFiles>` for the project named
-    zip32 only, so windows.h is parsed first and its include guard makes the
-    later include a no-op. No source line changes; the preprocessed Info-ZIP
-    code is the same except that CR/LF are defined after windows.h.
-  * 1.2.1.4 (b4034d51). `libjpeg-turbo-win\\jdcoefct.c(23,10): error C1083:
-    Cannot open include file: 'jdcoefct.h'`. The tree's decompressor sources
-    come from libjpeg-turbo 1.5.1 (jdcoefct.c, jdmaster.c and jdsample.c are
-    byte-identical to the 1.5.1 tag; 1.5.0 differs in two of them) though
+  * 1.8.3.0 and later: the fetch failed on `git submodule update`: `fatal:
+    remote error: upload-pack: not our ref b493d9bbb599fa4d9a0e5ea4bde957dd812384e7`,
+    the 3rdparty/noVNC pin that noVNC does not serve. noVNC contributes no
+    code to either executable: the vcxproj lists its files as `<None Include>`
+    and winvnc.rc embeds 55 of its .js files as `JS` resources for the web
+    viewer. So (a) Source(submodules=False) skips the submodule fetch (a new,
+    off-by-default Source option; the provenance still records the pin,
+    uninitialised, as `-b493d9bb...`), and (b) noVNC commit
+    7c36fabe599e053c5a81e98e091ac636f6c1e174, the pin of 1.8.2.9 and a commit
+    noVNC serves, is fetched through extra_sources and copied to
+    3rdparty\\noVNC so the 55 resource files exist (all 55 are in that commit;
+    v1.7.0 lacks core/clipboard.js). The resource section of winvnc.exe
+    therefore carries the web viewer scripts of that older noVNC, not of
+    b493d9bb. Code is unaffected.
+  * 1.8.3.2 (c757708e, the head of upstream's default branch) builds winvnc.exe
+    but not vncviewer.exe: `ClientConnectionUltra2.cpp(18,10): error C1083:
+    Cannot open include file: 'ViewerBounds.h'`. 6c44cfc ("harden code against
+    buffer overruns") added `#include "ViewerBounds.h"` to ClientConnectionCursor,
+    ClientConnectionUltra2 and FileTransfer and never committed the header; it is
+    in none of upstream's four branches (main, 1.9.0.0, 1.8.4.0_feature_requests,
+    feature/VeNCryptTLS). Nothing is invented to stand in for it:
+    1.8.3.2 is built with its server only, and the viewer is taken from 1.8.3.1
+    (92bb19b9), the last release before that commit, which builds both.
+  * 1.2.1.5 (9761329e) needed five things.
+    (1) zip32 failed with 240 errors from winnt.h, `error C2143: syntax error:
+    missing ':' before 'constant'`. Cause, found by reading winnt.h of SDK
+    10.0.26100: the ARM64 unwind-data struct declares a bit-field `DWORD CR : 2;`
+    and Info-ZIP's zip.h has `#define CR 13`, which every .c of the project
+    sees before <windows.h> is parsed, so the field becomes `DWORD 13 : 2;`.
+    Fix: the generated props file force-includes windows.h for projects named
+    zip32* only, so it is parsed first and its include guard makes the later
+    include a no-op. (Verified: no zip32 error in run 42410253107.)
+    (2) The plain libjpeg-turbo-win.vcxproj that vncviewer.sln and winvnc.sln
+    reference does not assemble simd\\jchuffsse2.asm (x86) or
+    simd\\jchuff-sse2-64.asm (x64) though jsimd_i386.c / jsimd_x86_64.c call
+    them: `libjpeg-turbo-win-static.lib(jsimd_i386.obj) : error LNK2019:
+    unresolved external symbol _jsimd_huff_encode_one_block_sse2` and
+    `LNK2001 _jconst_huff_encode_one_block`. libjpeg-turbo-winv12.vcxproj does
+    list them, so the build uses upstream's own VS2013 solutions
+    (vncviewer\\vncviewer_vs2013.sln and winvnc\\winvncv12.sln, which reference
+    the *v12.vcxproj files); PlatformToolset is forced to v143 as before.
+    (3) FileTransfer.h uses std::string without including <string>
+    (`error C2039: 'string': is not a member of 'std'`, `C2061`), which older
+    toolsets supplied transitively: <string> is force-included for .cpp items,
+    the technique of the TightVNC recipe.
+    (4) directxviewer.h includes <d3dx9.h>, which the vcxproj looks for in
+    "C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)" and the runner
+    does not have (`C1083: Cannot open include file: 'd3dx9.h'`). The headers
+    come from the Microsoft.DXSDK.D3DX 9.29.952.8 NuGet package, fetched by
+    sha256 through extra_sources and put on the include path; the viewer loads
+    d3d9 dynamically and needs none of its libraries.
+    (5) x64 only: winvnc's PreBuildEvent runs `cl /nologo /MT /Fo..\\Release\\ ...
+    /c buildtime.cpp`, an /MT compile into a directory the x64 build never
+    creates (`C1083: Cannot open compiler generated file ...\\winvnc\\Release\\
+    buildtime.obj`); its output is not linked (buildtime.cpp is also a normal
+    ClCompile item). PreBuildEventUseInBuild=false drops it, as the post-build
+    signing step is dropped.
+  * 1.2.1.4 (b4034d51) is not built. The `jdcoefct.h` error (C1083) is
+    resolvable: the tree's jdcoefct.c, jdmaster.c and jdsample.c are
+    byte-identical to libjpeg-turbo 1.5.1 (1.5.0 differs in two) though
     jconfig.h says 1.4.2, and the four private headers jdcoefct.h, jdmainct.h,
     jdmaster.h and jdsample.h were never committed (1.2.1.5 adds them,
-    byte-identical to the 1.5.0-1.5.3 tags). They are taken from libjpeg-turbo
-    commit cb88e5da8003afcdc443b787fdcb77285e5a8a02 (tag 1.5.1) through
-    extra_sources, copied to a corpusinc directory beside the tree and put on
-    the include path by the generated props file (AdditionalIncludeDirectories),
-    not into libjpeg-turbo-win.
+    byte-identical to the 1.5.0-1.5.3 tags); supplied from commit cb88e5da
+    (tag 1.5.1) as a build-side include directory, that error went away. The
+    tree is nonetheless a half-committed state: the winvnc link failed with 13
+    unresolved externals (zlib: `_compress`, `_uncompress`, `_adler32`,
+    `_deflate`, `_deflateEnd`, `_deflateParams`, `_deflateInit2_`, ... because
+    zlib-1.2.11\\contrib\\vstudio\\vc10\\x86\\ZlibStatRelease\\zlibstat.lib is not
+    produced by its sln) and the jpeg SIMD asm files of 1.2.1.5 are absent.
+    1.2.1.5 is the buildable neighbour, so 1.2.1.4 is not carried.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -189,51 +221,52 @@ _FLAGS = ("Release configuration of the 1.8.2.9 vcxproj files, platform "
           "link; post-build signing disabled")
 
 
-# --- second pass: 1.2.1.4, 1.2.1.5 and 1.8.3.2 (see the docstring) ---------
+# --- second pass: 1.2.1.5, 1.8.3.1 and 1.8.3.2 (see the docstring) ---------
 
-# The generated props file of the 1.2.1.x builds. Same switches as _PROPS
-# (without /DEPENDENTLOADFLAG, which 1.2.x never had), plus two additions that
-# the docstring explains: windows.h force-included for the zip32 project only,
-# and an optional extra include directory beside the props file. \x27 is a
-# single quote, because the whole script sits inside a cmd double-quoted
-# string and python single-quoted literals.
-def _props_1_2(include_dir=None):
-    include = ""
-    if include_dir:
-        include = ("'<AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)"
-                   + include_dir + r";%(AdditionalIncludeDirectories)"
-                   "</AdditionalIncludeDirectories>'")
-    return (
-        'python -c "'
-        "open('msvcprops.props','w').write("
-        "'<Project><ItemDefinitionGroup><ClCompile>'"
-        "'<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>'"
-        "'<WholeProgramOptimization>false</WholeProgramOptimization>'"
-        "'<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>'"
-        + include +
-        "'</ClCompile><Link>'"
-        "'<GenerateDebugInformation>true</GenerateDebugInformation>'"
-        "'<ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>'"
-        "'<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>'"
-        "'<EnableCOMDATFolding>false</EnableCOMDATFolding>'"
-        "'<OptimizeReferences>false</OptimizeReferences>'"
-        "'<Profile>false</Profile>'"
-        "'<AdditionalOptions>/Brepro /INCREMENTAL:NO</AdditionalOptions>'"
-        "'</Link></ItemDefinitionGroup>'"
-        r"'<ItemDefinitionGroup Condition=\x22\x27$(MSBuildProjectName)\x27==\x27zip32\x27\x22>'"
-        "'<ClCompile><ForcedIncludeFiles>windows.h</ForcedIncludeFiles></ClCompile>'"
-        "'</ItemDefinitionGroup></Project>')"
-        '"')
+# Generated props file of the 1.2.1.5 build. Same switches as _PROPS (without
+# /DEPENDENTLOADFLAG, which 1.2.x never had), plus: the DirectX headers on the
+# include path, windows.h force-included for zip32* projects, and <string>
+# force-included for .cpp items. The text is built with placeholder tokens so
+# no quote or percent sign reaches cmd.exe: @d is a double quote, @s a single
+# quote, @p a percent sign.
+_PROPS_1_2 = (
+    'python -c "'
+    "open('msvcprops.props','w').write(("
+    "'<Project><ItemDefinitionGroup><ClCompile>'"
+    "'<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>'"
+    "'<WholeProgramOptimization>false</WholeProgramOptimization>'"
+    "'<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>'"
+    "'<AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)corpusdx"
+    "\\build\\native\\include;@p(AdditionalIncludeDirectories)"
+    "</AdditionalIncludeDirectories>'"
+    "'</ClCompile><Link>'"
+    "'<GenerateDebugInformation>true</GenerateDebugInformation>'"
+    "'<ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>'"
+    "'<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>'"
+    "'<EnableCOMDATFolding>false</EnableCOMDATFolding>'"
+    "'<OptimizeReferences>false</OptimizeReferences>'"
+    "'<Profile>false</Profile>'"
+    "'<AdditionalOptions>/Brepro /INCREMENTAL:NO</AdditionalOptions>'"
+    "'</Link></ItemDefinitionGroup>'"
+    "'<ItemDefinitionGroup Condition=@d$(MSBuildProjectName.StartsWith(@szip32@s))@d>'"
+    "'<ClCompile><ForcedIncludeFiles>windows.h</ForcedIncludeFiles></ClCompile>'"
+    "'</ItemDefinitionGroup>'"
+    "'<Target Name=@dForceStringInclude@d BeforeTargets=@dClCompile@d>'"
+    "'<ItemGroup><ClCompile Condition=@d@s@p(Extension)@s==@s.cpp@s@d>'"
+    "'<ForcedIncludeFiles>string</ForcedIncludeFiles></ClCompile>'"
+    "'</ItemGroup></Target></Project>').replace('@d',chr(34)).replace('@s',chr(39))"
+    ".replace('@p',chr(37)))"
+    '"')
 
 
-# winvnc.sln of the 1.2.1.x trees lists two installer projects both named
-# "UltraVnc" (.vdproj), which MSBuild refuses (MSB5004); the solution filter
-# does not help because the check runs first. A copy without the .vdproj
-# entries is generated beside it and upstream's file is left alone.
-_SLN = (
+# The two installer projects of winvncv12.sln (.vdproj) cannot be built by
+# MSBuild and the solution filter does not help (MSB5004 is raised first). A
+# copy of the solution without the .vdproj entries is generated beside it and
+# upstream's file is left alone.
+_SLN_1_2 = (
     'python -c "'
     r"import re;"
-    r"L=open('winvnc/winvnc.sln',encoding='utf-8-sig').read().splitlines();"
+    r"L=open('winvnc/winvncv12.sln',encoding='utf-8-sig').read().splitlines();"
     r"I=[i for i,l in enumerate(L) if l.startswith('Project(') and 'vdproj' in l];"
     r"G=[re.findall(r'\x7b([0-9A-Fa-f-]+)\x7d',L[i])[-1] for i in I];"
     r"D=set([j for i in I for j in range(i,L.index('EndProject',i)+1)]);"
@@ -246,23 +279,21 @@ _SLN = (
 # C:\Program Files\nasm to ExecutablePath); the runner has none (exit 9009).
 _NASM = 'choco install nasm -y --no-progress'
 
+# The D3DX9 headers from the pinned NuGet package.
+_UNPACK_DXSDK = (
+    'python -c "'
+    "import zipfile,sys;"
+    "zipfile.ZipFile(sys.argv[1]).extractall('corpusdx')"
+    '" {dxsdk}')
+
 _MSBUILD_1_2 = ('msbuild %s /t:%s /p:Configuration=Release '
                 '/p:Platform={msbuild_platform} /p:PlatformToolset=v143 '
                 '/p:WindowsTargetPlatformVersion=10.0 '
                 '/p:WholeProgramOptimization=false /p:LinkIncremental=false '
                 '/p:PostBuildEventUseInBuild=false '
+                '/p:PreBuildEventUseInBuild=false '
                 '/p:ForceImportBeforeCppTargets=%%CD%%\\msvcprops.props '
                 '/m /v:minimal')
-
-# The four private headers of libjpeg-turbo, from the pinned checkout, into a
-# directory beside the tree.
-_COPY_JPEG_HEADERS = (
-    'python -c "'
-    "import shutil,sys,os;"
-    "os.makedirs('corpusinc',exist_ok=True);"
-    "[shutil.copy(sys.argv[1]+'/'+h,'corpusinc') "
-    "for h in ['jdcoefct.h','jdmainct.h','jdmaster.h','jdsample.h']]"
-    '" {libjpeg_turbo}')
 
 # noVNC files into 3rdparty\noVNC, where winvnc.rc names them.
 _COPY_NOVNC = (
@@ -272,35 +303,6 @@ _COPY_NOVNC = (
     "ignore=shutil.ignore_patterns('.git'))"
     '" {novnc}')
 
-_OLD_FLAGS = ("Release configuration of the 1.2.1.x vcxproj files: "
-              "/Ox /Ob2 /Oi /Ot per project, platform toolset v143 in "
-              "place of v100, Windows SDK 10.0; /MT replaced by /MD, /GL and "
-              "/LTCG off; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF "
-              "at link, forced by this recipe over upstream's /OPT:REF; "
-              "/PROFILE off; post-build signing disabled; windows.h "
-              "force-included (/FI) for the zip32 project only, because "
-              "Info-ZIP's #define CR 13 breaks winnt.h's ARM64 bit-field "
-              "`DWORD CR : 2`")
-
-_OLD_NOTES = ("Commit %s, FILEVERSION %s: the nearest buildable state to the "
-              "1.2.13 viewer FOSSIL used, which has no commit of its own. "
-              "vncviewer.exe is the component the evidence points at; "
-              "winvnc.exe, the server, is the second target. Both statically "
-              "link the in-tree zlib, libjpeg-turbo, miniLZO and the "
-              "Info-ZIP sources, so those functions are present here under "
-              "the UltraVNC family. The CRT is imported (/MD) and stays "
-              "attributed to data/MSVC. %s")
-
-_COMMON_STEPS = [
-    BuildStep(_NASM, allow_failure=True),
-    BuildStep(_SLN),
-    BuildStep(_MSBUILD_1_2 % ("vncviewer\\vncviewer.sln", "vncviewer"),
-              allow_failure=True),
-    BuildStep(_MSBUILD_1_2 % ("winvnc\\winvnc_build.sln", "winvnc"),
-              allow_failure=True),
-    BuildStep(_LOCATE),
-]
-
 _ARTIFACTS = [
     Artifact(path="corpusout\\vncviewer.exe", component="vncviewer.exe",
              pdb="corpusout\\vncviewer.pdb"),
@@ -308,8 +310,32 @@ _ARTIFACTS = [
              pdb="corpusout\\winvnc.pdb"),
 ]
 
-_JPEG_ONLY = ("NOT byte-identical to a build of unmodified upstream: the "
-              "windows.h force-include for zip32 (see the recipe docstring). ")
+_NOVNC_SOURCE = Source(git_url="https://github.com/novnc/noVNC.git",
+                       git_ref="7c36fabe599e053c5a81e98e091ac636f6c1e174")
+
+_NEW_STEPS = [
+    BuildStep(_PROPS),
+    BuildStep(_COPY_NOVNC),
+    BuildStep(_VCPKG_INTEGRATE, allow_failure=True),
+    BuildStep(_MSBUILD % ("vncviewer\\vncviewer.sln", "vncviewer"),
+              allow_failure=True),
+    BuildStep(_MSBUILD % ("winvnc\\winvnc.sln", "winvnc"),
+              allow_failure=True),
+]
+
+_NEW_FLAGS = (_FLAGS + "; noVNC submodule not fetched, the files for "
+              "winvnc.rc's web-viewer resources taken from noVNC 7c36fabe")
+
+_NEW_NOTES = ("Commit %s, version %s. NOT byte-identical to a build of "
+              "unmodified upstream: the 3rdparty/noVNC submodule pin "
+              "b493d9bb is not served by noVNC, so it is left uninitialised "
+              "and noVNC 7c36fabe (the pin of 1.8.2.9) supplies the 55 .js "
+              "files winvnc.rc embeds as resources; no code is affected "
+              "(see the recipe docstring). %sDependencies come from vcpkg per "
+              "vcpkg.json, statically linked into the exes, so those "
+              "libraries' functions are present here under the UltraVNC "
+              "family; miniLZO is compiled from lzo\\minilzo.c. The CRT is "
+              "imported (/MD) and stays attributed to data/MSVC.")
 
 
 RECIPES = {
@@ -356,38 +382,66 @@ RECIPES = {
         license="GPL-2.0-or-later",
         source=Source(git_url="https://github.com/ultravnc/UltraVNC.git",
                       git_ref="9761329ece79ab416bd6f17b3d68cbca21c9737c"),
-        build=[BuildStep(_props_1_2())] + _COMMON_STEPS,
-        artifacts=_ARTIFACTS,
-        toolchains=["msvc_x86", "msvc_x64"],
-        build_flags=_OLD_FLAGS,
-        notes=_OLD_NOTES % ("9761329e (2017-06-10)", "1.2.1.5", _JPEG_ONLY),
-    ),
-    "UltraVNC_1.2.1.4_msvc": Recipe(
-        family="UltraVNC",
-        version="1.2.1.4",
-        upstream="https://github.com/ultravnc/UltraVNC",
-        license="GPL-2.0-or-later",
-        source=Source(git_url="https://github.com/ultravnc/UltraVNC.git",
-                      git_ref="b4034d51163fefd9935691a11ec4d3597d5c571f"),
         extra_sources={
-            "libjpeg_turbo": Source(
-                git_url="https://github.com/libjpeg-turbo/libjpeg-turbo.git",
-                git_ref="cb88e5da8003afcdc443b787fdcb77285e5a8a02"),
+            "dxsdk": Source(
+                url="https://api.nuget.org/v3-flatcontainer/"
+                    "microsoft.dxsdk.d3dx/9.29.952.8/"
+                    "microsoft.dxsdk.d3dx.9.29.952.8.nupkg",
+                sha256="ead0906ae8a26c18a7525da7490127a2110f7c58f18293738283e30e97c6ea4b"),
         },
-        build=([BuildStep(_props_1_2("corpusinc")),
-                BuildStep(_COPY_JPEG_HEADERS)] + _COMMON_STEPS),
+        build=[
+            BuildStep(_PROPS_1_2),
+            BuildStep(_UNPACK_DXSDK),
+            BuildStep(_NASM, allow_failure=True),
+            BuildStep(_SLN_1_2),
+            BuildStep(_MSBUILD_1_2 % ("vncviewer\\vncviewer_vs2013.sln",
+                                      "vncviewer"), allow_failure=True),
+            BuildStep(_MSBUILD_1_2 % ("winvnc\\winvnc_build.sln", "winvnc"),
+                      allow_failure=True),
+            BuildStep(_LOCATE),
+        ],
         artifacts=_ARTIFACTS,
         toolchains=["msvc_x86", "msvc_x64"],
-        build_flags=_OLD_FLAGS + "; libjpeg-turbo's four private headers "
-                    "(jdcoefct.h, jdmainct.h, jdmaster.h, jdsample.h) on the "
-                    "include path from libjpeg-turbo 1.5.1",
-        notes=_OLD_NOTES % (
-            "b4034d51 (2017)", "1.2.1.4",
-            "NOT byte-identical to a build of unmodified upstream: the tree "
-            "lacks four libjpeg-turbo private headers, supplied from "
-            "libjpeg-turbo commit cb88e5da (tag 1.5.1) as a build-side "
-            "include directory, and windows.h is force-included for zip32 "
-            "(see the recipe docstring). "),
+        build_flags="Release configuration of upstream's VS2013 solutions "
+                    "(vncviewer_vs2013.sln, winvncv12.sln): /Ox /Ob2 /Oi /Ot "
+                    "per project, platform toolset v143 in place of "
+                    "v141_xp, Windows SDK 10.0; /MT replaced by /MD, /GL and "
+                    "/LTCG off; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF "
+                    "/OPT:NOICF at link, forced by this recipe over "
+                    "upstream's /OPT:REF; /PROFILE off; post-build signing "
+                    "and winvnc's /MT pre-build compile of buildtime.cpp "
+                    "disabled; windows.h force-included for zip32 and <string> "
+                    "for C++ items; D3DX9 headers from the Microsoft.DXSDK.D3DX "
+                    "9.29.952.8 NuGet package",
+        notes="Commit 9761329e (2017-06-10), FILEVERSION 1.2.1.5: the "
+              "nearest buildable state to the 1.2.13 viewer FOSSIL used, "
+              "which has no commit of its own. NOT byte-identical to a build "
+              "of unmodified upstream: windows.h is force-included for the "
+              "Info-ZIP project (its #define CR 13 breaks winnt.h's ARM64 "
+              "bit-field), <string> for C++ items, D3DX9 headers come from a "
+              "NuGet package, and the solutions are upstream's VS2013 ones "
+              "so the SIMD Huffman assembly is part of libjpeg-turbo (see "
+              "the recipe docstring). vncviewer.exe is the component the "
+              "evidence points at; winvnc.exe, the server, is the second "
+              "target. Both statically link the in-tree zlib, libjpeg-turbo, "
+              "miniLZO and the Info-ZIP sources, so those functions are "
+              "present here under the UltraVNC family. The CRT is imported "
+              "(/MD) and stays attributed to data/MSVC.",
+    ),
+    "UltraVNC_1.8.3.1_msvc": Recipe(
+        family="UltraVNC",
+        version="1.8.3.1",
+        upstream="https://github.com/ultravnc/UltraVNC",
+        license="GPL-3.0-or-later",
+        source=Source(git_url="https://github.com/ultravnc/UltraVNC.git",
+                      git_ref="92bb19b9eb01b043bf84172dfa493cd7b9341076",
+                      submodules=False),
+        extra_sources={"novnc": _NOVNC_SOURCE},
+        build=_NEW_STEPS + [BuildStep(_LOCATE)],
+        artifacts=_ARTIFACTS,
+        toolchains=["msvc_x86", "msvc_x64"],
+        build_flags=_NEW_FLAGS,
+        notes=_NEW_NOTES % ("92bb19b9 (2026-10-18)", "1.8.3.1", ""),
     ),
     "UltraVNC_1.8.3.2_msvc": Recipe(
         family="UltraVNC",
@@ -397,35 +451,18 @@ RECIPES = {
         source=Source(git_url="https://github.com/ultravnc/UltraVNC.git",
                       git_ref="c757708e83b6c8249a1cdc9b9c0427c4e72f1c21",
                       submodules=False),
-        extra_sources={
-            "novnc": Source(git_url="https://github.com/novnc/noVNC.git",
-                            git_ref="7c36fabe599e053c5a81e98e091ac636f6c1e174"),
-        },
-        build=[
-            BuildStep(_PROPS),
-            BuildStep(_COPY_NOVNC),
-            BuildStep(_VCPKG_INTEGRATE, allow_failure=True),
-            BuildStep(_MSBUILD % ("vncviewer\\vncviewer.sln", "vncviewer"),
-                      allow_failure=True),
-            BuildStep(_MSBUILD % ("winvnc\\winvnc.sln", "winvnc"),
-                      allow_failure=True),
-            BuildStep(_LOCATE),
-        ],
-        artifacts=_ARTIFACTS,
+        extra_sources={"novnc": _NOVNC_SOURCE},
+        build=([s for s in _NEW_STEPS if "vncviewer.sln" not in s.command]
+               + [BuildStep(_LOCATE.replace("('vncviewer', 'winvnc')",
+                                            "('winvnc',)"))]),
+        artifacts=_ARTIFACTS[1:],
         toolchains=["msvc_x86", "msvc_x64"],
-        build_flags=_FLAGS + "; noVNC submodule not fetched, files for "
-                    "winvnc.rc's web-viewer resources taken from noVNC "
-                    "7c36fabe",
-        notes="Commit c757708e (2026-11-02), version 1.8.3.2, the head of "
-              "upstream's default branch. NOT byte-identical to a build of "
-              "unmodified upstream: the 3rdparty/noVNC submodule pin "
-              "b493d9bb is not served by noVNC, so it is left uninitialised "
-              "and noVNC 7c36fabe (the pin of 1.8.2.9) supplies the 55 .js "
-              "files winvnc.rc embeds as resources; no code is affected "
-              "(see the recipe docstring). Dependencies come from vcpkg per "
-              "vcpkg.json, statically linked into the exes, so those "
-              "libraries' functions are present here under the UltraVNC "
-              "family; miniLZO is compiled from lzo\\minilzo.c. The CRT is "
-              "imported (/MD) and stays attributed to data/MSVC.",
+        build_flags=_NEW_FLAGS,
+        notes=_NEW_NOTES % (
+            "c757708e (2026-11-02)", "1.8.3.2",
+            "winvnc.exe only: vncviewer.exe does not build at this commit "
+            "because upstream never committed ViewerBounds.h (which "
+            "ClientConnectionCursor.cpp, ClientConnectionUltra2.cpp and "
+            "FileTransfer.cpp include); the viewer is in 1.8.3.1. "),
     ),
 }
