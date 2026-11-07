@@ -46,7 +46,11 @@ VENDORED = ("libeay32.lib", "ssleay32.lib", "zlib.lib", "libintelaes.lib")
 SYSTEM_LIBS = ("advapi32.lib", "user32.lib", "gdi32.lib", "shell32.lib",
                "ole32.lib", "oleaut32.lib", "uuid.lib", "crypt32.lib",
                "ws2_32.lib", "wininet.lib", "secur32.lib", "psapi.lib",
-               "wtsapi32.lib", "rpcrt4.lib", "ntdll.lib", "comdlg32.lib")
+               "wtsapi32.lib", "rpcrt4.lib", "ntdll.lib", "comdlg32.lib",
+               "winspool.lib", "mpr.lib", "userenv.lib", "htmlhelp.lib",
+               "urlmon.lib", "imm32.lib", "msimg32.lib", "wldap32.lib",
+               "shlwapi.lib", "netapi32.lib", "iphlpapi.lib", "setupapi.lib",
+               "version.lib", "winmm.lib", "comctl32.lib", "dbghelp.lib")
 
 # The sources were written for a Windows SDK that predates NTDDI_WIN7 and
 # friends. There "#if (NTDDI_VERSION >= NTDDI_WIN7)" compared against an
@@ -256,7 +260,7 @@ def main(argv):
         exe = os.path.join(out_dir, component + ".exe")
         pdb = os.path.join(out_dir, component + ".pdb")
         command = (["link", "/nologo", "/OUT:" + exe, "/PDB:" + pdb,
-                    "/DEBUG", "/INCREMENTAL:NO", "/Brepro",
+                    "/DEBUG", "/INCREMENTAL:NO", "/Brepro", "/MAP:" + os.path.join(out_dir, component + ".map"),
                     "/OPT:NOREF", "/OPT:NOICF", "/MANIFEST:NO",
                     "/SUBSYSTEM:" + subsystem, "/ENTRY:mainCRTStartup",
                     "/LIBPATH:" + libdir, "/IGNORE:4098,4099,4217,4286",
@@ -287,6 +291,19 @@ def main(argv):
                         out_dir, None)
             if c2 == 0:
                 code, output = run(command + [shim + ".obj"], out_dir, None)
+        if code != 0:
+            unresolved = sorted(set(re.findall(
+                r"unresolved external symbol (\S+)", output)))
+            print("UNRESOLVED %s (%d): %s" % (component, len(unresolved),
+                                              " ".join(unresolved)))
+        mapfile = os.path.join(out_dir, component + ".map")
+        if os.path.isfile(mapfile):
+            counts = {}
+            for line in open(mapfile, errors="replace"):
+                m = re.search(r"\sf\s+(?:i\s+)?(\S+\.lib):", line)
+                if m:
+                    counts[m.group(1)] = counts.get(m.group(1), 0) + 1
+            print("MAPFUNCS %s %s" % (component, sorted(counts.items())))
         if code != 0 or not os.path.isfile(exe):
             summary[component].append("<link.exe exit %d>" % code)
             status = 1
