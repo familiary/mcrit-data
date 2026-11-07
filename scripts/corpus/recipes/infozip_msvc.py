@@ -65,8 +65,8 @@ readback. cl 19.44.35229 (VS 2022 v143), SDK 10.0.26100.0.
 
 Measured, glue baseline applied (kept + removed = image):
 
-    zip.exe 3.0    x86  348 + 207 = 555    x64  348 + 213 = 561
-    unzip.exe 6.0  x86  238 + 195 = 433    x64  230 + 197 = 427
+    zip.exe 3.0    x86  344 + 211 = 555    x64  343 + 218 = 561
+    unzip.exe 6.0  x86  236 + 197 = 433    x64  227 + 200 = 427
 
 (MinGW: zip 245 + 208 = 453 / 317 + 204 = 521, unzip 130 + 154 = 284 /
 213 + 149 = 362.) About a hundred of the kept functions in each x86 image are
@@ -77,17 +77,17 @@ kept count has more of than MinGW's.
 Overlap with the MinGW artefacts of the same program and architecture, exact
 PicHash, functions of ten instructions or more (MinGW / MSVC / shared):
 
-    zip.exe    x86  189 / 223 / 0      x64  185 / 220 / 0
-    unzip.exe  x86  106 / 142 / 0      x64  107 / 138 / 0
+    zip.exe    x86  189 / 222 / 0      x64  185 / 218 / 0
+    unzip.exe  x86  106 / 142 / 0      x64  107 / 137 / 0
 
 As with every other MSVC pass here, the same source compiled by the two
 compilers shares no hash at that size, so the MSVC build is new data for
 MSVC-built malware rather than a duplicate of the MinGW one.
 
-Glue survivors at ten instructions or more: none on x86. On x64 one,
-``__scrt_common_main_seh`` (99 instructions, PicHash 11855707620856894801) in
-both zip.exe and unzip.exe - the MSVC CRT startup routine already recorded
-in the README as the one finding the MSVC baseline does not remove. No
+Glue survivors at ten instructions or more: none in the four images. The MSVC
+CRT startup routine ``__scrt_common_main_seh`` (99 instructions on x64,
+PicHash 11855707620856894801), which the x64 images carried before the
+wide-stdio glue baseline, is removed by it in zip.exe and unzip.exe. No
 unnamed function reaches ten instructions in any of the four images.
 """
 
