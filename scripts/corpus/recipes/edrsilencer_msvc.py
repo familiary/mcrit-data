@@ -35,20 +35,18 @@ Three obstacles, and how each is handled without changing upstream source:
 
 Measured, SMDA 5.0.2 for MinGW and 4.8.0 for MSVC (functions with 10 or more
 instructions, the cross-family floor; kept + removed = total image functions):
-  EDRSilencer_2024-11-03_msvc143_x64_EDRSilencer.exe: 49 kept + 168 removed = 217; 18 functions >=10, 18 unique PicHashes.
-  EDRSilencer_2024-11-03_msvc143_x86_EDRSilencer.exe: 48 kept + 164 removed = 212; 17 functions >=10, 17 unique PicHashes.
+  EDRSilencer_2024-11-03_msvc143_x64_EDRSilencer.exe: 47 kept + 170 removed = 217; 16 functions >=10, 16 unique PicHashes.
+  EDRSilencer_2024-11-03_msvc143_x86_EDRSilencer.exe: 47 kept + 165 removed = 212; 16 functions >=10, 16 unique PicHashes.
   MinGW (for comparison, from edrsilencer.py): x64 17 unique, x86 19 unique.
   x64 versus x86 (MSVC): 0 shared at the floor.
   MSVC versus MinGW at the floor: x86 0 shared; x64 1 shared, PrintHelp
   0xdd8066c9ae2c617e (upstream's own function, identical code from both
   compilers; not glue).
 
-Glue survivors, named at or above the floor, all MSVC CRT or runtime:
-  x64 printf 0x01b000030f8b5bfc (the same hash the al-khaser O2 x64
-  printf/wprintf wrapper carries in this corpus);
-  x64 __scrt_common_main_seh 0xa487ef4456111551 (as in DiskCryptor's x64 dccon.exe);
-  x86 printf 0xcc8ddc54a4d6fac6.
-The upstream functions are left alone.
+Glue survivors at or above the floor: none. The wide-stdio glue baseline
+removes the x64 printf (0x01b000030f8b5bfc), the x64 __scrt_common_main_seh
+(0xa487ef4456111551) and the x86 printf (0xcc8ddc54a4d6fac6) that the
+earlier import kept. The upstream functions are left alone.
 
 Linked and disassembled only; never executed and never used to change
 Windows Filtering Platform.

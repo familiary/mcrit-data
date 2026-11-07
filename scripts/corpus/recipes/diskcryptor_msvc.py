@@ -1,11 +1,11 @@
 """Original DiskCryptor 1.1.846.118 user-mode API and support programs.
 
 CI measurements, SMDA 4.8.0/MCRIT 1.9.0 (functions >=10 instructions):
-  x64 dcapi.dll 213+161=374, 127 functions/120 hashes; dccon.exe 101+164=265, 26/25; dcinst.exe 23+145=168, 4/4.
-  x86 dcapi.dll 235+169=404, 141/132; dccon.exe 104+170=274, 27/26; dcinst.exe 24+139=163, 5/5.
-  Cross-architecture PicHash overlap is 0 for each like component. Within-architecture component overlap is 0 except x86 dcapi/dccon, which share 1.
+  x64 dcapi.dll 213+161=374, 127 functions/120 hashes; dccon.exe 96+169=265, 22/22; dcinst.exe 23+145=168, 4/4.
+  x86 dcapi.dll 234+170=404, 140/131; dccon.exe 99+175=274, 23/23; dcinst.exe 24+139=163, 5/5.
+  Cross-architecture PicHash overlap is 0 for each like component. Within-architecture component overlap is 0 everywhere: the x86 dcapi/dccon share of _snwprintf 0xe7c749284c098840 (20 instructions) is removed by the wide-stdio glue baseline.
 
-Runtime survivors include x64 dccon.exe __scrt_common_main_seh 0xa487ef4456111551 and printf/wprintf 0x01b000030f8b5bfc; x64 dcinst.exe __scrt_common_main_seh 0x9c6b020cef91b85d. On x86, dccon.exe printf/wprintf 0xaaa5d2355288b00d and dcinst.exe __scrt_common_main_seh 0xd5e31daef61b43e7 plus $+0x124 0xb6f9895ed1a726a6 remain. The 16-bit bootloader is not rebuilt; its original resource bytes remain data. The user-mode images are linked and disassembled only.
+The glue baseline removes the printf/wprintf and __scrt_common_main_seh wrappers from the dccon.exe images, so the earlier survivors 0xa487ef4456111551 and 0x01b000030f8b5bfc (x64) and 0xaaa5d2355288b00d (x86) are gone. Named survivors at or above the floor are x64 dcapi.dll StringCchPrintfW 0xa676f9a691935460 (62 instructions), x64 dcinst.exe __scrt_common_main_seh 0x9c6b020cef91b85d (92), x86 dcapi.dll StringCchPrintfW 0x9125a9f03bc5bafa (59), and x86 dcinst.exe __scrt_common_main_seh 0xd5e31daef61b43e7 (110) plus $+0x124 0xb6f9895ed1a726a6 (10). The 16-bit bootloader is not rebuilt; its original resource bytes remain data. The user-mode images are linked and disassembled only.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

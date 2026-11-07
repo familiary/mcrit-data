@@ -1,6 +1,6 @@
 """EDRSandblast reusable core and static API, built as an x64 DLL.
 
-CI measurement, SMDA 4.8.0/MCRIT 1.9.0: 378 kept + 89 removed = 467 image functions; 240 have >=10 instructions with 227 unique PicHashes. The x64 reference complements its MinGW-free upstream MSVC build. Runtime printf/wprintf wrapper survives at 0x01b000030f8b5bfc. Vendored SysWhispers2 stubs are included as shipped. DLL is linked and disassembled only.
+CI measurement, SMDA 4.8.0/MCRIT 1.9.0: 375 kept + 92 removed = 467 image functions; 237 have >=10 instructions with 225 unique PicHashes. The x64 reference complements its MinGW-free upstream MSVC build. The printf/wprintf wrapper that survived the earlier import (0x01b000030f8b5bfc) is removed by the wide-stdio glue baseline; no named glue wrapper remains at or above the floor. Vendored SysWhispers2 stubs are included as shipped. DLL is linked and disassembled only.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

@@ -1,8 +1,8 @@
 """WinPmem 1.6.2 client image from the pinned Rekall 1.2.0 source.
 
-CI measurements, SMDA 4.8.0/MCRIT 1.9.0: x64 58 kept + 95 removed = 153; x86 58 + 85 = 143. Both retain 31 functions >=10 instructions and 31 unique PicHashes; cross-architecture overlap is 0.
+CI measurements, SMDA 4.8.0/MCRIT 1.9.0: x64 56 kept + 97 removed = 153; x86 56 + 87 = 143. Both retain 29 functions >=10 instructions and 29 unique PicHashes; cross-architecture overlap is 0.
 
-Named formatting/runtime survivors are x64 asprintf 0x3a5fd25ec0fe4cc8, aswprintf 0xc6f0ed3de3fb8d13, vwprintf 0x30c7edbbfc938177 and wprintf 0x01b000030f8b5bfc; x86 asprintf 0x639bfc2bc221685f, aswprintf 0x013adc10373d10ee, vwprintf 0x6c593a236b25c531 and wprintf 0xcc8ddc54a4d6fac6. Only the client translation unit is linked; no CLI, resources or embedded drivers are included. No acquisition is performed.
+Named formatting survivors after the wide-stdio glue baseline are x64 asprintf 0x3a5fd25ec0fe4cc8 and aswprintf 0xc6f0ed3de3fb8d13; x86 asprintf 0x639bfc2bc221685f and aswprintf 0x013adc10373d10ee. vwprintf and wprintf (x64 0x30c7edbbfc938177 and 0x01b000030f8b5bfc; x86 0x6c593a236b25c531 and 0xcc8ddc54a4d6fac6) are removed by the glue baseline. Only the client translation unit is linked; no CLI, resources or embedded drivers are included. No acquisition is performed.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

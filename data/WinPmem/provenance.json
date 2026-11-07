@@ -6,12 +6,12 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "winpmem.dll",
     "family": "WinPmem",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "Apache-2.0 (source headers and LICENSE)",
     "mcrit": "data/WinPmem/x64/mcrit/WinPmem_1.6.2_msvc143_x64_winpmem.dll.mcrit",
     "notes": "Historical 1.6.2 client pin located in Rekall 1.2.0 (2014-12-21), confirmed by PMEM_VERSION in executable/winpmem.h. Only the client translation unit is linked; no CLI, resources, fcat executable or embedded prebuilt drivers. No modern WinPmem substitution. No acquisition is performed; linked and disassembled only. _INC_VARARGS attempts to suppress the obsolete redundant varargs include, after standard stdarg is included by upstream.",
-    "num_functions": 58,
+    "num_functions": 56,
     "removed_runtime_functions": [
       "CloseHandle",
       "CreateFileW",
@@ -107,7 +107,9 @@
       "strlen",
       "type_info::`scalar deleting destructor'",
       "type_info::~type_info",
-      "wcscmp"
+      "vwprintf",
+      "wcscmp",
+      "wprintf"
     ],
     "sha256": "92b0388aed5af01d838b2001aee2da84c532c0ea0f3c299cbf47b13fd08e69f6",
     "smda": "data/WinPmem/x64/smda/WinPmem_1.6.2_msvc143_x64_winpmem.dll.7z",
@@ -128,12 +130,12 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "winpmem.dll",
     "family": "WinPmem",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "Apache-2.0 (source headers and LICENSE)",
     "mcrit": "data/WinPmem/x86/mcrit/WinPmem_1.6.2_msvc143_x86_winpmem.dll.mcrit",
     "notes": "Historical 1.6.2 client pin located in Rekall 1.2.0 (2014-12-21), confirmed by PMEM_VERSION in executable/winpmem.h. Only the client translation unit is linked; no CLI, resources, fcat executable or embedded prebuilt drivers. No modern WinPmem substitution. No acquisition is performed; linked and disassembled only. _INC_VARARGS attempts to suppress the obsolete redundant varargs include, after standard stdarg is included by upstream.",
-    "num_functions": 58,
+    "num_functions": 56,
     "removed_runtime_functions": [
       "ReadNoFence",
       "ReadPointerNoFence",
@@ -219,7 +221,9 @@
       "std::exception::what",
       "std::exception::~exception",
       "type_info::`scalar deleting destructor'",
-      "type_info::~type_info"
+      "type_info::~type_info",
+      "vwprintf",
+      "wprintf"
     ],
     "sha256": "5f6bab365ad72846c24d3cd3a0565cdb428cea05a50a8bcd47d108e1a6d44ea5",
     "smda": "data/WinPmem/x86/smda/WinPmem_1.6.2_msvc143_x86_winpmem.dll.7z",
