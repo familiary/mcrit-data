@@ -1,0 +1,130 @@
+{
+  "TinySHell_0.7_gcc13_x64_tsh": {
+    "architecture": "x64",
+    "build_flags": "make tsh tshd through upstream's own $(TSH)/$(TSHD) rules with CFLAGS=\"-O3 -W -Wall\" (the level Makefile:4 declares; the linux: target's hardcoded -O is the other one upstream offers), DEFS=-DLINUX and LDFLAGS=\"-Xlinker --no-as-needed -lutil\" copied from the linux_x64: target, plus -m32/-m64; STRIP=true neutralises the $(STRIP) on Makefile:122 and :126. Dynamically linked PIE, not -static and not -s",
+    "built_artifact": "tsh",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "tsh",
+    "family": "TinySHell",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "GPL, stated in each source file header ('this program is licensed under the GPL'); no LICENSE or COPYING file in the tree and no GPL version named",
+    "mcrit": "data/TinySHell/x64/mcrit/TinySHell_0.7_gcc13_x64_tsh.mcrit",
+    "notes": "Christophe Devine's minimal encrypted backdoor, built as the two binaries one tree produces: tshd (the implanted server, the component that matters) and tsh (the client). Mandiant's March 2025 UNC3886 reporting links this repository for six TINYSHELL-derived Junos backdoors (appid, to, irad, lmpad, jdosd, oemd) and keys its hunting rule on tsh_get_file, tsh_put_file, tsh_runshell, tshd_get_file, tshd_put_file and tshd_runshell, all present here. Those samples are FreeBSD/Junos, so these Linux ELF artefacts are a toolchain proxy for them rather than a container match. Symbol-carrying functions: tsh 44 / tshd 34 on x86, tsh 33 / tshd 29 on x64, of which 20 in tshd are the project's own on both. Linked dynamically, so glibc is not in the image under this family's name - the trap -static set for monomorph. aes.c and sha1.c are Devine's own implementations and the direct ancestors of XySSL, PolarSSL and mbedTLS, which is four versions and 26 artefacts here: not duplicates twenty years apart, but the same author's same algorithms, so read the cross-family PicHash census for this family with that in mind, as with libsodium's ed25519-ref10. The aes.c and sha1.c self-test main() functions sit inside #ifdef TEST (aes.c:585, sha1.c:259) and are compiled out, so linking all four translation units raises no duplicate main - correcting the concern recorded in issue #52. Upstream disagrees with itself on the version: Makefile:13 says tsh-0.7, tsh.c:2 says 0.6.",
+    "num_functions": 111,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "_start",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "29d41e382e4568f6870eb37fe99dc96484409a2f400e1b79afcace18823f3c73",
+    "smda": "data/TinySHell/x64/smda/TinySHell_0.7_gcc13_x64_tsh.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "5ec48d4193a726e41d129e4d01ecf56f07919be0",
+      "git_ref": "5ec48d4193a726e41d129e4d01ecf56f07919be0",
+      "git_url": "https://github.com/creaktive/tsh.git"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://github.com/creaktive/tsh",
+    "version": "0.7"
+  },
+  "TinySHell_0.7_gcc13_x64_tshd": {
+    "architecture": "x64",
+    "build_flags": "make tsh tshd through upstream's own $(TSH)/$(TSHD) rules with CFLAGS=\"-O3 -W -Wall\" (the level Makefile:4 declares; the linux: target's hardcoded -O is the other one upstream offers), DEFS=-DLINUX and LDFLAGS=\"-Xlinker --no-as-needed -lutil\" copied from the linux_x64: target, plus -m32/-m64; STRIP=true neutralises the $(STRIP) on Makefile:122 and :126. Dynamically linked PIE, not -static and not -s",
+    "built_artifact": "tshd",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "tshd",
+    "family": "TinySHell",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "GPL, stated in each source file header ('this program is licensed under the GPL'); no LICENSE or COPYING file in the tree and no GPL version named",
+    "mcrit": "data/TinySHell/x64/mcrit/TinySHell_0.7_gcc13_x64_tshd.mcrit",
+    "notes": "Christophe Devine's minimal encrypted backdoor, built as the two binaries one tree produces: tshd (the implanted server, the component that matters) and tsh (the client). Mandiant's March 2025 UNC3886 reporting links this repository for six TINYSHELL-derived Junos backdoors (appid, to, irad, lmpad, jdosd, oemd) and keys its hunting rule on tsh_get_file, tsh_put_file, tsh_runshell, tshd_get_file, tshd_put_file and tshd_runshell, all present here. Those samples are FreeBSD/Junos, so these Linux ELF artefacts are a toolchain proxy for them rather than a container match. Symbol-carrying functions: tsh 44 / tshd 34 on x86, tsh 33 / tshd 29 on x64, of which 20 in tshd are the project's own on both. Linked dynamically, so glibc is not in the image under this family's name - the trap -static set for monomorph. aes.c and sha1.c are Devine's own implementations and the direct ancestors of XySSL, PolarSSL and mbedTLS, which is four versions and 26 artefacts here: not duplicates twenty years apart, but the same author's same algorithms, so read the cross-family PicHash census for this family with that in mind, as with libsodium's ed25519-ref10. The aes.c and sha1.c self-test main() functions sit inside #ifdef TEST (aes.c:585, sha1.c:259) and are compiled out, so linking all four translation units raises no duplicate main - correcting the concern recorded in issue #52. Upstream disagrees with itself on the version: Makefile:13 says tsh-0.7, tsh.c:2 says 0.6.",
+    "num_functions": 106,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "_start",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "a649eccbca56bf7d88703f242f67782709fe86fee675b9d13241459864807e23",
+    "smda": "data/TinySHell/x64/smda/TinySHell_0.7_gcc13_x64_tshd.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "5ec48d4193a726e41d129e4d01ecf56f07919be0",
+      "git_ref": "5ec48d4193a726e41d129e4d01ecf56f07919be0",
+      "git_url": "https://github.com/creaktive/tsh.git"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://github.com/creaktive/tsh",
+    "version": "0.7"
+  },
+  "TinySHell_0.7_gcc13_x86_tsh": {
+    "architecture": "x86",
+    "build_flags": "make tsh tshd through upstream's own $(TSH)/$(TSHD) rules with CFLAGS=\"-O3 -W -Wall\" (the level Makefile:4 declares; the linux: target's hardcoded -O is the other one upstream offers), DEFS=-DLINUX and LDFLAGS=\"-Xlinker --no-as-needed -lutil\" copied from the linux_x64: target, plus -m32/-m64; STRIP=true neutralises the $(STRIP) on Makefile:122 and :126. Dynamically linked PIE, not -static and not -s",
+    "built_artifact": "tsh",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "tsh",
+    "family": "TinySHell",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "GPL, stated in each source file header ('this program is licensed under the GPL'); no LICENSE or COPYING file in the tree and no GPL version named",
+    "mcrit": "data/TinySHell/x86/mcrit/TinySHell_0.7_gcc13_x86_tsh.mcrit",
+    "notes": "Christophe Devine's minimal encrypted backdoor, built as the two binaries one tree produces: tshd (the implanted server, the component that matters) and tsh (the client). Mandiant's March 2025 UNC3886 reporting links this repository for six TINYSHELL-derived Junos backdoors (appid, to, irad, lmpad, jdosd, oemd) and keys its hunting rule on tsh_get_file, tsh_put_file, tsh_runshell, tshd_get_file, tshd_put_file and tshd_runshell, all present here. Those samples are FreeBSD/Junos, so these Linux ELF artefacts are a toolchain proxy for them rather than a container match. Symbol-carrying functions: tsh 44 / tshd 34 on x86, tsh 33 / tshd 29 on x64, of which 20 in tshd are the project's own on both. Linked dynamically, so glibc is not in the image under this family's name - the trap -static set for monomorph. aes.c and sha1.c are Devine's own implementations and the direct ancestors of XySSL, PolarSSL and mbedTLS, which is four versions and 26 artefacts here: not duplicates twenty years apart, but the same author's same algorithms, so read the cross-family PicHash census for this family with that in mind, as with libsodium's ed25519-ref10. The aes.c and sha1.c self-test main() functions sit inside #ifdef TEST (aes.c:585, sha1.c:259) and are compiled out, so linking all four translation units raises no duplicate main - correcting the concern recorded in issue #52. Upstream disagrees with itself on the version: Makefile:13 says tsh-0.7, tsh.c:2 says 0.6.",
+    "num_functions": 122,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "e298effe5fc478835730bd387664d0e1c1ccdef2ad78b2688577d2f2e7992f5a",
+    "smda": "data/TinySHell/x86/smda/TinySHell_0.7_gcc13_x86_tsh.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "5ec48d4193a726e41d129e4d01ecf56f07919be0",
+      "git_ref": "5ec48d4193a726e41d129e4d01ecf56f07919be0",
+      "git_url": "https://github.com/creaktive/tsh.git"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://github.com/creaktive/tsh",
+    "version": "0.7"
+  },
+  "TinySHell_0.7_gcc13_x86_tshd": {
+    "architecture": "x86",
+    "build_flags": "make tsh tshd through upstream's own $(TSH)/$(TSHD) rules with CFLAGS=\"-O3 -W -Wall\" (the level Makefile:4 declares; the linux: target's hardcoded -O is the other one upstream offers), DEFS=-DLINUX and LDFLAGS=\"-Xlinker --no-as-needed -lutil\" copied from the linux_x64: target, plus -m32/-m64; STRIP=true neutralises the $(STRIP) on Makefile:122 and :126. Dynamically linked PIE, not -static and not -s",
+    "built_artifact": "tshd",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "tshd",
+    "family": "TinySHell",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "GPL, stated in each source file header ('this program is licensed under the GPL'); no LICENSE or COPYING file in the tree and no GPL version named",
+    "mcrit": "data/TinySHell/x86/mcrit/TinySHell_0.7_gcc13_x86_tshd.mcrit",
+    "notes": "Christophe Devine's minimal encrypted backdoor, built as the two binaries one tree produces: tshd (the implanted server, the component that matters) and tsh (the client). Mandiant's March 2025 UNC3886 reporting links this repository for six TINYSHELL-derived Junos backdoors (appid, to, irad, lmpad, jdosd, oemd) and keys its hunting rule on tsh_get_file, tsh_put_file, tsh_runshell, tshd_get_file, tshd_put_file and tshd_runshell, all present here. Those samples are FreeBSD/Junos, so these Linux ELF artefacts are a toolchain proxy for them rather than a container match. Symbol-carrying functions: tsh 44 / tshd 34 on x86, tsh 33 / tshd 29 on x64, of which 20 in tshd are the project's own on both. Linked dynamically, so glibc is not in the image under this family's name - the trap -static set for monomorph. aes.c and sha1.c are Devine's own implementations and the direct ancestors of XySSL, PolarSSL and mbedTLS, which is four versions and 26 artefacts here: not duplicates twenty years apart, but the same author's same algorithms, so read the cross-family PicHash census for this family with that in mind, as with libsodium's ed25519-ref10. The aes.c and sha1.c self-test main() functions sit inside #ifdef TEST (aes.c:585, sha1.c:259) and are compiled out, so linking all four translation units raises no duplicate main - correcting the concern recorded in issue #52. Upstream disagrees with itself on the version: Makefile:13 says tsh-0.7, tsh.c:2 says 0.6.",
+    "num_functions": 118,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "18e39cb9ec8c887bb49fa488c002abb9d15d38da16721589b6becf39c5eef1df",
+    "smda": "data/TinySHell/x86/smda/TinySHell_0.7_gcc13_x86_tshd.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "5ec48d4193a726e41d129e4d01ecf56f07919be0",
+      "git_ref": "5ec48d4193a726e41d129e4d01ecf56f07919be0",
+      "git_url": "https://github.com/creaktive/tsh.git"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://github.com/creaktive/tsh",
+    "version": "0.7"
+  }
+}

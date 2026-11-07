@@ -85,6 +85,8 @@ Offensive tooling
 * [BlackBoneDrv](#blackbonedrv)
 * [SysWhispers](#syswhispers)
 * [Hidden](#hidden)
+* [TinySHell](#tinyshell)
+* [Azazel](#azazel)
 
 String obfuscation
 * [Obfuscate](#obfuscate)
@@ -964,6 +966,41 @@ The project carries no licence of any kind - no LICENSE or COPYING file and no c
 Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Hidden -->
+<!-- /generated -->
+
+### TinySHell<a id='tinyshell'></a>
+
+Christophe Devine's minimal encrypted backdoor: `tshd`, the implanted server, and `tsh`, the client that drives it, built from one tree as two components. Mandiant's March 2025 UNC3886 reporting links this repository for six TINYSHELL-derived Junos backdoors - `appid`, `to`, `irad`, `lmpad`, `jdosd`, `oemd` - and keys its hunting rule on `tsh_get_file`, `tsh_put_file`, `tsh_runshell` and the three `tshd_` equivalents, all of which are in these artefacts.  
+Those samples are FreeBSD/Junos, so a Linux ELF build is a **toolchain proxy** for them rather than a container match: the project code is the same and the function names the rule keys on are the same, but a byte-level comparison against a Junos sample should not be expected to line up.  
+Built through upstream's own `$(TSH)`/`$(TSHD)` rules with `STRIP=true`, which neutralises the `$(STRIP)` those rules end with; no source is patched and no command is replicated by hand. `-O3` is used, the level `Makefile:4` declares - upstream's `linux:` target hardcodes `-O` instead, so both levels exist on its Linux path and a reference built at one will not match a sample built at the other. The binaries are dynamically linked PIE, never `-static`, so glibc stays out of the image and out of this family's name.  
+`aes.c` and `sha1.c` are Devine's own implementations and the direct ancestors of XySSL, then PolarSSL, then [mbedTLS](#mbedtls) - four versions and 26 artefacts here. Twenty years apart they are not duplicates, but they are the same author's same algorithms, so read this family's cross-family PicHash census with that in mind, as with libsodium's ed25519-ref10.  
+Every unnamed function in these images is a libc import stub, accounted for exactly: `tshd` x64 has 41 `.rela.plt` relocations and 41 unnamed functions, `tsh` x64 has 42 and 42. An ELF `.plt` entry carries no symbol, so unlike a PE import thunk it cannot be filtered; `min_named_ratio` is lowered to 0.38 for that reason and the recipe records the measurement.  
+Licence: every source header says "this program is licensed under the GPL", but the tree carries no `LICENSE` or `COPYING` file and names no GPL version. Upstream also disagrees with itself about the version - `Makefile:13` says `tsh-0.7`, `tsh.c:2` says 0.6.  
+
+Generated with `scripts/build_corpus.py`; see `data/TinySHell/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: TinySHell -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| TinySHell | 0.7 | GCC 13 (Linux, glibc) | [x86 ELF](data/TinySHell/x86/mcrit/TinySHell_0.7_gcc13_x86_tsh.mcrit) / [x64 ELF](data/TinySHell/x64/mcrit/TinySHell_0.7_gcc13_x64_tsh.mcrit) | [x86 ELF](data/TinySHell/x86/smda/TinySHell_0.7_gcc13_x86_tsh.7z) / [x64 ELF](data/TinySHell/x64/smda/TinySHell_0.7_gcc13_x64_tsh.7z) |
+| TinySHell | 0.7 | GCC 13 (Linux, glibc) | [x86 ELF](data/TinySHell/x86/mcrit/TinySHell_0.7_gcc13_x86_tshd.mcrit) / [x64 ELF](data/TinySHell/x64/mcrit/TinySHell_0.7_gcc13_x64_tshd.mcrit) | [x86 ELF](data/TinySHell/x86/smda/TinySHell_0.7_gcc13_x86_tshd.7z) / [x64 ELF](data/TinySHell/x64/smda/TinySHell_0.7_gcc13_x64_tshd.7z) |
+<!-- /generated -->
+
+### Azazel<a id='azazel'></a>
+
+chokepoint/azazel, a userland rootkit linked as a shared object and installed by writing its path into `/etc/ld.so.preload`, so the dynamic linker interposes its `open`, `stat`, `execve`, `unlink`, `readdir`, PAM and `pcap_loop` ahead of libc's. Chronicle's Winnti-for-Linux reporting, as MITRE records it under S0430, describes a modified copy shipped as `libxselinux.so` - one character off upstream's own `-Wl,-soname,libselinux.so`.  
+**Built without `-fvisibility=hidden`, deliberately, unlike every other ELF artefact here.** For a header-only library that flag is what keeps its own instantiations from being exported and called through `.plt` stubs. For an interposition library the exports *are* the artefact: `open`, `__xstat` and `pam_authenticate` have to be exported under exactly those names or `ld.so.preload` has nothing to interpose. The unnamed stubs in these reports are the cost of keeping the shape upstream actually builds, and `min_named_ratio` is lowered to 0.45 because of it - x64 measures 0.48 over functions of three instructions or more while x86 measures 1.00 on the same source, a difference in the two ABIs' PLT shapes rather than in the build.  
+This family is the hardest test of the glue filter in the corpus, which is much of why it is worth having: most of its functions are *named after the libc and PAM entry points they replace*. `corpus/baseline.py` drops a function only when its symbol **and** its PicHash match the probe, and that rule held - the only removals were startup glue (`frame_dummy`, `_init`, `_fini`, the `tm_clones` pair, the `__x86.get_pc_thunk.*` trio), and not one of the 30 hooks was touched.  
+`make config` is not run and does not need to be: upstream commits `const.h`, and it was verified to be `config.py`'s own default output by decoding its `syscall_table` under `config.py`'s obfuscation (`c ^ 0xfe`), which returns that file's 24 names in its exact order. So the artefact's string table is upstream's default configuration, and the build needs no Python 2 interpreter. Three command-line fixes carry it onto a modern host without touching the tree - `-fcommon` (GCC 10 made `-fno-common` the default and `azazel.h:31` is a tentative definition in a header), and `-D_STAT_VER=1`/`3` (glibc 2.33 removed `__xstat` and the `_STAT_VER` macro; the values are glibc's own `_STAT_VER_LINUX` per ABI).  
+Upstream links no `-lcrypto` despite `crypthook.c` calling `EVP_*`, so the artefact carries 8 undefined OpenSSL references. That is upstream's shape, not a fault here, and an analyst reading the imports should know the dependency is unresolved in upstream's own build. `crypthook.c` is vendored from chokepoint/CryptHook and stays under this family, being below the eight-function floor on its own.  
+Issue #55 asks that this be decided together with Medusa (#40), which shares 21 symbol names with it. Medusa is a kernel module and is not built, so that overlap is not yet measurable; those 21 names are where leakage would appear when it is.  
+
+Generated with `scripts/build_corpus.py`; see `data/Azazel/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Azazel -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Azazel | 2020-07-14 | GCC 13 (Linux, glibc) | [x86 ELF](data/Azazel/x86/mcrit/Azazel_2020-07-14_gcc13_x86_libselinux.so.mcrit) / [x64 ELF](data/Azazel/x64/mcrit/Azazel_2020-07-14_gcc13_x64_libselinux.so.mcrit) | [x86 ELF](data/Azazel/x86/smda/Azazel_2020-07-14_gcc13_x86_libselinux.so.7z) / [x64 ELF](data/Azazel/x64/smda/Azazel_2020-07-14_gcc13_x64_libselinux.so.7z) |
 <!-- /generated -->
 
 ## String obfuscation
