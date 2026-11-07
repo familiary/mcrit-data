@@ -50,14 +50,71 @@ exact message belongs in the README's not-built table, because "upstream's
 own settings do not compile on v143" is a finding and not something to paper
 over with `/WX-`.
 
-**`BUILD_ARCH` has to be passed here too, for a different reason than on the
-MinGW side.** `workspace/CMakeLists.txt` sets it from
-`CMAKE_GENERATOR_PLATFORM` under MSVC - but the `NMake Makefiles` generator
-this corpus uses has no generator platform, so the variable comes back empty
-and `TARGET_ARCH` falls through to its x64 default. That would compile the
-x86 leg with `WIN64`/`_WIN64`/`X64` defined and write it to `metsrv.x64.dll`.
-`{msbuild_platform}` already spells `Win32`/`x64`, so one command line serves
-both legs, exactly as in `meterpreter.py`.
+**This uses the Visual Studio generator, not the `NMake Makefiles` one every
+other MSVC recipe here uses, and that is the whole reason the first attempt
+failed.** Run 42412811010 was dispatched on NMake Makefiles and both legs
+failed, in two different places:
+
+    x64  base_inject.c(374): error C2220: the following warning is treated
+         as an error
+         base_inject.c(374): warning C4996: 'GetVersionExW': was declared
+         deprecated
+
+    x86  GateTrampoline64.asm(72): fatal error A1010: unmatched block
+         nesting : DoSyscall
+         ... Hostx86\x86\ml.exe ... GateTrampoline64.asm
+
+The x86 failure is the informative one: the 32-bit assembler was handed the
+**64-bit** trampoline. `workspace/ReflectiveDLLInjection/CMakeLists.txt`
+chooses between `GateTrampoline32.asm` and `GateTrampoline64.asm` with
+
+    set(BITS "64")
+    if(MSVC AND "${CMAKE_GENERATOR_PLATFORM}" STREQUAL "Win32")
+        set(BITS "32")
+
+and a Makefile generator has no `CMAKE_GENERATOR_PLATFORM`, so `BITS` stayed
+at its 64 default on both legs. That is the same gap that makes
+`workspace/CMakeLists.txt` compute `BUILD_ARCH` wrongly, which the first
+attempt had already worked around by passing `-DBUILD_ARCH` explicitly -
+treating one symptom of a cause with two.
+
+`BITS` cannot be fixed the same way: it is a plain `set()` at the top of the
+file, so a cache entry is overwritten before the `if` reads it. Nor can the
+platform variable simply be supplied - CMake rejects it outright for a
+generator that has no platform, verified locally rather than guessed:
+
+    CMake Error at CMakeLists.txt:2 (project):
+      Generator
+
+        Unix Makefiles
+
+      does not support platform specification, but platform
+
+        Win32
+
+So the generator itself has to supply it. `-G "Visual Studio 17 2022"` with
+`-A {msbuild_platform}` sets `CMAKE_GENERATOR_PLATFORM` natively, which fixes
+`BITS` and `BUILD_ARCH` together and at their source - and it is closer to
+what upstream does anyway, since `make.bat` drives MSBuild. `BUILD_ARCH` is
+therefore no longer passed: upstream's own `set(BUILD_ARCH
+${CMAKE_GENERATOR_PLATFORM})` now computes it correctly.
+
+The cost is that the Visual Studio generator is multi-configuration, so the
+artefact lands under a `Release/` subdirectory rather than in the target
+directory, and the build needs `--config Release`. Both are reflected below.
+
+**`/wd4996` and the two deprecation defines are passed, and nothing else.**
+The x64 failure above is upstream's `/WX` meeting a 2026 SDK: `GetVersionExW`
+was deprecated in the Windows 8.1 SDK, long after the XP-era toolsets
+upstream targets, and this tree compiles with `WINVER=0x0501`. `/wd4996`,
+`_CRT_SECURE_NO_WARNINGS` and `_WINSOCK_DEPRECATED_NO_WARNINGS` are the three
+documented ways to say "this is XP-era code on a modern SDK", they cover the
+whole C4996 deprecation class that 32 translation units of it will raise, and
+**none of them changes a byte of generated code** - C4996 is a diagnostic.
+What is deliberately *not* passed is `/WX-`: upstream's promotion of warnings
+to errors stays in force, so a genuine portability problem on v143 - the kind
+that would change behaviour rather than just emit a notice - still fails this
+build loudly instead of being silently absorbed.
 
 **What is and is not in the image.** Only `metsrv` is built:
 `BUILD_ALL=OFF` with `BUILD_METSRV=ON`, so the 25 extensions and the kiwi
@@ -85,7 +142,9 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 # variable replaces CMake's Release default, and an incrementally linked
 # image reaches every function through a jump thunk that SMDA counts as a
 # function of its own.
-_CFLAGS = '-DCMAKE_C_FLAGS_RELEASE="/MD /O2 /Ob2 /DNDEBUG /Zi"'
+_CFLAGS = ('-DCMAKE_C_FLAGS_RELEASE="/MD /O2 /Ob2 /DNDEBUG /Zi '
+           '/wd4996 /D_CRT_SECURE_NO_WARNINGS '
+           '/D_WINSOCK_DEPRECATED_NO_WARNINGS"')
 _LDFLAGS = ('-DCMAKE_SHARED_LINKER_FLAGS_RELEASE='
             '"/INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF /OPT:NOICF"')
 
@@ -98,20 +157,19 @@ _LDFLAGS = ('-DCMAKE_SHARED_LINKER_FLAGS_RELEASE='
 # the git root is the repository. The four -D options after the generator are
 # upstream's own option() switches plus BUILD_ARCH; see the docstring for why
 # each is needed.
-_CMAKE = ('cmake -S workspace -B build-{arch} -G "NMake Makefiles" '
-          '-DCMAKE_BUILD_TYPE=Release '
+_CMAKE = ('cmake -S workspace -B build-{arch} '
+          '-G "Visual Studio 17 2022" -A {msbuild_platform} '
           '-DBUILD_ALL=OFF '
           '-DBUILD_METSRV=ON '
           '-DUSE_STATIC_MSVC_RUNTIMES=OFF '
-          '-DBUILD_ARCH={msbuild_platform} '
           '%s %s' % (_CFLAGS, _LDFLAGS))
 
-_BUILD = "cmake --build build-{arch} --target metsrv"
+_BUILD = "cmake --build build-{arch} --target metsrv --config Release"
 
 # Cheap insurance, as in xz_msvc.py and libuv_msvc.py: build.py reports a
 # missing artefact by the path it expected and nothing else, so this puts the
 # names the build actually wrote into the log the workflow prints on failure.
-_DIR = "dir build-{arch}\\metsrv"
+_DIR = "dir build-{arch}\\metsrv\\Release"
 
 
 RECIPES = {
@@ -127,9 +185,9 @@ RECIPES = {
                BuildStep(_BUILD, cwd="c\\meterpreter"),
                BuildStep(_DIR, cwd="c\\meterpreter", allow_failure=True)],
         artifacts=[
-            Artifact(path="c\\meterpreter\\build-{arch}\\metsrv\\metsrv.{arch}.dll",
+            Artifact(path="c\\meterpreter\\build-{arch}\\metsrv\\Release\\metsrv.{arch}.dll",
                      component="metsrv.dll",
-                     pdb="c\\meterpreter\\build-{arch}\\metsrv\\metsrv.{arch}.pdb"),
+                     pdb="c\\meterpreter\\build-{arch}\\metsrv\\Release\\metsrv.{arch}.pdb"),
         ],
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags="/MD /O1 /Ob1 /DNDEBUG /Zi with /W3 /WX - the recipe "
@@ -137,9 +195,13 @@ RECIPES = {
                     "both down for MSVC Release, which is upstream's own "
                     "intent; /INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF "
                     "/OPT:NOICF at link, plus upstream's own /ignore:4070, "
-                    "/safeseh:no and /DEF:metsrv.def. CMake NMake Makefiles "
-                    "with BUILD_ALL=OFF, BUILD_METSRV=ON, "
-                    "USE_STATIC_MSVC_RUNTIMES=OFF and BUILD_ARCH=Win32/x64",
+                    "/safeseh:no and /DEF:metsrv.def. plus /wd4996, "
+                    "_CRT_SECURE_NO_WARNINGS and "
+                    "_WINSOCK_DEPRECATED_NO_WARNINGS for the C4996 "
+                    "deprecation class, which are diagnostics only; /WX- is "
+                    "NOT passed. CMake Visual Studio 17 2022 generator with "
+                    "-A Win32/x64 and --config Release, BUILD_ALL=OFF, "
+                    "BUILD_METSRV=ON, USE_STATIC_MSVC_RUNTIMES=OFF",
         notes="The MSVC half of the Meterpreter family, same commit as the "
               "MinGW artefacts, so the two differ in the compiler rather "
               "than in what was built. Read this as the right source "
