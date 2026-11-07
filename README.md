@@ -85,6 +85,7 @@ Offensive tooling
 * [BlackBoneDrv](#blackbonedrv)
 * [SysWhispers](#syswhispers)
 * [Hidden](#hidden)
+* [Meterpreter](#meterpreter)
 
 String obfuscation
 * [Obfuscate](#obfuscate)
@@ -964,6 +965,22 @@ The project carries no licence of any kind - no LICENSE or COPYING file and no c
 Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Hidden -->
+<!-- /generated -->
+
+### Meterpreter<a id='meterpreter'></a>
+
+The Windows Meterpreter from rapid7/metasploit-payloads: `metsrv`, the reflectively-loaded core server. Malpedia tracks it as `win.meterpreter`. One of the tree's 27 projects is built - `ext_server_stdapi` builds by the same recipe but links as C++ and brings MinGW's C++ exception runtime in under this family's name, so it waits on a baseline round and is recorded in the not-built table; the kiwi extension is not built at all, mimikatz belonging in its own family.  
+Built through upstream's own MinGW cross-build: the CMake toolchain files in `c/meterpreter/toolsets`, the non-MSVC branch of `workspace/CMakeLists.txt`, and the cross compilers Rapid7's own `docker/Dockerfile` installs. **This is not the toolchain Rapid7 distributes.** Their released binaries are MSVC `v120_xp` and `make.bat` pins `v141_xp`; neither toolset exists on the `windows-2022` runner this repository builds MSVC data on, so an MSVC artefact here would be a v143 shape rather than the distributed one, and none is claimed. A MinGW reference matches an MSVC-built sample only weakly, so read these rows as covering the source rather than the shipped binary.  
+`metsrv` statically contains an amalgamated **zlib 1.0.4P** (`zlib.h:245`, dated July 1996) carrying the PPP additions `Z_PACKET_FLUSH`, `inflateIncomp` and `deflateOutputPending`, so those functions are present under this family. It is a 1996 fork and does not duplicate the modern zlib in [libzlib](#libzlib): the two share two unnamed PicHashes of ten instructions or more and no named one, and `deflateOutputPending` in the symbol table is the name that tells them apart.  
+Counts are kept / removed as compiler runtime / image total: **578 / 61 / 639** on x86 and **615 / 61 / 676** on x64. `metsrv` is C only and its 61 removals on each architecture are plain MinGW glue - no `_Unwind_*`, no `__cxxabiv1::`, no 64-bit division helpers. The two architectures share **no** PicHash of ten instructions or more with each other, and together they share 4 with abseil and at most 2 with each of the other 37 families that share any. Only the abseil ones are named on either side and the names differ - `memcpy_s` / `memmove_s` against abseil's `vsprintf_s` - so they are short-body coincidences rather than leakage; every other shared hash is unnamed in both families.  
+No upstream source is patched and no compiler or linker flag is added. The `-D` options the recipe passes are upstream's own `option()` switches, plus `BUILD_ARCH`, which `workspace/CMakeLists.txt` reads from the cache on the non-MSVC path and which has to be set or a 32-bit cross build compiles 64-bit defines and writes them to `metsrv.x64.dll`. Nothing built here is run, configured or packaged into a payload.  
+
+Generated with `scripts/build_corpus.py`; see `data/Meterpreter/provenance.json` for source digests, submodule pins, compiler and flags.
+
+<!-- generated: Meterpreter -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Meterpreter | 2.0.259 | MinGW-w64 GCC 13 | [x86 PE](data/Meterpreter/x86/mcrit/Meterpreter_2.0.259_mingw13_x86_metsrv.dll.mcrit) / [x64 PE](data/Meterpreter/x64/mcrit/Meterpreter_2.0.259_mingw13_x64_metsrv.dll.mcrit) | [x86 PE](data/Meterpreter/x86/smda/Meterpreter_2.0.259_mingw13_x86_metsrv.dll.7z) / [x64 PE](data/Meterpreter/x64/smda/Meterpreter_2.0.259_mingw13_x64_metsrv.dll.7z) |
 <!-- /generated -->
 
 ## String obfuscation
