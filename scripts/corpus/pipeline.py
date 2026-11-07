@@ -140,6 +140,7 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                     bitness=artifact.bitness,
                     base_addr=artifact.base_addr,
                     pdb_path=pdb_path,
+                    exclude_functions=recipe.exclude_functions,
                 )
                 arch = "x86" if report.bitness == 32 else "x64"
                 slug = recipe.slug(toolchain_id, artifact, arch)
@@ -199,6 +200,12 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
             }
             if removed:
                 entry["removed_runtime_functions"] = sorted(removed)
+            if recipe.exclude_functions:
+                excluded = getattr(report, "excluded_function_count", 0)
+                entry["exclude_functions"] = list(recipe.exclude_functions)
+                entry["excluded_function_count"] = excluded
+                entry["num_functions_before_exclusion"] = (
+                    report.num_functions + excluded)
             if dependency_provenance:
                 entry["dependencies"] = dependency_provenance
             if recipe.notes:
