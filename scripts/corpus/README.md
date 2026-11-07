@@ -520,6 +520,53 @@ The filter matches on symbol *and* PicHash deliberately, which is what stops
 it deleting a project's own `strlen`, so these stay. The x64 artefacts have
 no such problem and their glue is removed in full.
 
+## The Go half
+
+A Go program is the one kind of artefact here with no C runtime in it and no
+compiler to probe: the Go toolchain links the Go runtime and every standard
+package it reaches into the image, so a small project is mostly not the
+project. A yamux client built with Go 1.24.7 is 2256 functions on
+linux/amd64 and 2283 on windows/386, and about 70 of them are yamux. All of
+the rest is in the Golang family already, once per Go version, and
+attributing it to a project would make every Go sample match every Go family.
+
+A recipe selects the filter with `glue_filter="go"` (the default is `"crt"`,
+the measured C and C++ baseline). It targets the platform through the
+`{goos}` and `{goarch}` placeholders, which are derived from the toolchain id
+the recipe names (`mingw_x64` is windows/amd64, `linux_x86` is linux/386), so
+Go builds ride the existing toolchain ids the way a Rust recipe rides them;
+`CGO_ENABLED=0 go build -trimpath` and the Go version go in the recipe, not
+in the toolchain.
+
+The filter is a rule on the symbol name, not a measured baseline, and that
+is deliberate: the whole standard library is the glue, which no probe
+program would reproduce without importing every package. A name is the
+runtime's or the standard library's when its package path has no dot in the
+first element (`runtime`, `net/http`, `internal/abi`), when it is a vendored
+`vendor/...` copy, when it is a compiler-written `type:.eq.` or `type:.hash.`
+function for such a type or for a type nobody named (`[2]interface {}`,
+`go.shape.struct {...}`), or when it is one of the toolchain's own symbols
+(`_rt0_*`, `go:buildid`, `go.itab.*`) or a bare label from the runtime's
+assembly (`gogo`, `cmpbody`). `main` and any module (`github.com/...`,
+`golang.org/x/...`, `gopkg.in/...`) are kept. A generic instantiation is
+read from what precedes the first bracket, because its type arguments can
+hold slashes of their own.
+
+One thing has no name to apply the rule to: the runtime's assembly stubs
+(the `reflectcall` variants, the debug-call helpers), which SMDA cannot
+name. The linker lays packages out one after another, so an unnamed
+function whose nearest named neighbour on each side is runtime or standard
+library is dropped with them; one between the project's own functions is
+kept.
+
+Measured on that yamux client, with the filter on: linux/amd64 2256 = 2176
+removed + 80 kept, windows/386 2283 = 2202 + 81. What is kept is the
+project's 71 and 72 yamux functions, `main.main` and its closure, and 7
+unnamed functions in each image. A module path with no dot (`module demo`)
+would be read as the standard library; every Go project here is pinned by its
+github.com path. Families with this filter are skipped by `refilter`: there
+is no baseline to re-measure.
+
 ## Adding a recipe
 
 Recipes are declarative (`corpus/recipes/*.py`) and carry no logic, so every

@@ -106,9 +106,13 @@ def _filter_is_off_for():
     data/libstdc++ exists to carry the C++ runtime, and SysWhispers links no
     runtime at all. Reading it from the recipes rather than listing it here
     means a recipe that changes its mind does not need this file changed too.
+
+    A family whose recipe uses another filter is skipped too: the Go rule
+    works on symbol names, not on a measured baseline, so there is nothing
+    here to re-measure.
     """
     return {recipe.family for recipe in recipes.all_recipes().values()
-            if not recipe.drop_crt_glue}
+            if not recipe.drop_crt_glue or recipe.glue_filter != "crt"}
 
 
 def _artifacts(families=None):
