@@ -315,6 +315,40 @@ _COPY_NOVNC = (
     "ignore=shutil.ignore_patterns('.git'))"
     '" {novnc}')
 
+# --- 1.2.1.4 (see the docstring) --------------------------------------------
+
+# _PROPS_1_2 plus: winvnc.exe links the zlibstat.lib that the tree's own
+# zlib-1.2.11 project produces. winvncv12.vcxproj of this commit has no
+# ProjectReference to it (1.2.1.5 has), so 13 zlib symbols were unresolved;
+# the library is built by its own project (a separate step) and added here.
+_PROPS_1_2_4 = _PROPS_1_2.replace(
+    "</ItemGroup></Target></Project>'",
+    "</ItemGroup></Target>'"
+    "'<PropertyGroup><CorpusZArch>x86</CorpusZArch>"
+    "<CorpusZArch Condition=@d@s$(Platform)@s==@sx64@s@d>x64</CorpusZArch>"
+    "</PropertyGroup>'"
+    "'<ItemDefinitionGroup Condition=@d$(MSBuildProjectName.StartsWith(@swinvnc@s))@d>'"
+    "'<Link><AdditionalDependencies>$(MSBuildThisFileDirectory)"
+    "zlib-1.2.11/contrib/vstudio/vc10/$(CorpusZArch)/ZlibStatRelease/zlibstat.lib;"
+    "@p(AdditionalDependencies)</AdditionalDependencies></Link>'"
+    "'</ItemDefinitionGroup></Project>'")
+assert _PROPS_1_2_4 != _PROPS_1_2
+
+# The files libjpeg-turbo-win\ includes or assembles and that 1.2.1.4 never
+# committed (1.2.1.5 adds them): four private headers and the SIMD Huffman
+# sources, taken from libjpeg-turbo tag 1.5.1 (cb88e5da). Byte-identical to
+# the copies in 1.2.1.5 (jchuff-sse2.asm is named jchuffsse2.asm there).
+_COPY_JPEG = (
+    'python -c "'
+    "import shutil,sys;"
+    "[shutil.copy(sys.argv[1]+'/'+a,'libjpeg-turbo-win/'+b) for a,b in ["
+    "('jdcoefct.h','jdcoefct.h'),('jdmainct.h','jdmainct.h'),"
+    "('jdmaster.h','jdmaster.h'),('jdsample.h','jdsample.h'),"
+    "('simd/jchuff-sse2.asm','simd/jchuffsse2.asm'),"
+    "('simd/jchuff-sse2-64.asm','simd/jchuff-sse2-64.asm'),"
+    "('simd/jpeg_nbits_table.inc','simd/jpeg_nbits_table.inc')]]"
+    '" {libjpeg}')
+
 _ARTIFACTS = [
     Artifact(path="corpusout\\vncviewer.exe", component="vncviewer.exe",
              pdb="corpusout\\vncviewer.pdb"),
@@ -439,6 +473,81 @@ RECIPES = {
               "miniLZO and the Info-ZIP sources, so those functions are "
               "present here under the UltraVNC family. The CRT is imported "
               "(/MD) and stays attributed to data/MSVC.",
+    ),
+    "UltraVNC_1.2.1.4_msvc": Recipe(
+        family="UltraVNC",
+        version="1.2.1.4",
+        upstream="https://github.com/ultravnc/UltraVNC",
+        license="GPL-2.0-or-later",
+        source=Source(git_url="https://github.com/ultravnc/UltraVNC.git",
+                      git_ref="b4034d51163fefd9935691a11ec4d3597d5c571f"),
+        extra_sources={
+            "dxsdk": Source(
+                url="https://api.nuget.org/v3-flatcontainer/"
+                    "microsoft.dxsdk.d3dx/9.29.952.8/"
+                    "microsoft.dxsdk.d3dx.9.29.952.8.nupkg",
+                sha256="ead0906ae8a26c18a7525da7490127a2110f7c58f18293738283e30e97c6ea4b"),
+            "libjpeg": Source(
+                git_url="https://github.com/libjpeg-turbo/libjpeg-turbo.git",
+                git_ref="cb88e5da8003afcdc443b787fdcb77285e5a8a02"),
+        },
+        build=[
+            BuildStep(_PROPS_1_2_4),
+            BuildStep(_UNPACK_DXSDK),
+            BuildStep(_COPY_JPEG),
+            BuildStep(_NASM, allow_failure=True),
+            BuildStep(_SLN_1_2),
+            BuildStep(_MSBUILD_1_2 % (
+                "zlib-1.2.11\\contrib\\vstudio\\vc10\\zlibstatv12.vcxproj",
+                "Build"), allow_failure=True),
+            BuildStep(_MSBUILD_1_2 % ("vncviewer\\vncviewer_vs2013.sln",
+                                      "vncviewer"), allow_failure=True),
+            BuildStep(_MSBUILD_1_2 % ("winvnc\\winvnc_build.sln", "winvnc"),
+                      allow_failure=True),
+            BuildStep(_LOCATE),
+        ],
+        artifacts=_ARTIFACTS,
+        toolchains=["msvc_x86", "msvc_x64"],
+        build_flags="As UltraVNC_1.2.1.5_msvc (upstream's VS2013 solutions, "
+                    "v143, SDK 10.0, /MD, no /GL or /LTCG, /DEBUG /Brepro "
+                    "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF, signing and "
+                    "buildtime pre-build step disabled, windows.h for zip32, "
+                    "<string> for C++ items, _WIN32_WINNT/_WIN32_IE for "
+                    "winvnc x64, D3DX9 headers from the NuGet package), plus: "
+                    "jdcoefct.h, jdmainct.h, jdmaster.h, jdsample.h and the "
+                    "SIMD Huffman sources (jchuffsse2.asm, jchuff-sse2-64.asm, "
+                    "jpeg_nbits_table.inc) added to libjpeg-turbo-win from "
+                    "libjpeg-turbo 1.5.1 (cb88e5da); the tree's zlib-1.2.11 "
+                    "zlibstatv12.vcxproj built on its own and zlibstat.lib "
+                    "added to winvnc's link",
+        notes="Commit b4034d51 (FILEVERSION 1.2.1.4), the half-committed "
+              "state before 1.2.1.5. NOT byte-identical to a build of "
+              "unmodified upstream: the tree lacks four libjpeg private "
+              "headers and the SIMD Huffman assembly its own project lists "
+              "(supplied from libjpeg-turbo 1.5.1, identical to what 1.2.1.5 "
+              "commits), winvncv12.vcxproj does not reference the in-tree "
+              "zlib so zlibstat.lib is built separately and added to the "
+              "link, and the 1.2.1.5 workarounds apply (windows.h for the "
+              "Info-ZIP project, <string> for C++ items, D3DX9 headers from "
+              "a NuGet package). See the recipe docstring. Both executables "
+              "statically link the in-tree zlib 1.2.11, libjpeg-turbo, "
+              "miniLZO and the Info-ZIP sources. The CRT is imported (/MD) "
+              "and stays attributed to data/MSVC.",
+    ),
+    "UltraVNC_1.8.3.0_msvc": Recipe(
+        family="UltraVNC",
+        version="1.8.3.0",
+        upstream="https://github.com/ultravnc/UltraVNC",
+        license="GPL-3.0-or-later",
+        source=Source(git_url="https://github.com/ultravnc/UltraVNC.git",
+                      git_ref="36c2389f681c9c939d5276323cf6242d26bb00fb",
+                      submodules=False),
+        extra_sources={"novnc": _NOVNC_SOURCE},
+        build=_NEW_STEPS + [BuildStep(_LOCATE)],
+        artifacts=_ARTIFACTS,
+        toolchains=["msvc_x86", "msvc_x64"],
+        build_flags=_NEW_FLAGS,
+        notes=_NEW_NOTES % ("36c2389f (2026-09-12)", "1.8.3.0", ""),
     ),
     "UltraVNC_1.8.3.1_msvc": Recipe(
         family="UltraVNC",
