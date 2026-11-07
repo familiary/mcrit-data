@@ -129,8 +129,7 @@ _RUSTC = BuildStep("rustc -vV")
 _MSVC_RUSTFLAGS = ("-C link-arg=/OPT:NOREF -C link-arg=/OPT:NOICF "
                    "-C link-arg=/Brepro -C link-arg=/INCREMENTAL:NO "
                    "-C link-arg=msvcrt.lib -C link-arg=vcruntime.lib "
-                   "-C link-arg=ucrt.lib "
-                   "-C symbol-mangling-version=legacy")
+                   "-C link-arg=ucrt.lib")
 
 
 def _flags(extra):
@@ -142,8 +141,8 @@ def _flags(extra):
 # Keep only the orion crate's own code. SMDA demangles Rust names, so the
 # usual form is `orion::hazardous::...` or `<orion::T as core::Trait>::m`;
 # the legacy-mangled spellings (`_ZN5orion...`, with one more underscore on
-# 32-bit PE) are listed too for a build whose symbols arrive undemangled
-# (MSVC builds use legacy mangling, see _MSVC_RUSTFLAGS). Everything else is
+# 32-bit PE) are listed too for a build whose symbols arrive undemangled.
+# Everything else is
 # excluded: precompiled core/alloc, compiler_builtins, the driver's own
 # orion_x_* exports, allocator and panic glue, and the statically linked
 # dependencies - subtle and zeroize already have families in data/Rust
@@ -192,7 +191,7 @@ def _all(version):
             version, triple, ["msvc_" + arch], "orion_driver.dll",
             "orion_driver.dll",
             _flags(triple + ", dynamic CRT (/MD), link /OPT:NOREF "
-                   "/OPT:NOICF /Brepro /INCREMENTAL:NO, legacy symbol mangling"),
+                   "/OPT:NOICF /Brepro /INCREMENTAL:NO"),
             "MSVC build (%s); see the README for the measured counts." % triple,
             steps_before=[BuildStep("rustup target add " + triple)],
             env={"RUSTFLAGS": _MSVC_RUSTFLAGS},
