@@ -550,6 +550,9 @@ Recorded here so the analysis is not repeated:
 | google/tcmalloc | #10 | Bazel-only and Linux-only - it cannot produce a PE at all. Issue #10's "tcmalloc" is almost certainly gperftools |
 | gRPC | #10 | cross-building needs a full native build first to obtain `protoc` and `grpc_cpp_plugin`, plus boringssl (which needs Go); 45-90 minutes for two architectures, and its statically-linked-into-Windows-malware rate is close to zero |
 | DavidBuchanan314/monomorph | [lib2smda#1](https://github.com/familiary/lib2smda/issues/1) | Linux x86-64 ELF only. That alone is no longer the obstacle it was when this row was written - `linux_x86` and `linux_x64` exist now - but the reason that mattered does not move: its own code is four functions, `get_bit`, `decode_buf`, `inflate_buf` and `main`, 679 bytes between them, against a floor of eight. The committed artefact carries 1397 function symbols, but 1393 of them are statically linked glibc and zlib, and with no glibc baseline to subtract them they would enter under monomorph's name and duplicate `data/libzlib`. What is distinctive about the project is the 4 MB array of MD5 collision blocks, which is data rather than code; upstream points at a collision detector for identifying it |
+| orion 0.19.9 | #7 | does not exist: crates.io and the orion-rs/orion tags both stop at 0.18.1, and the `orion-0.19.9` string the issue quotes (Microsoft RIFT post, 2025-06-27) matches no registry artefact. `curl https://index.crates.io/or/io/orion` lists 0.18.1 as the newest; `cargo` with `orion = "=0.19.9"` fails with `candidate versions found which didn't match: 0.18.1, 0.18.0, 0.18.0-rc.1, ...`. 0.17.11 (newest when the post appeared) and 0.18.1 (newest published) are built instead |
+| orion, high-level API (`orion::aead`, `orion::hash`, `orion::kdf`, `orion::pwhash`, `orion::kex`), ML-KEM, ML-DSA, X-Wing, HPKE | #7 | the high-level layer needs the `safe_api` feature, which enables `std` and `getrandom`; a std cdylib links all of std statically (a stock one measured 1.1 MB of text, the PE images 500+ core and alloc functions even with `no_std`) and the thin wrappers add little over `orion::hazardous`, which is covered. The post-quantum and HPKE modules are not exercised by the driver; on the PE builds the ones that were compiled are present anyway, because the linker keeps whole objects |
+| orion on MSVC, first attempt | #7 | run 42389588702: `error: failed to run `rustc` to learn about target-specific information ... error: `-C symbol-mangling-version=legacy` requires `-Z unstable-options`` on rustc 1.99.1; the flag was dropped (SMDA's PdbSymbolProvider demangles Rust names itself) and run 42389993593 built all four |
 
 VX-API (#4), BlackBone (#8) and SysWhispers v1 (#9) were on this list and are
 not any more: they need ATL, the DIA SDK or MASM, none of which exists for
@@ -593,6 +596,19 @@ reach. Neither is a threshold moved to let something through, and nothing
 was hand-added to the baseline. Its reference value is still thin and the
 recipe says so: nothing from this project is ever linked into a protected
 program.
+
+`Recipe.exclude_functions` is the by-name counterpart of the glue baseline,
+for code that cannot be kept out of the image and is not the recipe's family.
+It is a list of regular expressions over SMDA's function names; a function any
+of them matches is removed after the glue baseline, and the artefact's
+provenance records the patterns, `excluded_function_count` and
+`num_functions_before_exclusion`, so kept + glue + excluded is still the image
+total. The one user is `orion`: a Rust image carries the precompiled `core`
+and `alloc`, and the corpus's `/OPT:NOREF` link policy (and GNU ld's inability
+to collect sections with unwind data) keeps all of it, so its pattern is a
+negative lookahead on the family's own namespace
+(`^(?!<?orion::|...)`), which states what the family is instead of listing
+what it is not. The minimum-function floor applies to what is left.
 
 None of the three MSVC builds patches upstream source. BlackBone needs one
 compiler switch that its project file does not set (`/permissive`, because

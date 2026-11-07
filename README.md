@@ -91,6 +91,7 @@ String obfuscation
 * [StringObfuscatorCT](#stringobfuscatorct)
 * [StringObfuscator](#stringobfuscator)
 * [obfstr](#obfstr)
+* [orion](#orion)
 * [Obfuscator4g3nt47](#obfuscator4g3nt47)
 
 ## Compilers
@@ -1026,6 +1027,25 @@ Generated with `scripts/build_corpus.py`; see `data/obfstr/provenance.json` for 
 |----------|---------|----------|-------|------|
 | obfstr | 0.4.6 | GCC 13 (Linux, glibc) | [x86 ELF](data/obfstr/x86/mcrit/obfstr_0.4.6_gcc13_x86_obfstr_driver.so.mcrit) / [x64 ELF](data/obfstr/x64/mcrit/obfstr_0.4.6_gcc13_x64_obfstr_driver.so.mcrit) | [x86 ELF](data/obfstr/x86/smda/obfstr_0.4.6_gcc13_x86_obfstr_driver.so.7z) / [x64 ELF](data/obfstr/x64/smda/obfstr_0.4.6_gcc13_x64_obfstr_driver.so.7z) |
 | obfstr | 0.4.6 | MinGW-w64 GCC 13 | [x86 PE](data/obfstr/x86/mcrit/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.mcrit) / [x64 PE](data/obfstr/x64/mcrit/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.mcrit) | [x86 PE](data/obfstr/x86/smda/obfstr_0.4.6_mingw13_x86_obfstr_driver.dll.7z) / [x64 PE](data/obfstr/x64/smda/obfstr_0.4.6_mingw13_x64_obfstr_driver.dll.7z) |
+<!-- /generated -->
+
+### orion<a id='orion'></a>
+
+orion-rs/orion is the pure-Rust cryptography library that Rust ransomware samples statically link; tracker issue #7 pairs it with rayon-core, which is already in `data/Rust`. **The issue asks for orion 0.19.9, and that version does not exist**: crates.io and the GitHub tags both stop at 0.18.1. The string `orion-0.19.9` the issue quotes (from a Microsoft RIFT post of 2025-06-27) cannot be matched to any registry artefact, so two real versions are built as one family: 0.17.11, the newest release when the post appeared and so the most plausible real dependency, and 0.18.1, the newest published release. Both are pinned by the sha256 of the crates.io tarball, which is crates.io's own checksum.  
+A library emits no code until it is used, so a `#![no_std]` driver crate (`scripts/corpus/exercisers/orion_driver`) exports one `orion_x_*` function per primitive of orion's `hazardous` module: XChaCha20-Poly1305 and ChaCha20-Poly1305 (plus the streaming and committing AEADs), the ChaCha20 stream ciphers, SHA-2, SHA-3, SHAKE, BLAKE2b, Poly1305, HMAC, HKDF, PBKDF2, Argon2i and X25519, and on 0.18 also BLAKE3, Argon2id and scrypt. The high-level API (`orion::aead`, `orion::kex`, `orion::pwhash`) needs `std` and `getrandom`, which would file thousands of Rust runtime functions under this family, so it is the thin wrapper layer over `hazardous` that is not covered; the ML-KEM, ML-DSA, X-Wing and HPKE modules are not exercised either.  
+Because the precompiled `core` and `alloc` still come along in the PE images (the linker policy of this corpus keeps every function of every object it pulls in), the new `exclude_functions` recipe field drops every function whose name does not start with `orion::`; the count is recorded per artefact, so kept + glue + excluded is the image total. Measured: ELF 173-175 kept, MinGW 389-603, MSVC 487-573; 0 PicHashes shared with any family in `data/Rust` (orion implements its primitives itself rather than using the RustCrypto crates); `subtle` and `zeroize` are in `data/Rust` as their own families and are excluded here, `fiat-crypto` and `cmov` are excluded without a family of their own. rustc is the stable toolchain at build time (1.97.0 in the container, 1.99.1 on the runner), recorded per artefact.  
+
+Generated with `scripts/build_corpus.py`; see `data/orion/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: orion -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| orion | 0.17.11 | GCC 13 (Linux, glibc) | [x86 ELF](data/orion/x86/mcrit/orion_0.17.11_gcc13_x86_orion_driver.so.mcrit) / [x64 ELF](data/orion/x64/mcrit/orion_0.17.11_gcc13_x64_orion_driver.so.mcrit) | [x86 ELF](data/orion/x86/smda/orion_0.17.11_gcc13_x86_orion_driver.so.7z) / [x64 ELF](data/orion/x64/smda/orion_0.17.11_gcc13_x64_orion_driver.so.7z) |
+| orion | 0.17.11 | MinGW-w64 GCC 13 | [x86 PE](data/orion/x86/mcrit/orion_0.17.11_mingw13_x86_orion_driver.dll.mcrit) / [x64 PE](data/orion/x64/mcrit/orion_0.17.11_mingw13_x64_orion_driver.dll.mcrit) | [x86 PE](data/orion/x86/smda/orion_0.17.11_mingw13_x86_orion_driver.dll.7z) / [x64 PE](data/orion/x64/smda/orion_0.17.11_mingw13_x64_orion_driver.dll.7z) |
+| orion | 0.17.11 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/orion/x86/mcrit/orion_0.17.11_msvc143_x86_orion_driver.dll.mcrit) / [x64 PE](data/orion/x64/mcrit/orion_0.17.11_msvc143_x64_orion_driver.dll.mcrit) | [x86 PE](data/orion/x86/smda/orion_0.17.11_msvc143_x86_orion_driver.dll.7z) / [x64 PE](data/orion/x64/smda/orion_0.17.11_msvc143_x64_orion_driver.dll.7z) |
+| orion | 0.18.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/orion/x86/mcrit/orion_0.18.1_gcc13_x86_orion_driver.so.mcrit) / [x64 ELF](data/orion/x64/mcrit/orion_0.18.1_gcc13_x64_orion_driver.so.mcrit) | [x86 ELF](data/orion/x86/smda/orion_0.18.1_gcc13_x86_orion_driver.so.7z) / [x64 ELF](data/orion/x64/smda/orion_0.18.1_gcc13_x64_orion_driver.so.7z) |
+| orion | 0.18.1 | MinGW-w64 GCC 13 | [x86 PE](data/orion/x86/mcrit/orion_0.18.1_mingw13_x86_orion_driver.dll.mcrit) / [x64 PE](data/orion/x64/mcrit/orion_0.18.1_mingw13_x64_orion_driver.dll.mcrit) | [x86 PE](data/orion/x86/smda/orion_0.18.1_mingw13_x86_orion_driver.dll.7z) / [x64 PE](data/orion/x64/smda/orion_0.18.1_mingw13_x64_orion_driver.dll.7z) |
+| orion | 0.18.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/orion/x86/mcrit/orion_0.18.1_msvc143_x86_orion_driver.dll.mcrit) / [x64 PE](data/orion/x64/mcrit/orion_0.18.1_msvc143_x64_orion_driver.dll.mcrit) | [x86 PE](data/orion/x86/smda/orion_0.18.1_msvc143_x86_orion_driver.dll.7z) / [x64 PE](data/orion/x64/smda/orion_0.18.1_msvc143_x64_orion_driver.dll.7z) |
 <!-- /generated -->
 
 ### Obfuscator4g3nt47<a id='obfuscator4g3nt47'></a>

@@ -71,7 +71,70 @@ personality even though this crate never unwinds, and without a stub the
 `.so` fails to load) and the panic handler. Their names are recorded in
 the notes of each recipe so a consumer can tell them from orion's code.
 
-Measured results are in the per-recipe `notes`.
+**Measured** (kept + removed-as-glue + excluded-by-name = image total; the
+rustc is the stable toolchain at build time: 1.97.0 (2d8144b78 2026-07-07,
+LLVM 22.1.6) for ELF and MinGW built in the container, 1.99.1 (58cf8f9c3
+2026-10-13, LLVM 23.1.1) on the windows-2022 runner for MSVC):
+
+    artefact                  x86 kept/glue/excl/total     x64 kept/glue/excl/total
+    0.17.11 ELF (gcc13)       175 /   3 /  86 =  264       174 /   6 /  86 =  266
+    0.17.11 MinGW (mingw13)   503 /  73 / 823 = 1399       389 /  63 / 682 = 1134
+    0.17.11 MSVC (msvc143)    488 / 129 / 891 = 1508       487 / 121 / 818 = 1426
+    0.18.1  ELF (gcc13)       175 /   3 /  98 =  276       173 /   6 /  96 =  275
+    0.18.1  MinGW (mingw13)   603 /  73 / 871 = 1547       545 /  63 / 739 = 1347
+    0.18.1  MSVC (msvc143)    573 / 130 / 973 = 1676       568 / 121 / 893 = 1582
+
+The ELF images are garbage-collected by the linker, so they carry the
+functions the driver reaches (about 175). The PE images carry roughly three
+times as many orion functions: GNU ld's --gc-sections cannot drop anything
+that has unwind data (the PE linker script keeps .eh_frame/.pdata), and this
+corpus's MSVC policy (/OPT:NOREF /OPT:NOICF) keeps every function of every
+object pulled in. So the PE artefacts also hold orion code the driver never
+calls (the ML-KEM and HPKE modules, among others), which is more complete
+reference data, not an accident; the same policy is why the precompiled
+`core`/`alloc` come along, and why they are excluded by name.
+
+**What the exclusion removes.** `Recipe.exclude_functions` (new, with the
+pipeline hooks in smdaify.py/pipeline.py) drops every function whose
+demangled name does not start with `orion::` or `<orion::` (plus the
+legacy-mangled spellings), after the glue baseline: the precompiled core,
+alloc and compiler_builtins, the C runtime, the driver's own `orion_x_*`
+exports, allocator and panic glue, and the statically linked dependencies.
+Of those, `subtle` and `zeroize` already have families of their own in
+data/Rust (lib.rust.subtle, lib.rust.zeroize); `fiat-crypto` and `cmov` do
+not, and are excluded rather than misfiled (they are small; a family of
+their own is a follow-up). Each provenance entry records the pattern,
+`excluded_function_count` and `num_functions_before_exclusion`.
+Trait impls of orion types for core traits (`<orion::T as
+core::fmt::Debug>::fmt`) stay; blanket impls of core types over orion types
+(`<&orion::T as ...>`) and `core::ptr::drop_in_place<orion::T>` do not.
+
+**PicHash overlap** (distinct PicHashes of functions with 10 or more
+instructions; kept functions only):
+
+  * within one version, ELF against MinGW: 0 of 136/274 (0.17.11 x64),
+    0 of 149/332 (x86), 0 of 142/420 and 0 of 160/475 (0.18.1); x64 against
+    x86: 0 everywhere. Different compilers, relocation models and
+    inlining decisions give different bytes even from one Rust source.
+  * MSVC against MinGW: 169 of 319/274 (0.17.11 x64), 37 (x86), 263 of
+    420/420 (0.18.1 x64), 54 (x86): both are LLVM-built PE images with the
+    same code generator, so they share code. MSVC against ELF: 0 on x64, 10
+    on x86.
+  * 0.17.11 against 0.18.1: ELF x64 39 of 136/142, x86 12; MinGW x64 68 of
+    274/420, x86 101; MSVC x64 86 of 319/420, x86 87. The two versions share
+    their primitives (BLAKE2b, SHA-2, ChaCha20, Poly1305) and differ in the
+    API layer and in the 0.18 additions.
+  * against the existing Rust data (all eight files of data/Rust, 106,219
+    distinct PicHashes of 10-or-more-instruction functions across 100+
+    lib.rust.* families, among them lib.rust.chacha20, sha2, sha3, hmac,
+    subtle, zeroize and curve25519-dalek): 0 shared with any of the twelve
+    orion artefacts. orion implements its primitives itself rather than
+    depending on the RustCrypto crates (its dependencies are only subtle,
+    zeroize, fiat-crypto, cmov and, with safe_api, getrandom and
+    ct-codecs), so chacha20/poly1305/blake2b_simd-style families do not
+    appear under orion and nothing in it repeats them.
+
+The same counts are in each recipe's notes.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -96,7 +159,7 @@ _COMMON_NOTES = (
     "(and cmov on 0.18) are pinned by checksum in the driver's Cargo.lock "
     "and built --locked. The driver's own functions are the orion_x_* "
     "exports, a bump allocator, the panic handler and an eh-personality stub. "
-    "The rustc used is the stable toolchain installed on the build machine: ")
+    "Compiler: ")
 
 
 def _crate(version):
@@ -171,6 +234,32 @@ def _make(version, target, toolchains, artifact, component, build_flags,
     )
 
 
+_RUSTC_LOCAL = ("rustc 1.97.0 (2d8144b78 2026-07-07), LLVM 22.1.6, the stable "
+                "toolchain of the build container")
+_RUSTC_RUNNER = ("rustc 1.99.1 (58cf8f9c3 2026-10-13), LLVM 23.1.1, the stable "
+                 "toolchain of the windows-2022 runner image")
+
+# (kept, glue removed, excluded by name) per version, kind and architecture;
+# kept + glue + excluded is the image total.
+_COUNTS = {
+    ("0.17.11", "elf"): {"x86": (175, 3, 86), "x64": (174, 6, 86)},
+    ("0.17.11", "mingw"): {"x86": (503, 73, 823), "x64": (389, 63, 682)},
+    ("0.17.11", "msvc"): {"x86": (488, 129, 891), "x64": (487, 121, 818)},
+    ("0.18.1", "elf"): {"x86": (175, 3, 98), "x64": (173, 6, 96)},
+    ("0.18.1", "mingw"): {"x86": (603, 73, 871), "x64": (545, 63, 739)},
+    ("0.18.1", "msvc"): {"x86": (573, 130, 973), "x64": (568, 121, 893)},
+}
+
+
+def _measured(version, kind, arches=("x86", "x64")):
+    parts = []
+    for arch in arches:
+        kept, glue, excluded = _COUNTS[(version, kind)][arch]
+        parts.append("%s: %d kept + %d glue + %d excluded = %d" %
+                     (arch, kept, glue, excluded, kept + glue + excluded))
+    return "Measured " + "; ".join(parts) + ". "
+
+
 def _all(version):
     tag = "orion_" + version
     recipes = {
@@ -178,12 +267,13 @@ def _all(version):
             version, "{platform}-unknown-linux-gnu", ["linux_x86", "linux_x64"],
             "liborion_driver.so", "orion_driver.so",
             _flags("i686-unknown-linux-gnu / x86_64-unknown-linux-gnu"),
-            "ELF build; see the README for the measured counts."),
+            "ELF build with " + _RUSTC_LOCAL + ". " + _measured(version, "elf")),
         tag: _make(
             version, "{platform}-pc-windows-gnu", ["mingw_x86", "mingw_x64"],
             "orion_driver.dll", "orion_driver.dll",
             _flags("i686-pc-windows-gnu / x86_64-pc-windows-gnu"),
-            "MinGW (windows-gnu) build; see the README for the measured counts."),
+            "MinGW (windows-gnu) build with " + _RUSTC_LOCAL + ". "
+            + _measured(version, "mingw")),
     }
     for arch, triple in (("x86", "i686-pc-windows-msvc"),
                          ("x64", "x86_64-pc-windows-msvc")):
@@ -192,7 +282,8 @@ def _all(version):
             "orion_driver.dll",
             _flags(triple + ", dynamic CRT (/MD), link /OPT:NOREF "
                    "/OPT:NOICF /Brepro /INCREMENTAL:NO"),
-            "MSVC build (%s); see the README for the measured counts." % triple,
+            "MSVC build (%s) with %s. %s" % (triple, _RUSTC_RUNNER,
+                                              _measured(version, "msvc", (arch,))),
             steps_before=[BuildStep("rustup target add " + triple)],
             env={"RUSTFLAGS": _MSVC_RUSTFLAGS},
             pdb="target/%s/release/orion_driver.pdb" % triple)
