@@ -56,28 +56,27 @@ Open risks, in the order they bite:
    The step asserts the original line text and prints PATCHED / SHADOW lines
    into the build log.
 
-Measured (scratch run 42402134785, x64 job green; SMDA kept + removed runtime
-= total): kprocesshacker.sys 190 + 19 = 209. 66 functions of 10+ instructions
-(66 distinct PicHashes); 113 of the 190 are 3 instructions or fewer (90 are single
+Measured (scratch run 42404084321, x64 job green; SMDA kept + removed runtime
+= total): kprocesshacker.sys 176 + 33 = 209. 56 functions of 10+ instructions
+(56 distinct PicHashes); 110 of the 176 are 3 instructions or fewer (90 are single
 instructions, 76 of them import thunks sharing PicHash 1253497258561142223)
-and 9 are `??_C@_1...` string-literal COMDATs; all 190
-are named. Removed as runtime glue (19): ReadNoFence64, ReadPointerNoFence,
+and 9 are `??_C@_1...` string-literal COMDATs; all 176 are named. The 76 thunks
+are exactly the imported kernel API names (BCrypt*, Ex*, Io*, Ke*, Kf*, Mm*, Ob*,
+Probe*, Ps*, Rtl*, Se*, Zw*). Removed as runtime glue (33): ReadNoFence64, ReadPointerNoFence,
 __C_specific_handler, __GSHandlerCheck, __GSHandlerCheck_SEH, eight
 __castguard_* names (check_failure and slow_path_check debugbreak/fastfail/nop,
 compat_check, slow_path_compat_check), __security_check_cookie and five
-_guard_* names. The glue baseline is
-user-mode, so kernel runtime SURVIVES and is not hidden: memcpy (152
-instructions, PicHash 729628813605614666), memset (65, 9661683141091972025),
-__memset_query (16, 16342713605483745002), __memset_repmovs (21,
-6643742553189302072), __cpu_features_init (59, 13091074222736779356),
-__security_init_cookie (12, 374977537579870673), GsDriverEntry (13,
-17538726983033257291), __GSHandlerCheckCommon (30, 10950584254824723265),
-__report_gsfailure (3, 14537609155102306236), __report_rangecheckfailure (3,
-16800067082027224991), __report_securityfailure (2, 12080796586923680034),
-__castguard_check_failure_os_handled (16), ..._os_handled_wrapper (9),
-__castguard_slow_path_check_os_handled (23), RtlFailFast (3). Judge coverage
-on the 66 functions of 10+ instructions, of which 50 are Kph*/Kpi*/Ph*
-driver code plus DriverEntry. Overlap with other families was not measured.
+_guard_* names (19, the user-mode glue), and the kernel-mode glue added by the
+kernel baseline (14): GsDriverEntry, RtlFailFast, __GSHandlerCheckCommon,
+__cpu_features_init, __memset_query, __memset_repmovs, __security_init_cookie,
+memcpy, memset, __report_gsfailure, __report_rangecheckfailure,
+__castguard_check_failure_os_handled, __castguard_check_failure_os_handled_wrapper
+and __castguard_slow_path_check_os_handled. The one kernel runtime name that
+survives is __report_securityfailure (2 instructions, PicHash
+12080796586923680034), which the baseline does not hide. Judge coverage on the
+56 functions of 10+ instructions, of which 50 are Kph*/Kpi*/Ph* driver code plus
+DriverEntry and 5 are string-literal COMDATs. Overlap with other families was not
+measured.
 
 Driver images are never packaged, signed, installed or loaded. This is a
 disassembly reference only.

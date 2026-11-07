@@ -408,7 +408,7 @@ Generated with `scripts/build_corpus.py`; see `data/kphlib/provenance.json` for 
 
 ### KProcessHacker<a id='kprocesshacker'></a>
 
-KProcessHacker is the Process Hacker 2.39 kernel driver (x64 only; WDK 10.0.26100 has no x86 kernel target). Built with the WDK; to get past the WDK header `shared\warning.h`, which turns C4703 into an error, the recipe shadows that header without its one pragma line and also initialises three flagged locals to NULL at build time, so the image is NOT byte-identical to an unmodified upstream build. It is linked and disassembled, never packaged, signed, installed or loaded. Kernel runtime pieces (`memcpy`, `memset`, `__security_init_cookie`, `GsDriverEntry`, ...) survive in the image; see the recipe docstring.  
+KProcessHacker is the Process Hacker 2.39 kernel driver (x64 only; WDK 10.0.26100 has no x86 kernel target). Built with the WDK; to get past the WDK header `shared\warning.h`, which turns C4703 into an error, the recipe shadows that header without its one pragma line and also initialises three flagged locals to NULL at build time, so the image is NOT byte-identical to an unmodified upstream build. It is linked and disassembled, never packaged, signed, installed or loaded. The kernel-mode runtime glue (`memcpy`, `memset`, `__security_init_cookie`, `GsDriverEntry`, ...) is removed from the image by the glue baseline; see the recipe docstring.  
 Generated with `scripts/build_corpus.py`; see `data/KProcessHacker/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: KProcessHacker -->
