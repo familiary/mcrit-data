@@ -36,6 +36,7 @@ Libraries
 * [libsodium](#libsodium)
 * [libtomcrypt](#libtomcrypt)
 * [kphlib](#kphlib)
+* [KProcessHacker](#kprocesshacker)
 * [libuv](#libuv)
 * [libxml2](#libxml2)
 * [lz4](#lz4)
@@ -403,6 +404,17 @@ Generated with `scripts/build_corpus.py`; see `data/kphlib/provenance.json` for 
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | kphlib | 2.39 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/kphlib/x86/mcrit/kphlib_2.39_msvc143_x86_kphlib.dll.mcrit) / [x64 PE](data/kphlib/x64/mcrit/kphlib_2.39_msvc143_x64_kphlib.dll.mcrit) | [x86 PE](data/kphlib/x86/smda/kphlib_2.39_msvc143_x86_kphlib.dll.7z) / [x64 PE](data/kphlib/x64/smda/kphlib_2.39_msvc143_x64_kphlib.dll.7z) |
+<!-- /generated -->
+
+### KProcessHacker<a id='kprocesshacker'></a>
+
+KProcessHacker is the Process Hacker 2.39 kernel driver (x64 only; WDK 10.0.26100 has no x86 kernel target). Built with the WDK; to get past the WDK header `shared\warning.h`, which turns C4703 into an error, the recipe shadows that header without its one pragma line and also initialises three flagged locals to NULL at build time, so the image is NOT byte-identical to an unmodified upstream build. It is linked and disassembled, never packaged, signed, installed or loaded. Kernel runtime pieces (`memcpy`, `memset`, `__security_init_cookie`, `GsDriverEntry`, ...) survive in the image; see the recipe docstring.  
+Generated with `scripts/build_corpus.py`; see `data/KProcessHacker/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: KProcessHacker -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| KProcessHacker | 2.39 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/KProcessHacker/x64/mcrit/KProcessHacker_2.39_msvc143_x64_kprocesshacker.sys.mcrit) | [x64 PE](data/KProcessHacker/x64/smda/KProcessHacker_2.39_msvc143_x64_kprocesshacker.sys.7z) |
 <!-- /generated -->
 
 ### libuv<a id='libuv'></a>
