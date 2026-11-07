@@ -7,7 +7,8 @@ things differ from the MinGW and ELF legs, and both change the code:
      them) or the GCC inline assembler its C files use, so configure is run with
      --disable-asm and the generic C paths are compiled: mpi/generic/*.c for the
      multi-precision primitives, plain C for AES, the hashes, ChaCha20 and the
-     rest, and no hardware detection (hwf-x86.c is not built, so no AES-NI,
+     rest, and no hardware-accelerated code (src/hwf-x86.c is compiled, but
+     without CPUID code, so it reports no hardware features, and no AES-NI,
      PCLMUL, AVX2, SHA-NI or RDRAND code exists in these images). The MinGW and
      ELF legs were built with upstream's defaults, assembler modules and hardware
      acceleration on. A function present in one family of legs may therefore not
