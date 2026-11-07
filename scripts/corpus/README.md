@@ -540,6 +540,9 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| Arti 2.8.0 and every release after 2.3.0 | #36 | deliberately not built: the family pins arti 2.3.0 (2026-05-07, the newest before the worm of 2026-05-11) and 1.1.13 (the newest 1.1.x, the series the vendor names) |
+| Arti beyond arti-client's default features: onion-service client/service, bridges and pluggable transports, RPC server, the `arti` CLI and SOCKS/DNS proxy crate | #36 | not built: the driver instantiates `TorClient::create_bootstrapped`/`connect`/`resolve` with the default features (tokio, native-tls, compression) plus `static-sqlite`; the rest are non-default features or a separate binary crate, and the first build already carries 495 packages |
+| Arti 1.1.13 with its release Cargo.lock unchanged | #36 | does not compile on rustc 1.97.0: `error[E0282]: type annotations needed for `Box<_>`` at `time-0.3.31/src/format_description/parse/mod.rs:83`. Built with `time` raised to 0.3.36 in the lockfile only (no source patched); every other package keeps the release's version and checksum except time-macros 0.2.18 and the added num-conv 0.1.0 |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |

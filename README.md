@@ -54,6 +54,7 @@ Libraries
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [libstdc++](#libstdcxx)
+* [Arti](#arti)
 
 Runtimes
 * [Lua](#lua)
@@ -673,6 +674,25 @@ Generated with `scripts/build_corpus.py`; see `data/libstdc++/provenance.json` f
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libstdc++ | 13.2-mingw-w64 | MinGW-w64 GCC 13 | [x86 PE](data/libstdc++/x86/mcrit/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.mcrit) | [x86 PE](data/libstdc++/x86/smda/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.7z) |
+<!-- /generated -->
+
+### Arti<a id='arti'></a>
+
+Arti is the Tor Project's Rust Tor client; tracker issue #36 records it embedded in a Tor-backed npm supply-chain worm published 2026-05-11 (CloudSEK called it a "modified Arti 1.1.x", a vendor assessment rather than a build string). Two releases are built, pinned by the crates.io sha256 of the `arti-client` tarball: arti 2.3.0 (2026-05-07, the newest before the worm; arti-client 0.42.0) and arti 1.1.13 (the newest 1.1.x; arti-client 0.14.0). Each has a committed `Cargo.lock` that started as the lock crates.io ships in the matching `arti` release crate; the only deviation is `time` raised to 0.3.36 on 1.1.13, because 0.3.31 does not compile on current rustc.  
+`arti-client` needs `std`, tokio and a TLS stack, so the `cdylib` driver (`scripts/corpus/exercisers/arti_driver`) is a std crate that bootstraps a `TorClient`, connects and resolves, with arti-client's default features plus `static-sqlite`. A std cdylib carries all of std and every third-party dependency, so the recipe's `exclude_functions` keeps only the Arti workspace's own code (`arti_client`, `tor_*`, `safelog`, `fs_mistrust`, `caret`, `retry_error`, ...) and counts everything else (tokio, RustCrypto, dalek, native-tls, SQLite, zstd, std/core/alloc) as excluded, so it is not filed under Arti. Kept per artefact: ELF 3,027-4,190, MinGW 4,237-7,141, MSVC 2,280-4,169; kept + glue + excluded is the image total in each provenance entry. Against `data/Rust` the PE artefacts share 0-16 PicHashes (10+ instructions) and the ELF ones none; against `data/orion` 0-4.  
+Not covered: onion services, bridges and pluggable transports, the RPC server and the `arti` command-line crate.
+
+Generated with `scripts/build_corpus.py`; see `data/arti/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: arti -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| arti | 1.1.13 | GCC 13 (Linux, glibc) | [x86 ELF](data/arti/x86/mcrit/arti_1.1.13_gcc13_x86_arti_driver.so.mcrit) / [x64 ELF](data/arti/x64/mcrit/arti_1.1.13_gcc13_x64_arti_driver.so.mcrit) | [x86 ELF](data/arti/x86/smda/arti_1.1.13_gcc13_x86_arti_driver.so.7z) / [x64 ELF](data/arti/x64/smda/arti_1.1.13_gcc13_x64_arti_driver.so.7z) |
+| arti | 1.1.13 | MinGW-w64 GCC 13 | [x86 PE](data/arti/x86/mcrit/arti_1.1.13_mingw13_x86_arti_driver.dll.mcrit) / [x64 PE](data/arti/x64/mcrit/arti_1.1.13_mingw13_x64_arti_driver.dll.mcrit) | [x86 PE](data/arti/x86/smda/arti_1.1.13_mingw13_x86_arti_driver.dll.7z) / [x64 PE](data/arti/x64/smda/arti_1.1.13_mingw13_x64_arti_driver.dll.7z) |
+| arti | 1.1.13 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/arti/x86/mcrit/arti_1.1.13_msvc143_x86_arti_driver.dll.mcrit) / [x64 PE](data/arti/x64/mcrit/arti_1.1.13_msvc143_x64_arti_driver.dll.mcrit) | [x86 PE](data/arti/x86/smda/arti_1.1.13_msvc143_x86_arti_driver.dll.7z) / [x64 PE](data/arti/x64/smda/arti_1.1.13_msvc143_x64_arti_driver.dll.7z) |
+| arti | 2.3.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/arti/x86/mcrit/arti_2.3.0_gcc13_x86_arti_driver.so.mcrit) / [x64 ELF](data/arti/x64/mcrit/arti_2.3.0_gcc13_x64_arti_driver.so.mcrit) | [x86 ELF](data/arti/x86/smda/arti_2.3.0_gcc13_x86_arti_driver.so.7z) / [x64 ELF](data/arti/x64/smda/arti_2.3.0_gcc13_x64_arti_driver.so.7z) |
+| arti | 2.3.0 | MinGW-w64 GCC 13 | [x86 PE](data/arti/x86/mcrit/arti_2.3.0_mingw13_x86_arti_driver.dll.mcrit) / [x64 PE](data/arti/x64/mcrit/arti_2.3.0_mingw13_x64_arti_driver.dll.mcrit) | [x86 PE](data/arti/x86/smda/arti_2.3.0_mingw13_x86_arti_driver.dll.7z) / [x64 PE](data/arti/x64/smda/arti_2.3.0_mingw13_x64_arti_driver.dll.7z) |
+| arti | 2.3.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/arti/x86/mcrit/arti_2.3.0_msvc143_x86_arti_driver.dll.mcrit) / [x64 PE](data/arti/x64/mcrit/arti_2.3.0_msvc143_x64_arti_driver.dll.mcrit) | [x86 PE](data/arti/x86/smda/arti_2.3.0_msvc143_x86_arti_driver.dll.7z) / [x64 PE](data/arti/x64/smda/arti_2.3.0_msvc143_x64_arti_driver.dll.7z) |
 <!-- /generated -->
 
 ## Runtimes
