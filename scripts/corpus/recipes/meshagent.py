@@ -30,8 +30,8 @@ recorded rather than removed by name, preserving the baseline contract.
 
 The source headers identify OpenSSL 1.1.1f, but strings in both committed
 Linux archives identify 1.1.1s; the archive version is recorded in provenance.
-The Windows recipe substitutes shared OpenSSL 1.1.1w and zlib 1.3.1 instead
-of attributing the committed static dependencies to MeshAgent.
+A separate Windows probe is prepared with shared OpenSSL 1.1.1w and zlib
+1.3.1 dependencies; it is not part of these Linux recipes.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -61,77 +61,7 @@ _BUILD_X86 = (_BUILD.replace("ARCHID=20", "ARCHID=19")
               .replace("CC={cc}", "'CC={cc} -m32'")
               .replace("corpus-deps", "corpus-deps32"))
 
-_MSVC_HELPER = "python {repo}/scripts/corpus/exercisers/meshagent_dependencies.py"
-_MSVC_DEPS = [
-    BuildStep('if "{arch}"=="x64" perl Configure VC-WIN64A shared no-tests no-asm '
-              '"LDFLAGS=/nologo /debug /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF"',
-              cwd="{openssl_source}"),
-    BuildStep('if "{arch}"=="x86" perl Configure VC-WIN32 shared no-tests no-asm '
-              '"LDFLAGS=/nologo /debug /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF"',
-              cwd="{openssl_source}"),
-    BuildStep("nmake /nologo build_libs", cwd="{openssl_source}"),
-    BuildStep('nmake -f win32\\Makefile.msc '
-              '"LDFLAGS=-nologo -debug -Brepro -INCREMENTAL:NO -OPT:NOREF '
-              '-OPT:NOICF -pdb:zlib1.pdb" zlib1.dll', cwd="{zlib_source}"),
-    BuildStep("if not exist corpus-deps mkdir corpus-deps"),
-    BuildStep("cl /nologo /MD /O2 /Zi /Brepro /DDUK_USE_DEBUGGER_SUPPORT "
-              "/DDUK_USE_INTERRUPT_COUNTER /DDUK_USE_DEBUGGER_INSPECT "
-              "/DDUK_USE_DEBUGGER_PAUSE_UNCAUGHT /DDUK_USE_DEBUGGER_DUMPHEAP "
-              "/c ../microscript/duktape.c /Foduktape.obj", cwd="corpus-deps"),
-    BuildStep(_MSVC_HELPER + " exports --arch {arch} --output corpus-deps/duktape.def "
-              "corpus-deps/duktape.obj"),
-    BuildStep("link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF "
-              "/OUT:corpus-duktape.dll /DEF:duktape.def duktape.obj", cwd="corpus-deps"),
-]
-_MSVC_BUILD = []
-for _directory, _project, _name in (
-    ("meshservice", "MeshService-2022", "MeshAgentService"),
-    ("meshconsole", "MeshConsole-2022", "MeshAgentConsole"),
-):
-    _MSVC_BUILD += [
-        BuildStep(_MSVC_HELPER + " props --project " + _directory + "/" + _project +
-                  ".vcxproj --platform {msbuild_platform} --name " + _name +
-                  " --ssl {openssl_source} --zlib {zlib_source} "
-                  "--deps {source_root}/corpus-deps "
-                  "--output corpus-deps/" + _directory + ".props"),
-        BuildStep("msbuild " + _directory + "/" + _project +
-                  ".vcxproj /m:2 /p:Configuration=Release /p:Platform={msbuild_platform} "
-                  "/p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0.26100.0 "
-                  "/p:WholeProgramOptimization=false /p:LinkIncremental=false "
-                  "/p:OutDir={source_root}/corpus-out/" + _directory + "/ "
-                  "/p:ForceImportBeforeCppTargets={source_root}/corpus-deps/" +
-                  _directory + ".props"),
-    ]
-
 RECIPES = {
-    "meshagent_26846b1_msvc": Recipe(
-        family="MeshAgent",
-        version="26846b1",
-        upstream="https://github.com/Ylianst/MeshAgent",
-        license="Apache-2.0",
-        source=Source(git_url="https://github.com/Ylianst/MeshAgent.git",
-                      git_ref="26846b1c7f0841d71938f6bebc96eef5a947d217"),
-        extra_sources={"openssl_source": Source(
-            url="https://github.com/openssl/openssl/releases/download/"
-                "OpenSSL_1_1_1w/openssl-1.1.1w.tar.gz",
-            sha256="cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8"),
-            "zlib_source": Source(url="https://zlib.net/fossils/zlib-1.3.1.tar.gz",
-                sha256="9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23")},
-        build=_MSVC_DEPS + _MSVC_BUILD,
-        artifacts=[Artifact(path="corpus-out/meshservice/MeshAgentService.exe",
-                            component="meshservice", is_library=True,
-                            pdb="corpus-out/meshservice/MeshAgentService.pdb"),
-                   Artifact(path="corpus-out/meshconsole/MeshAgentConsole.exe",
-                            component="meshconsole", is_library=True,
-                            pdb="corpus-out/meshconsole/MeshAgentConsole.pdb")],
-        toolchains=["msvc_x86", "msvc_x64"],
-        requires=["msbuild", "cl", "link", "nmake", "perl", "dumpbin"],
-        build_flags="upstream Release /MD /Zi /Brepro /OPT:NOREF /OPT:NOICF "
-                    "/INCREMENTAL:NO; whole program optimization disabled",
-        notes="OpenSSL 1.1.1w, embedded Duktape 2.6.0 and zlib 1.3.1 are "
-              "linked as shared dependencies and excluded from agent code. "
-              "Service and console retain upstream Windows KVM configuration.",
-    ),
     "meshagent_26846b1_linux_nokvm": Recipe(
         family="MeshAgent",
         version="26846b1",
