@@ -12,7 +12,7 @@ functions / 47 distinct PicHashes at >=10 instructions), 765 Linux x86 (4
 removed; 239/231), 616 MSVC x64 (140 removed; 323/60) and 616 MSVC x86 (134
 removed; 402/66). Legacy retains 82 Linux x64 (6 removed; 27/18), 134 Linux
 x86 (3 removed; 38/33), 61 MinGW x64 (48 removed; 20/20), 53 MinGW x86 (48
-removed; 25/20), 88 MSVC x64 (133 removed; 53/43) and 88 MSVC x86 (127
+removed; 25/20), 88 MSVC x64 (133 removed; 54/42) and 88 MSVC x86 (127
 removed; 40/35). Kept + removed equals the image total in every case. Current
 MinGW x86 and x64 both fail with the upstream C++20
 ``operator""_obf_bytes`` deduction error recorded in the corpus README.

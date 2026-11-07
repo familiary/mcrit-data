@@ -219,7 +219,7 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "advobfuscator-legacy.dll",
     "family": "ADVobfuscator",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x64/mcrit/ADVobfuscator_2020-06-26_msvc143_x64_advobfuscator-legacy.dll.mcrit",
@@ -360,7 +360,7 @@
       "wcslen",
       "wmemcpy"
     ],
-    "sha256": "a09b43edfc9612ee00b271b0df708c55cb5e83dba23b660531e6b9a9cb95ac2b",
+    "sha256": "7e679b1a4d02259a7715cbf1a89a724bf3fd4d4816a44b33e580206947ed781a",
     "smda": "data/ADVobfuscator/x64/smda/ADVobfuscator_2020-06-26_msvc143_x64_advobfuscator-legacy.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -379,7 +379,7 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "advobfuscator-legacy.dll",
     "family": "ADVobfuscator",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x86/mcrit/ADVobfuscator_2020-06-26_msvc143_x86_advobfuscator-legacy.dll.mcrit",
@@ -514,7 +514,7 @@
       "void __cdecl std::_Xbad_alloc(void)",
       "wmemcpy"
     ],
-    "sha256": "e19ee3bb874d839e3e9795c782304d7533f6361736a6816bee9f0b4705bc82b2",
+    "sha256": "9b21765478bacdef82c8a685be0389c90fff3856a79821e1a5142f2d55b70f71",
     "smda": "data/ADVobfuscator/x86/smda/ADVobfuscator_2020-06-26_msvc143_x86_advobfuscator-legacy.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -596,7 +596,7 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "advobfuscator-current.dll",
     "family": "ADVobfuscator",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x64/mcrit/ADVobfuscator_2026-10-27_msvc143_x64_advobfuscator-current.dll.mcrit",
@@ -744,7 +744,7 @@
       "type_info::`scalar deleting destructor'",
       "type_info::~type_info"
     ],
-    "sha256": "0628d3d92afb39d87d8005c043b6d7e3e614a31a4dc8d45fabf57adc628f38cd",
+    "sha256": "275f5163a596de74f0b1d7dc4860b9f21937975afb3b458f27b5fcef8af8dbe0",
     "smda": "data/ADVobfuscator/x64/smda/ADVobfuscator_2026-10-27_msvc143_x64_advobfuscator-current.dll.7z",
     "smda_version": "4.8.0",
     "source": {
@@ -763,7 +763,7 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "advobfuscator-current.dll",
     "family": "ADVobfuscator",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x86/mcrit/ADVobfuscator_2026-10-27_msvc143_x86_advobfuscator-current.dll.mcrit",
@@ -905,7 +905,7 @@
       "type_info::`scalar deleting destructor'",
       "type_info::~type_info"
     ],
-    "sha256": "bef6fa91adf860c04de60e202cfd554a3e3d65de29cce8893355e843fb3e14c7",
+    "sha256": "e2fd0a5dbe48b7c1abd0853c42017d9f373dc91e701f8ff558fa4e370bb6fbda",
     "smda": "data/ADVobfuscator/x86/smda/ADVobfuscator_2026-10-27_msvc143_x86_advobfuscator-current.dll.7z",
     "smda_version": "4.8.0",
     "source": {
