@@ -58,23 +58,27 @@ with an 823,296-byte PDB (x86), and a first-try success on both legs: no
 obstacle turned up, and no source was patched.
 
 Counts (smda 5.0.2, mcrit 1.16.0): x86 holds 328 functions in the image, the
-glue baseline removes 137 and 191 are kept; x64 holds 334, removes 144 and
-keeps 190. Kept plus removed equals the image total. All kept functions are
+glue baseline removes 138 and 190 are kept; x64 holds 334, removes 145 and
+keeps 189. Kept plus removed equals the image total. All kept functions are
 named. 181 (x86) and 180 (x64) are miniz's own (mz_*, tdefl_*, tinfl_*,
 miniz_*); 146 and 140 of the kept carry ten or more instructions, against
 130 and 121 in the MinGW artefacts. The removed set is the MSVC runtime
 glue: the DLL entry (_DllMainCRTStartup, dllmain_*), __scrt_* start-up and
 onexit machinery, __security_*/__GS* cookie code, __castguard_*, and CRT
-thunks the probes reach (malloc, free, memcpy, memset, fclose, fread, time).
+thunks the probes reach (malloc, free, memcpy, memset, fclose, fflush, fread,
+time).
 
-Glue survivors: ten per architecture, all one-instruction import thunks
+Glue survivors: nine per architecture, all one-instruction import thunks
 (jmp through the IAT) to stdio and filesystem functions that the glue probes
 do not call, each with PicHash 1165511d87767dcf. x86: __fseeki64, __ftelli64,
-__utime64, __wfopen_s, __wfreopen_s, __wstat64, _fflush, _fwrite, _remove,
-utime. x64: _fseeki64, _ftelli64, _utime64, _wfopen_s, _wfreopen_s,
-_wstat64, fflush, fwrite, remove, utime. They are not miniz code but carry
+__utime64, __wfopen_s, __wfreopen_s, __wstat64, _fwrite, _remove, utime.
+x64: _fseeki64, _ftelli64, _utime64, _wfopen_s, _wfreopen_s, _wstat64, fwrite,
+remove. x64 utime is the exception: a one-instruction thunk with PicHash
+458924a8d07e5d36, the hash mz_free shares. They are not miniz code but carry
 no signal and are the same single hash MinGW's _utime thunk has; left in
-because the baseline is shared tooling.
+because the baseline is shared tooling. fflush and _fflush were survivors
+until the wide-stdio baseline (PR #80, #86) classified them as CRT glue and
+removed them.
 
 MinGW/MSVC overlap by PicHash, functions of ten or more instructions: none.
 0 of 127 (x86) and 0 of 119 (x64) distinct MinGW hashes occur in the MSVC
