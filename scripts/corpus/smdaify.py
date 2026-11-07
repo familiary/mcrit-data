@@ -150,6 +150,28 @@ def _drop_crt_glue(report, toolchain_id):
     return removed
 
 
+def _drop_excluded(report, patterns):
+    """Remove functions whose name matches one of the recipe's patterns.
+
+    Returns how many were removed. The names are not returned: a Rust image
+    can carry over a thousand of them and the pattern, which is recorded, is
+    what states the rule. The caller records the count so that kept plus
+    excluded is still the image total.
+    """
+    import re
+
+    compiled = [re.compile(pattern) for pattern in patterns]
+    doomed = [offset for offset, function in report.xcfg.items()
+              if any(rx.search(function.function_name or "") for rx in compiled)]
+    for offset in doomed:
+        del report.xcfg[offset]
+    report._sorted_functions = None
+    if doomed:
+        _recompute_statistics(report)
+        LOGGER.info("excluded %d functions by name", len(doomed))
+    return len(doomed)
+
+
 def assert_symbols_survived(report, binary_path, min_named_ratio):
     """Refuse a report whose build stripped its symbols.
 
@@ -305,11 +327,17 @@ def _is_direct_target(instruction):
 def smdaify(binary_path, family, version, component, is_library=True,
             toolchain_id=None, drop_crt_glue=True, filename=None,
             min_named_ratio=0.5, is_blob=False, bitness=None,
-            base_addr=0x400000, pdb_path="", min_functions=None):
+            base_addr=0x400000, pdb_path="", min_functions=None,
+            exclude_functions=()):
     """Disassemble ``binary_path`` and label it the way the corpus expects.
 
     ``min_functions`` is the recipe's replacement for
     ``config.MIN_USEFUL_FUNCTIONS``; None means that constant applies.
+
+    ``exclude_functions`` are name patterns (Recipe.exclude_functions). The
+    number removed by them is left on the returned report as
+    ``excluded_function_count``; the second return value stays the list of
+    glue functions, exactly as before.
     """
     if is_blob:
         if bitness not in (32, 64):
@@ -336,6 +364,9 @@ def smdaify(binary_path, family, version, component, is_library=True,
     removed = []
     if drop_crt_glue and toolchain_id:
         removed = _drop_crt_glue(report, toolchain_id)
+    report.excluded_function_count = 0
+    if exclude_functions and not is_blob:
+        report.excluded_function_count = _drop_excluded(report, exclude_functions)
 
     if is_blob:
         recovered = report.statistics.num_instructions if report.statistics else 0
