@@ -32,10 +32,22 @@ assert text.count("#ifdef _WIN64") == 5
 text = text.replace("#ifdef _WIN64", "#ifdef _WIN32")
 open(hdr, "w", newline="").write(text)
 
+
+
+def public_names(path):
+    """PUBLIC symbols of an .asm file, including those of the files it INCLUDEs
+    (the CryptonightR_template_* labels are declared in the *_win.inc files)."""
+    text = open(path).read()
+    names = re.findall(r"^\s*PUBLIC (\w+)", text, re.M)
+    for inc in re.findall(r"^\s*INCLUDE (\S+)", text, re.M):
+        names += public_names(os.path.join(os.path.dirname(path), inc))
+    return list(dict.fromkeys(names))
+
+
 total = 0
 for rel in ("asm/cryptonight_v8_main_loop.asm", "asm/cnR/CryptonightR_template.asm"):
     path = os.path.join(crypto, *rel.split("/"))
-    names = re.findall(r"^PUBLIC (\w+)", open(path).read(), re.M)
+    names = public_names(path)
     assert names and len(set(names)) == len(names)
     out = [".386", ".model flat, C", ".code"]
     for n in names:

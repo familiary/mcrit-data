@@ -32,8 +32,8 @@ never committed or modified in the repo):
 2. The two MASM sources, asm/cryptonight_v8_main_loop.asm and
    asm/cnR/CryptonightR_template.asm, are overwritten in the build tree with
    generated stubs: `.386 / .model flat, C / .code`, then for every symbol the
-   original PUBLIC-declares (3 main loops and 514 CryptonightR_*/
-   CryptonightWOW_* template labels, 517 in all)
+   original PUBLIC-declares (directly or through its INCLUDEd *_win.inc) (3 main loops and 536 CryptonightR_*/
+   CryptonightWOW_* template labels, 539 in all)
        name PROC / ret / name ENDP
    They carry no information, have no counterpart in a real build, and nothing
    runs them. CMake still assembles them with ml.exe as upstream's MSVC branch
@@ -87,6 +87,6 @@ RECIPES = {
                     "loops replaced by ret stubs, x86 compat header force-included)",
         notes="NOT byte-identical to a build of unmodified upstream: recipe-applied patch, see the "
               "recipe docstring. The x86 image is an unsupported configuration (upstream #errors on "
-              "32-bit builds): its CryptoNight assembly is replaced by 517 one-instruction ret stubs.",
+              "32-bit builds): its CryptoNight assembly is replaced by 539 one-instruction ret stubs.",
     ),
 }
