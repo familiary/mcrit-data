@@ -41,6 +41,46 @@ COMPONENTS = {
 }
 LIBRARIES = ("Mayaqua", "Cedar")
 VENDORED = ("libeay32.lib", "ssleay32.lib", "zlib.lib", "libintelaes.lib")
+# The vendored OpenSSL objects call CryptoAPI, the event log and GetUserNameA,
+# which the old Visual Studio default library list supplied implicitly.
+SYSTEM_LIBS = ("advapi32.lib", "user32.lib", "gdi32.lib", "shell32.lib",
+               "ole32.lib", "oleaut32.lib", "uuid.lib", "crypt32.lib",
+               "ws2_32.lib", "wininet.lib", "secur32.lib", "psapi.lib",
+               "wtsapi32.lib", "rpcrt4.lib", "ntdll.lib", "comdlg32.lib")
+
+# The sources were written for a Windows SDK that predates NTDDI_WIN7 and
+# friends. There "#if (NTDDI_VERSION >= NTDDI_WIN7)" compared against an
+# undefined name, i.e. was true, so Network.c saw the Windows 7 WFP types in
+# the repository's fixed_fwpm*.h copies; with the current SDK
+# _WIN32_WINNT 0x0502 selects NTDDI_WS03SP1 and they vanish. Command-line
+# defines restore the intended level. Variants are tried in order and the
+# first that compiles is used (the one used is printed).
+SECEXT_SHIM = """#ifndef SE_EXTENDED_NAME_FORMAT_SHIM
+#define SE_EXTENDED_NAME_FORMAT_SHIM
+/* CM.c defines MICROSOFT_C, which exposes GetUserNameEx prototypes using
+   EXTENDED_NAME_FORMAT, but never includes security.h; the old SDK's
+   shell headers pulled the type in. Same enumerators as secext.h. */
+typedef enum {
+    NameUnknown = 0, NameFullyQualifiedDN = 1, NameSamCompatible = 2,
+    NameDisplay = 3, NameUniqueId = 6, NameCanonical = 7,
+    NameUserPrincipal = 8, NameCanonicalEx = 9, NameServicePrincipal = 10,
+    NameDnsDomain = 12, NameGivenName = 13, NameSurname = 14
+} EXTENDED_NAME_FORMAT, *PEXTENDED_NAME_FORMAT;
+#endif
+"""
+
+
+def file_variants(rel, out_dir):
+    """Extra cl switches to try, in order, for files the current SDK breaks."""
+    name = os.path.basename(rel)
+    if name == "Network.c":
+        return [["/DNTDDI_VERSION=0x06010000"], ["/DNTDDI_VERSION=0x0A000000"]]
+    if name == "CM.c":
+        shim = os.path.join(out_dir, "secext_shim.h")
+        with open(shim, "w") as handle:
+            handle.write(SECEXT_SHIM)
+        return [["/FI" + shim], []]
+    return [[]]
 
 
 def load_project(path):
@@ -86,8 +126,11 @@ def compiler_flags(cl_tool, defines_extra=()):
         flags.append("/W3")
     for number in filter(None, a.get("DisableSpecificWarnings", "").split(";")):
         flags.append("/wd" + number)
-    # Recorded deviations: dynamic CRT, debug info in the objects.
-    flags += ["/MD", "/Z7"]
+    # Recorded deviations: dynamic CRT, debug info in the objects. The
+    # projects compile with /Zp4, which the current Windows SDK refuses
+    # ("Windows headers require the default packing option") unless told it
+    # is intended; this is the SDK's own documented switch, not a source edit.
+    flags += ["/MD", "/Z7", "/DWINDOWS_IGNORE_PACKING_MISMATCH"]
     for define in filter(None, a.get("PreprocessorDefinitions", "").split(";")):
         flags.append("/D" + define)
     for define in defines_extra:
@@ -135,7 +178,7 @@ def run(command, cwd, log):
                             stderr=subprocess.STDOUT, text=True, errors="replace")
     sys.stdout.write(result.stdout)
     sys.stdout.flush()
-    return result.returncode
+    return result.returncode, result.stdout
 
 
 def compile_project(src_dir, name, platform, out_dir, extra_defines, dry):
@@ -165,7 +208,14 @@ def compile_project(src_dir, name, platform, out_dir, extra_defines, dry):
         if dry:
             print("cl", " ".join(command))
             return rel, 0, obj
-        return rel, run(["cl"] + command, proj_dir, None), obj
+        code = 1
+        for extra in file_variants(rel, out_dir):
+            code = run(["cl"] + extra + command, proj_dir, None)[0]
+            if extra:
+                print("VARIANT %s %s -> exit %d" % (rel, " ".join(extra), code))
+            if code == 0 and os.path.isfile(obj):
+                break
+        return rel, code, obj
 
     with ThreadPoolExecutor(max_workers=os.cpu_count() or 2) as pool:
         for rel, code, obj in pool.map(one, jobs):
@@ -196,7 +246,7 @@ def main(argv):
             print("lib /OUT:%s %d objects" % (lib, len(objects)))
             continue
         command = ["lib", "/nologo", "/IGNORE:4006,4221", "/OUT:" + lib] + objects
-        if run(command, out_dir, None) != 0:
+        if run(command, out_dir, None)[0] != 0:
             summary[name].append("<lib.exe failed>")
 
     status = 0
@@ -217,11 +267,26 @@ def main(argv):
                    + objects
                    + [os.path.join(out_dir, n + ".lib") for n in LIBRARIES]
                    + list(VENDORED)
-                   + ["delayimp.lib", "legacy_stdio_definitions.lib"])
+                   + ["delayimp.lib", "legacy_stdio_definitions.lib"]
+                   + list(SYSTEM_LIBS))
         if dry:
             print(" ".join(command))
             continue
-        code = run(command, out_dir, None)
+        code, output = run(command, out_dir, None)
+        if code != 0 and "__iob_func" in output:
+            # The vendored OpenSSL objects were built for a CRT that still
+            # exported __iob_func; provide it from a generated shim object.
+            shim = os.path.join(out_dir, "iob_shim.c")
+            with open(shim, "w") as handle:
+                handle.write("#include <stdio.h>\n"
+                             "FILE *__cdecl __iob_func(void)\n"
+                             "{ static FILE *t[3]; t[0]=stdin; t[1]=stdout; t[2]=stderr; "
+                             "return (FILE *)t; }\n")
+            print("retrying %s with a generated __iob_func shim" % component)
+            c2, _ = run(["cl", "/nologo", "/c", "/MD", "/Z7", "/Fo" + shim + ".obj", shim],
+                        out_dir, None)
+            if c2 == 0:
+                code, output = run(command + [shim + ".obj"], out_dir, None)
         if code != 0 or not os.path.isfile(exe):
             summary[component].append("<link.exe exit %d>" % code)
             status = 1

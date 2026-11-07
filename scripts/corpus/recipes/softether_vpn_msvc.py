@@ -36,7 +36,39 @@ build of the unmodified solution):
   * the vendored static OpenSSL, zlib and intel-aes libraries upstream ships
     under src/BuildFiles/Library are linked as upstream does, with
     /NODEFAULTLIB:LIBCMT and legacy_stdio_definitions.lib because they were
-    built against the static CRT.
+    built against the static CRT; the helper adds the system import
+    libraries they and the GUI dialogs need (advapi32, comdlg32, ...) and, if
+    the link reports an unresolved __iob_func, a generated one-function shim
+    object (the OpenSSL objects were built for a CRT that exported it);
+  * two files are compiled with extra command-line switches because the
+    sources assume an older Windows SDK: Mayaqua/Network.c with
+    /DNTDDI_VERSION=0x06010000 (the old SDK had no NTDDI_WIN7, so the
+    "#if (NTDDI_VERSION >= NTDDI_WIN7)" guards in the repository's
+    fixed_fwpm*.h copies were true; with the current SDK _WIN32_WINNT 0x0502
+    hides FWPM_NET_EVENT1), and Cedar/CM.c with a generated force-included
+    header that supplies the EXTENDED_NAME_FORMAT enum (secext.h's
+    enumerators) that Mayaqua/Microsoft.h uses there without including
+    security.h; /DWINDOWS_IGNORE_PACKING_MISMATCH is passed everywhere so the
+    SDK accepts the projects' /Zp4.
+
+Measured on windows-2022 (MSVC 14.44, SDK 10.0.26100.0), scoped dispatches
+on scratch/softether-msvc, runs 42409611446, 42410237181, 42410784026:
+
+  * run 1: /Zp4 against the current SDK stops every file that includes
+    windows.h (winnt.h(2597): static_assert failed: 'Windows headers require
+    the default packing option ...'), then Network.c (FWPM_NET_EVENT1) and
+    CM.c (Microsoft.h(459): C2122 'PULONG': prototype parameter in name list
+    illegal) on top;
+  * run 2: after the packing define, Network.c and CM.c remain, and the
+    link stops on advapi32 symbols (__imp_CryptAcquireContextW, ...);
+  * run 3: every Mayaqua and Cedar source compiles on x86 and x64 and
+    Mayaqua.lib/Cedar.lib are produced; all four programs then fail to link
+    with exactly four unresolved externals (the __iob_func one is solved by
+    the shim): Cedar.lib(WinUi.obj) __imp_GetOpenFileNameA/W and
+    __imp_GetSaveFileNameA/W, i.e. comdlg32.lib missing from the library
+    list. comdlg32.lib is added to the helper after that run; the result of
+    the fixed link has NOT been run (the three-dispatch budget was spent), so
+    no images or data are committed.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
