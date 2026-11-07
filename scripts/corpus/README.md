@@ -540,6 +540,7 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| SoftEther VPN Stable 4.44 Windows x86/x64 | #51 | Scoped Windows-2022 probes: `msbuild src\SEVPN.sln` fails with `MSB4025: The project file could not be loaded. Root element is missing.` Building `src\vpnserver\vpnserver.vcproj` directly fails with `MSB4192`: the `.vcproj` format cannot be built directly by MSBuild. Converting upstream projects would change source files. The official Windows binaries have no COFF symbols or exports and ship no PDB. Linux source builds are covered. |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |
