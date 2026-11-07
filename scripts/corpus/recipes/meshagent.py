@@ -63,16 +63,17 @@ _BUILD_X86 = (_BUILD.replace("ARCHID=20", "ARCHID=19")
 
 _MSVC_HELPER = "python {repo}/scripts/corpus/exercisers/meshagent_dependencies.py"
 _MSVC_DEPS = [
+    BuildStep("tar xf {openssl_source} && tar xf {zlib_source}"),
     BuildStep('if "{arch}"=="x64" perl Configure VC-WIN64A shared no-tests no-asm '
               '"LDFLAGS=/nologo /debug /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF"',
-              cwd="{openssl_source}"),
+              cwd="openssl-1.1.1w"),
     BuildStep('if "{arch}"=="x86" perl Configure VC-WIN32 shared no-tests no-asm '
               '"LDFLAGS=/nologo /debug /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF"',
-              cwd="{openssl_source}"),
-    BuildStep("nmake /nologo build_libs", cwd="{openssl_source}"),
+              cwd="openssl-1.1.1w"),
+    BuildStep("nmake /nologo build_libs", cwd="openssl-1.1.1w"),
     BuildStep('nmake -f win32\\Makefile.msc '
               '"LDFLAGS=-nologo -debug -Brepro -INCREMENTAL:NO -OPT:NOREF '
-              '-OPT:NOICF -pdb:zlib1.pdb" zlib1.dll', cwd="{zlib_source}"),
+              '-OPT:NOICF -pdb:zlib1.pdb" zlib1.dll', cwd="zlib-1.3.1"),
     BuildStep("if not exist corpus-deps mkdir corpus-deps"),
     BuildStep("cl /nologo /MD /O2 /Zi /Brepro /DDUK_USE_DEBUGGER_SUPPORT "
               "/DDUK_USE_INTERRUPT_COUNTER /DDUK_USE_DEBUGGER_INSPECT "
@@ -91,13 +92,15 @@ for _directory, _project, _name in (
     _MSVC_BUILD += [
         BuildStep(_MSVC_HELPER + " props --project " + _directory + "/" + _project +
                   ".vcxproj --platform {msbuild_platform} --name " + _name +
-                  " --ssl {openssl_source} --zlib {zlib_source} "
+                  " --ssl {source_root}/openssl-1.1.1w --zlib {source_root}/zlib-1.3.1 "
                   "--deps {source_root}/corpus-deps "
                   "--output corpus-deps/" + _directory + ".props"),
         BuildStep("msbuild " + _directory + "/" + _project +
                   ".vcxproj /m:2 /p:Configuration=Release /p:Platform={msbuild_platform} "
                   "/p:PlatformToolset=v143 /p:WindowsTargetPlatformVersion=10.0.26100.0 "
                   "/p:WholeProgramOptimization=false /p:LinkIncremental=false "
+                  "/p:SolutionDir={source_root}/ "
+                  "/p:IntDir={source_root}/corpus-obj/" + _directory + "/ "
                   "/p:OutDir={source_root}/corpus-out/" + _directory + "/ "
                   "/p:ForceImportBeforeCppTargets={source_root}/corpus-deps/" +
                   _directory + ".props"),
@@ -125,7 +128,7 @@ RECIPES = {
                             component="meshconsole", is_library=True,
                             pdb="corpus-out/meshconsole/MeshAgentConsole.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
-        requires=["msbuild", "cl", "link", "nmake", "perl", "dumpbin"],
+        requires=["msbuild", "cl", "link", "nmake", "perl", "dumpbin", "tar"],
         build_flags="upstream Release /MD /Zi /Brepro /OPT:NOREF /OPT:NOICF "
                     "/INCREMENTAL:NO; whole program optimization disabled",
         notes="OpenSSL 1.1.1w, embedded Duktape 2.6.0 and zlib 1.3.1 are "
