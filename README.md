@@ -1085,14 +1085,14 @@ The complete upstream check suite, pinned to 2026-07-01. Release /O2 and /Od mea
 
 ### peinjector<a id='peinjector'></a>
 
-The final 2016-05-11 commit’s four library files build for Linux ELF and MinGW. MSVC builds libpefile.c and libpetool.c; cl rejects libpeinfect_obfuscator.c’s variable-length array at line 97. The protocol/server code and minIni are excluded.
+The final 2016-05-11 commit’s four library files build for Linux ELF, MinGW and MSVC. The MSVC image is not byte-identical to a build of unmodified upstream: cl rejects the variable-length array `char tmp[size];` at libpeinfect_obfuscator.c line 97, so the recipe rewrites that one line in the build tree to `char tmp[sizeof(SHELLCODE_ENTRY)];` (the only size its single caller passes). The Linux and MinGW images use unmodified source. The protocol/server code and minIni are excluded.
 
 <!-- generated: peinjector -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | peinjector | 2016-05-11 | GCC 14 (Linux, glibc) | [x86 ELF](data/peinjector/x86/mcrit/peinjector_2016-05-11_gcc14_x86_peinjector.so.mcrit) / [x64 ELF](data/peinjector/x64/mcrit/peinjector_2016-05-11_gcc14_x64_peinjector.so.mcrit) | [x86 ELF](data/peinjector/x86/smda/peinjector_2016-05-11_gcc14_x86_peinjector.so.7z) / [x64 ELF](data/peinjector/x64/smda/peinjector_2016-05-11_gcc14_x64_peinjector.so.7z) |
 | peinjector | 2016-05-11 | MinGW-w64 GCC 13 | [x86 PE](data/peinjector/x86/mcrit/peinjector_2016-05-11_mingw13_x86_peinjector.dll.mcrit) / [x64 PE](data/peinjector/x64/mcrit/peinjector_2016-05-11_mingw13_x64_peinjector.dll.mcrit) | [x86 PE](data/peinjector/x86/smda/peinjector_2016-05-11_mingw13_x86_peinjector.dll.7z) / [x64 PE](data/peinjector/x64/smda/peinjector_2016-05-11_mingw13_x64_peinjector.dll.7z) |
-| peinjector | 2016-05-11 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/peinjector/x86/mcrit/peinjector_2016-05-11_msvc143_x86_pefile_petool.dll.mcrit) / [x64 PE](data/peinjector/x64/mcrit/peinjector_2016-05-11_msvc143_x64_pefile_petool.dll.mcrit) | [x86 PE](data/peinjector/x86/smda/peinjector_2016-05-11_msvc143_x86_pefile_petool.dll.7z) / [x64 PE](data/peinjector/x64/smda/peinjector_2016-05-11_msvc143_x64_pefile_petool.dll.7z) |
+| peinjector | 2016-05-11 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/peinjector/x86/mcrit/peinjector_2016-05-11_msvc143_x86_peinjector.dll.mcrit) / [x64 PE](data/peinjector/x64/mcrit/peinjector_2016-05-11_msvc143_x64_peinjector.dll.mcrit) | [x86 PE](data/peinjector/x86/smda/peinjector_2016-05-11_msvc143_x86_peinjector.dll.7z) / [x64 PE](data/peinjector/x64/smda/peinjector_2016-05-11_msvc143_x64_peinjector.dll.7z) |
 <!-- /generated -->
 
 ### DiskCryptor<a id='diskcryptor'></a>

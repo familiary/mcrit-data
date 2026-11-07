@@ -17,10 +17,10 @@ The earlier MSVC image (pefile_petool.dll, libpefile.c and libpetool.c only, 15+
 Measurements, >=10 instruction functions and PicHashes:
   Linux x64 67+5=72 total, 29/29; Linux x86 93+5=98, 35/35.
   MinGW x64 63+116=179, 32/32; MinGW x86 51+122=173, 34/34.
-  MSVC: see the measurement block at the end of this docstring.
-  Linux x86 versus MinGW x86 shares 2 hashes; every other cross-compiler or cross-architecture pair shares 0. MSVC x86 versus x64 shares 0.
+  MSVC (patched) x64 83+60=143, 56/56; x86 83+50=133, 55/55.
+  Linux x86 versus MinGW x86 shares 2 hashes; every other cross-compiler or cross-architecture pair shares 0. MSVC (patched) shares 0 hashes with every Linux/MinGW image and between its own x86 and x64 images.
 
-The Linux x86 image retains _init 0xda23d7f0d78226f7 (11 instructions), deregister_tm_clones 0x930296f4ff4b0b00 (18), register_tm_clones 0xcd189d0b900985c3 (26), __do_global_dtors_aux 0x9d9807ada1cb6058 (21), __x86.get_pc_thunk.bp 0x7c99608cc56520ba (2) and _fini 0x92f45e02492408a1 (7). Images are linked and disassembled only.
+Surviving names at the 10-instruction floor in the MSVC images are all peinjector library functions (pefile_*, peinfect_*, petool_* and the obfuscator helpers); no runtime or glue name survives. The Linux x86 image retains _init 0xda23d7f0d78226f7 (11 instructions), deregister_tm_clones 0x930296f4ff4b0b00 (18), register_tm_clones 0xcd189d0b900985c3 (26), __do_global_dtors_aux 0x9d9807ada1cb6058 (21), __x86.get_pc_thunk.bp 0x7c99608cc56520ba (2) and _fini 0x92f45e02492408a1 (7). Images are linked and disassembled only.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
