@@ -1040,3 +1040,43 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
 <!-- /generated -->
+
+
+### Gh0st
+
+<!-- generated: Gh0st -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Gh0st | 2008-f434b0d-buffer | MinGW-w64 GCC 13 | [x86 PE](data/Gh0st/x86/mcrit/Gh0st_2008-f434b0d-buffer_mingw13_x86_buffer.mcrit) / [x64 PE](data/Gh0st/x64/mcrit/Gh0st_2008-f434b0d-buffer_mingw13_x64_buffer.mcrit) | [x86 PE](data/Gh0st/x86/smda/Gh0st_2008-f434b0d-buffer_mingw13_x86_buffer.7z) / [x64 PE](data/Gh0st/x64/smda/Gh0st_2008-f434b0d-buffer_mingw13_x64_buffer.7z) |
+| Gh0st | 2008-f434b0d-buffer | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Gh0st/x64/mcrit/Gh0st_2008-f434b0d-buffer_msvc143_x64_buffer.mcrit) | [x64 PE](data/Gh0st/x64/smda/Gh0st_2008-f434b0d-buffer_msvc143_x64_buffer.7z) |
+| Gh0st | 2008-f434b0d-managers | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Gh0st/x86/mcrit/Gh0st_2008-f434b0d-managers_msvc143_x86_manager-modules.mcrit) | [x86 PE](data/Gh0st/x86/smda/Gh0st_2008-f434b0d-managers_msvc143_x86_manager-modules.7z) |
+<!-- /generated -->
+
+
+### TinyNuke
+
+<!-- generated: TinyNuke -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| TinyNuke | 2017-c1e04c3-modules | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TinyNuke/x86/mcrit/TinyNuke_2017-c1e04c3-modules_msvc143_x86_hvnc-socks-modules.mcrit) / [x64 PE](data/TinyNuke/x64/mcrit/TinyNuke_2017-c1e04c3-modules_msvc143_x64_hvnc-socks-modules.mcrit) | [x86 PE](data/TinyNuke/x86/smda/TinyNuke_2017-c1e04c3-modules_msvc143_x86_hvnc-socks-modules.7z) / [x64 PE](data/TinyNuke/x64/smda/TinyNuke_2017-c1e04c3-modules_msvc143_x64_hvnc-socks-modules.7z) |
+<!-- /generated -->
+
+
+### r77
+
+<!-- generated: r77 -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| r77 | 1.8.2-collections | MinGW-w64 GCC 13 | [x86 PE](data/r77/x86/mcrit/r77_1.8.2-collections_mingw13_x86_collections.mcrit) / [x64 PE](data/r77/x64/mcrit/r77_1.8.2-collections_mingw13_x64_collections.mcrit) | [x86 PE](data/r77/x86/smda/r77_1.8.2-collections_mingw13_x86_collections.7z) / [x64 PE](data/r77/x64/smda/r77_1.8.2-collections_mingw13_x64_collections.7z) |
+| r77 | 1.8.2-modules | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/r77/x86/mcrit/r77_1.8.2-modules_msvc143_x86_native-modules.mcrit) / [x64 PE](data/r77/x64/mcrit/r77_1.8.2-modules_msvc143_x64_native-modules.mcrit) | [x86 PE](data/r77/x86/smda/r77_1.8.2-modules_msvc143_x86_native-modules.7z) / [x64 PE](data/r77/x64/smda/r77_1.8.2-modules_msvc143_x64_native-modules.7z) |
+<!-- /generated -->
+
+
+### mimikatz
+
+<!-- generated: mimikatz -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| mimikatz | 2.2.0-45c42c7-strings | MinGW-w64 GCC 13 | [x86 PE](data/mimikatz/x86/mcrit/mimikatz_2.2.0-45c42c7-strings_mingw13_x86_string-output.mcrit) / [x64 PE](data/mimikatz/x64/mcrit/mimikatz_2.2.0-45c42c7-strings_mingw13_x64_string-output.mcrit) | [x86 PE](data/mimikatz/x86/smda/mimikatz_2.2.0-45c42c7-strings_mingw13_x86_string-output.7z) / [x64 PE](data/mimikatz/x64/smda/mimikatz_2.2.0-45c42c7-strings_mingw13_x64_string-output.7z) |
+| mimikatz | 2.2.0-45c42c7-modules | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/mimikatz/x86/mcrit/mimikatz_2.2.0-45c42c7-modules_msvc143_x86_kuhl-kull-modules.mcrit) / [x64 PE](data/mimikatz/x64/mcrit/mimikatz_2.2.0-45c42c7-modules_msvc143_x64_kuhl-kull-modules.mcrit) | [x86 PE](data/mimikatz/x86/smda/mimikatz_2.2.0-45c42c7-modules_msvc143_x86_kuhl-kull-modules.7z) / [x64 PE](data/mimikatz/x64/smda/mimikatz_2.2.0-45c42c7-modules_msvc143_x64_kuhl-kull-modules.7z) |
+<!-- /generated -->

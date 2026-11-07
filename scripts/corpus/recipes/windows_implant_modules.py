@@ -18,7 +18,44 @@ x64 19 + 32 = 51. All nineteen kept functions have project symbols; no
 named runtime glue survives. Both have eighteen unique >=10-instruction
 PicHashes; their intersection is zero. Both architectures add coverage.
 
-Counts, overlap and glue survivors for the other families require the probe.
+Measured r77 native counts: x86 128 kept + 28 removed = 156 image
+functions; x64 127 + 33 = 160. Their >=10-instruction sets have 117 and
+121 hashes, with intersection one: 9401389992967488103, carried by the
+outlined FileInformationGetNextEntryOffset and FileInformationSetNextEntryOffset
+blocks on both architectures. All four cross-compiler comparisons against
+the MinGW collections images have intersection zero. No named runtime glue
+survives in either MSVC image.
+
+Measured mimikatz counts: x86 1340 kept + 43 removed = 1383; x64
+1314 + 58 = 1372. The >=10-instruction unique sets have 1074 / 1060
+hashes, with intersection zero. No named runtime glue survives. The
+_RtlDecryptMemory symbols are the selected rapid7 fork's own wrapper,
+not misattributed CRT code.
+
+Gh0st MSVC x86 managers: 189 kept + 67 removed = 256; 123 unique
+>=10-instruction hashes. Its intersections with each MinGW CBuffer image
+are zero. Thirty-five one-instruction import thunks remain; the CRT one
+is strstr, PicHash 6102989692441836808. The other 34 are OS imports,
+all PicHash 1253497258561142223: _closesocket@4, _connect@12, _htons@4,
+_ntohs@4, _recv@16, _select@20, _send@16, _setsockopt@20, _socket@12,
+_gethostbyname@4, _WSAStartup@8, _WSACleanup@0, _WSAIoctl@36,
+_waveInGetNumDevs@0, _waveOutGetNumDevs@0, _waveOutOpen@24,
+_waveOutClose@4, _waveOutPrepareHeader@12, _waveOutUnprepareHeader@12,
+_waveOutWrite@12, _waveOutReset@4, _waveInOpen@24, _waveInClose@4,
+_waveInPrepareHeader@12, _waveInUnprepareHeader@12, _waveInAddBuffer@12,
+_waveInStart@4, _waveInStop@4, _waveInReset@4, _ImmGetContext@4,
+_ImmReleaseContext@8, _ImmGetCompositionStringA@16,
+_WTSQuerySessionInformationA@20, _WTSFreeMemory@4.
+
+Gh0st MSVC x64 CBuffer: 16 kept + 4 removed = 20 image functions;
+12 unique >=10-instruction hashes. It shares none with the other three
+Gh0st images above the instruction floor. The only named runtime residue
+is the one-instruction strstr import thunk, PicHash 6102989692441836808.
+
+The five excluded Gh0st TUs remain expected-failure compiler probes, and
+are not linked. Unexpected failure of any included TU fails the recipe;
+an excluded TU starting to compile also fails it so coverage can be reviewed.
+Keeping the same compiler-PDB history reproduces the probe's linked image.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -110,8 +147,9 @@ RECIPES = {
         build_flags=_FLAGS + ' /D_WIN32_WINNT=0x0601 '
                     '/Zc:strictStrings- /Zc:forScope-; ' + _LINK,
         notes='Pinned public mirror. Manager and socket translation units '
-              'only; the DLL entry point, installer, kernel driver and '
-              'vendored precompiled zlib library are excluded. The native '
+              'only; the DLL entry point, standalone installer project, kernel driver and '
+              'vendored precompiled zlib library are excluded. The '
+              'common/install.cpp manager helper is included. The native '
               'server project declares UseOfMfc=false. Five incompatible '
               'translation units are excluded explicitly: FileManager, '
               'KernelManager, ScreenManager, ScreenSpy and VideoManager. '
