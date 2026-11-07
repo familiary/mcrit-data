@@ -3,10 +3,10 @@
     "architecture": "x64",
     "build_flags": "Win10Release|x64, the Win10 one of the project's four Release configurations; it defines _WIN10_, which selects NativeStructs10.h and with it the Windows 10 EPROCESS, MMVAD and handle-table layouts. All eight of the project's configurations are x64 and it carries no Win32 or ARM configuration at all. ConfigurationType Driver with DriverType WDM on the WindowsKernelModeDriver10.0 toolset, so ntoskrnl.lib, hal.lib and the /GS support library come from the WDK's property sheets - the project declares no AdditionalDependencies in any configuration. Beyond CompileAs C and the _WIN10_ define the project states no ClCompile or Link settings, so optimization, warning level, runtime library and debug format are the toolset's defaults rather than anything upstream chose. This recipe forces /Zi (DebugInformationFormat ProgramDatabase) with separate compiler and linker PDBs, a full /DEBUG, /OPT:NOREF /OPT:NOICF, no whole-program optimization at either end (/p:WholeProgramOptimization=false plus LinkTimeCodeGeneration Default), /Brepro, /INCREMENTAL:NO, and TreatWarningAsError false; TargetVersion is pinned to Windows10 because the configuration leaves the element empty, signing is turned off with SignMode=Off and driver-package validation with SkipPackageVerification=true, neither of which reaches the compiler or the linker - the driver is linked and disassembled, never packaged, signed, installed or loaded. RuntimeLibrary is left alone: a kernel driver has no ucrt to move out of the image",
     "built_artifact": "out/BlackBoneDrv10.sys",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35228 for x64",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "BlackBoneDrv10.sys",
     "family": "BlackBoneDrv",
-    "generated": "2026-09-23",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "MIT (Copyright (c) 2015 DarthTon) for the project; two pieces of the driver are not covered by it and both are in this artefact. src/BlackBoneDrv/ldrreloc.c is Windows Research Kernel source, \"Copyright (c) Microsoft Corporation. All rights reserved.\", usable only under the Windows Research Kernel Source Code License agreement, which it points at as \"License.txt\" - a file that does not exist anywhere in the repository; it contributes LdrRelocateImage, LdrRelocateImageWithBias, LdrProcessRelocationBlock and LdrProcessRelocationBlockLongLong. src/BlackBoneDrv/VadHelpers.c carries no copyright header but is the same kernel's Mm AVL code verbatim, comment blocks and COUNT_BALANCE_MAX macro included, contributing MiPromoteNode, MiRebalanceNode, MiRemoveNode and MiFindNodeOrParent. src/BlackBoneDrv/apiset.h is Microsoft's too (\"Copyright (c) 2008 Microsoft Corporation\") but declares structures only and contributes no code",
     "mcrit": "data/BlackBoneDrv/x64/mcrit/BlackBoneDrv_2023-07-17_msvc143_x64_BlackBoneDrv10.sys.mcrit",
@@ -35,7 +35,7 @@
       "_guard_xfg_dispatch_icall_nop",
       "strcmp"
     ],
-    "sha256": "380c9474adeefaaaa9b8eab71a4eddc7d082304609e60a911cafa198dea3bfa7",
+    "sha256": "77549b49581c2e020f8a0ad7a93650def1bd2e726132b13873a0271f3b155ead",
     "smda": "data/BlackBoneDrv/x64/smda/BlackBoneDrv_2023-07-17_msvc143_x64_BlackBoneDrv10.sys.7z",
     "smda_version": "4.8.0",
     "source": {
