@@ -17,13 +17,13 @@ The WDK makes linker warnings errors. The only one the link raised, LNK4266
 name with /IGNORE:4266, and TreatLinkerWarningAsErrors is false. It concerns
 the load-config directory, not the function bodies.
 
-CI measurement, SMDA 4.8.0: 356 kept + 23 removed = 379 image functions; 211
-have ten or more instructions, with 197 unique PicHashes among them. Every kept
-function is named. Runtime survivors are __castguard_check_failure_os_handled
-0x1dae47b7c1717474, __castguard_slow_path_check_os_handled 0xc3c57fc601efa17a,
-__castguard_check_failure_os_handled_wrapper 0x70dc51e78d5b7c53,
-__cpu_features_init 0xb5acd6a5667fa85c (the same PicHash as WinPmemDrv's copy),
-memcpy 0x0a20298a4cda344a and memset 0x861531a0852ad3b9. __security_init_cookie
+CI measurement, SMDA 4.8.0: 346 kept + 33 removed = 379 image functions; 203
+have ten or more instructions, with 189 unique PicHashes among them. Every kept
+function is named. The kernel-mode glue baseline removes the CRT wrappers the
+earlier measurement kept (__castguard_check_failure_os_handled,
+__castguard_slow_path_check_os_handled,
+__castguard_check_failure_os_handled_wrapper, __cpu_features_init, memcpy and
+memset), so none of them survives as a kept function. __security_init_cookie
 and __GSHandlerCheckCommon are absent: BufferSecurityCheck is false, so no /GS
 cookie or handler is emitted.
 
