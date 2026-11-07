@@ -1100,13 +1100,14 @@ Built with `scripts/build_corpus.py`; source digests, producer details and link 
 
 ### ntpd<a id='ntpd'></a>
 
-The legitimate ntpd daemon from early 4.2.2 and stable 4.2.8p18. Issue #57 identifies no upstream version; these are era references, not claims about the Turla host version. Matches also identify clean installations and are not indicators of compromise. Only ntpd and support objects reached by its link are collected. Default supported reference clocks are retained; OpenSSL and SNMP integration are disabled, while system libc and libm remain dynamic.
+The legitimate ntpd daemon from 4.2.0, early 4.2.2 and stable 4.2.8p18. The 4.2.0 image is built with GCC 13.3.0 and a recipe-applied build-tree patch that deletes four incomplete-array extern declarations in `include/ntp_stdlib.h` and `include/ntpd.h`; it is NOT byte-identical to a build of unmodified upstream. Issue #57 identifies no upstream version; these are era references, not claims about the Turla host version. Matches also identify clean installations and are not indicators of compromise. Only ntpd and support objects reached by its link are collected. Default supported reference clocks are retained; OpenSSL and SNMP integration are disabled, while system libc and libm remain dynamic.
 
 Built with `scripts/build_corpus.py`; source digests, producer details and link flags are in `data/ntpd/provenance.json`.
 
 <!-- generated: ntpd -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| ntpd | 4.2.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/ntpd/x86/mcrit/ntpd_4.2.0_gcc13_x86_ntpd.mcrit) / [x64 ELF](data/ntpd/x64/mcrit/ntpd_4.2.0_gcc13_x64_ntpd.mcrit) | [x86 ELF](data/ntpd/x86/smda/ntpd_4.2.0_gcc13_x86_ntpd.7z) / [x64 ELF](data/ntpd/x64/smda/ntpd_4.2.0_gcc13_x64_ntpd.7z) |
 | ntpd | 4.2.2 | GCC 14 (Linux, glibc) | [x86 ELF](data/ntpd/x86/mcrit/ntpd_4.2.2_gcc14_x86_ntpd.mcrit) / [x64 ELF](data/ntpd/x64/mcrit/ntpd_4.2.2_gcc14_x64_ntpd.mcrit) | [x86 ELF](data/ntpd/x86/smda/ntpd_4.2.2_gcc14_x86_ntpd.7z) / [x64 ELF](data/ntpd/x64/smda/ntpd_4.2.2_gcc14_x64_ntpd.7z) |
 | ntpd | 4.2.8p18 | GCC 14 (Linux, glibc) | [x86 ELF](data/ntpd/x86/mcrit/ntpd_4.2.8p18_gcc14_x86_ntpd.mcrit) / [x64 ELF](data/ntpd/x64/mcrit/ntpd_4.2.8p18_gcc14_x64_ntpd.mcrit) | [x86 ELF](data/ntpd/x86/smda/ntpd_4.2.8p18_gcc14_x86_ntpd.7z) / [x64 ELF](data/ntpd/x64/smda/ntpd_4.2.8p18_gcc14_x64_ntpd.7z) |
 <!-- /generated -->
