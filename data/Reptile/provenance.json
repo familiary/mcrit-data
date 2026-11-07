@@ -1,38 +1,4 @@
 {
-  "Reptile_2026-08-17_gcc13_x64_cmd": {
-    "architecture": "x64",
-    "build_flags": "upstream's userland/Makefile compile lines, flag for flag: gcc -Iinclude -O3 -fPIC -D_REPTILE_ with shell.c and cmd.c piped through scripts/destringify.pl, DEP_SRC (crypto/aes.c crypto/sha1.c transport/pel.c) linked into shell and listener, -lutil on shell and -lreadline on listener, plus -m32/-m64; the literal `strip` ending each rule is not run. AUTH and HTUA are PINNED to 0x52657074 and 0x696c6521 because scripts/random.sh derives them from /dev/urandom and they are compiled in as immediates, so upstream's own build is not reproducible; -DNAME=\"reptile\" is configs/defconfig's HIDE value unchanged",
-    "built_artifact": "userland/out/cmd",
-    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
-    "component": "cmd",
-    "family": "Reptile",
-    "generated": "2026-11-07",
-    "is_blob": false,
-    "license": "none stated: the tree ships DISCLAIMER.md and no LICENSE file. The vendored userland/crypto/aes.c, userland/crypto/sha1.c and userland/transport/pel.c are Christophe Devine's, credited by upstream's README to creaktive/tsh, and are GPL by their own file headers",
-    "mcrit": "data/Reptile/x64/mcrit/Reptile_2026-08-17_gcc13_x64_cmd.mcrit",
-    "notes": "The userland half only. kernel/ is a .ko and is not built: a relocatable kernel object has no program headers and every section at address 0, so SMDA has no layout to work from and either finds nothing or attaches names to the wrong bodies - see the not-built table, where this is recorded in full. The four binaries here are ordinary dynamically linked PIE executables; upstream's Makefile comments describe shell and cmd as the pair that stays on the victim machine and listener and packet as the attacker's. Counts: shell 32/27, cmd 11/8, listener 56/45, packet 29/17 symbol-carrying functions on x86/x64, with cmd x64 exactly on the eight-function floor, which is the project's own size. AUTH and HTUA are pinned rather than taken from /dev/urandom, the only departure from upstream's build path: both are visibly synthetic (ASCII Rept and ile!) so they are not mistaken for observed values, and the functions comparing against them will not match a real sample's, which carries that actor's random pair. Everything else is upstream's, with the rest of the configuration taken unchanged from configs/defconfig. userland/crypto/aes.c, userland/crypto/sha1.c and userland/transport/pel.c are Christophe Devine's Tiny SHell code, credited as such by upstream's README, and are in DEP_SRC so they are linked into shell and listener but not cmd or packet; the TinySHell family here is built from that same upstream, so those bodies are genuinely in both families - real code sharing rather than misattribution, measured and recorded rather than filtered, as with data/Hidden and Zydis.",
-    "num_functions": 27,
-    "removed_runtime_functions": [
-      "__do_global_dtors_aux",
-      "_fini",
-      "_init",
-      "_start",
-      "deregister_tm_clones",
-      "frame_dummy",
-      "register_tm_clones"
-    ],
-    "sha256": "2b5dfff7c82029ce6630282d90cabdb594ffc2b1cf3b020e95637e450751b3a9",
-    "smda": "data/Reptile/x64/smda/Reptile_2026-08-17_gcc13_x64_cmd.7z",
-    "smda_version": "5.0.2",
-    "source": {
-      "commit": "30651814619cb56d67ca6681cb937278b15b11ea",
-      "git_ref": "30651814619cb56d67ca6681cb937278b15b11ea",
-      "git_url": "https://github.com/f0rb1dd3n/Reptile.git"
-    },
-    "toolchain": "gcc13_x64",
-    "upstream": "https://github.com/f0rb1dd3n/Reptile",
-    "version": "2026-08-17"
-  },
   "Reptile_2026-08-17_gcc13_x64_listener": {
     "architecture": "x64",
     "build_flags": "upstream's userland/Makefile compile lines, flag for flag: gcc -Iinclude -O3 -fPIC -D_REPTILE_ with shell.c and cmd.c piped through scripts/destringify.pl, DEP_SRC (crypto/aes.c crypto/sha1.c transport/pel.c) linked into shell and listener, -lutil on shell and -lreadline on listener, plus -m32/-m64; the literal `strip` ending each rule is not run. AUTH and HTUA are PINNED to 0x52657074 and 0x696c6521 because scripts/random.sh derives them from /dev/urandom and they are compiled in as immediates, so upstream's own build is not reproducible; -DNAME=\"reptile\" is configs/defconfig's HIDE value unchanged",
@@ -130,36 +96,6 @@
       "git_url": "https://github.com/f0rb1dd3n/Reptile.git"
     },
     "toolchain": "gcc13_x64",
-    "upstream": "https://github.com/f0rb1dd3n/Reptile",
-    "version": "2026-08-17"
-  },
-  "Reptile_2026-08-17_gcc13_x86_cmd": {
-    "architecture": "x86",
-    "build_flags": "upstream's userland/Makefile compile lines, flag for flag: gcc -Iinclude -O3 -fPIC -D_REPTILE_ with shell.c and cmd.c piped through scripts/destringify.pl, DEP_SRC (crypto/aes.c crypto/sha1.c transport/pel.c) linked into shell and listener, -lutil on shell and -lreadline on listener, plus -m32/-m64; the literal `strip` ending each rule is not run. AUTH and HTUA are PINNED to 0x52657074 and 0x696c6521 because scripts/random.sh derives them from /dev/urandom and they are compiled in as immediates, so upstream's own build is not reproducible; -DNAME=\"reptile\" is configs/defconfig's HIDE value unchanged",
-    "built_artifact": "userland/out/cmd",
-    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
-    "component": "cmd",
-    "family": "Reptile",
-    "generated": "2026-11-07",
-    "is_blob": false,
-    "license": "none stated: the tree ships DISCLAIMER.md and no LICENSE file. The vendored userland/crypto/aes.c, userland/crypto/sha1.c and userland/transport/pel.c are Christophe Devine's, credited by upstream's README to creaktive/tsh, and are GPL by their own file headers",
-    "mcrit": "data/Reptile/x86/mcrit/Reptile_2026-08-17_gcc13_x86_cmd.mcrit",
-    "notes": "The userland half only. kernel/ is a .ko and is not built: a relocatable kernel object has no program headers and every section at address 0, so SMDA has no layout to work from and either finds nothing or attaches names to the wrong bodies - see the not-built table, where this is recorded in full. The four binaries here are ordinary dynamically linked PIE executables; upstream's Makefile comments describe shell and cmd as the pair that stays on the victim machine and listener and packet as the attacker's. Counts: shell 32/27, cmd 11/8, listener 56/45, packet 29/17 symbol-carrying functions on x86/x64, with cmd x64 exactly on the eight-function floor, which is the project's own size. AUTH and HTUA are pinned rather than taken from /dev/urandom, the only departure from upstream's build path: both are visibly synthetic (ASCII Rept and ile!) so they are not mistaken for observed values, and the functions comparing against them will not match a real sample's, which carries that actor's random pair. Everything else is upstream's, with the rest of the configuration taken unchanged from configs/defconfig. userland/crypto/aes.c, userland/crypto/sha1.c and userland/transport/pel.c are Christophe Devine's Tiny SHell code, credited as such by upstream's README, and are in DEP_SRC so they are linked into shell and listener but not cmd or packet; the TinySHell family here is built from that same upstream, so those bodies are genuinely in both families - real code sharing rather than misattribution, measured and recorded rather than filtered, as with data/Hidden and Zydis.",
-    "num_functions": 37,
-    "removed_runtime_functions": [
-      "__x86.get_pc_thunk.bx",
-      "__x86.get_pc_thunk.dx",
-      "frame_dummy"
-    ],
-    "sha256": "168f10998be6d76c645ded63af408974cbdda85561481a71734d590d7db94cb5",
-    "smda": "data/Reptile/x86/smda/Reptile_2026-08-17_gcc13_x86_cmd.7z",
-    "smda_version": "5.0.2",
-    "source": {
-      "commit": "30651814619cb56d67ca6681cb937278b15b11ea",
-      "git_ref": "30651814619cb56d67ca6681cb937278b15b11ea",
-      "git_url": "https://github.com/f0rb1dd3n/Reptile.git"
-    },
-    "toolchain": "gcc13_x86",
     "upstream": "https://github.com/f0rb1dd3n/Reptile",
     "version": "2026-08-17"
   },

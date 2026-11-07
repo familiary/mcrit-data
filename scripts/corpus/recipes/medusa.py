@@ -141,12 +141,16 @@ RECIPES = {
                BuildStep(_RUN_GEN), BuildStep(_SO)],
         artifacts=[Artifact(path="build/rkld.so", component="rkld.so")],
         toolchains=["linux_x86", "linux_x64"],
-        # Same situation as Azazel, and measured the same way: nothing is
-        # stripped and every one of this project's functions carries its name;
-        # what dilutes the ratio is the unnamed .plt residue that comes of
-        # keeping the hooks exported, which an interposition library has to
-        # do. See the docstring.
-        min_named_ratio=0.45,
+        # Measured, not guessed. The symbol gate takes its ratio over
+        # functions of three instructions or more and BEFORE runtime glue is
+        # dropped, so this is the number the gate itself reports: x64 scores
+        # 71 of 146 = 0.486, x86 passes the 0.5 default outright. 0.48 sits
+        # just under the x64 figure so that a future build which loses more
+        # symbol coverage still fails. Nothing is stripped and every one of
+        # this project's functions carries its name; what dilutes the ratio
+        # is the unnamed .plt residue that comes of keeping the hooks
+        # exported, which an interposition library has to do.
+        min_named_ratio=0.48,
         build_flags="gcc -O0 (upstream's Makefile sets no -O at all) -fPIC "
                     "-shared -ldl -D_GNU_SOURCE over src/rkld.c and "
                     "src/rknet.c, which is upstream's own compile line; "

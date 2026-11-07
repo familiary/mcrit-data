@@ -66,13 +66,23 @@ Read this family's cross-family PicHash census with that in mind.
 **Measured.** Symbol-carrying functions in the built binaries:
 
     shell     x86 32    x64 27
-    cmd       x86 11    x64  8
     listener  x86 56    x64 45
     packet    x86 29    x64 17
 
-`cmd` x64 sits exactly on the eight-function floor. That is the project's
-own count rather than a build accident - it is a small command shim - and
-`min_functions` is left alone because the floor is met.
+**`cmd` is built by upstream and is deliberately not collected.** It passes
+the eight-function floor and should not: SMDA reports 27 functions for the
+x64 binary, of which **one** is the project's. That one is `main`, at 470
+instructions, and the other 26 are two- and three-instruction `.plt` stubs;
+`nm` finds eight symbols in the image and seven are startup glue (`_init`,
+`_fini`, `_start`, `frame_dummy`, the `tm_clones` pair,
+`__do_global_dtors_aux`) which the measured baseline correctly removes.
+`cmd.c` is a single-`main` shim, so clearing the floor at 27 is clearing it
+on import stubs rather than on project code - which is the trap
+`scripts/corpus/README.md` records for 4g3nt47/Obfuscator, where "clearing a
+floor on misattributed runtime is what made it unbuildable, not failing
+one". One 470-instruction body is not worth an artefact that misrepresents
+its own size, so the binary is built (upstream's rule is left intact) and
+left uncollected.
 
 **Licence: none.** The repository ships `DISCLAIMER.md` and no `LICENSE`
 file. Recorded as the fact it is, which is this corpus's rule.
@@ -122,23 +132,25 @@ RECIPES = {
                       git_ref="30651814619cb56d67ca6681cb937278b15b11ea"),
         build=[BuildStep(_MKDIR, cwd="userland"),
                BuildStep(_SHELL, cwd="userland"),
-               BuildStep(_CMD, cwd="userland"),
                BuildStep(_LISTENER, cwd="userland"),
                BuildStep(_PACKET, cwd="userland")],
         artifacts=[
             Artifact(path="userland/out/shell", component="shell"),
-            Artifact(path="userland/out/cmd", component="cmd"),
             Artifact(path="userland/out/listener", component="listener"),
             Artifact(path="userland/out/packet", component="packet"),
         ],
         toolchains=["linux_x86", "linux_x64"],
-        # Same measurement as TinySHell and for the same cause: these are
-        # small dynamically linked executables that call libc a lot, and an
-        # ELF .plt entry carries no symbol for baseline.py to match the way a
-        # PE import thunk does. Nothing is stripped - the literal `strip` in
-        # upstream's rules is the reason the compile lines are issued
-        # directly - and every one of the projects' own functions is named.
-        min_named_ratio=0.3,
+        # Measured, not guessed. The gate takes its ratio over functions of
+        # three instructions or more and BEFORE runtime glue is dropped, so
+        # these are the gate's own numbers: on x64 shell scores 25 of 68 =
+        # 0.368, listener 43 of 99 = 0.434 and packet 15 of 38 = 0.395, while
+        # every x86 artefact passes the 0.5 default. 0.36 sits just under the
+        # lowest of those. Nothing is stripped - the literal `strip` in
+        # upstream's rules is why the compile lines are issued directly - and
+        # every one of the project's own functions is named; the shortfall is
+        # the libc .plt, which carries no symbol for baseline.py to match the
+        # way a PE import thunk does.
+        min_named_ratio=0.36,
         build_flags="upstream's userland/Makefile compile lines, flag for "
                     "flag: gcc -Iinclude -O3 -fPIC -D_REPTILE_ with "
                     "shell.c and cmd.c piped through "
