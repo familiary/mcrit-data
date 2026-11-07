@@ -93,6 +93,10 @@ String obfuscation
 * [obfstr](#obfstr)
 * [Obfuscator4g3nt47](#obfuscator4g3nt47)
 
+Remote access
+* [UltraVNC](#ultravnc)
+* [TightVNC](#tightvnc)
+
 ## Compilers
 
 Reference code extracted from all files containing precompiled code found in installations for various compiler toolchains.
@@ -1039,4 +1043,34 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
+<!-- /generated -->
+
+## Remote access
+
+VNC servers and viewers that malware families carry or customise. Both are Windows Visual Studio projects with in-tree or vcpkg dependencies, built on a windows-2022 runner by `.github/workflows/windows-reference-data.yml`; there is no MinGW build of either (see `scripts/corpus/README.md`). Their zlib, libjpeg and compression-library code is statically linked into the executables by upstream's own project files and is therefore present under these families as well as under `libzlib`, `liblzma` and `libsodium`. The zlib functions are shared hashes in the deep check (59 PicHashes, see `scripts/corpus/recipes/ultravnc_msvc.py`).
+
+### UltraVNC<a id='ultravnc'></a>
+
+UltraVNC is the VNC implementation FOSSIL (ACM TOPS 2018) matched in Zeus (86 functions) and Citadel (125). FOSSIL's reference binary was the viewer, version 1.2.13, so `vncviewer.exe` is the component the evidence points at and `winvnc.exe` is the server. That source state does not exist as a buildable commit; 1.8.2.9 is the newest release that can be fetched and built (the recipe docstring lists what was tried). Its attribution to UltraVNC rather than TightVNC or RealVNC rests on FOSSIL alone.  
+Generated with `scripts/build_corpus.py`; see `data/UltraVNC/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: UltraVNC -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| UltraVNC | 1.8.2.9 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/UltraVNC/x86/mcrit/UltraVNC_1.8.2.9_msvc143_x86_vncviewer.exe.mcrit) / [x64 PE](data/UltraVNC/x64/mcrit/UltraVNC_1.8.2.9_msvc143_x64_vncviewer.exe.mcrit) | [x86 PE](data/UltraVNC/x86/smda/UltraVNC_1.8.2.9_msvc143_x86_vncviewer.exe.7z) / [x64 PE](data/UltraVNC/x64/smda/UltraVNC_1.8.2.9_msvc143_x64_vncviewer.exe.7z) |
+| UltraVNC | 1.8.2.9 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/UltraVNC/x86/mcrit/UltraVNC_1.8.2.9_msvc143_x86_winvnc.exe.mcrit) / [x64 PE](data/UltraVNC/x64/mcrit/UltraVNC_1.8.2.9_msvc143_x64_winvnc.exe.mcrit) | [x86 PE](data/UltraVNC/x86/smda/UltraVNC_1.8.2.9_msvc143_x86_winvnc.exe.7z) / [x64 PE](data/UltraVNC/x64/smda/UltraVNC_1.8.2.9_msvc143_x64_winvnc.exe.7z) |
+<!-- /generated -->
+
+### TightVNC<a id='tightvnc'></a>
+
+The only evidence for TightVNC is an AhnLab ASEC report that Kimsuky customises `tvnserver` (service installation and connection direction); it names no version, function or string. Two 2.8 releases are built, 2.8.85 and 2.8.90, with the viewer beside the server, so that a comparison with UltraVNC can separate the two code bases.  
+Generated with `scripts/build_corpus.py`; see `data/TightVNC/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: TightVNC -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| TightVNC | 2.8.85 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TightVNC/x86/mcrit/TightVNC_2.8.85_msvc143_x86_tvnserver.exe.mcrit) / [x64 PE](data/TightVNC/x64/mcrit/TightVNC_2.8.85_msvc143_x64_tvnserver.exe.mcrit) | [x86 PE](data/TightVNC/x86/smda/TightVNC_2.8.85_msvc143_x86_tvnserver.exe.7z) / [x64 PE](data/TightVNC/x64/smda/TightVNC_2.8.85_msvc143_x64_tvnserver.exe.7z) |
+| TightVNC | 2.8.85 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TightVNC/x86/mcrit/TightVNC_2.8.85_msvc143_x86_tvnviewer.exe.mcrit) / [x64 PE](data/TightVNC/x64/mcrit/TightVNC_2.8.85_msvc143_x64_tvnviewer.exe.mcrit) | [x86 PE](data/TightVNC/x86/smda/TightVNC_2.8.85_msvc143_x86_tvnviewer.exe.7z) / [x64 PE](data/TightVNC/x64/smda/TightVNC_2.8.85_msvc143_x64_tvnviewer.exe.7z) |
+| TightVNC | 2.8.90 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TightVNC/x86/mcrit/TightVNC_2.8.90_msvc143_x86_tvnserver.exe.mcrit) / [x64 PE](data/TightVNC/x64/mcrit/TightVNC_2.8.90_msvc143_x64_tvnserver.exe.mcrit) | [x86 PE](data/TightVNC/x86/smda/TightVNC_2.8.90_msvc143_x86_tvnserver.exe.7z) / [x64 PE](data/TightVNC/x64/smda/TightVNC_2.8.90_msvc143_x64_tvnserver.exe.7z) |
+| TightVNC | 2.8.90 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TightVNC/x86/mcrit/TightVNC_2.8.90_msvc143_x86_tvnviewer.exe.mcrit) / [x64 PE](data/TightVNC/x64/mcrit/TightVNC_2.8.90_msvc143_x64_tvnviewer.exe.mcrit) | [x86 PE](data/TightVNC/x86/smda/TightVNC_2.8.90_msvc143_x86_tvnviewer.exe.7z) / [x64 PE](data/TightVNC/x64/smda/TightVNC_2.8.90_msvc143_x64_tvnviewer.exe.7z) |
 <!-- /generated -->
