@@ -13,7 +13,12 @@ the resulting images are analysis containers, not upstream release binaries.
 Those references and the missing initialization limit their reference value.
 No source file is changed, and no compiled program is executed.
 
-Counts, measured overlap and glue survivors require the Windows probe.
+TinyNuke measured counts: x86 19 kept + 26 removed = 45 image functions;
+x64 19 + 32 = 51. All nineteen kept functions have project symbols; no
+named runtime glue survives. Both have eighteen unique >=10-instruction
+PicHashes; their intersection is zero. Both architectures add coverage.
+
+Counts, overlap and glue survivors for the other families require the probe.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -24,10 +29,11 @@ _LINK = ('/DLL /NOENTRY /FORCE:UNRESOLVED /DEBUG /Brepro '
          '/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF')
 
 
-def _analysis_steps(selection, includes, defines):
+def _analysis_steps(selection, includes, defines, path_names=False, excluded=()):
     # Numbered object files preserve TUs that share a basename.
     prepare = (
-        "from pathlib import Path; import json; "
+        "from pathlib import Path; import json,shutil; "
+        "shutil.rmtree('corpus_obj',ignore_errors=True); "
         "Path('corpus_obj').mkdir(exist_ok=True); "
         "files=" + selection + "; "
         "assert files, 'no module source files selected'; "
@@ -35,12 +41,20 @@ def _analysis_steps(selection, includes, defines):
         "Path('corpus_sources.json').write_text(json.dumps([str(p) for p in files])); "
         "print('Module sources:',len(files))"
     )
+    object_name = ("__import__('hashlib').sha1(p.replace(chr(92),'/').encode()).hexdigest()"
+                   if path_names else "str(i)")
     compile_sources = (
         "from pathlib import Path; import json,subprocess; "
         "files=json.loads(Path('corpus_sources.json').read_text()); "
-        "[subprocess.run(['cl']+'" + _FLAGS + ' ' + includes + ' ' + defines +
-        "'.split()+['/Focorpus_obj/'+str(i)+'.obj','/Fdcorpus_compile.pdb',p],"
-        "check=True) for i,p in enumerate(files)]"
+        "excluded=" + repr(excluded) + "; "
+        "results=[(p,subprocess.run(['cl']+'" + _FLAGS + ' ' + includes + ' ' + defines +
+        "'.split()+['/Focorpus_obj/'+" + object_name +
+        "+'.obj','/Fdcorpus_compile.pdb',p],"
+        "check=p.replace(chr(92),'/') not in excluded).returncode) "
+        "for i,p in enumerate(files)]; "
+        "assert all(c!=0 for p,c in results if p.replace(chr(92),'/') in excluded), "
+        "'previously excluded source compiled; revisit coverage'; "
+        "print('SKIPPED_SOURCE_FILES:'+json.dumps([p for p,c in results if c]))"
     )
     link = (
         "from pathlib import Path; import subprocess; "
@@ -57,6 +71,22 @@ def _analysis_steps(selection, includes, defines):
 
 
 RECIPES = {
+    'gh0st_buffer_f434b0d_msvc': Recipe(
+        family='Gh0st', version='2008-f434b0d-buffer',
+        upstream='https://github.com/sincoder/gh0st',
+        license='No licence file in the selected mirror',
+        source=Source(git_url='https://github.com/sincoder/gh0st.git',
+                      git_ref='f434b0df9d08540c8d81d82892def50198aa8849'),
+        build=_analysis_steps("[Path('Server/svchost/common/Buffer.cpp')]",
+                              '/IServer/svchost/common', ''),
+        artifacts=[Artifact(path='corpus.dll', component='buffer', pdb='corpus.pdb')],
+        toolchains=['msvc_x64'], requires=['cl', 'link', 'python'],
+        build_flags=_FLAGS + '; ' + _LINK,
+        notes='Only the reusable CBuffer translation unit. Its x86 MSVC '
+              'functions are already in the manager image; this adds x64 '
+              'MSVC coverage beside the MinGW references. No entry point, '
+              'protocol handler, installer, driver or precompiled zlib. '
+              'References remain unresolved in this analysis container.'),
     'gh0st_managers_f434b0d_msvc': Recipe(
         family='Gh0st', version='2008-f434b0d-managers',
         upstream='https://github.com/sincoder/gh0st',
@@ -66,15 +96,27 @@ RECIPES = {
         build=_analysis_steps(
             "sorted(Path('Server/svchost/common').glob('*.cpp'))+"
             "[Path('Server/svchost/ClientSocket.cpp'),Path('common/Audio.cpp')]",
-            '/I. /IServer/svchost /Icommon', '/D_WIN32_WINNT=0x0601'),
+            '/I. /IServer/svchost /Icommon',
+            '/D_WIN32_WINNT=0x0601 /Zc:strictStrings- /Zc:forScope-',
+            path_names=True,
+            excluded=('Server/svchost/common/FileManager.cpp',
+                      'Server/svchost/common/KernelManager.cpp',
+                      'Server/svchost/common/ScreenManager.cpp',
+                      'Server/svchost/common/ScreenSpy.cpp',
+                      'Server/svchost/common/VideoManager.cpp')),
         artifacts=[Artifact(path='corpus.dll', component='manager-modules',
                             pdb='corpus.pdb')],
         toolchains=['msvc_x86'], requires=['cl', 'link', 'python'],
-        build_flags=_FLAGS + ' /D_WIN32_WINNT=0x0601; ' + _LINK,
+        build_flags=_FLAGS + ' /D_WIN32_WINNT=0x0601 '
+                    '/Zc:strictStrings- /Zc:forScope-; ' + _LINK,
         notes='Pinned public mirror. Manager and socket translation units '
               'only; the DLL entry point, installer, kernel driver and '
               'vendored precompiled zlib library are excluded. The native '
-              'server project declares UseOfMfc=false. References to excluded '
+              'server project declares UseOfMfc=false. Five incompatible '
+              'translation units are excluded explicitly: FileManager, '
+              'KernelManager, ScreenManager, ScreenSpy and VideoManager. '
+              'Their exact errors are recorded in the corpus README. '
+              'References to excluded '
               'code remain unresolved in this analysis image. The published '
               'project is Win32-only; no x64 build is claimed.'),
     'r77_modules_1.8.2_msvc': Recipe(
@@ -84,7 +126,8 @@ RECIPES = {
                       git_ref='cea145c1518784d95df8d7fe1808952b12e5cdb4'),
         build=_analysis_steps(
             "sorted(p for root in ['r77','r77api'] for p in Path(root).glob('*.c'))",
-            '/Ir77 /Ir77api', '/DUNICODE /D_UNICODE'),
+            '/Ir77 /Ir77api /IReflectiveDllMain', '/DUNICODE /D_UNICODE',
+            path_names=True),
         artifacts=[Artifact(path='corpus.dll', component='native-modules',
                             pdb='corpus.pdb')],
         toolchains=['msvc_x86', 'msvc_x64'], requires=['cl', 'link', 'python'],
@@ -118,10 +161,14 @@ RECIPES = {
         source=Source(git_url='https://github.com/rapid7/mimikatz.git',
                       git_ref='45c42c710fc3a9d7acdcd1f7acf966cc4ce07a49'),
         build=_analysis_steps(
-            "sorted(p for root in ['mimikatz/modules','modules'] "
-            "for p in Path(root).rglob('*.c') "
-            "if p.name.startswith(('kuhl_m_','kull_m_')))",
-            '/Iinc /Imimikatz /Imodules', '/DUNICODE /D_UNICODE'),
+            "[Path('mimikatz')/e.attrib['Include'].replace(chr(92),'/') "
+            "for e in __import__('xml.etree.ElementTree',fromlist=['ElementTree'])"
+            ".parse('mimikatz/mimikatz.vcxproj').iter() "
+            "if e.tag.endswith('ClCompile') and 'Include' in e.attrib "
+            "and Path(e.attrib['Include'].replace(chr(92),'/')).name"
+            ".startswith(('kuhl_m_','kull_m_'))]",
+            '/Iinc /Imimikatz /Imodules', '/DUNICODE /D_UNICODE',
+            path_names=True),
         artifacts=[Artifact(path='corpus.dll', component='kuhl-kull-modules',
                             pdb='corpus.pdb')],
         toolchains=['msvc_x86', 'msvc_x64'], requires=['cl', 'link', 'python'],
