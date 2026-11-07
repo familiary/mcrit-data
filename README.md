@@ -55,6 +55,16 @@ Libraries
 * [jemalloc](#jemalloc)
 * [libstdc++](#libstdcxx)
 
+Windows tools
+* [EDRSandblast](#edrsandblast)
+* [EDRSilencer](#edrsilencer)
+* [al-khaser](#al-khaser)
+* [peinjector](#peinjector)
+* [DiskCryptor](#diskcryptor)
+* [DiskCryptorDrv](#diskcryptordrv)
+* [WinPmem](#winpmem)
+* [WinPmemDrv](#winpmemdrv)
+
 Runtimes
 * [Lua](#lua)
 * [LuaJIT](#luajit)
@@ -1039,4 +1049,90 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
+<!-- /generated -->
+
+### EDRSandblast<a id='edrsandblast'></a>
+
+The reusable core and static API from the 2024-08-30 pin, including its vendored SysWhispers2 code. The MSVC x64 image links both complete archives; the CLI and LSASS example are excluded. All code is linked and disassembled only.
+
+<!-- generated: EDRSandblast -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| EDRSandblast | 2024-08-30 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/EDRSandblast/x64/mcrit/EDRSandblast_2024-08-30_msvc143_x64_EDRSandblast.dll.mcrit) | [x64 PE](data/EDRSandblast/x64/smda/EDRSandblast_2024-08-30_msvc143_x64_EDRSandblast.dll.7z) |
+<!-- /generated -->
+
+### EDRSilencer<a id='edrsilencer'></a>
+
+The two upstream C files from the 2024-11-03 pin, built with MinGW and MSVC for x86 and x64. Within each compiler, x86 and x64 have no shared PicHashes at the 10-instruction floor, and MSVC shares only one with MinGW (PrintHelp, x64). MSVC fails on three duplicate GUID initializations in the current SDK; exact errors are listed in scripts/corpus/README.md. No filters are installed or exercised.
+
+<!-- generated: EDRSilencer -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| EDRSilencer | 2024-11-03 | MinGW-w64 GCC 13 | [x86 PE](data/EDRSilencer/x86/mcrit/EDRSilencer_2024-11-03_mingw13_x86_EDRSilencer.exe.mcrit) / [x64 PE](data/EDRSilencer/x64/mcrit/EDRSilencer_2024-11-03_mingw13_x64_EDRSilencer.exe.mcrit) | [x86 PE](data/EDRSilencer/x86/smda/EDRSilencer_2024-11-03_mingw13_x86_EDRSilencer.exe.7z) / [x64 PE](data/EDRSilencer/x64/smda/EDRSilencer_2024-11-03_mingw13_x64_EDRSilencer.exe.7z) |
+| EDRSilencer | 2024-11-03 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/EDRSilencer/x86/mcrit/EDRSilencer_2024-11-03_msvc143_x86_EDRSilencer.exe.mcrit) / [x64 PE](data/EDRSilencer/x64/mcrit/EDRSilencer_2024-11-03_msvc143_x64_EDRSilencer.exe.mcrit) | [x86 PE](data/EDRSilencer/x86/smda/EDRSilencer_2024-11-03_msvc143_x86_EDRSilencer.exe.7z) / [x64 PE](data/EDRSilencer/x64/smda/EDRSilencer_2024-11-03_msvc143_x64_EDRSilencer.exe.7z) |
+<!-- /generated -->
+
+### al-khaser<a id='al-khaser'></a>
+
+The complete upstream check suite, pinned to 2026-07-01. Release /O2 and /Od measure optimized code and additional independent check bodies; the x64 sets share only three PicHashes at the 10-instruction floor. No checks are executed.
+
+<!-- generated: al-khaser -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| al-khaser | 2026-07-01-O2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/al-khaser/x86/mcrit/al-khaser_2026-07-01-O2_msvc143_x86_al-khaser.exe.mcrit) / [x64 PE](data/al-khaser/x64/mcrit/al-khaser_2026-07-01-O2_msvc143_x64_al-khaser.exe.mcrit) | [x86 PE](data/al-khaser/x86/smda/al-khaser_2026-07-01-O2_msvc143_x86_al-khaser.exe.7z) / [x64 PE](data/al-khaser/x64/smda/al-khaser_2026-07-01-O2_msvc143_x64_al-khaser.exe.7z) |
+| al-khaser | 2026-07-01-Od | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/al-khaser/x86/mcrit/al-khaser_2026-07-01-Od_msvc143_x86_al-khaser.exe.mcrit) / [x64 PE](data/al-khaser/x64/mcrit/al-khaser_2026-07-01-Od_msvc143_x64_al-khaser.exe.mcrit) | [x86 PE](data/al-khaser/x86/smda/al-khaser_2026-07-01-Od_msvc143_x86_al-khaser.exe.7z) / [x64 PE](data/al-khaser/x64/smda/al-khaser_2026-07-01-Od_msvc143_x64_al-khaser.exe.7z) |
+<!-- /generated -->
+
+### peinjector<a id='peinjector'></a>
+
+The final 2016-05-11 commit’s four library files build for Linux ELF and MinGW. MSVC builds libpefile.c and libpetool.c; cl rejects libpeinfect_obfuscator.c’s variable-length array at line 97. The protocol/server code and minIni are excluded.
+
+<!-- generated: peinjector -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| peinjector | 2016-05-11 | GCC 14 (Linux, glibc) | [x86 ELF](data/peinjector/x86/mcrit/peinjector_2016-05-11_gcc14_x86_peinjector.so.mcrit) / [x64 ELF](data/peinjector/x64/mcrit/peinjector_2016-05-11_gcc14_x64_peinjector.so.mcrit) | [x86 ELF](data/peinjector/x86/smda/peinjector_2016-05-11_gcc14_x86_peinjector.so.7z) / [x64 ELF](data/peinjector/x64/smda/peinjector_2016-05-11_gcc14_x64_peinjector.so.7z) |
+| peinjector | 2016-05-11 | MinGW-w64 GCC 13 | [x86 PE](data/peinjector/x86/mcrit/peinjector_2016-05-11_mingw13_x86_peinjector.dll.mcrit) / [x64 PE](data/peinjector/x64/mcrit/peinjector_2016-05-11_mingw13_x64_peinjector.dll.mcrit) | [x86 PE](data/peinjector/x86/smda/peinjector_2016-05-11_mingw13_x86_peinjector.dll.7z) / [x64 PE](data/peinjector/x64/smda/peinjector_2016-05-11_mingw13_x64_peinjector.dll.7z) |
+| peinjector | 2016-05-11 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/peinjector/x86/mcrit/peinjector_2016-05-11_msvc143_x86_pefile_petool.dll.mcrit) / [x64 PE](data/peinjector/x64/mcrit/peinjector_2016-05-11_msvc143_x64_pefile_petool.dll.mcrit) | [x86 PE](data/peinjector/x86/smda/peinjector_2016-05-11_msvc143_x86_pefile_petool.dll.7z) / [x64 PE](data/peinjector/x64/smda/peinjector_2016-05-11_msvc143_x64_pefile_petool.dll.7z) |
+<!-- /generated -->
+
+### DiskCryptor<a id='diskcryptor'></a>
+
+Original 1.1.846.118 source preserved as an archive by the maintained fork. The API, console and installer-support images are separate components. Modern fork code is not substituted; the 16-bit bootloader remains an upstream resource.
+
+<!-- generated: DiskCryptor -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| DiskCryptor | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/DiskCryptor/x86/mcrit/DiskCryptor_1.1.846.118_msvc143_x86_dcapi.dll.mcrit) / [x64 PE](data/DiskCryptor/x64/mcrit/DiskCryptor_1.1.846.118_msvc143_x64_dcapi.dll.mcrit) | [x86 PE](data/DiskCryptor/x86/smda/DiskCryptor_1.1.846.118_msvc143_x86_dcapi.dll.7z) / [x64 PE](data/DiskCryptor/x64/smda/DiskCryptor_1.1.846.118_msvc143_x64_dcapi.dll.7z) |
+| DiskCryptor | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/DiskCryptor/x86/mcrit/DiskCryptor_1.1.846.118_msvc143_x86_dccon.exe.mcrit) / [x64 PE](data/DiskCryptor/x64/mcrit/DiskCryptor_1.1.846.118_msvc143_x64_dccon.exe.mcrit) | [x86 PE](data/DiskCryptor/x86/smda/DiskCryptor_1.1.846.118_msvc143_x86_dccon.exe.7z) / [x64 PE](data/DiskCryptor/x64/smda/DiskCryptor_1.1.846.118_msvc143_x64_dccon.exe.7z) |
+| DiskCryptor | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/DiskCryptor/x86/mcrit/DiskCryptor_1.1.846.118_msvc143_x86_dcinst.exe.mcrit) / [x64 PE](data/DiskCryptor/x64/mcrit/DiskCryptor_1.1.846.118_msvc143_x64_dcinst.exe.mcrit) | [x86 PE](data/DiskCryptor/x86/smda/DiskCryptor_1.1.846.118_msvc143_x86_dcinst.exe.7z) / [x64 PE](data/DiskCryptor/x64/smda/DiskCryptor_1.1.846.118_msvc143_x64_dcinst.exe.7z) |
+<!-- /generated -->
+
+### DiskCryptorDrv<a id='diskcryptordrv'></a>
+
+The 1.1.846.118 filter driver from the same archive as DiskCryptor, built for x64 only with WDK 10.0.26100.0. Upstream source is not patched; a generated stub suppress.h is supplied by include path. The driver image is linked and disassembled only, never signed, installed or loaded.
+
+<!-- generated: DiskCryptorDrv -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| DiskCryptorDrv | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/DiskCryptorDrv/x64/mcrit/DiskCryptorDrv_1.1.846.118_msvc143_x64_dcrypt.sys.mcrit) | [x64 PE](data/DiskCryptorDrv/x64/smda/DiskCryptorDrv_1.1.846.118_msvc143_x64_dcrypt.sys.7z) |
+<!-- /generated -->
+
+### WinPmem<a id='winpmem'></a>
+
+The original 1.6.2 client found in Rekall v1.2.0 (cfaf02d7, 2014-12-21), confirmed by the shipped PMEM_VERSION macro. No modern WinPmem substitution, CLI or embedded resources. No acquisition is performed.
+
+<!-- generated: WinPmem -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| WinPmem | 1.6.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/WinPmem/x86/mcrit/WinPmem_1.6.2_msvc143_x86_winpmem.dll.mcrit) / [x64 PE](data/WinPmem/x64/mcrit/WinPmem_1.6.2_msvc143_x64_winpmem.dll.mcrit) | [x86 PE](data/WinPmem/x86/smda/WinPmem_1.6.2_msvc143_x86_winpmem.dll.7z) / [x64 PE](data/WinPmem/x64/smda/WinPmem_1.6.2_msvc143_x64_winpmem.dll.7z) |
+<!-- /generated -->
+
+### WinPmemDrv<a id='winpmemdrv'></a>
+
+The seven driver translation units listed in the historical pin’s SOURCES file. The already-shipped api.h is preserved without regenerating its obfuscation key. The driver image is never signed, installed or loaded.
+
+<!-- generated: WinPmemDrv -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| WinPmemDrv | 1.6.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/WinPmemDrv/x64/mcrit/WinPmemDrv_1.6.2_msvc143_x64_winpmem.sys.mcrit) | [x64 PE](data/WinPmemDrv/x64/smda/WinPmemDrv_1.6.2_msvc143_x64_winpmem.sys.7z) |
 <!-- /generated -->
