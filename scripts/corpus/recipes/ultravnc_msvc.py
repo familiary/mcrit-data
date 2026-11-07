@@ -117,7 +117,7 @@ unmodified upstream. Every change, with its reason:
     feature/VeNCryptTLS). Nothing is invented to stand in for it:
     1.8.3.2 is built with its server only, and the viewer is taken from 1.8.3.1
     (92bb19b9), the last release before that commit, which builds both.
-  * 1.2.1.5 (9761329e) needed five things.
+  * 1.2.1.5 (9761329e) needed six things.
     (1) zip32 failed with 240 errors from winnt.h, `error C2143: syntax error:
     missing ':' before 'constant'`. Cause, found by reading winnt.h of SDK
     10.0.26100: the ARM64 unwind-data struct declares a bit-field `DWORD CR : 2;`
@@ -151,6 +151,13 @@ unmodified upstream. Every change, with its reason:
     buildtime.obj`); its output is not linked (buildtime.cpp is also a normal
     ClCompile item). PreBuildEventUseInBuild=false drops it, as the post-build
     signing step is dropped.
+    (6) x64 only: the Release|x64 configuration of winvncv12.vcxproj omits
+    the `_WIN32_WINNT=0x501;_WIN32_IE=0x0600` that Release|Win32 defines, and
+    stdhdrs.h then sets WINVER 0x0500 without _WIN32_WINNT, so HideDesktop.cpp
+    reaches ATL with a newer default _WIN32_WINNT than WINVER: `atlwinverapi.h(714,9):
+    error C3861: 'LCMapStringEx': identifier not found` (run 42411877665, the
+    only error of that project). The generated props file defines the same two
+    macros as Release|Win32 does for winvnc* projects on x64.
   * 1.2.1.4 (b4034d51) is not built. The `jdcoefct.h` error (C1083) is
     resolvable: the tree's jdcoefct.c, jdmaster.c and jdsample.c are
     byte-identical to libjpeg-turbo 1.5.1 (1.5.0 differs in two) though
@@ -250,6 +257,11 @@ _PROPS_1_2 = (
     "'</Link></ItemDefinitionGroup>'"
     "'<ItemDefinitionGroup Condition=@d$(MSBuildProjectName.StartsWith(@szip32@s))@d>'"
     "'<ClCompile><ForcedIncludeFiles>windows.h</ForcedIncludeFiles></ClCompile>'"
+    "'</ItemDefinitionGroup>'"
+    "'<ItemDefinitionGroup Condition=@d@s$(Platform)@s==@sx64@s And "
+    "$(MSBuildProjectName.StartsWith(@swinvnc@s))@d>'"
+    "'<ClCompile><PreprocessorDefinitions>_WIN32_WINNT=0x501;_WIN32_IE=0x0600;"
+    "@p(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile>'"
     "'</ItemDefinitionGroup>'"
     "'<Target Name=@dForceStringInclude@d BeforeTargets=@dClCompile@d>'"
     "'<ItemGroup><ClCompile Condition=@d@s@p(Extension)@s==@s.cpp@s@d>'"
@@ -411,7 +423,7 @@ RECIPES = {
                     "upstream's /OPT:REF; /PROFILE off; post-build signing "
                     "and winvnc's /MT pre-build compile of buildtime.cpp "
                     "disabled; windows.h force-included for zip32 and <string> "
-                    "for C++ items; D3DX9 headers from the Microsoft.DXSDK.D3DX "
+                    "for C++ items, _WIN32_WINNT/_WIN32_IE as in Release|Win32 for winvnc x64; D3DX9 headers from the Microsoft.DXSDK.D3DX "
                     "9.29.952.8 NuGet package",
         notes="Commit 9761329e (2017-06-10), FILEVERSION 1.2.1.5: the "
               "nearest buildable state to the 1.2.13 viewer FOSSIL used, "
