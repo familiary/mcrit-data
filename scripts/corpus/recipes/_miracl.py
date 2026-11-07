@@ -3,6 +3,45 @@
 The three recipe modules, miracl_linux.py, miracl.py (MinGW) and
 miracl_msvc.py, differ only in how a compiler is driven. What is built, and
 the variant names, live here so the three cannot drift apart.
+
+Measured (kept + removed = total; removed is the measured runtime-glue
+baseline; PicHash overlap counts functions of 10 or more instructions):
+
+  variant / artefact               kept  removed  total
+  generic32 linux x86               745        6    751
+  generic32 mingw x86               861       72    933
+  generic32 msvc x86                759      235    994
+  asm32     linux x86               744        6    750
+  asm32     msvc x86                759      234    993
+  generic64 linux x64               737        6    743
+  generic64 mingw x64               650       70    720
+  generic64 msvc x64                724      224    948
+  asm64     linux x64               729        6    735
+  asm64     mingw x64               644       70    714
+
+How much the configuration changes the code (PicHash overlap, 10+ insn
+functions, within one compiler and architecture): x64 generic64 vs asm64 is
+491 of 514 (96%) on gcc and 487 of 509 (96%) on MinGW, so on 64-bit the
+assembly muldiv barely moves the shape; x86 generic32 vs asm32 is 196 of 610
+(32%) on gcc, because the 32-bit paths inline muldvd differently, but 540 of
+554 (98%) on MSVC where only mrmuldv differs. Across compilers the overlap is
+essentially nil: gcc/MinGW share 32 x86 hashes (6%), and no hash is shared
+between MSVC and either GCC build or between 32- and 64-bit. So the compiler
+and word size dominate; the assembly setting matters on 32-bit ELF only.
+
+Surviving glue and runtime, all named and kept deliberately: ELF x86 keeps
+_init (11 insn, e54662b85aae2ecd), __do_global_dtors_aux (21,
+d5b1d127777c35f3), __x86.get_pc_thunk.si/.cx/.bp (2 each, 99104660fd4df449,
+769f0aed4b5feefe, 7c99608cc56520ba), which the PIC bodies keep the baseline
+from matching, as obfuscate_linux.py records. Every image keeps the C++
+wrappers' iostream inlines (operator<< and operator>> on Big, Flash, ZZn, ECn
+and EC2, otfloat); the MSVC images also keep MSVC STL instantiations that
+big.cpp's headers emit (std::use_facet, basic_istream::sentry, ...), which
+are template code compiled into the image rather than imported. The MinGW x86
+image keeps 118 unnamed functions, 113 of them 2-instruction import thunks
+(the rest 4 of 7 instructions and 1 of 15). Linux images
+compiled without -fvisibility=hidden were 1388-1409 functions of which about
+650 were unnamed PLT stubs; they are not what is committed.
 """
 
 UPSTREAM = "https://github.com/miracl/MIRACL"

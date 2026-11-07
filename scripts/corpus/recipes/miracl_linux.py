@@ -30,8 +30,12 @@ Variants (ELF):
 The module list is lib/linux64's: 50 C modules and the C++ wrappers big, zzn,
 ecn, ec2, crt and flash. The example programs and source/curve/ are not
 built. -O2 as in the scripts, plus -fPIC and a -shared link so there is an
-image SMDA can read; every symbol stays exported and the object is not
-stripped.
+image SMDA can read, with -fvisibility=hidden: a default-visibility
+-fPIC build makes every call between two MIRACL functions go through the PLT,
+and the first build did exactly that - 650 of the x64 image's 1388 functions
+were one- to three-instruction PLT stubs, unnamed. A statically linked or
+non-PIC consumer has no such stubs. The object is not stripped, so the names
+come from .symtab.
 
 Measured results: see the table in the README and the overlap block below.
 """
@@ -51,7 +55,7 @@ _SPEC = {
 
 
 def _compile(driver, defines, mods, ext):
-    return ("for f in %s; do %s {archflag} -O2 -fPIC %s -I. -c ../source/$f.%s"
+    return ("for f in %s; do %s {archflag} -O2 -fPIC -fvisibility=hidden %s -I. -c ../source/$f.%s"
             " -o $f.o || exit 1; done" % (" ".join(mods), driver, defines, ext))
 
 
@@ -66,7 +70,7 @@ def _recipe(variant):
     ]
     if muldv:
         build.append(BuildStep(
-            "cp ../source/%s mrmuldv.c && {cc} {archflag} -O2 -fPIC %s -I. "
+            "cp ../source/%s mrmuldv.c && {cc} {archflag} -O2 -fPIC -fvisibility=hidden %s -I. "
             "-c mrmuldv.c -o mrmuldv.o" % (muldv, defines), cwd="mb"))
     build.append(BuildStep("{cxx} {archflag} -shared -o libmiracl.so *.o -lm",
                            cwd="mb"))
@@ -79,7 +83,7 @@ def _recipe(variant):
         build=build,
         artifacts=[Artifact(path="mb/libmiracl.so", component="libmiracl.so")],
         toolchains=[toolchain],
-        build_flags="-O2 -fPIC -shared, upstream template include/%s%s%s"
+        build_flags="-O2 -fPIC -fvisibility=hidden -shared, upstream template include/%s%s%s"
                     % (template, " " + defines if defines else "",
                        " + source/" + muldv if muldv else ""),
         notes=m.UNKNOWN + " This is the ELF build of the '%s' variant (%s) of "

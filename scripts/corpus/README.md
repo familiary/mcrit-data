@@ -546,6 +546,11 @@ Recorded here so the analysis is not repeated:
 | SysWhispers2, SysWhispers3 | #9 | cross-build cleanly, but the generated stubs are 2-15 instructions differing by one immediate - a large, low-value cluster. v1, whose stubs carry a full PEB version ladder, is covered instead |
 | sc4cpp | #14 | upstream repository and the owning GitHub account are both gone (404); the surviving derivative needs clang-cl |
 | BlackLotus | #15 | not an open-source project: leaked bootkit source with no licence, and the UEFI half does not build from the repository as published (it references `global/` and `gnu-efi/` directories that are not there) |
+| MIRACL asm32 on MinGW x86 | #29 | not attempted: upstream's only MinGW script (`lib/mingw.bat`) is the 64-bit one, and the 32-bit assembly `mrmuldv.gcc` belongs to the Linux/DJGPP scripts; no ready MinGW x86 assembly configuration exists, so none was invented |
+| MIRACL asm64 on MSVC x64 | #29 | not a separate target: upstream's MSVC x64 configuration (`mirdef.w64` with `mrmuldv.w64`, `_umul128` intrinsics) has no assembly, so it is the `generic64` MSVC build |
+| MIRACL `mirdef.h64` + `MR_NOASM` on MSVC / MinGW x64 | #29 | not attempted: `mirdef.h64` assumes LP64 (`mr_utype long` as the 64-bit word), Windows is LLP64, and upstream ships `mirdef.w64` / `mirdef.mgw` for it; generic MR_NOASM also needs a 128-bit `mr_dltype`, which cl does not have (MinGW uses `__int128`) |
+| MIRACL example programs and `source/curve/` | #29 | not built: the issue names the library, and upstream's scripts compile the examples only as demonstrations |
+| MIRACL matching the real LockBit 3.0 keygen.exe | #29 | not decidable: no verified sample or `mirdef.h` is available, so the variant that matches is unknown and all of them are built (see `scripts/corpus/recipes/_miracl.py`) |
 | gperftools (tcmalloc) | #10 | its Windows port targets MSVC; `src/windows/port.h` clashes with mingw's `nanosleep` linkage and needs a source patch |
 | google/tcmalloc | #10 | Bazel-only and Linux-only - it cannot produce a PE at all. Issue #10's "tcmalloc" is almost certainly gperftools |
 | gRPC | #10 | cross-building needs a full native build first to obtain `protoc` and `grpc_cpp_plugin`, plus boringssl (which needs Go); 45-90 minutes for two architectures, and its statically-linked-into-Windows-malware rate is close to zero |
