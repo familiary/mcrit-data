@@ -13,7 +13,7 @@
       }
     },
     "family": "nt_wrapper",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "Apache-2.0 (full text in LICENSE, per-file \"Copyright 2020 Justas Masiulis\" headers). Builds against the Process Hacker native API headers, winsiderss/phnt at df94006275bb26ed739785556c1200496b78b1a2, which are CC BY 4.0; those are declarations only and contribute no code to the artefact, but they are a pinned input and are recorded as one.",
     "mcrit": "data/nt_wrapper/x64/mcrit/nt_wrapper_2021-02-02_msvc143_x64_nt_wrapper.dll.mcrit",
@@ -168,7 +168,7 @@
       }
     },
     "family": "nt_wrapper",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "Apache-2.0 (full text in LICENSE, per-file \"Copyright 2020 Justas Masiulis\" headers). Builds against the Process Hacker native API headers, winsiderss/phnt at df94006275bb26ed739785556c1200496b78b1a2, which are CC BY 4.0; those are declarations only and contribute no code to the artefact, but they are a pinned input and are recorded as one.",
     "mcrit": "data/nt_wrapper/x86/mcrit/nt_wrapper_2021-02-02_msvc143_x86_nt_wrapper.dll.mcrit",

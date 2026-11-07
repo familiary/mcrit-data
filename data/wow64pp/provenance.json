@@ -88,7 +88,7 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "wow64pp.dll",
     "family": "wow64pp",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/wow64pp/x86/mcrit/wow64pp_2020-09-19_msvc143_x86_wow64pp.dll.mcrit",

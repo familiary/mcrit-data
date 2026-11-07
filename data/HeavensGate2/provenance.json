@@ -6,7 +6,7 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "HeavensGate.exe",
     "family": "HeavensGate2",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "none",
     "mcrit": "data/HeavensGate2/x86/mcrit/HeavensGate2_2017-07-23_msvc143_x86_HeavensGate.exe.mcrit",

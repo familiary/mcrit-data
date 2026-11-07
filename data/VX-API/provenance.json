@@ -6,12 +6,12 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "vxapi.dll",
     "family": "VX-API",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "MIT",
     "mcrit": "data/VX-API/x64/mcrit/VX-API_2.01.015_msvc143_x64_vxapi.dll.mcrit",
     "notes": "A small number of sources need ATL or __try/__except and are skipped; the rest of the collection is present. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. The link uses /FORCE:UNRESOLVED because references into the skipped sources cannot resolve - the artefact is reference material, not a loadable DLL.",
-    "num_functions": 686,
+    "num_functions": 685,
     "removed_runtime_functions": [
       "ATL::AtlCrtErrorCheck",
       "ATL::AtlThrowImpl",
@@ -312,7 +312,8 @@
       "strlen",
       "terminate",
       "type_info::`scalar deleting destructor'",
-      "type_info::~type_info"
+      "type_info::~type_info",
+      "wprintf"
     ],
     "sha256": "69a96fb5264e555b25c7f95ad149da9f1b440b5c80728fd279f46b21865fd375",
     "smda": "data/VX-API/x64/smda/VX-API_2.01.015_msvc143_x64_vxapi.dll.7z",
@@ -333,12 +334,12 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "vxapi.dll",
     "family": "VX-API",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "MIT",
     "mcrit": "data/VX-API/x86/mcrit/VX-API_2.01.015_msvc143_x86_vxapi.dll.mcrit",
     "notes": "A small number of sources need ATL or __try/__except and are skipped; the rest of the collection is present. Built against the DLL runtime, so the MSVC C runtime is imported rather than linked in and stays attributed to data/MSVC. The link uses /FORCE:UNRESOLVED because references into the skipped sources cannot resolve - the artefact is reference material, not a loadable DLL.",
-    "num_functions": 668,
+    "num_functions": 667,
     "removed_runtime_functions": [
       "ATL::AtlCrtErrorCheck",
       "ATL::AtlThrowImpl",
@@ -631,7 +632,8 @@
       "std::exception::what",
       "std::exception::~exception",
       "type_info::`scalar deleting destructor'",
-      "type_info::~type_info"
+      "type_info::~type_info",
+      "wprintf"
     ],
     "sha256": "97d1014cb0a4aff0aa6825f3d7e16f5ff322bfb4cb4798622ec063934723eb86",
     "smda": "data/VX-API/x86/smda/VX-API_2.01.015_msvc143_x86_vxapi.dll.7z",

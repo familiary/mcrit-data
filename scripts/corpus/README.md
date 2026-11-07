@@ -223,6 +223,129 @@ the whole UCRT inline set, where `printf_s`,
 census under LuaJIT's name. That is forty-odd names, half of them wide, and a
 measurement of its own.
 
+**The seventh round: the wide and secure stdio wrappers.** That measurement is
+this one. `validate --deep` on the whole corpus still failed on PicHash
+`10336305819058912646`, 28 instructions, named `swprintf_s` and shared by
+BlackBone, EDRSandblast and al-khaser, and the #78 families carry a wider tail
+of the same kind - `wprintf`, `_vfprintf_l`/`_vfwprintf_l`, `fwprintf`,
+`_vswprintf_s_l`, `vwprintf` - none of which a probe emitted with the body the
+artefacts have.
+
+`swprintf_s` was not a missing name. `_PROBE_MSVCRT_WIDE` has called it since
+the third round and, measured on the runner, emits one at 28 instructions on
+x64 too - PicHash `13530071051526633694`. Same name, same length, another
+hash: exactly what the symbol-and-PicHash filter is for, and it kept the
+artefacts' copies correctly. What differs is the flags. The same wrapper,
+taken by address and built `/sdl`, emits `10336305819058912646` and nothing
+else does; BlackBone's x64 configuration is documented as `/sdl`. The rest of
+the tail came apart the same way, one flag at a time, and each was found by
+building the wrappers under every candidate flag set and comparing against the
+committed reports rather than by reading recipes:
+
+* `/sdl` on x64 (and `/sdl` with `/Oy-` on x86, for al-khaser's `/O2`
+  `swprintf_s` and `fwprintf`).
+* `/Oy-` on x86 only: keeping the frame pointer adds `push ebp`, `mov ebp,
+  esp` and `pop ebp` to a wrapper, which is exactly the difference between the
+  20-instruction `printf`/`wprintf` in DiskCryptor and al-khaser
+  (`12296465484064796685`, `0xaaa5d2355288b00d`) and the 17 every default build
+  emits. BlackBone's x86 `fprintf` (14 against 11) is the same effect.
+* `/Od`, because al-khaser is built twice: its `/Od` image carries
+  `printf`/`wprintf` (22 instructions on x86, 25 on x64 with `/sdl`),
+  `_vfprintf_l`/`_vfwprintf_l`, `fwprintf`, `swprintf_s`, `_vsnwprintf`,
+  `_vsnwprintf_l`, `_vswprintf_s_l`, `localtime_s` and
+  `__local_stdio_printf_options` un-inlined.
+* `/Gs0` and `/O1` (x64), and C++ under `/std:c++20` (x64): tried against the
+  survivors nothing above reproduced, and they were OpenSSL's `sprintf`,
+  `fprintf` and `_vsnprintf` family, libzlib's `snprintf`/`vsnprintf` and the
+  22-instruction `printf`/`wprintf` in protobuf and VX-API.
+
+The measurement is the CI log, not a guess. Four dispatches of the Windows
+workflow on a scratch branch, each building `cJSON_1.6.0_msvc` on both
+architectures with a temporary per-probe log of every stdio-shaped function
+and its PicHash and instruction count (runs 42276319638, 42277298368,
+42278735210, 42280017368); the last one ran the registrations in this commit,
+and nothing is registered that it did not emit a body for that an artefact
+carries. The log is not committed.
+
+What the probes now emit, hash for hash, among the names the task started
+from (instructions in brackets):
+
+| name | arch | PicHash | carried by |
+| --- | --- | --- | --- |
+| `swprintf_s` | x64 | `10336305819058912646` (28) | BlackBone, EDRSandblast, al-khaser `/O2` |
+| `wprintf` | x64 | `121597203084696572` (25) | EDRSandblast, DiskCryptor, WinPmem, al-khaser `/O2`, LuaJIT |
+| `printf`, `wprintf` | x86 | `12296465484064796685` (20) | DiskCryptor, al-khaser `/O2` |
+| `wprintf`, `vwprintf` | x86 | `14739679411554417350` (17), `7807335352819369265` (13) | WinPmem |
+| `vwprintf` | x64 | `3515039425838154103` (21) | WinPmem |
+| `swprintf_s`, `fwprintf` | x86 | `6949881716872909772` (19), `5147500236835420388` (15) | al-khaser `/O2` |
+| `wscanf` | x64, x86 | `5430873308725790042` (25), `15708648133356572057` (20) | DiskCryptor |
+| `_snwprintf` | x86 | `16701398180549986368` (20) | DiskCryptor |
+| `fprintf` | x86 | `8972144503159668082` (14) | BlackBone |
+| `printf`, `wprintf` | x64, x86 `/Od` | `9388650845780074387` (25), `807282956642728980` (22) | al-khaser |
+| `_vfprintf_l`, `_vfwprintf_l` | x64, x86 `/Od` | `11988831538536686101` (15), `8707119721426719415` (19) | al-khaser |
+| `swprintf_s` | x64, x86 `/Od` | `3201430126001659171` (25), `333673324085173386` (22) | al-khaser |
+
+`printf` at `121597203084696572` was already removed by the sixth round; it is
+the same body as `wprintf`'s and only the name was missing. 354 distinct
+(architecture, name, PicHash) bodies in the committed reports are now
+reproduced. Added registrations: 28 on x64 and 33 on x86, taking
+`crt_glue`'s probe count to 80 and 86; every one is `/MD`, linked the way the
+recipes link, a DLL except one EXE (the two print groups, whose bodies are the
+DLL's hash for hash). The groups are the UCRT's whole inline `printf` and
+`scanf` families - narrow, wide, `_s`, `_p`, `_l` and `v*` - because LuaJIT
+instantiates all of them and its names are the bulk of the effect.
+
+What it costs the artefacts, counted from the committed reports against the
+measured bodies rather than from a rebuild: **705 functions across 15
+families**, of which LuaJIT is 619 (about 155 UCRT wrappers in each of its four
+images, thunks included) and the families this round was opened for are
+BlackBone 2, EDRSandblast 2, al-khaser 27 (both images, both architectures),
+DiskCryptor 9 and WinPmem 4. The count is of name-and-PicHash matches that the
+sixth-round baseline did not already make; `is_glue` does the removal. The
+MinGW and Linux baselines do not move: the name-to-PicHash map is
+byte-identical before and after for both MinGW toolchains (3133 symbols on x86
+and 2944 on x64), measured with the same dump as the sixth round.
+
+What is not reproduced, and so is not registered:
+
+* BlackBone x86 `swprintf_s` (`15224987278223994096`, 14) and
+  `_vswprintf_s_l` (`13343053050147212994`, 19). The artefact passes
+  arguments to `_vswprintf_s_l` in `ecx` and `edx`, which looks like a
+  link-time-code-generation calling convention (`/GL`, `/LTCG`). Probes built `/Ox /Ob2 /Ot /GS- /GL`,
+  with and without `/Oy-` and `/LTCG /OPT:REF /OPT:ICF`, emit the same
+  functions with stack arguments and 15/14 or 18/17 instructions.
+* WinPmem `asprintf` and `aswprintf` (63 to 66 instructions, both
+  architectures): the UCRT has no such functions, so these are the project's
+  own, not glue.
+* OpenSSL x64 `_snwprintf`, `_vsnwprintf`, `_vsnwprintf_l`, `sscanf` and
+  `_vsscanf_l`: `/Gs0` reproduces the narrow `sprintf`/`fprintf` family and
+  was not tried on the wide and scan groups; this is one more measurement,
+  not an obstacle.
+* libzlib x86 `_snprintf` and `_vsnprintf`, q3vm v1.3.1 x86 `printf` and
+  `fprintf` - q3vm builds `/GL` - and wowGrail x86 `printf` (33): no
+  flavour tried reproduces them; the 2026-03-06 q3vm x86 pair did leave in the
+  rebuild, which is what put that image below the function floor. LuaJIT x86 `_vwscanf_s_l` (8 instructions) is
+  a fragment of a wrapper rather than the wrapper.
+* The startup bodies, which are not stdio: DiskCryptor's x86
+  `__scrt_common_main_seh$+0x124` (`0xb6f9895ed1a726a6`) and the
+  `__scrt_common_main_seh` of dcinst x64/x86 (92 and 110 instructions) and
+  al-khaser x64 (109). They belong with the entry-point round.
+* The kernel-mode glue (`memcpy`, `memset`, `__security_init_cookie`, ...) is
+  a separate gap and untouched.
+
+What the seventh round did to the corpus, measured by an all-msvc wave on
+this branch (run 42333283878, with the sixth round's data as the baseline to
+compare against): 20 of the 114 MSVC images change and 653 functions move
+from kept to removed, with no kept count rising anywhere. LuaJIT accounts for
+619 of them (the count includes one-instruction thunks), then OpenSSL 9,
+Lua 6, cJSON 4, libzlib 4, NTTITONHeavensGate 3, and BlackBone, VX-API and q3vm
+2 each, protobuf and wowGrail 1. The 2026-03-06 q3vm x86 image is the one that
+matters beyond the numbers: its `printf` and `fprintf` leave it and it keeps
+six functions of its own, below the default floor of eight, so that recipe
+sets `min_functions` to the six it has. v1.3.1 x86 is unchanged. The #78
+families (EDRSandblast, al-khaser, DiskCryptor, WinPmem, EDRSilencer) were
+rebuilt on their own branches against this baseline and are imported there.
+
 The deep check fails on one kind of collision only - the kind every round
 above was found by, one symbol name repeated across every family sharing the
 hash - and reports the rest as `NOTE` lines with their counts. `validate`,
