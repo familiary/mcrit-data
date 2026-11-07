@@ -87,7 +87,7 @@ import subprocess
 import tempfile
 
 from . import config, export, package, recipes
-from .baseline import crt_glue, is_glue
+from .baseline import crt_glue, is_glue, is_kernel_image
 from .reprocess import _read_archive, _write_archive, _export_path
 from .smdaify import _recompute_statistics
 
@@ -212,9 +212,10 @@ def _usable_baseline(toolchain_id):
     return glue
 
 
-def _glue_offsets(report, toolchain_id):
+def _glue_offsets(report, toolchain_id, kernel=False):
+    extra = {"kernel": True} if kernel else {}
     return [offset for offset, function in report.xcfg.items()
-            if is_glue(function, toolchain_id)]
+            if is_glue(function, toolchain_id, **extra)]
 
 
 def _corrected_archive(report_dict, report, offsets):
@@ -404,7 +405,8 @@ def refilter(families=None, dry_run=False):
         try:
             member, report_dict = _read_archive(archive)
             report = SmdaReport.fromDict(report_dict)
-            offsets = _glue_offsets(report, toolchain_id)
+            kernel = is_kernel_image(entry.get("component") or slug)
+            offsets = _glue_offsets(report, toolchain_id, kernel=kernel)
         except (OSError, RuntimeError, ValueError, KeyError, TypeError,
                 AttributeError, subprocess.CalledProcessError) as error:
             # 7z runs with check=True, so a corrupt or unreadable archive

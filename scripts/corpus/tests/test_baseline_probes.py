@@ -359,3 +359,262 @@ class MsvcWideStdioProbeTest(unittest.TestCase):
                     if word != "probe_symbol":
                         self.assertTrue(word.startswith("probe_msvcrt_"),
                                         "%s: %s" % (filename, word))
+
+
+class KernelProbeSourcesTest(unittest.TestCase):
+    """What the WDK probes are made of; nothing here needs a compiler."""
+
+    def test_every_unit_has_a_distinct_file_stem(self):
+        tags = [tag for tag, _ in baseline._kernel_sources()]
+        self.assertEqual(len(tags), len(set(tags)))
+
+    def test_the_entry_point_and_the_runtime_unit_are_always_there(self):
+        sources = dict(baseline._kernel_sources())
+        self.assertIn("DriverEntry", sources["driver_entry"])
+        self.assertIn("__try", sources["runtime"])
+        self.assertIn("__finally", sources["runtime"])
+        # Larger than a page, so the prologue has to call __chkstk.
+        self.assertIn("UCHAR big[0x3000]", sources["runtime"])
+
+    def test_every_listed_name_is_taken_by_address_in_a_unit_of_its_own(self):
+        sources = dict(baseline._kernel_sources())
+        listed = (baseline._KERNEL_CRT_NAMES + baseline._KERNEL_NTDDK_NAMES
+                  + baseline._KERNEL_STRSAFE_NAMES
+                  + baseline._KERNEL_INTSAFE_NAMES)
+        self.assertEqual(len(listed), len(set(listed)))
+        for name in listed:
+            code = sources["sym_" + name]
+            self.assertIn("ProbeKernelSymbol_%s = (PVOID)%s;" % (name, name), code)
+
+    def test_the_headers_that_define_the_inline_helpers_are_included(self):
+        sources = dict(baseline._kernel_sources())
+        self.assertIn("#include <ntstrsafe.h>", sources["sym_RtlStringCchPrintfW"])
+        self.assertIn("#include <ntstrsafe.h>", sources["sym_RtlUnicodeStringPrintf"])
+        self.assertIn("#include <ntintsafe.h>", sources["sym_RtlULongAdd"])
+        self.assertIn("#include <string.h>", sources["sym_memcpy"])
+        # ntstrsafe.h deprecates strcpy and friends, so the CRT names must
+        # never share a unit with it.
+        for name in baseline._KERNEL_CRT_NAMES:
+            self.assertNotIn("ntstrsafe", sources["sym_" + name])
+
+    def test_the_survivors_the_committed_drivers_carry_are_reachable(self):
+        """Names read off the five driver images' kept functions."""
+        sources = dict(baseline._kernel_sources())
+        for name in ("RtlUnicodeStringPrintf", "RtlUnicodeStringCat",
+                     "RtlUnicodeStringCatString", "RtlUnicodeStringCopy",
+                     "RtlUnicodeStringInit", "RtlStringCchPrintfW",
+                     "RtlULongAdd", "RtlFailFast", "memcpy", "memset"):
+            self.assertIn("sym_" + name, sources, name)
+
+    def test_no_probe_calls_the_kernel_api_families(self):
+        """An import thunk is the driver using an API, not the runtime."""
+        api = re.compile(r"\b(Ex|Ke|Mm|Zw|Nt|Io|Ps|Ob|Se|Cm|Fsrtl)[A-Z]\w+\(")
+        for tag, code in baseline._kernel_sources():
+            self.assertIsNone(api.search(code), tag)
+
+    def test_the_probe_names_are_dropped_by_prefix(self):
+        for tag, code in baseline._kernel_sources():
+            for word in re.findall(r"\bProbe\w+", code):
+                self.assertTrue(word.startswith("ProbeKernel"), (tag, word))
+
+
+class KernelProbeProjectTest(unittest.TestCase):
+
+    def test_the_project_is_well_formed_and_is_a_wdm_driver(self):
+        import xml.etree.ElementTree as ElementTree
+        text = baseline._kernel_project(["driver_entry", "runtime"])
+        root = ElementTree.fromstring(text.split("\n", 1)[1])
+        self.assertIn("WindowsKernelModeDriver10.0", text)
+        self.assertIn("<ConfigurationType>Driver</ConfigurationType>", text)
+        self.assertIn("<DriverType>WDM</DriverType>", text)
+        self.assertIn("<TargetVersion>Windows10</TargetVersion>", text)
+        self.assertEqual(text.count("<ClCompile Include="), 2)
+        self.assertTrue(root.tag.endswith("Project"))
+
+    def test_the_props_link_the_way_the_driver_recipes_do(self):
+        import xml.etree.ElementTree as ElementTree
+        for flavour in ("wdm", "wdm_nogs"):
+            text = baseline._kernel_props(flavour)
+            ElementTree.fromstring(text)
+            self.assertIn("/Brepro /INCREMENTAL:NO", text, flavour)
+            self.assertIn("<OptimizeReferences>false<", text, flavour)
+            self.assertIn("<EnableCOMDATFolding>false<", text, flavour)
+            self.assertIn("<WholeProgramOptimization>false<", text, flavour)
+
+    def test_only_the_nogs_flavour_turns_the_cookie_off(self):
+        self.assertIn("<BufferSecurityCheck>false<",
+                      baseline._kernel_props("wdm_nogs"))
+        self.assertNotIn("BufferSecurityCheck", baseline._kernel_props("wdm"))
+
+
+class KernelThunkRuleTest(unittest.TestCase):
+
+    def test_runtime_names_are_kept_and_kernel_api_names_are_not(self):
+        keep = baseline._kernel_thunk_is_runtime
+        for name in ("__chkstk", "_local_unwind", "memcmp", "strlen",
+                     "_wcsicmp"):
+            self.assertTrue(keep(name), name)
+        for name in ("ZwClose", "RtlInitUnicodeString", "ExAllocatePoolWithTag",
+                     "KeBugCheckEx"):
+            self.assertFalse(keep(name), name)
+
+
+class KernelRoutingTest(unittest.TestCase):
+    """A driver is filtered against both sets; nothing else ever sees the new one."""
+
+    def setUp(self):
+        self._crt, self._kernel = baseline.crt_glue, baseline.kernel_glue
+        self.calls = []
+        baseline.crt_glue = lambda toolchain_id: {"printf": {1}, "memcpy": {2}}
+
+        def kernel(toolchain_id):
+            self.calls.append(toolchain_id)
+            return {"memcpy": {3}, "__security_init_cookie": {4}}
+        baseline.kernel_glue = kernel
+
+    def tearDown(self):
+        baseline.crt_glue, baseline.kernel_glue = self._crt, self._kernel
+
+    def test_a_user_mode_image_never_consults_the_kernel_set(self):
+        self.assertFalse(baseline.is_glue(FakeFunction("__security_init_cookie", 4), "t"))
+        self.assertFalse(baseline.is_glue(FakeFunction("memcpy", 3), "t"))
+        self.assertTrue(baseline.is_glue(FakeFunction("printf", 1), "t"))
+        self.assertEqual(self.calls, [])
+
+    def test_a_driver_is_filtered_against_the_kernel_set(self):
+        self.assertTrue(baseline.is_glue(
+            FakeFunction("__security_init_cookie", 4), "t", kernel=True))
+        self.assertTrue(baseline.is_glue(FakeFunction("memcpy", 3), "t", kernel=True))
+
+    def test_a_driver_keeps_every_user_mode_removal(self):
+        self.assertTrue(baseline.is_glue(FakeFunction("printf", 1), "t", kernel=True))
+        self.assertTrue(baseline.is_glue(FakeFunction("memcpy", 2), "t", kernel=True))
+        # Found in the user-mode set, so the kernel set is not even measured.
+        self.assertEqual(self.calls, [])
+
+    def test_name_and_hash_both_still_have_to_match(self):
+        self.assertFalse(baseline.is_glue(FakeFunction("memcpy", 99), "t", kernel=True))
+        self.assertFalse(baseline.is_glue(FakeFunction("my_memcpy", 3), "t", kernel=True))
+        self.assertFalse(baseline.is_glue(FakeFunction("", 3), "t", kernel=True))
+
+    def test_a_driver_is_recognised_by_its_file_name(self):
+        for name in ("Hidden.sys", "dcrypt.SYS", "out/winpmem.sys"):
+            self.assertTrue(baseline.is_kernel_image(name), name)
+        for name in ("Hidden.dll", "HiddenCLI.exe", "", None, "sys", "a.sys.txt"):
+            self.assertFalse(baseline.is_kernel_image(name), name)
+
+    def test_the_pipeline_passes_the_driver_flag_down(self):
+        from corpus import smdaify
+        seen = []
+        original = smdaify.is_glue
+        smdaify.is_glue = lambda function, toolchain_id, kernel=False: (
+            seen.append(kernel) or False)
+
+        class Report(object):
+            xcfg = {1: FakeFunction("f", 1)}
+        try:
+            smdaify._drop_crt_glue(Report(), "t")
+            smdaify._drop_crt_glue(Report(), "t", kernel=True)
+        finally:
+            smdaify.is_glue = original
+        self.assertEqual(seen, [False, True])
+
+
+class KernelGlueMeasurementTest(unittest.TestCase):
+    """The build driver, with cl, link and msbuild replaced by fakes."""
+
+    def setUp(self):
+        baseline.kernel_glue.cache_clear()
+        self._run = baseline.subprocess.run
+        self.commands = []
+        self.layout = ("km", "km\\crt", "shared", "lib", "10.0.0.0")
+
+    def tearDown(self):
+        baseline.subprocess.run = self._run
+        baseline.kernel_glue.cache_clear()
+        baseline._PROBE_FAILURES.clear()
+
+    def _fake(self, missing_object=(), link_failures=(), msbuild_ok=True):
+        links = list(link_failures)
+
+        def run(command, cwd=None, **kwargs):
+            self.commands.append(command)
+            tool = command[0]
+            code, out = 0, ""
+            if tool == "cl":
+                for argument in command:
+                    if argument.startswith("src\\"):
+                        tag = argument[len("src\\"):-len(".c")]
+                        if tag in missing_object:
+                            code, out = 2, "src\\%s.c : error C2065" % tag
+                            continue
+                        open(os.path.join(cwd, "obj", tag + ".obj"), "w").close()
+            elif tool == "link":
+                if links:
+                    code = 1
+                    out = "obj\\%s.obj : error LNK2001: unresolved external" % links.pop(0)
+                else:
+                    open(os.path.join(cwd, "probe_cl_link.sys"), "w").close()
+            elif tool == "msbuild":
+                if msbuild_ok:
+                    os.makedirs(os.path.join(cwd, "out"), exist_ok=True)
+                    open(os.path.join(cwd, "out", "probe.sys"), "w").close()
+                else:
+                    code, out = 1, "error MSB4019"
+            return baseline.subprocess.CompletedProcess(command, code, out, "")
+        baseline.subprocess.run = run
+
+    def _images(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            return [flavour for flavour, _, _ in baseline._kernel_probe_images(
+                "t", tmp, self.layout)]
+
+    def test_all_three_flavours_are_built(self):
+        self._fake()
+        self.assertEqual(self._images(), ["cl_link", "wdm", "wdm_nogs"])
+        self.assertEqual(baseline.probe_failures(), {})
+
+    def test_a_unit_that_does_not_compile_is_reported_and_the_rest_are_kept(self):
+        self._fake(missing_object=("sym_memchr",))
+        self.assertEqual(self._images(), ["cl_link", "wdm", "wdm_nogs"])
+        self.assertEqual(baseline.probe_failures(),
+                         {"t": ["kernel/sym_memchr.c"]})
+        for command in self.commands:
+            if command[0] == "link":
+                self.assertNotIn("obj\\sym_memchr.obj", command)
+
+    def test_a_unit_that_does_not_link_is_dropped_everywhere_and_reported(self):
+        self._fake(link_failures=("sym_strstr",))
+        self.assertEqual(self._images(), ["cl_link", "wdm", "wdm_nogs"])
+        self.assertEqual(baseline.probe_failures(),
+                         {"t": ["kernel/sym_strstr.c (link)"]})
+        projects = [c for c in self.commands if c[0] == "msbuild"]
+        self.assertEqual(len(projects), 2)
+
+    def test_a_failing_msbuild_flavour_fails_the_run_not_the_others(self):
+        self._fake(msbuild_ok=False)
+        self.assertEqual(self._images(), ["cl_link"])
+        self.assertEqual(baseline.probe_failures(),
+                         {"t": ["kernel/wdm", "kernel/wdm_nogs"]})
+
+    def test_the_cl_link_flavour_uses_winpmems_line(self):
+        self._fake()
+        self._images()
+        compile_command = [c for c in self.commands if c[0] == "cl"][0]
+        for flag in ("/kernel", "/Zl", "/GS", "/O2", "/GL-", "/Zi"):
+            self.assertIn(flag, compile_command)
+        link_command = [c for c in self.commands if c[0] == "link"][0]
+        for flag in ("/NODEFAULTLIB", "/ENTRY:DriverEntry", "/INCREMENTAL:NO",
+                     "/OPT:NOREF", "/OPT:NOICF", "/Brepro", "BufferOverflowK.lib"):
+            self.assertIn(flag, link_command)
+
+    def test_x86_has_no_kernel_baseline(self):
+        original = baseline.get_toolchain
+        baseline.get_toolchain = lambda toolchain_id: _toolchain(arch="x86")
+        try:
+            self.assertEqual(baseline.kernel_glue("t86"), {})
+        finally:
+            baseline.get_toolchain = original
+        self.assertEqual(baseline.probe_failures(), {})
+
