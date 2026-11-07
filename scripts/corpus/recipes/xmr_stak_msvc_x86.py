@@ -45,7 +45,13 @@ never committed or modified in the repo):
    four 32x32->64 partial products, the same product as the MinGW x86 build's)
    and points the upstream spelling at it with a macro.
 
-Counts and overlap are filled in from the CI run, see the README row.
+Counts (CI run 42416031824): 4800 kept + 1845 removed as runtime = 6645. 539 of
+the kept functions are the generated one-instruction `ret` stubs (names
+containing CryptonightR_, CryptonightWOW_ or mainloop; none has ten
+instructions); 1854 kept functions have ten instructions or more, 1410 distinct
+PicHashes. Overlap (PicHashes of functions of ten instructions or more): 0 with
+MSVC x64 (1346), 0 with MinGW x86 (637), 0 with MinGW x64 (633) and 0 with
+Linux x64 (659).
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

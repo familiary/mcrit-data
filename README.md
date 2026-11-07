@@ -1091,7 +1091,7 @@ Generated with `scripts/build_corpus.py`; see `data/xmrig-proxy/provenance.json`
 
 ### xmr-stak<a id='xmr-stak'></a>
 
-xmr-stak 2.10.8, CPU backend only, an independent implementation rather than a fork of XMRig. Linux x64, MinGW x64, MinGW x86 and MSVC x64. The MinGW images are built from a recipe-patched tree and are NOT byte-identical to a build of unmodified upstream (see `scripts/corpus/recipes/xmr_stak_mingw.py`); the MinGW x86 image is an unsupported configuration (upstream `#error You are trying to do a 32-bit build`), its CryptoNight assembly replaced by 528 one-instruction `ret` stubs.  
+xmr-stak 2.10.8, CPU backend only, an independent implementation rather than a fork of XMRig. Linux x64, MinGW x64, MinGW x86, MSVC x64 and MSVC x86. The MinGW images and the MSVC x86 image are built from a recipe-patched tree and are NOT byte-identical to a build of unmodified upstream (see `scripts/corpus/recipes/xmr_stak_mingw.py` and `xmr_stak_msvc_x86.py`); the two x86 images are unsupported configurations (upstream `#error You are trying to do a 32-bit build`), their CryptoNight assembly replaced by one-instruction `ret` stubs (528 in the MinGW image, 539 of the 4800 functions in the MSVC image).  
 Generated with `scripts/build_corpus.py`; see `data/xmr-stak/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: xmr-stak -->
@@ -1099,5 +1099,5 @@ Generated with `scripts/build_corpus.py`; see `data/xmr-stak/provenance.json` fo
 |----------|---------|----------|-------|------|
 | xmr-stak | 2.10.8 | GCC 13 (Linux, glibc) | [x64 ELF](data/xmr-stak/x64/mcrit/xmr-stak_2.10.8_gcc13_x64_xmr-stak.mcrit) | [x64 ELF](data/xmr-stak/x64/smda/xmr-stak_2.10.8_gcc13_x64_xmr-stak.7z) |
 | xmr-stak | 2.10.8 | MinGW-w64 GCC 13 | [x86 PE](data/xmr-stak/x86/mcrit/xmr-stak_2.10.8_mingw13_x86_xmr-stak.exe.mcrit) / [x64 PE](data/xmr-stak/x64/mcrit/xmr-stak_2.10.8_mingw13_x64_xmr-stak.exe.mcrit) | [x86 PE](data/xmr-stak/x86/smda/xmr-stak_2.10.8_mingw13_x86_xmr-stak.exe.7z) / [x64 PE](data/xmr-stak/x64/smda/xmr-stak_2.10.8_mingw13_x64_xmr-stak.exe.7z) |
-| xmr-stak | 2.10.8 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/xmr-stak/x64/mcrit/xmr-stak_2.10.8_msvc143_x64_xmr-stak.exe.mcrit) | [x64 PE](data/xmr-stak/x64/smda/xmr-stak_2.10.8_msvc143_x64_xmr-stak.exe.7z) |
+| xmr-stak | 2.10.8 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/xmr-stak/x86/mcrit/xmr-stak_2.10.8_msvc143_x86_xmr-stak.exe.mcrit) / [x64 PE](data/xmr-stak/x64/mcrit/xmr-stak_2.10.8_msvc143_x64_xmr-stak.exe.mcrit) | [x86 PE](data/xmr-stak/x86/smda/xmr-stak_2.10.8_msvc143_x86_xmr-stak.exe.7z) / [x64 PE](data/xmr-stak/x64/smda/xmr-stak_2.10.8_msvc143_x64_xmr-stak.exe.7z) |
 <!-- /generated -->
