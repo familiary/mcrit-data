@@ -85,6 +85,7 @@ Offensive tooling
 * [BlackBoneDrv](#blackbonedrv)
 * [SysWhispers](#syswhispers)
 * [Hidden](#hidden)
+* [Medusa](#medusa)
 
 String obfuscation
 * [Obfuscate](#obfuscate)
@@ -964,6 +965,23 @@ The project carries no licence of any kind - no LICENSE or COPYING file and no c
 Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Hidden -->
+<!-- /generated -->
+
+### Medusa<a id='medusa'></a>
+
+ldpreload/Medusa, a ring-3 rootkit of the same shape as [Azazel](#azazel): a shared object installed through `/etc/ld.so.preload` so the dynamic linker interposes its libc, PAM, utmp, libpcap and TCP-wrappers entry points ahead of the real ones. Intezer's reporting describes OrBit as a rebuild of this project.  
+**Only `build/rkld.so` is collected, and upstream's `make` is never invoked**, because its default `all:` target modifies the host it builds on: it runs `sudo sed -i` on `/etc/ssh/sshd_config` to set `PermitRootLogin yes` and then restarts sshd, in the default target rather than an `install:` one. The compiler lines are issued directly instead. Two other parts of that target are left out on their own merits: `bin/rkload` links `-static`, which would put all of glibc under this family's name as it did for monomorph, and it embeds the finished `.so` as a C array via `xxd -i`, so it would carry the implant as data.  
+The build does compile and run upstream's `src/config.c`, because `src/rkld.c:33` and `src/rknet.c:19` include `../build/xor.h` which only that binary produces. It was read before being run: its only side effects are `unlink`, `open` and `write` on `./build/xor.h`, which it fills with XOR-obfuscated copies of constants hardcoded in `config.c` itself - upstream's defaults, with no operator input. That is the same category as LuaJIT's host-built `buildvm`, which this tooling already runs mid-build.  
+Built **without** `-fvisibility=hidden`, as Azazel is and for the same reason: an interposition library's exported names are the artefact. `include/arch.h` is generated per *target* rather than from the host's `uname -m`, because `rkld.c:1653` and `:1664` guard two `sys_connect`/`sys_bind` pairs with `__i386__` and `__AMD64__`, and gcc defines `__i386__` itself under `-m32` - so an x86 build against an x64 `arch.h` compiles both and fails with `redefinition of 'sys_connect'`.  
+216 functions on x86 and 214 on x64. **Against Azazel, the measurement issue #40 and #55 ask for: all 21 symbol names the two share are present in both families, and they share zero PicHashes of ten instructions or more.** Both projects hook the same libc and PAM entry points, so both necessarily define functions called `open`, `__xstat` and `pam_authenticate`; none of those bodies is the same code. That is the distinction the deep check's leakage rule turns on, and it is why the two families coexist without leakage.  
+There is no `-O` anywhere in upstream's `Makefile`, so this is `-O0`. Licence: none stated - no `LICENSE` file and no licence header in any source file, recorded as a fact.  
+
+Generated with `scripts/build_corpus.py`; see `data/Medusa/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Medusa -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Medusa | 2025-04-05 | GCC 13 (Linux, glibc) | [x86 ELF](data/Medusa/x86/mcrit/Medusa_2025-04-05_gcc13_x86_rkld.so.mcrit) / [x64 ELF](data/Medusa/x64/mcrit/Medusa_2025-04-05_gcc13_x64_rkld.so.mcrit) | [x86 ELF](data/Medusa/x86/smda/Medusa_2025-04-05_gcc13_x86_rkld.so.7z) / [x64 ELF](data/Medusa/x64/smda/Medusa_2025-04-05_gcc13_x64_rkld.so.7z) |
 <!-- /generated -->
 
 ## String obfuscation

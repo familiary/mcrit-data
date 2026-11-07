@@ -1,0 +1,65 @@
+{
+  "Medusa_2025-04-05_gcc13_x64_rkld.so": {
+    "architecture": "x64",
+    "build_flags": "gcc -O0 (upstream's Makefile sets no -O at all) -fPIC -shared -ldl -D_GNU_SOURCE over src/rkld.c and src/rknet.c, which is upstream's own compile line; include/arch.h generated with upstream's echo lines but keyed on the target bitness rather than the host's uname -m; build/config compiled and run to emit build/xor.h, which rkld.c and rknet.c include; upstream's sudo sshd_config edit, its xxd step and its -static bin/rkload loader are deliberately not run",
+    "built_artifact": "build/rkld.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "rkld.so",
+    "family": "Medusa",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "none stated: no LICENSE file in the tree and no licence header in any source file",
+    "mcrit": "data/Medusa/x64/mcrit/Medusa_2025-04-05_gcc13_x64_rkld.so.mcrit",
+    "notes": "A ring-3 LD_PRELOAD rootkit, the shape Intezer describes OrBit as a rebuild of. Only build/rkld.so is collected. Upstream's all: target is not invoked at all, because it modifies the host it builds on: it runs sudo sed -i on /etc/ssh/sshd_config to set PermitRootLogin yes and then restarts sshd, in the default target rather than an install: one. The compiler lines are therefore issued directly. Two further parts of that target are left out on their own merits: bin/rkload links -static, which would put all of glibc under this family's name as it did for monomorph, and it embeds the finished .so as a C array via xxd -i, so it would carry the implant as data. The build does compile and run upstream's src/config.c, because rkld.c:33 and rknet.c:19 include ../build/xor.h which only that binary produces; it was read before being run and its only side effects are unlink, open and write on ./build/xor.h, filling it with XOR-obfuscated copies of constants hardcoded in config.c itself - upstream's defaults, with no operator input, which is the same category as LuaJIT's host-built buildvm. 80 symbol-carrying functions on x64 and 84 on x86. Built WITHOUT -fvisibility=hidden, as Azazel is and for the same reason: an interposition library's exports are the artefact. include/arch.h is generated per target rather than per host because rkld.c:1653 and :1664 guard two sys_connect/sys_bind pairs with __i386__ and __AMD64__, and gcc defines __i386__ itself under -m32, so an x86 build against an x64 arch.h fails with redefinition of 'sys_connect'. src/rknet.c IS in upstream's default build line, correcting issue #40. There is no -O anywhere in the Makefile, so this is -O0, also correcting that issue. Needs libwrap (tcpd.h) and libpcap headers. Issue #55 lists 21 symbol names shared with Azazel; that overlap is measurable now that both families exist, and sharing a name is expected since both hook the same libc - a shared PicHash would be the finding, and the deep check is what reports it.",
+    "num_functions": 214,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "0dc8fe33e5fb8e32fa853a2b54ed0e7086a3c42c51126129de7a61df5c7fa300",
+    "smda": "data/Medusa/x64/smda/Medusa_2025-04-05_gcc13_x64_rkld.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "fdade060f4bc53a356fe62c14e9c830fcc0b968e",
+      "git_ref": "fdade060f4bc53a356fe62c14e9c830fcc0b968e",
+      "git_url": "https://github.com/ldpreload/Medusa.git"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://github.com/ldpreload/Medusa",
+    "version": "2025-04-05"
+  },
+  "Medusa_2025-04-05_gcc13_x86_rkld.so": {
+    "architecture": "x86",
+    "build_flags": "gcc -O0 (upstream's Makefile sets no -O at all) -fPIC -shared -ldl -D_GNU_SOURCE over src/rkld.c and src/rknet.c, which is upstream's own compile line; include/arch.h generated with upstream's echo lines but keyed on the target bitness rather than the host's uname -m; build/config compiled and run to emit build/xor.h, which rkld.c and rknet.c include; upstream's sudo sshd_config edit, its xxd step and its -static bin/rkload loader are deliberately not run",
+    "built_artifact": "build/rkld.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "rkld.so",
+    "family": "Medusa",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "none stated: no LICENSE file in the tree and no licence header in any source file",
+    "mcrit": "data/Medusa/x86/mcrit/Medusa_2025-04-05_gcc13_x86_rkld.so.mcrit",
+    "notes": "A ring-3 LD_PRELOAD rootkit, the shape Intezer describes OrBit as a rebuild of. Only build/rkld.so is collected. Upstream's all: target is not invoked at all, because it modifies the host it builds on: it runs sudo sed -i on /etc/ssh/sshd_config to set PermitRootLogin yes and then restarts sshd, in the default target rather than an install: one. The compiler lines are therefore issued directly. Two further parts of that target are left out on their own merits: bin/rkload links -static, which would put all of glibc under this family's name as it did for monomorph, and it embeds the finished .so as a C array via xxd -i, so it would carry the implant as data. The build does compile and run upstream's src/config.c, because rkld.c:33 and rknet.c:19 include ../build/xor.h which only that binary produces; it was read before being run and its only side effects are unlink, open and write on ./build/xor.h, filling it with XOR-obfuscated copies of constants hardcoded in config.c itself - upstream's defaults, with no operator input, which is the same category as LuaJIT's host-built buildvm. 80 symbol-carrying functions on x64 and 84 on x86. Built WITHOUT -fvisibility=hidden, as Azazel is and for the same reason: an interposition library's exports are the artefact. include/arch.h is generated per target rather than per host because rkld.c:1653 and :1664 guard two sys_connect/sys_bind pairs with __i386__ and __AMD64__, and gcc defines __i386__ itself under -m32, so an x86 build against an x64 arch.h fails with redefinition of 'sys_connect'. src/rknet.c IS in upstream's default build line, correcting issue #40. There is no -O anywhere in the Makefile, so this is -O0, also correcting that issue. Needs libwrap (tcpd.h) and libpcap headers. Issue #55 lists 21 symbol names shared with Azazel; that overlap is measurable now that both families exist, and sharing a name is expected since both hook the same libc - a shared PicHash would be the finding, and the deep check is what reports it.",
+    "num_functions": 216,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "3c16cc5102c7706e4faa560245581f0fc9543d089104e4d9c83f41c227b7cb17",
+    "smda": "data/Medusa/x86/smda/Medusa_2025-04-05_gcc13_x86_rkld.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "fdade060f4bc53a356fe62c14e9c830fcc0b968e",
+      "git_ref": "fdade060f4bc53a356fe62c14e9c830fcc0b968e",
+      "git_url": "https://github.com/ldpreload/Medusa.git"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://github.com/ldpreload/Medusa",
+    "version": "2025-04-05"
+  }
+}
