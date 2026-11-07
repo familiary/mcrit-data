@@ -20,6 +20,17 @@ Open risks, in the order they bite:
 2. kph.c is compiled as a plain object and the phlib archive is pulled by
    reference, so only reached support code enters the image.
 
+Measured (scratch run 42388543606, SMDA kept + removed runtime = total):
+  kphlib_2.39_msvc143_x86_kphlib.dll: 970 + 87 = 1057; 725 functions of 10+
+  instructions, 575 distinct PicHashes.
+  kphlib_2.39_msvc143_x64_kphlib.dll: 956 + 89 = 1045; 708 functions of 10+
+  instructions, 580 distinct PicHashes.
+  x86 versus x64: 0 shared PicHashes at the 10-instruction floor.
+  Generated glue survivor: __acrt_fp_format (fpshim.c), x86 PicHash
+  5217805753421424442, x64 1616887169466728392 (decimal); it is not the
+  UCRT's code. Overlap with other families was not measured; phlib support is
+  compiled here and no other family in the corpus ships Process Hacker.
+
 No driver interaction is exercised; the DLL is linked and disassembled only.
 """
 
