@@ -331,7 +331,7 @@ What is not reproduced, and so is not registered:
   `__scrt_common_main_seh` of dcinst x64/x86 (92 and 110 instructions) and
   al-khaser x64 (109). They belong with the entry-point round.
 * The kernel-mode glue (`memcpy`, `memset`, `__security_init_cookie`, ...) is
-  a separate gap and untouched.
+  the eighth round, below.
 
 What the seventh round did to the corpus, measured by an all-msvc wave on
 this branch (run 42333283878, with the sixth round's data as the baseline to
@@ -345,6 +345,123 @@ six functions of its own, below the default floor of eight, so that recipe
 sets `min_functions` to the six it has. v1.3.1 x86 is unchanged. The #78
 families (EDRSandblast, al-khaser, DiskCryptor, WinPmem, EDRSilencer) were
 rebuilt on their own branches against this baseline and are imported there.
+
+**The eighth round: kernel-mode glue, for drivers only.** Everything above
+measures a user-mode image. A `.sys` has no ucrt or vcruntime; what the WDK
+links into it instead is a few static libraries and whatever `ntstrsafe.h`
+and `ntintsafe.h` compile into the calling unit, and none of that was in the
+baseline, so each of the five driver images in the repository carried 10 to 22
+functions of it under its own family's name. They were counted from the
+committed reports before anything was built: `memcpy` (152 instructions),
+`memset` (65), `__cpu_features_init` (59), `__memset_query`,
+`__memset_repmovs`, the `__castguard_*_os_handled` trio,
+`__GSHandlerCheckCommon`, `GsDriverEntry`, `__security_init_cookie`, the
+`__report_*` failure reporters, `RtlFailFast`, and the `ntstrsafe` inlines
+(`RtlUnicodeStringPrintf`, `RtlStringCchPrintfW`, ...).
+
+`baseline.kernel_glue` measures them the way the other baselines are measured,
+and keeps them apart: `is_glue(function, toolchain, kernel=True)` consults it
+only for an image whose file name ends in `.sys` (`smdaify` and `refilter` both
+decide that from the name), on top of the user-mode set and never instead of
+it, so a user-mode image cannot gain or lose a function from this round - the
+only call that changes is the one a driver makes. x64 only: WDK 10.0.26100 has
+no x86 kernel target (see `wdk-driver-playbook.md`), so there is no x86 `.sys`
+and `kernel_glue` is empty there by construction.
+
+Three flavours of probe, because the survivors came from three link lines.
+Each is the 103 translation units `_kernel_sources` writes - a `DriverEntry`,
+one unit of SEH, a page-sized frame and variable-length `memcpy`/`memset`/
+`memmove`/`memcmp` calls, and one unit per name taken by address (the C
+runtime names, `RtlFailFast`, the whole `RtlString{Cb,Cch}*` and
+`RtlUnicodeString*` families and twelve `ntintsafe` helpers, taken by address
+for the reason the wide-stdio round gave: a call can be expanded in line and
+an address cannot) - and a unit that will not compile costs itself, not the
+flavour:
+
+* `wdm`: the WDK's own msbuild driver project, WDM, Release x64, TargetVersion
+  Windows10, the forced props the driver recipes use. Hidden, BlackBoneDrv and
+  APICallProxy are built this way; it links `BufferOverflowFastFailK.lib`.
+* `wdm_nogs`: the same with `BufferSecurityCheck` off and `/O2`, DiskCryptorDrv's
+  build.
+* `cl_link`: `cl /kernel /Zl /GS` and `link /NODEFAULTLIB` against
+  `BufferOverflowK.lib`, WinPmemDrv's line. Its `__security_init_cookie` and
+  `__report_rangecheckfailure` are different bodies from the FastFail ones.
+
+The measurement is the CI log: two dispatches of the Windows workflow on a
+scratch branch, each building the five driver recipes with a temporary
+per-probe log (runs 42402246098 and 42403085859). The second ran the code in
+this branch plus the five names below, kept in only so that the log would carry
+their compiler errors. The result is 162 symbols and 246 PicHashes. The
+rebuilt images came out exactly as the committed reports predicted when
+re-filtered with those entries (counted locally, then confirmed by the
+rebuild): **76 functions, 2462 instructions, across the five images** - Hidden
+17 (507 to 490), BlackBoneDrv 22 (321 to 299), APICallProxy 14 (183 to 169),
+DiskCryptorDrv 10 (356 to 346), WinPmemDrv 13 (145 to 132) - and `HiddenCLI.exe`,
+the one user-mode image in the wave, is 523 functions before and after.
+
+What the entries are, hash for hash, among the survivors in the committed
+images (instructions in brackets; every one is x64):
+
+| name | PicHash | carried by |
+| --- | --- | --- |
+| `memcpy` | `729628813605614666` (152) | all five |
+| `memset` | `9661683141091972025` (65) | all five |
+| `__cpu_features_init` | `13091074222736779356` (59) | all five |
+| `__memset_query`, `__memset_repmovs` | `16342713605483745002` (16), `6643742553189302072` (21) | all five |
+| `__castguard_check_failure_os_handled` (16), `_wrapper` (9), `__castguard_slow_path_check_os_handled` (23) | `2138725727597589620`, `8132465082075151443`, `14106821896220680570` | all five |
+| `__GSHandlerCheckCommon` | `10950584254824723265` (30) | all but DiskCryptorDrv |
+| `GsDriverEntry` | `17538726983033257291` (13) | BlackBoneDrv, Hidden, WinPmemDrv |
+| `__security_init_cookie` | `374977537579870673` (12) | APICallProxy, BlackBoneDrv, Hidden |
+| `__security_init_cookie` | `2877408483180583694` (22) | WinPmemDrv |
+| `__report_gsfailure`, `__report_securityfailure`, `__report_rangecheckfailure` | `14537609155102306236`, `6588078908701986747`, `16800067082027224991` (3 each) | APICallProxy, BlackBoneDrv, Hidden |
+| `__report_rangecheckfailure` | `7481953668246422650` (4) | WinPmemDrv |
+| `RtlFailFast` | `12325927464713800029` (3) | APICallProxy, BlackBoneDrv, Hidden |
+| `RtlUnicodeStringPrintf` | `7519792502405545790` (51) | BlackBoneDrv, Hidden |
+| `RtlUnicodeStringCat`, `CatString`, `Copy`, `Init` | `6233312765464530417` (75), `691161227449751944` (59), `7265331077103111775` (69), `9624075325316981261` (38) | BlackBoneDrv |
+| `RtlStringCchPrintfW` | `12776501659978149984` (45) | DiskCryptorDrv |
+| `RtlULongAdd` | `7595675468641775940` (8) | WinPmemDrv |
+| `__chkstk`, `_vsnwprintf` | `1253497258561142223` (1 each) | BlackBoneDrv; BlackBoneDrv, DiskCryptorDrv, Hidden |
+
+The one-instruction rows are import thunks into ntoskrnl, and the baseline
+keeps those only when the name is in the runtime's namespace (no capital
+letter: `__chkstk`, `_vsnwprintf`, `strlen`), not the kernel API's
+(`ZwClose`, `RtlInitUnicodeString`). A thunk to `ZwCreateFile` is a driver
+using an API, and putting it in the baseline would take it out of every driver
+that imports it; the probes also reference nothing from the Ex/Ke/Mm/Zw/Rtl
+export families, so none was measured. String-literal COMDATs (`??_C@_`) the
+probes emit are dropped from the baseline for the same reason.
+
+What survives, and why:
+
+* WinPmemDrv `__report_gsfailure` (`786151766786688416`) and
+  `__report_securityfailure` (`15435519476439815878`), 9 instructions each. The
+  `cl_link` probe emits both from the same `BufferOverflowK.lib` at the same
+  length with other hashes (`808649142088531034`, `2807459272347353473`). The
+  committed bodies contain `call qword ptr [rip + 0x8f9]` into the import table
+  and two rip-relative loads of the cookie, and the likely cause - not
+  separately confirmed - is that those displacements follow the image layout;
+  the three-instruction FastFail versions have none and match, and so do the
+  22- and 4-instruction `BufferOverflowK.lib` bodies. A probe cannot be given
+  another image's layout, so these two stay.
+* The API thunks (`Zw*`, `Rtl*` imports: 1 instruction each: 123 in
+  DiskCryptorDrv, 108 in BlackBoneDrv, 81 in APICallProxy, 76 in Hidden, 43 in
+  WinPmemDrv), on purpose. Also the thunks `_local_unwind` (Hidden) and
+  `_snwprintf` (WinPmemDrv), which no probe references.
+* KMDF and WDF glue (`FxDriverEntry`, `WdfVersionBind`, ...): no committed
+  image is a KMDF driver, so there is nothing to measure it against and no
+  probe for it. A first KMDF driver would need a fourth flavour.
+* The 32-bit and ARM64 kernel targets: not buildable by this WDK.
+* Five names that did not compile, and are not in the baseline:
+  `memchr`, `wcslen`, `wcscmp`, `wcscpy`, `wcscat`, each `error C2099:
+  initializer is not a constant` - they are intrinsics under `/kernel`, so
+  their address is not a constant expression. Only their import thunks would
+  have been measured, so they were left out rather than reworked.
+
+The images affected, which a re-import has to rebuild because `refilter` can
+only apply a baseline this host can measure and there is no MSVC here:
+Hidden, BlackBoneDrv and APICallProxy on `claude/msvc-baseline-wide-stdio`'s
+data, and DiskCryptorDrv and WinPmemDrv on `claude/fix-diskcryptordrv`. Nothing
+else in the repository is a `.sys`.
 
 The deep check fails on one kind of collision only - the kind every round
 above was found by, one symbol name repeated across every family sharing the

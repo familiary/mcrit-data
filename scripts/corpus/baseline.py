@@ -50,11 +50,23 @@ on this side rather than static executables:
 Nothing of glibc itself is in either list, which answers the question a
 glibc probe set would have been for: there is no glibc body in a dynamically
 linked .so to measure or to remove.
+
+Kernel-mode images are the fourth case and are kept apart from all of the
+above. A .sys has no ucrt or vcruntime; the WDK links its own memcpy/memset
+family, the /GS cookie and its failure reporters, GsDriverEntry and the
+guard-cast stubs into it, and ntstrsafe.h compiles its helpers into the unit
+that calls them. ``kernel_glue`` measures those from three driver builds (the
+WDK's msbuild project, the same without /GS, and cl /kernel with link
+/NODEFAULTLIB against BufferOverflowK.lib) and ``is_glue(..., kernel=True)``
+consults it only for a file whose name ends in .sys, in addition to the
+user-mode set, so no user-mode image is affected. See the section above
+``kernel_glue`` for what the probes call and what they deliberately do not.
 """
 
 import functools
 import logging
 import os
+import re
 import subprocess
 import tempfile
 
@@ -3548,8 +3560,477 @@ def crt_glue(toolchain_id):
     return glue
 
 
-def is_glue(function, toolchain_id):
+# ---------------------------------------------------------------------------
+# Kernel mode.
+#
+# Everything above measures a user-mode image: a DLL or EXE linked against the
+# C runtime, which is not what a .sys is. A driver has no ucrt and no
+# vcruntime; what the WDK links into it instead is a handful of static
+# libraries (BufferOverflowFastFailK.lib or BufferOverflowK.lib for the /GS
+# cookie and its failure reporters, GsDriverEntry, the memcpy/memset/memmove
+# family and their cpu-feature dispatch, the guard-cast stubs) plus whatever
+# ntstrsafe.h and ntintsafe.h compile into the translation unit that calls
+# them. None of it is the driver's own code and none of it is in the
+# user-mode baseline, which is why the five driver images in this repository
+# each carried 6 to 17 functions of it under their own family's name.
+#
+# So the kernel baseline is measured the same way - build the thing with
+# nothing of the project in it and read off what is there - and kept apart
+# from the user-mode one: kernel_glue() is only ever consulted for an image
+# that is a driver (see is_kernel_image), so no user-mode image can gain or
+# lose a function because of anything in this section.
+#
+# Three kinds of probe, because the three kinds of survivor in the committed
+# images came from three different link lines:
+#
+# * ``wdm`` - the WDK's own msbuild driver project, WDM, Release|x64,
+#   TargetVersion Windows10, the forced props the driver recipes use. This is
+#   how Hidden, BlackBoneDrv and APICallProxy are built, and it links
+#   BufferOverflowFastFailK.lib and enters through GsDriverEntry.
+# * ``wdm_nogs`` - the same project with BufferSecurityCheck off, which is
+#   how DiskCryptorDrv is built: no cookie, no GsDriverEntry, but the same
+#   libcntpr-side memcpy/memset and guard stubs.
+# * ``cl_link`` - cl /kernel and link /NODEFAULTLIB by hand against
+#   BufferOverflowK.lib, which is WinPmemDrv's line. Its report functions
+#   and __security_init_cookie are different bodies from the FastFail ones.
+#
+# What the probes call is deliberately narrow. A kernel image reaches
+# ntoskrnl through one-instruction import thunks named after the export, and a
+# thunk to ExAllocatePoolWithTag is the driver using an API, not the compiler's
+# runtime; a probe that called it would put the thunk in the baseline and take
+# it out of every driver that imports the same function. So the probes
+# reference the C runtime and the header-defined helpers and nothing from the
+# Ex/Ke/Mm/Zw/Rtl export families, and _KERNEL_THUNK_NAME below keeps a
+# one-instruction function only when its name is in the runtime's namespace
+# (``__chkstk``, ``_local_unwind``, ``memcmp``), not the kernel API's.
+#
+# x64 only. WDK 10.0.26100 has no x86 kernel target at all (the playbook in
+# this directory has the exact error), so there is no x86 .sys to measure or
+# to filter, and kernel_glue("msvc..._x86") is empty by construction.
+# ---------------------------------------------------------------------------
+
+_KERNEL_INCLUDES = "#include <ntifs.h>\n"
+
+_KERNEL_DRIVER_ENTRY = _KERNEL_INCLUDES + """\
+DRIVER_INITIALIZE DriverEntry;
+DRIVER_UNLOAD ProbeKernelUnload;
+
+VOID ProbeKernelUnload(PDRIVER_OBJECT DriverObject)
+{
+    UNREFERENCED_PARAMETER(DriverObject);
+}
+
+NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
+{
+    UNREFERENCED_PARAMETER(RegistryPath);
+    DriverObject->DriverUnload = ProbeKernelUnload;
+    return STATUS_SUCCESS;
+}
+"""
+
+# The frame, the unwinder and the indirect call: what makes cl reference
+# __chkstk, __C_specific_handler, _local_unwind and the guard-dispatch stubs.
+# The array is larger than a page so that the prologue has to probe it, and
+# every size that reaches memcpy and friends is a run-time value so that cl
+# cannot expand it inline.
+_KERNEL_RUNTIME = _KERNEL_INCLUDES + """\
+#include <string.h>
+
+typedef VOID (*PROBE_KERNEL_CALLBACK)(PVOID);
+
+static volatile LONG ProbeKernelSink;
+static PROBE_KERNEL_CALLBACK volatile ProbeKernelCallback;
+
+NTSTATUS ProbeKernelFrame(PUCHAR input, SIZE_T length, PVOID context)
+{
+    UCHAR big[0x3000];
+    SIZE_T i;
+
+    for (i = 0; i < sizeof(big); i++) {
+        big[i] = (UCHAR)(input[i % (length | 1)] + i);
+    }
+    memcpy(context, big, length);
+    memmove(big + 1, big, length);
+    memset(context, 0x5a, length);
+    ProbeKernelSink += memcmp(big, context, length);
+
+    __try {
+        ProbeKernelSink += big[length & 0xfff];
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        return GetExceptionCode();
+    }
+    __try {
+        ProbeKernelSink++;
+    } __finally {
+        ProbeKernelSink--;
+    }
+    if (ProbeKernelCallback) {
+        ProbeKernelCallback(context);
+    }
+    return STATUS_SUCCESS;
+}
+"""
+
+# Names taken by address, one translation unit each, so that a name a given
+# WDK does not declare costs that one unit and not the family it is listed
+# with. Address-taking is the same device the wide-stdio round used: a call
+# can be expanded in line, an address cannot, and for an inline function in a
+# header it is what makes cl emit a body to be named at all.
+# memchr, wcslen, wcscmp, wcscpy and wcscat are not here: the first measurement
+# (run 42402246098, WDK 10.0.26100.0) listed them, and each of the five units
+# failed to compile there. Only their one-instruction import thunks would have
+# been measured, which is not what this baseline is for, so they were taken
+# out rather than fixed.
+_KERNEL_CRT_NAMES = (
+    "memcpy", "memmove", "memset", "memcmp",
+    "strlen", "strcmp", "strncmp", "strcpy", "strncpy", "strcat", "strchr",
+    "strrchr", "strstr",
+    "wcsncmp", "wcsncpy", "wcschr", "wcsrchr", "wcsstr",
+)
+
+_KERNEL_NTDDK_NAMES = ("RtlFailFast",)
+
+
+def _strsafe_names():
+    names = []
+    for width in ("Cb", "Cch"):
+        for operation in ("Cat", "CatN", "Copy", "CopyN", "Length",
+                          "Printf", "VPrintf"):
+            for suffix in ("A", "W"):
+                names.append("RtlString%s%s%s" % (width, operation, suffix))
+                if operation != "Length":
+                    names.append("RtlString%s%sEx%s" % (width, operation, suffix))
+    names += ["RtlStringCbCopyUnicodeString", "RtlStringCchCopyUnicodeString"]
+    names += ["RtlUnicodeString%s" % operation for operation in (
+        "Cat", "CatEx", "CatString", "CatStringEx", "Copy", "CopyEx",
+        "CopyString", "CopyStringEx", "Init", "InitEx", "Printf", "PrintfEx",
+        "VPrintf", "VPrintfEx", "Validate", "ValidateEx")]
+    return tuple(names)
+
+
+_KERNEL_STRSAFE_NAMES = _strsafe_names()
+
+_KERNEL_INTSAFE_NAMES = (
+    "RtlULongAdd", "RtlULongSub", "RtlULongMult",
+    "RtlUIntAdd", "RtlUIntMult",
+    "RtlSizeTAdd", "RtlSizeTSub", "RtlSizeTMult",
+    "RtlULongLongAdd", "RtlULongLongMult",
+    "RtlULongLongToULong", "RtlSizeTToULong",
+)
+
+
+def _kernel_symbol_source(header, name):
+    return (_KERNEL_INCLUDES + header
+            + "PVOID ProbeKernelSymbol_%s = (PVOID)%s;\n" % (name, name))
+
+
+def _kernel_sources():
+    """[(tag, source)] in a fixed order; the tag is the file stem."""
+    sources = [("driver_entry", _KERNEL_DRIVER_ENTRY),
+               ("runtime", _KERNEL_RUNTIME)]
+    for names, header in ((_KERNEL_CRT_NAMES, "#include <string.h>\n"),
+                          (_KERNEL_NTDDK_NAMES, ""),
+                          (_KERNEL_STRSAFE_NAMES, "#include <ntstrsafe.h>\n"),
+                          (_KERNEL_INTSAFE_NAMES, "#include <ntintsafe.h>\n")):
+        for name in names:
+            sources.append(("sym_" + name, _kernel_symbol_source(header, name)))
+    return sources
+
+
+# Forced into the msbuild flavours exactly as the driver recipes force it:
+# BlackBoneDrv's list (compiler and linker PDBs apart, /OPT:NOREF /OPT:NOICF,
+# no whole-program optimisation, /Brepro /INCREMENTAL:NO, warnings not errors),
+# which Hidden and APICallProxy share, and DiskCryptorDrv's additions for the
+# nogs flavour. RuntimeLibrary is left alone as it is there.
+def _kernel_props(flavour):
+    compile_extra = ""
+    if flavour == "wdm_nogs":
+        compile_extra = ("<BufferSecurityCheck>false</BufferSecurityCheck>"
+                         "<Optimization>MaxSpeed</Optimization>")
+    return (
+        "<Project><ItemDefinitionGroup><ClCompile>"
+        "<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>"
+        "<ProgramDataBaseFileName>$(IntDir)probe.compiler.pdb"
+        "</ProgramDataBaseFileName>"
+        "<WholeProgramOptimization>false</WholeProgramOptimization>"
+        "<TreatWarningAsError>false</TreatWarningAsError>"
+        + compile_extra +
+        "</ClCompile><Link>"
+        "<GenerateDebugInformation>true</GenerateDebugInformation>"
+        "<ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>"
+        "<OptimizeReferences>false</OptimizeReferences>"
+        "<EnableCOMDATFolding>false</EnableCOMDATFolding>"
+        "<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>"
+        "<TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>"
+        "<AdditionalOptions>%(AdditionalOptions) /Brepro /INCREMENTAL:NO "
+        "/IGNORE:4266</AdditionalOptions>"
+        "</Link></ItemDefinitionGroup></Project>")
+
+
+def _kernel_project(tags):
+    items = "".join('<ClCompile Include="src\\%s.c" />' % tag for tag in tags)
+    return (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<Project DefaultTargets="Build" ToolsVersion="Current" '
+        'xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\n'
+        '<ItemGroup Label="ProjectConfigurations">'
+        '<ProjectConfiguration Include="Release|x64">'
+        '<Configuration>Release</Configuration><Platform>x64</Platform>'
+        '</ProjectConfiguration></ItemGroup>\n'
+        '<PropertyGroup Label="Globals">'
+        '<ProjectGuid>{3F0C6B2E-7A41-4C38-9E52-6D1B8A0F4C77}</ProjectGuid>'
+        '<RootNamespace>probe</RootNamespace>'
+        '<Configuration>Release</Configuration>'
+        '<Platform Condition="\'$(Platform)\' == \'\'">x64</Platform>'
+        '</PropertyGroup>\n'
+        '<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />\n'
+        '<PropertyGroup Label="Configuration">'
+        '<TargetVersion>Windows10</TargetVersion>'
+        '<UseDebugLibraries>false</UseDebugLibraries>'
+        '<PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>'
+        '<ConfigurationType>Driver</ConfigurationType>'
+        '<DriverType>WDM</DriverType></PropertyGroup>\n'
+        '<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.props" />\n'
+        '<PropertyGroup><TargetName>probe</TargetName></PropertyGroup>\n'
+        '<ItemGroup>' + items + '</ItemGroup>\n'
+        '<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />\n'
+        '</Project>\n')
+
+
+# A one-instruction function in a driver is nearly always the thunk to an
+# ntoskrnl export, named after it. Those are the driver using an API and are
+# not baseline; the ones that are the runtime's own are the compiler helpers
+# and C library names ntoskrnl happens to export, and those live in the
+# compiler's namespace: __chkstk, _local_unwind, memcmp. The kernel API's are
+# CamelCase with a family prefix (ExAllocatePoolWithTag, ZwClose).
+def _kernel_thunk_is_runtime(name):
+    letters = [character for character in name if character.isalpha()]
+    return bool(letters) and not any(character.isupper() for character in letters)
+
+
+def _wdk_layout():
+    """(km include dir, km\\crt dir, shared dir, km lib dir) or None."""
+    sdk = os.environ.get("WindowsSdkDir", "")
+    if not sdk:
+        sdk = r"C:\Program Files (x86)\Windows Kits\10" + os.sep
+    versions = []
+    wanted = os.environ.get("WindowsSDKVersion", "").strip("\\/")
+    if wanted:
+        versions.append(wanted)
+    include = os.path.join(sdk, "Include")
+    if os.path.isdir(include):
+        versions += sorted((name for name in os.listdir(include)
+                            if name.startswith("10.")), reverse=True)
+    for version in versions:
+        km = os.path.join(sdk, "Include", version, "km")
+        lib = os.path.join(sdk, "Lib", version, "km", "x64")
+        if os.path.isfile(os.path.join(km, "ntddk.h")) \
+                and os.path.isfile(os.path.join(lib, "ntoskrnl.lib")):
+            return (km, os.path.join(km, "crt"),
+                    os.path.join(sdk, "Include", version, "shared"), lib,
+                    version)
+    return None
+
+
+def _tail(completed, limit=3000):
+    """What a failed tool said: its error lines, or failing that its tail.
+
+    cl prints a warning per unit (C4117 for the reserved _KERNEL_MODE define
+    on every one of them), so the last 3000 characters of a 110-unit compile
+    are all warnings and say nothing about the five that failed. The error
+    lines are what a reader needs.
+    """
+    text = ((completed.stdout or "") + (completed.stderr or "")).strip()
+    errors = [line.strip() for line in text.splitlines()
+              if re.search(r"\b(?:fatal )?error [A-Z]+\d+", line)]
+    if errors:
+        return "\n".join(errors[:60])[-limit:]
+    return text[-limit:]
+
+
+def _kernel_probe_images(toolchain_id, tmp, layout):
+    """Build the three flavours; returns [(flavour, image, pdb)].
+
+    Every failure is logged and recorded, never raised: the family being
+    built should not go down with a probe, only the run, afterwards.
+    """
+    km, crt, shared, lib, version = layout
+    failures = _PROBE_FAILURES.setdefault(toolchain_id, [])
+    source_dir = os.path.join(tmp, "src")
+    os.makedirs(source_dir)
+    sources = _kernel_sources()
+    for tag, code in sources:
+        with open(os.path.join(source_dir, tag + ".c"), "w") as handle:
+            handle.write(code)
+
+    # Which units compile at all. Built together by one cl invocation: cl
+    # carries on past a failing file, and a unit that failed leaves no object,
+    # so the objects present afterwards are the units that compiled. The
+    # flags are WinPmemDrv's, which is the one recipe here that invokes cl
+    # directly.
+    object_dir = os.path.join(tmp, "obj")
+    os.makedirs(object_dir)
+    compile_command = [
+        "cl", "/nologo", "/c", "/O2", "/MD", "/Zi", "/GL-", "/kernel", "/Zl",
+        "/GS", "/D_AMD64_", "/DAMD64", "/DWIN64", "/D_WIN64", "/D_KERNEL_MODE",
+        "/I" + km, "/I" + crt, "/I" + shared,
+        "/Fdobj\\compiler.pdb", "/Foobj\\"]
+    compile_command += ["src\\%s.c" % tag for tag, _ in sources]
+    built = subprocess.run(compile_command, capture_output=True, cwd=tmp,
+                           text=True, errors="replace")
+    compiled = [tag for tag, _ in sources
+                if os.path.isfile(os.path.join(object_dir, tag + ".obj"))]
+    for tag, _ in sources:
+        if tag not in compiled:
+            failures.append("kernel/%s.c" % tag)
+    if len(compiled) != len(sources):
+        LOGGER.warning("%s: %d kernel baseline probe unit(s) did not compile "
+                       "and are missing from the baseline:\n%s", toolchain_id,
+                       len(sources) - len(compiled), _tail(built))
+    if "driver_entry" not in compiled:
+        return []
+
+    images = []
+
+    # cl_link flavour. A unit naming an ntoskrnl export that does not exist
+    # fails the link with LNK2001 naming its object, so the units it names are
+    # dropped and the link repeated rather than losing the flavour.
+    linked = list(compiled)
+    for _ in range(4):
+        link_command = [
+            "link", "/nologo", "/DRIVER", "/SUBSYSTEM:NATIVE",
+            "/ENTRY:DriverEntry", "/NODEFAULTLIB", "/MACHINE:X64", "/DEBUG",
+            "/OPT:NOREF", "/OPT:NOICF", "/INCREMENTAL:NO", "/Brepro",
+            "/OUT:probe_cl_link.sys", "/PDB:probe_cl_link.pdb"]
+        link_command += ["obj\\%s.obj" % tag for tag in linked]
+        link_command += ["/LIBPATH:" + lib, "ntoskrnl.lib", "hal.lib",
+                         "wdmsec.lib", "BufferOverflowK.lib"]
+        result = subprocess.run(link_command, capture_output=True, cwd=tmp,
+                                text=True, errors="replace")
+        if result.returncode == 0:
+            images.append(("cl_link", os.path.join(tmp, "probe_cl_link.sys"),
+                           os.path.join(tmp, "probe_cl_link.pdb")))
+            break
+        unresolved = set(re.findall(
+            r"obj\\(\w+)\.obj\s*: error LNK\d+", (result.stdout or "")
+            + (result.stderr or "")))
+        unresolved.discard("driver_entry")
+        if not unresolved & set(linked):
+            LOGGER.warning("%s: the cl_link kernel baseline probe did not "
+                           "link:\n%s", toolchain_id, _tail(result))
+            failures.append("kernel/cl_link")
+            break
+        for tag in sorted(unresolved & set(linked)):
+            failures.append("kernel/%s.c (link)" % tag)
+        LOGGER.warning("%s: dropping kernel baseline probe unit(s) that did "
+                       "not link: %s", toolchain_id,
+                       ", ".join(sorted(unresolved)))
+        linked = [tag for tag in linked if tag not in unresolved]
+    else:
+        failures.append("kernel/cl_link")
+
+    # The two msbuild flavours, over the units that compiled and linked.
+    for flavour in ("wdm", "wdm_nogs"):
+        work = os.path.join(tmp, flavour)
+        os.makedirs(os.path.join(work, "src"))
+        for tag in linked:
+            with open(os.path.join(work, "src", tag + ".c"), "w") as handle:
+                handle.write(dict(sources)[tag])
+        with open(os.path.join(work, "probe.vcxproj"), "w") as handle:
+            handle.write(_kernel_project(linked))
+        with open(os.path.join(work, "corpus-msvc.props"), "w") as handle:
+            handle.write(_kernel_props(flavour))
+        command = [
+            "msbuild", "probe.vcxproj", "/nologo", "/p:Configuration=Release",
+            "/p:Platform=x64", "/p:TargetVersion=Windows10",
+            "/p:SignMode=Off", "/p:SkipPackageVerification=true",
+            "/p:WholeProgramOptimization=false", "/p:OutDir=out\\",
+            "/p:IntDir=obj\\",
+            "/p:ForceImportBeforeCppTargets=" + os.path.join(
+                work, "corpus-msvc.props"),
+            "/m", "/v:minimal"]
+        result = subprocess.run(command, capture_output=True, cwd=work,
+                                text=True, errors="replace")
+        image = os.path.join(work, "out", "probe.sys")
+        if result.returncode != 0 or not os.path.isfile(image):
+            LOGGER.warning("%s: the %s kernel baseline probe did not build:\n%s",
+                           toolchain_id, flavour, _tail(result))
+            failures.append("kernel/" + flavour)
+            continue
+        images.append((flavour, image, os.path.join(work, "out", "probe.pdb")))
+    return images
+
+
+@functools.lru_cache(maxsize=None)
+def kernel_glue(toolchain_id):
+    """Map symbol name -> set of PicHashes for kernel-mode (WDK) images.
+
+    Separate from crt_glue and consulted only for a driver; empty on every
+    toolchain that cannot build one.
+    """
+    from .smdaify import disassemble
+
+    toolchain = get_toolchain(toolchain_id)
+    if toolchain.kind != "msvc" or toolchain.arch != "x64":
+        LOGGER.info("%s: no kernel-mode baseline (the WDK has no kernel "
+                    "target for this architecture)", toolchain_id)
+        return {}
+    _PROBE_FAILURES.setdefault(toolchain_id, [])
+    layout = _wdk_layout()
+    if layout is None:
+        LOGGER.warning("%s: no WDK (km headers and ntoskrnl.lib) found, so "
+                       "the kernel-mode baseline is empty", toolchain_id)
+        _PROBE_FAILURES[toolchain_id].append("kernel/wdk")
+        return {}
+    dump = os.environ.get("CORPUS_BASELINE_DUMP")
+    glue = {}
+    with tempfile.TemporaryDirectory() as tmp:
+        images = _kernel_probe_images(toolchain_id, tmp, layout)
+        for flavour, image, pdb in images:
+            report = disassemble(image, pdb_path=pdb)
+            before = len(glue)
+            for function in report.getFunctions():
+                name = function.function_name
+                if not name:
+                    continue
+                if dump:
+                    LOGGER.info("kernel probe %s: %s pic=%d instructions=%d",
+                                flavour, name, function.pic_hash,
+                                function.num_instructions)
+                if function.num_instructions == 1 \
+                        and not _kernel_thunk_is_runtime(name):
+                    continue
+                glue.setdefault(name, set()).add(function.pic_hash)
+            LOGGER.info("%s: kernel probe %s (WDK %s): %d function(s), %d new "
+                        "symbol(s)", toolchain_id, flavour, layout[4],
+                        len(list(report.getFunctions())), len(glue) - before)
+    glue.pop("DriverEntry", None)
+    # ??_C@_ is an MSVC string-literal COMDAT that sits in a code section and
+    # disassembles as a function. The two the probes emit are "" and L"": data
+    # that any code using the literal carries, not the runtime's, so they are
+    # not baseline - the same reason the playbook gives for not counting them
+    # as the driver's own functions.
+    for name in [name for name in glue
+                 if name.startswith(("ProbeKernel", "_ProbeKernel", "??_C@_"))]:
+        glue.pop(name, None)
+    LOGGER.info("%s: kernel glue baseline measured from %d image(s): %d "
+                "symbol(s), %d PicHash(es)", toolchain_id, len(images),
+                len(glue), sum(len(hashes) for hashes in glue.values()))
+    return glue
+
+
+def is_kernel_image(name):
+    """True for a driver by its file name, which is how recipes name them."""
+    return str(name or "").lower().endswith(".sys")
+
+
+def is_glue(function, toolchain_id, kernel=False):
     glue = crt_glue(toolchain_id)
     if not function.function_name:
         return False
-    return function.pic_hash in glue.get(function.function_name, ())
+    if function.pic_hash in glue.get(function.function_name, ()):
+        return True
+    # A driver is filtered against the user-mode set too, as it always was:
+    # the kernel baseline adds to it and never replaces it.
+    return bool(kernel) and function.pic_hash in kernel_glue(
+        toolchain_id).get(function.function_name, ())

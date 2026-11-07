@@ -486,7 +486,7 @@ RECIPES = {
         # x86 leg here in any case. The expectation is that very nearly all
         # 139 functions carry a name; if a build comes back near the floor,
         # that is a finding about the build rather than a reason to lower it.
-        # Measured: 321 of 321 named, a ratio of 1.000, so the PDB was found
+        # Measured: 299 of 299 named, a ratio of 1.000, so the PDB was found
         # and applied. The count is higher than the source's 139 because the
         # PDB also names string-literal COMDATs and import thunks; see notes.
         notes="The kernel half of BlackBone, in its own solution and sharing "
@@ -503,16 +503,19 @@ RECIPES = {
               "under _WIN10_: BlackBoneDrv.c 5, Dispatch.c 1, Inject.c 4, "
               "Loader.c 14, MMap.c 19, NotifyRoutine.c 1, Private.c 13, "
               "Remap.c 25, Routines.c 21, Utils.c 23, VadHelpers.c 4, "
-              "VadRoutines.c 5, ldrreloc.c 4. The built artefact reports 321 "
+              "VadRoutines.c 5, ldrreloc.c 4. The built artefact reports 299 "
               "functions, which overstates that: 58 are MSVC string-literal "
               "COMDAT symbols (??_C@_...) sitting in the code sections and "
               "disassembled as one- to six-instruction fragments rather than "
-              "being code at all, and a further 112 are three instructions "
-              "or fewer, almost all import thunks into ntoskrnl. The 144 "
-              "functions of ten instructions or more are the driver's own "
-              "code and agree with the 139 counted in the source, the excess "
-              "being static helpers and AVL callbacks the file-by-file count "
-              "does not reach. Judge coverage on those 144. Eight of the "
+              "being code at all, and a further 106 are three instructions "
+              "or fewer, almost all import thunks into ntoskrnl. The kernel-mode "
+              "glue baseline removes the 22 WDK and CRT support functions the "
+              "image carried (the RtlUnicodeString family, memcpy, memset, "
+              "the GS and castguard checks, the cookie and CPU feature init, "
+              "and RtlFailFast among them). The 129 functions of ten "
+              "instructions or more that remain are the driver's own code. "
+              "That is below the 139 counted in the source, and the gap is "
+              "not explained here. Judge coverage on those 129. Eight of the "
               "139 are not this "
               "project's code and are present here under this family: "
               "ldrreloc.c's four Ldr* relocation routines are Windows "
@@ -526,11 +529,11 @@ RECIPES = {
               "Win7, Win8 and Win8.1 configurations compile the same sources "
               "against different EPROCESS, MMVAD and handle-table "
               "definitions and are not built. The image also carries "
-              "whatever kernel-mode runtime the WDK links in, and the "
-              "compiler-runtime filter cannot recognise it because the "
-              "baseline it measures against is a user-mode ucrt/vcruntime "
-              "build; those functions are therefore filed under this family "
-              "and are not this project's code. The driver is linked and "
+              "whatever kernel-mode runtime the WDK links in. The kernel-mode "
+              "glue baseline measures that runtime from three driver builds "
+              "and removes what it recognises; anything it does not recognise "
+              "is filed under this family and is not this project's code. "
+              "The driver is linked and "
               "disassembled, never loaded: it is unsigned, and loading it "
               "would put an unauthenticated kernel-mode primitive for "
               "cross-process memory remapping and SSDT hooking on the "

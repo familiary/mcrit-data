@@ -12,7 +12,7 @@ import logging
 import os
 
 from . import config
-from .baseline import is_glue
+from .baseline import is_glue, is_kernel_image
 
 
 LOGGER = logging.getLogger(__name__)
@@ -127,17 +127,23 @@ def _recompute_statistics(report):
     report._num_instructions = statistics.num_instructions
 
 
-def _drop_crt_glue(report, toolchain_id):
+def _drop_crt_glue(report, toolchain_id, kernel=False):
     """Remove compiler runtime functions so they keep the compiler's family.
 
     A function is glue only when its symbol name and its PicHash both match a
     baseline measured from an otherwise empty DLL built with the same
     toolchain, so a project that provides its own version of a runtime symbol
     keeps it.
+
+    ``kernel`` adds the WDK baseline for a driver on top of the user-mode one;
+    see baseline.kernel_glue.
     """
     removed = []
+    # The keyword is only passed for a driver, so a user-mode image reaches
+    # is_glue exactly as it always has.
+    extra = {"kernel": True} if kernel else {}
     for offset, function in list(report.xcfg.items()):
-        if is_glue(function, toolchain_id):
+        if is_glue(function, toolchain_id, **extra):
             removed.append(function.function_name)
             del report.xcfg[offset]
     # getFunctions() memoises its sorted list, so it has to be dropped or
@@ -335,7 +341,8 @@ def smdaify(binary_path, family, version, component, is_library=True,
 
     removed = []
     if drop_crt_glue and toolchain_id:
-        removed = _drop_crt_glue(report, toolchain_id)
+        removed = _drop_crt_glue(report, toolchain_id,
+                                 kernel=is_kernel_image(filename or binary_path))
 
     if is_blob:
         recovered = report.statistics.num_instructions if report.statistics else 0

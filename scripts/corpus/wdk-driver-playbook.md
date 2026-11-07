@@ -279,12 +279,15 @@ where the consumer's linker can fold it into the final PDB.
 - `min_named_ratio`: leave `0.5`. With a forced PDB a C driver should come in
   near 1.0. C++ with exception handling on x86 is the risky case -
   `blackbone.py`'s x86 leg lands at 0.523.
-- `drop_crt_glue`: leave `True`. It is a user-mode ucrt/vcruntime baseline, so
-  it will recognise little kernel runtime - it removed 21 symbols from
-  BlackBoneDrv (`__security_check_cookie`, `__C_specific_handler`, the
-  `__castguard_*` and `_guard_*` families, `RtlCaptureContext`, `strcmp`).
-  Leaving it on asserts nothing and cannot mismatch, because `is_glue` requires
-  the symbol name *and* the PicHash to match.
+- `drop_crt_glue`: leave `True`. A `.sys` is filtered against the user-mode
+  baseline *and* the kernel one (`baseline.kernel_glue`, chosen by the `.sys`
+  file name), which removes the WDK's `memcpy`/`memset` family, the /GS cookie
+  and its reporters, `GsDriverEntry`, the guard-cast stubs and the
+  `ntstrsafe`/`ntintsafe` inlines the probes reach - 10 to 22 functions per
+  image (README, "The eighth round"). Leaving it on cannot mismatch, because
+  `is_glue` requires the symbol name *and* the PicHash to match. What it does
+  not remove is every import thunk named for an ntoskrnl API (`Zw*`, `Rtl*`),
+  by design, and any KMDF glue, which has no probe yet.
 - `pdb`: name the **linker** PDB only. If the path is set it must exist or the
   build fails.
 - Add `BuildStep("dir /s out", allow_failure=True)` as the last step. `build.py`
