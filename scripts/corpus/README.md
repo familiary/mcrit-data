@@ -540,6 +540,7 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| metasploit-payloads / Meterpreter (`metsrv`, `ext_server_*`) | [#31](https://github.com/r0ny123/mcrit-data/issues/31) | Not built pending the issue's explicit maintainer scope decision: it describes Meterpreter as a post-exploitation agent and asks whether it belongs in the corpus. No compiler failure is claimed. The issue's vendoring findings remain relevant: `metsrv/zlib.c` is reported as the zlib 1.0.4 PPP fork; ReflectiveDLLInjection and COFFLoader have separate coverage; the `kiwi/mimikatz` submodule remains outside this work. If scope is accepted, measure the zlib overlap and record the v120_xp versus v143 toolset difference before attributing consumer functions. |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |
