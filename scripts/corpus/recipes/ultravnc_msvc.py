@@ -317,22 +317,18 @@ _COPY_NOVNC = (
 
 # --- 1.2.1.4 (see the docstring) --------------------------------------------
 
-# _PROPS_1_2 plus: winvnc.exe links the zlibstat.lib that the tree's own
-# zlib-1.2.11 project produces. winvncv12.vcxproj of this commit has no
-# ProjectReference to it (1.2.1.5 has), so 13 zlib symbols were unresolved;
-# the library is built by its own project (a separate step) and added here.
-_PROPS_1_2_4 = _PROPS_1_2.replace(
-    "</ItemGroup></Target></Project>'",
-    "</ItemGroup></Target>'"
-    "'<PropertyGroup><CorpusZArch>x86</CorpusZArch>"
-    "<CorpusZArch Condition=@d@s$(Platform)@s==@sx64@s@d>x64</CorpusZArch>"
-    "</PropertyGroup>'"
-    "'<ItemDefinitionGroup Condition=@d$(MSBuildProjectName.StartsWith(@swinvnc@s))@d>'"
-    "'<Link><AdditionalDependencies>$(MSBuildThisFileDirectory)"
-    "zlib-1.2.11/contrib/vstudio/vc10/$(CorpusZArch)/ZlibStatRelease/zlibstat.lib;"
-    "@p(AdditionalDependencies)</AdditionalDependencies></Link>'"
-    "'</ItemDefinitionGroup></Project>'")
-assert _PROPS_1_2_4 != _PROPS_1_2
+# winvncv12.vcxproj imports the NuGet package Libjpeg-Turbo 1.5.15 from
+# ..\packages\ and raises an error when it is missing (no packages.config or
+# restore is in the tree). Its targets only add an include directory and, for
+# the v120 and v140 toolsets, link its own libs; under v143 nothing is linked.
+# The package is fetched by sha256 and its build\ directory unpacked where the
+# project looks for it.
+_UNPACK_LJNUGET = (
+    'python -c "'
+    "import zipfile,sys;z=zipfile.ZipFile(sys.argv[1]);"
+    "z.extractall('winvnc/packages/Libjpeg-Turbo.1.5.15',"
+    "[n for n in z.namelist() if n.startswith('build/')])"
+    '" {ljnuget}')
 
 # The files libjpeg-turbo-win\ includes or assembles and that 1.2.1.4 never
 # committed (1.2.1.5 adds them): four private headers and the SIMD Huffman
@@ -490,16 +486,18 @@ RECIPES = {
             "libjpeg": Source(
                 git_url="https://github.com/libjpeg-turbo/libjpeg-turbo.git",
                 git_ref="cb88e5da8003afcdc443b787fdcb77285e5a8a02"),
+            "ljnuget": Source(
+                url="https://api.nuget.org/v3-flatcontainer/libjpeg-turbo/"
+                    "1.5.15/libjpeg-turbo.1.5.15.nupkg",
+                sha256="e6ba0d683c7048867fb21ba65e1cd40c96e02144d2721095347b24b523d6e2e9"),
         },
         build=[
-            BuildStep(_PROPS_1_2_4),
+            BuildStep(_PROPS_1_2),
             BuildStep(_UNPACK_DXSDK),
             BuildStep(_COPY_JPEG),
+            BuildStep(_UNPACK_LJNUGET),
             BuildStep(_NASM, allow_failure=True),
             BuildStep(_SLN_1_2),
-            BuildStep(_MSBUILD_1_2 % (
-                "zlib-1.2.11\\contrib\\vstudio\\vc10\\zlibstatv12.vcxproj",
-                "Build"), allow_failure=True),
             BuildStep(_MSBUILD_1_2 % ("vncviewer\\vncviewer_vs2013.sln",
                                       "vncviewer"), allow_failure=True),
             BuildStep(_MSBUILD_1_2 % ("winvnc\\winvnc_build.sln", "winvnc"),
@@ -517,17 +515,17 @@ RECIPES = {
                     "jdcoefct.h, jdmainct.h, jdmaster.h, jdsample.h and the "
                     "SIMD Huffman sources (jchuffsse2.asm, jchuff-sse2-64.asm, "
                     "jpeg_nbits_table.inc) added to libjpeg-turbo-win from "
-                    "libjpeg-turbo 1.5.1 (cb88e5da); the tree's zlib-1.2.11 "
-                    "zlibstatv12.vcxproj built on its own and zlibstat.lib "
-                    "added to winvnc's link",
+                    "libjpeg-turbo 1.5.1 (cb88e5da); the NuGet package "
+                    "Libjpeg-Turbo 1.5.15 that winvncv12.vcxproj imports "
+                    "unpacked under winvnc\\packages (headers only under v143)",
         notes="Commit b4034d51 (FILEVERSION 1.2.1.4), the half-committed "
               "state before 1.2.1.5. NOT byte-identical to a build of "
               "unmodified upstream: the tree lacks four libjpeg private "
               "headers and the SIMD Huffman assembly its own project lists "
               "(supplied from libjpeg-turbo 1.5.1, identical to what 1.2.1.5 "
-              "commits), winvncv12.vcxproj does not reference the in-tree "
-              "zlib so zlibstat.lib is built separately and added to the "
-              "link, and the 1.2.1.5 workarounds apply (windows.h for the "
+              "commits), winvncv12.vcxproj needs the NuGet package "
+              "Libjpeg-Turbo 1.5.15 that is not in the tree (fetched by "
+              "sha256), and the 1.2.1.5 workarounds apply (windows.h for the "
               "Info-ZIP project, <string> for C++ items, D3DX9 headers from "
               "a NuGet package). See the recipe docstring. Both executables "
               "statically link the in-tree zlib 1.2.11, libjpeg-turbo, "
