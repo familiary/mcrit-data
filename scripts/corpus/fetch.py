@@ -44,7 +44,14 @@ def download(url, expected_sha256):
     target = os.path.join(cache_dir, os.path.basename(url.split("?")[0]))
     for attempt in range(2):
         if not os.path.exists(target):
-            subprocess.run(["curl", "-sSL", "--fail", "--retry", "3",
+            # --retry alone only covers timeouts and HTTP 5xx, with a 1-2-4
+            # second back-off, so a connect-level failure (curl exit 35, an
+            # SSL handshake error) is never retried and a host that stalls
+            # for a minute fails the whole run. --retry-all-errors covers the
+            # former, the fixed delay and bounded connect time the latter.
+            subprocess.run(["curl", "-sSL", "--fail",
+                            "--retry", "5", "--retry-all-errors",
+                            "--retry-delay", "10", "--connect-timeout", "30",
                             "-o", target, url], check=True)
         digest = sha256_file(target)
         if digest == expected_sha256:
