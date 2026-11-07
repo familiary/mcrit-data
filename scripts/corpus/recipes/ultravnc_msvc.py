@@ -161,12 +161,11 @@ unmodified upstream. Every change, with its reason:
     macros as Release|Win32 does for winvnc* projects on x64.
   * 1.8.3.0 (36c2389f, "1.8.3.0") builds like 1.8.3.1: same noVNC pin, same
     two workarounds, both executables, x86 and x64 (run 42417689317). Its
-    images are not carried in data/ because they are almost the same code as
-    versions that are: PicHash overlap (functions of 10+ instructions,
+    images are carried although they are almost the same code as versions
+    already carried: PicHash overlap (functions of 10+ instructions,
     distinct hashes) is 99.97% against 1.8.2.9 for the x86 viewer (3528 of
     3529), 97.0% for the x64 viewer, 98.8% / 95.4% for the x86 / x64 server
-    against 1.8.2.9 and 99.8% / 98.2% against 1.8.3.1. The recipe is kept so
-    the images can be rebuilt; kept / removed / total were 6252 / 1587 / 7839
+    against 1.8.2.9 and 99.8% / 98.2% against 1.8.3.1. Kept / removed / total: 6252 / 1587 / 7839
     (x86 viewer), 6023 / 1611 / 7634 (x64 viewer), 7590 / 1662 / 9252 (x86
     server), 7189 / 1722 / 8911 (x64 server).
   * 1.2.1.4 (b4034d51) builds, both executables, x86 and x64 (run
@@ -197,11 +196,14 @@ unmodified upstream. Every change, with its reason:
     builds and links, so no zlib workaround is applied; I cannot say why that
     run lacked the library. Kept / removed / total: 2577 / 1513 / 4090
     (x86 viewer), 2335 / 1521 / 3856 (x64 viewer), 3874 / 1560 / 5434 (x86
-    server), 3562 / 1584 / 5146 (x64 server). Not carried in data/: against
-    1.2.1.5 the PicHash overlap is 95.1% / 88.8% (x86 / x64 viewer, of 1436
+    server), 3562 / 1584 / 5146 (x64 server). Carried although redundant:
+    against 1.2.1.5 the PicHash overlap is 95.1% / 88.8% (x86 / x64 viewer, of 1436
     and 1245 hashes) and 96.7% / 93.0% (server, of 2000 and 1790), 93.8% over
-    the four images together (6068 of 6471 hashes). The recipe is kept for
-    rebuilding.
+    the four images together (6068 of 6471 hashes). Surviving glue names (kept
+    functions named like something the baseline removed from another UltraVNC
+    image): 1.2.1.4 has 25 (x86 viewer), 25 (x86 server) and 5 / 5 (x64), the
+    same as 1.2.1.5; 1.8.3.0 has 34, 45 and 5 / 5, the same as 1.8.3.1; they
+    are MSVC STL and ATL inline instantiations.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
