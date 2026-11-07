@@ -45,8 +45,67 @@ MSVC v143 measurements (same ten-instruction hash floor):
   x64 meshconsole kept 3055 + removed 220 = image 3275; 1973 unique PicHashes
 All fifteen image-pair intersections are zero.
 Thus every compiler, architecture and component leg adds distinct coverage.
-MinGW's C++ probe fails at wincrypto.cpp:342 even with -fpermissive, jumping
-across BYTE ByteData initialization at line 277; the README records it.
+
+MinGW-w64 GCC 13 (msvcrt) measurements, same floor (patched build tree, see below):
+  x86 meshservice kept 2702 + removed 173 = image 2875; 1865 unique PicHashes
+  x86 meshconsole kept 2766 + removed 193 = image 2959; 2017 unique PicHashes
+  x64 meshservice kept 3046 + removed 154 = image 3200; 1800 unique PicHashes
+  x64 meshconsole kept 3033 + removed 187 = image 3220; 2068 unique PicHashes
+Linux x86-64/x86 KVM (ARCHID 6 and 5, GCC 13; the NOKVM images above are GCC 14):
+  x64 kvm kept 3423 + removed 6 = image 3429; 1810 unique PicHashes
+  x86 kvm kept 3408 + removed 7 = image 3415; 2003 unique PicHashes
+The KVM images share 25 (x64) and 130 (x86) ten-instruction hashes with the
+NOKVM images of the same architecture: the agent core compiled twice, by two
+GCC majors. Other measured intersections: MinGW x86 service with Linux x86 KVM 35
+and with NOKVM 26 (identical small ILib functions differing only in the leading
+underscore); MinGW service with console 9 on each architecture (mingw-w64 CRT
+survivors below); MinGW x64 service with MSVC x64 service 1 (the 13-instruction
+getter ILibWrapper_WebRTC_Connection_GetUserData). All other pairs share zero.
+MinGW images keep about 385-690 one-instruction linker import thunks (jmp
+through the import table, named after the OpenSSL, zlib, Duktape and Win32
+symbols) because the OpenSSL headers carry no dllimport; they are counted in
+kept and are below the ten-instruction floor. No OpenSSL, zlib, Duktape or
+libjpeg body is in any new image; jpeg_error_handler and crc32_z are agent code
+(crc32_z is also in the NOKVM images). OpenSSL/libzlib family overlap was not
+re-measured for the new images (those families were not checked out).
+
+Surviving mingw-w64 CRT names (recorded, not removed): __tmainCRTStartup (142 x64,
+152 x86 instructions), _fseeki64, _ftelli64, _int_chsize_s, _int_memcpy_s,
+_int_memmove_s, four _stub shims (vsprintf_s etc.), sprintf_s, and _start (service
+only). Linux KVM survivors: x64 sprintf_s only (agent code); x86 also
+__do_global_dtors_aux, __stack_chk_fail_local, __x86.get_pc_thunk.{bp,cx,si},
+_init, _start, deregister_tm_clones, register_tm_clones.
+
+Linux KVM: jpeglib.h comes from host libjpeg-turbo (libjpeg-dev, plus
+libjpeg-turbo8-dev:i386 for x86) and the build passes NOTURBOJPEG=1, so libjpeg is a
+shared library and the committed static libturbojpeg.a is not linked. X11, XTest,
+XRandr, libdrm, EGL, GLES and wayland-client are headers only (the agent dlopens
+them). Host packages used: libjpeg-dev libjpeg-turbo8-dev libx11-dev libxtst-dev
+libxext-dev libxrandr-dev libxfixes-dev libdrm-dev libegl1-mesa-dev
+libgles2-mesa-dev libwayland-dev pkg-config.
+
+MinGW build tree patches (applied by scripts/corpus/exercisers/meshagent_mingw.py;
+the images are NOT byte-identical to a build of unmodified upstream). Exact diffs:
+  meshcore/wincrypto.cpp (goto 'error' at line 342 crossed the initialisation at 277)
+    -	BYTE ByteData = CERT_KEY_CERT_SIGN_KEY_USAGE | CERT_OFFLINE_CRL_SIGN_KEY_USAGE | CERT_CRL_SIGN_KEY_USAGE;
+    +	BYTE ByteData;
+    +	ByteData = CERT_KEY_CERT_SIGN_KEY_USAGE | CERT_OFFLINE_CRL_SIGN_KEY_USAGE | CERT_CRL_SIGN_KEY_USAGE;
+  microstack/ILibParsers.c (follow-on: definitions conflicted with ILibParsers.h)
+    -char* ILibInet_ntop(int af, const char *src, char *dst, size_t dstsize)
+    +char* ILibInet_ntop(int af, const void *src_, char *dst, size_t dstsize)
+    +	const char *src = (const char*)src_;
+    -int ILibInet_pton(int af, const char *src, char *dst)
+    +int ILibInet_pton(int af, const char *src, void *dst_)
+    +	char *dst = (char*)dst_;
+Not source edits, but behavioural: a generated forced include reduces __try/__except
+(GCC has no SEH) to a plain block so exception filters never run, maps
+_get_timezone/_get_daylight to _timezone/_daylight (msvcrt lacks them), and sets
+UNREFERENCED_PARAMETER to a cast; forwarding headers fix include-name case; the
+UTF-16 resource.h is re-encoded as UTF-8; ILibDuktape_Commit.h is generated as the
+makefile does. Resource scripts (.rc) are not compiled. Optimisation mirrors upstream
+Release: service -O2 (x86) / -Os (x64), console -O0; -g; msvcrt, -shared-libgcc, dynamic
+libstdc++. OpenSSL 1.1.1w and zlib 1.3.1 are shared DLLs; Duktape is a DLL per
+executable linked against an import library for the host callback.
 
 Actual build logs confirm service /Ox /Os /Oy on x86, /O1 on x64; console
 keeps upstream /Od on both. /MD, /Zi, /Brepro, /INCREMENTAL:NO, /OPT:NOREF
@@ -191,6 +250,46 @@ for _directory, _project, _name in (
                   _directory + ".props"),
     ]
 
+_BUILD_KVM = (_BUILD.replace("ARCHID=20", "ARCHID=6")
+              .replace("env -u CFLAGS make linux", "env -u CFLAGS make linux NOTURBOJPEG=1"))
+_BUILD_KVM_X86 = (_BUILD_X86.replace("ARCHID=19", "ARCHID=5")
+                  .replace("env -u CFLAGS make linux", "env -u CFLAGS make linux NOTURBOJPEG=1"))
+
+_MINGW_HELPER = "python3 {repo}/scripts/corpus/exercisers/meshagent_mingw.py"
+_MINGW_DUK_DEFS = ("-DDUK_USE_DATE_NOW_WINDOWS -DDUK_USE_DEBUGGER_SUPPORT "
+                   "-DDUK_USE_INTERRUPT_COUNTER -DDUK_USE_DEBUGGER_INSPECT "
+                   "-DDUK_USE_DEBUGGER_PAUSE_UNCAUGHT -DDUK_USE_DEBUGGER_DUMPHEAP")
+_MINGW_DEPS = [
+    BuildStep("tar xf {openssl_source} && tar xf {zlib_source}"),
+    BuildStep("if [ {bitness} = 64 ]; then T=mingw64; else T=mingw; fi && "
+              "./Configure $T --cross-compile-prefix={prefix} shared no-tests && "
+              "(make -j2 build_libs || make -j2 build_libs)", cwd="openssl-1.1.1w",
+              env={"CC": "gcc", "CXX": "g++", "AR": "ar", "RANLIB": "ranlib",
+                   "WINDRES": "windres"}),
+    BuildStep("make -f win32/Makefile.gcc PREFIX={prefix} SHARED_MODE=1 -j2",
+              cwd="zlib-1.3.1"),
+    BuildStep(_MINGW_HELPER + " prepare --prefix {prefix} --shim {source_root}/corpus-shim"),
+]
+_MINGW_BUILD = []
+for _component, _name, _opt in (
+    ("service", "MeshAgentService", "$([ {bitness} = 64 ] && echo -Os || echo -O2)"),
+    ("console", "MeshAgentConsole", "-O0"),
+):
+    _MINGW_BUILD += [
+        BuildStep(_MINGW_HELPER + " host --prefix {prefix} --name " + _name +
+                  " --deps {source_root}/corpus-deps"),
+        BuildStep("{cc} -shared -O2 -g " + _MINGW_DUK_DEFS + " ../microscript/duktape.c "
+                  "-o corpus-duktape-" + _name + ".dll "
+                  "-Wl,--out-implib,libcorpus-duktape-" + _name + ".dll.a "
+                  "-L. -l" + _name + "-host -lws2_32", cwd="corpus-deps"),
+        BuildStep(_MINGW_HELPER + " build --prefix {prefix} --component " + _component +
+                  " --arch {arch} --shim {source_root}/corpus-shim "
+                  "--deps {source_root}/corpus-deps --ssl {source_root}/openssl-1.1.1w "
+                  "--zlib {source_root}/zlib-1.3.1 --objdir {source_root}/corpus-obj/" +
+                  _component + " --output {source_root}/corpus-out/" + _name + ".exe "
+                  "--optimize=" + _opt),
+    ]
+
 RECIPES = {
     "meshagent_26846b1_msvc": Recipe(
         family="MeshAgent",
@@ -225,6 +324,44 @@ RECIPES = {
         notes="OpenSSL 1.1.1w, embedded Duktape 2.6.0 and zlib 1.3.1 are "
               "linked as shared dependencies and excluded from agent code. "
               "Service and console retain upstream Windows KVM configuration.",
+    ),
+    "meshagent_26846b1_mingw": Recipe(
+        family="MeshAgent",
+        version="26846b1",
+        upstream="https://github.com/Ylianst/MeshAgent",
+        license="Apache-2.0",
+        source=Source(git_url="https://github.com/Ylianst/MeshAgent.git",
+                      git_ref="26846b1c7f0841d71938f6bebc96eef5a947d217"),
+        extra_sources={"openssl_source": Source(
+            url="https://github.com/openssl/openssl/releases/download/"
+                "OpenSSL_1_1_1w/openssl-1.1.1w.tar.gz",
+            sha256="cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8"),
+            "zlib_source": Source(url="https://zlib.net/fossils/zlib-1.3.1.tar.gz",
+                sha256="9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23")},
+        build=_MINGW_DEPS + _MINGW_BUILD,
+        artifacts=[Artifact(path="corpus-out/MeshAgentService.exe", component="meshservice",
+                            is_library=True,
+                            build_flags="-O2 (x86) / -Os (x64), mirroring upstream Release "
+                                        "/Ox and /O1; -g; two build-tree patches, see notes"),
+                   Artifact(path="corpus-out/MeshAgentConsole.exe", component="meshconsole",
+                            is_library=True,
+                            build_flags="-O0, mirroring upstream Release /Od; -g; two "
+                                        "build-tree patches, see notes")],
+        toolchains=["mingw_x86", "mingw_x64"],
+        requires=["perl", "make", "tar", "git"],
+        build_flags="MinGW-w64 GCC, msvcrt, -g, -shared-libgcc, dynamic libstdc++; "
+                    "build-tree patches to meshcore/wincrypto.cpp and "
+                    "microstack/ILibParsers.c",
+        notes="NOT byte-identical to a build of unmodified upstream: the recipe applies "
+              "two build-tree patches. wincrypto.cpp splits 'BYTE ByteData = ...' into a "
+              "declaration and an assignment (the goto to 'error' crosses the "
+              "initialisation); ILibParsers.c gives ILibInet_ntop/ILibInet_pton the "
+              "parameter types ILibParsers.h declares (GCC rejects conflicting types). "
+              "A generated forced-include also reduces __try/__except to a plain block "
+              "(the exception filter never runs) and maps _get_timezone/_get_daylight "
+              "to _timezone/_daylight. Forwarding headers fix include-name case. "
+              "OpenSSL 1.1.1w and zlib 1.3.1 are shared DLLs; Duktape is one DLL per "
+              "executable with an import library for the host timeout callback.",
     ),
     "meshagent_26846b1_linux_nokvm": Recipe(
         family="MeshAgent",
@@ -276,5 +413,63 @@ RECIPES = {
         notes="OpenSSL 1.1.1s and Duktape 2.6.0 from the pinned source tree, "
               "and Debian zlib 1.3.1, are shared dependencies, excluded from agent code. "
               "The reported deployments are primarily Windows; KVM status is unknown.",
+    ),
+    "meshagent_26846b1_linux_kvm": Recipe(
+        family="MeshAgent",
+        version="26846b1",
+        upstream="https://github.com/Ylianst/MeshAgent",
+        license="Apache-2.0",
+        source=Source(git_url="https://github.com/Ylianst/MeshAgent.git",
+                      git_ref="26846b1c7f0841d71938f6bebc96eef5a947d217"),
+        build=[BuildStep(_BUILD_DEPS), BuildStep(_BUILD_KVM)],
+        artifacts=[Artifact(path="meshagent_x86-64", component="meshagent-kvm",
+                            is_library=True)],
+        toolchains=["linux_x64"],
+        requires=["make", "pkg-config"],
+        build_flags="-O2 -g -fstack-protector -D_FORTIFY_SOURCE=2 -fno-strict-aliasing; "
+                    "ARCHID=6 KVM=1; NOTURBOJPEG=1 (system libjpeg shared); "
+                    "DYNAMICTLS=1; STRIP=true",
+        notes="Official Linux x86-64 KVM configuration. OpenSSL 1.1.1s and Duktape "
+              "2.6.0 from the pinned source tree, host zlib and host libjpeg-turbo "
+              "are shared dependencies, excluded from agent code. Needs host "
+              "development headers: libjpeg-dev libx11-dev libxtst-dev libxext-dev "
+              "libxrandr-dev libxfixes-dev libdrm-dev libegl1-mesa-dev "
+              "libgles2-mesa-dev libwayland-dev pkg-config.",
+    ),
+    "meshagent_26846b1_linux_x86_kvm": Recipe(
+        family="MeshAgent",
+        version="26846b1",
+        upstream="https://github.com/Ylianst/MeshAgent",
+        license="Apache-2.0",
+        source=Source(git_url="https://github.com/Ylianst/MeshAgent.git",
+                      git_ref="26846b1c7f0841d71938f6bebc96eef5a947d217"),
+        extra_sources={
+            "zlib32_dev": Source(
+                url="https://deb.debian.org/debian/pool/main/z/zlib/"
+                    "zlib1g-dev_1.3.dfsg+really1.3.1-1+b1_i386.deb",
+                sha256="b5ca31bbc301f5f8be89ef90a1935c826bf562d6f6601e9169709366e3bad263"),
+            "zlib32_runtime": Source(
+                url="https://deb.debian.org/debian/pool/main/z/zlib/"
+                    "zlib1g_1.3.dfsg+really1.3.1-1+b1_i386.deb",
+                sha256="8950c79b1ade51f53b2f37863aec532cfaca3dff315e28f0c5b53902425c41ed"),
+        },
+        build=[BuildStep(_BUILD_DEPS_X86),
+               BuildStep("mkdir -p corpus-zlib32 && "
+                         "dpkg-deb -x {zlib32_dev} corpus-zlib32 && "
+                         "dpkg-deb -x {zlib32_runtime} corpus-zlib32"),
+               BuildStep(_BUILD_KVM_X86, env={
+                   "LIBRARY_PATH": "{source_root}/corpus-zlib32/usr/lib/i386-linux-gnu"})],
+        artifacts=[Artifact(path="meshagent_x86", component="meshagent-kvm",
+                            is_library=True)],
+        toolchains=["linux_x86"],
+        requires=["make", "dpkg-deb", "pkg-config"],
+        build_flags="-O2 -g -m32 -fstack-protector -D_FORTIFY_SOURCE=2 -fno-strict-aliasing; "
+                    "ARCHID=5 KVM=1; NOTURBOJPEG=1 (system libjpeg shared); "
+                    "DYNAMICTLS=1; STRIP=true",
+        notes="Official Linux x86 KVM configuration. OpenSSL 1.1.1s and Duktape "
+              "2.6.0 from the pinned source tree, Debian zlib 1.3.1 and host "
+              "libjpeg-turbo (i386) are shared dependencies, excluded from agent "
+              "code. Needs the host development headers listed for the x64 KVM "
+              "recipe plus libjpeg-turbo8-dev:i386.",
     ),
 }

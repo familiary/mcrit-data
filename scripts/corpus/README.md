@@ -540,8 +540,6 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
-| MeshAgent MinGW Windows | #86 | `x86_64-w64-mingw32-g++ -fpermissive` still rejects `meshcore/wincrypto.cpp:342:1: error: jump to label 'error'`, crossing initialization of `BYTE ByteData` at line 277. No upstream source patch is applied. |
-| MeshAgent Linux KVM | #86 | The KVM compression compilation stops at `meshcore/KVM/Linux/linux_compression.h:26:10: fatal error: jpeglib.h: No such file or directory`. Linux NOKVM x86/x64 builds are covered; the reports do not establish deployed agents' KVM status. |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |

@@ -138,6 +138,17 @@ def _resolve(index, family, slug, entry):
         narrowed = [(name, recipe) for name, recipe in candidates
                     if wanted in {canonical_alias(t)
                                   for t in recipe.toolchains}]
+        if len(narrowed) > 1:
+            # Two recipes of one project can target the same toolchain and
+            # differ only in the component they build (MeshAgent's KVM and
+            # NOKVM Linux images); the slug ends with that component.
+            prefix = "%s_%s_" % (family, version)
+            rest = slug[len(prefix):].split("_") if slug.startswith(prefix) else []
+            component = "_".join(rest[2:])
+            by_component = [(name, recipe) for name, recipe in narrowed
+                            if any(a.component == component for a in recipe.artifacts)]
+            if by_component:
+                narrowed = by_component
         if len(narrowed) == 1:
             candidates = narrowed
         else:
