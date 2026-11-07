@@ -6,7 +6,7 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "BlackBoneDrv10.sys",
     "family": "BlackBoneDrv",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "MIT (Copyright (c) 2015 DarthTon) for the project; two pieces of the driver are not covered by it and both are in this artefact. src/BlackBoneDrv/ldrreloc.c is Windows Research Kernel source, \"Copyright (c) Microsoft Corporation. All rights reserved.\", usable only under the Windows Research Kernel Source Code License agreement, which it points at as \"License.txt\" - a file that does not exist anywhere in the repository; it contributes LdrRelocateImage, LdrRelocateImageWithBias, LdrProcessRelocationBlock and LdrProcessRelocationBlockLongLong. src/BlackBoneDrv/VadHelpers.c carries no copyright header but is the same kernel's Mm AVL code verbatim, comment blocks and COUNT_BALANCE_MAX macro included, contributing MiPromoteNode, MiRebalanceNode, MiRemoveNode and MiFindNodeOrParent. src/BlackBoneDrv/apiset.h is Microsoft's too (\"Copyright (c) 2008 Microsoft Corporation\") but declares structures only and contributes no code",
     "mcrit": "data/BlackBoneDrv/x64/mcrit/BlackBoneDrv_2023-07-17_msvc143_x64_BlackBoneDrv10.sys.mcrit",

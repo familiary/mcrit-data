@@ -6,7 +6,7 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "RtlWow64.dll",
     "family": "RtlWow64",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "Apache-2.0",
     "mcrit": "data/RtlWow64/x86/mcrit/RtlWow64_2021-02-12_msvc143_x86_RtlWow64.dll.mcrit",

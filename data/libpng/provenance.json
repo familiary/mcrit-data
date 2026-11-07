@@ -347,7 +347,7 @@
       }
     },
     "family": "libpng",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "libpng-2.0",
     "mcrit": "data/libpng/x64/mcrit/libpng_1.6.50_msvc143_x64_libpng16.dll.mcrit",
@@ -530,7 +530,7 @@
       }
     },
     "family": "libpng",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "libpng-2.0",
     "mcrit": "data/libpng/x86/mcrit/libpng_1.6.50_msvc143_x86_libpng16.dll.mcrit",
