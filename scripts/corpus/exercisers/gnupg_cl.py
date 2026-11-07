@@ -503,6 +503,87 @@ def generic_mpi_modules(bld, src, items):
     return added
 
 
+def resolve_hwfeatures(items, includes, defines, force, arch, shim, bld, src):
+    """Bisect cl's internal compiler error (C1001) in src/hwfeatures.c.
+
+    1.10.4 and 1.11.3 abort in cl on this file whatever the optimiser setting.
+    With --disable-asm HAVE_CPU_ARCH_X86 is not defined, so the table
+    `hwflist[] = { ... }` has no initialiser at all (an empty brace list for an
+    array of structs, which cl turns into a zero-size array) and is the
+    suspect. Each variant below is one separate cl invocation, all of them
+    logged; the first that compiles supplies the real object:
+
+      orig        the file as shipped (known to crash)
+      x86tab      /DHAVE_CPU_ARCH_X86=1 for this file only: the table gets its
+                  x86 rows; the detection branch then calls
+                  _gcry_hwf_detect_x86, which hwf-x86.c (compiled with the GCC
+                  CPU macro, as for 1.8.14) provides and which reports no
+                  features without CPUID
+      noparse     parse_hwf_deny_file returns at once (build-tree edit)
+      nosysconf   _gcry_get_sysconfdir returns the fixed fallback (build-tree edit)
+      noparse+nosysconf, and the original under /std:c11, /Zc:preprocessor,
+      /Od /Zi and /d2SSAOptimizer-
+    """
+    pos = [k for k, i in enumerate(items) if os.path.basename(i[0]) == "hwfeatures.c"]
+    if not pos:
+        return items, False
+    k = pos[0]
+    path, objname, cwd = items[k]
+    with open(path, newline="") as f:
+        text = f.read()
+
+    def noparse(t):
+        return t.replace("parse_hwf_deny_file (void)\n{\n", "parse_hwf_deny_file (void)\n{\n  return;\n", 1)
+
+    def nosysconf(t):
+        return t.replace("  static char *appdata;\n",
+                         "  return \"c:/ProgramData/GNU/etc/gcrypt/\";\n  static char *appdata;\n", 1)
+    variants = [
+        ("orig", [], None, False),
+        ("x86tab", ["/DHAVE_CPU_ARCH_X86=1"], None, True),
+        ("noparse", [], noparse, False),
+        ("nosysconf", [], nosysconf, False),
+        ("noparse+nosysconf", [], lambda t: nosysconf(noparse(t)), False),
+        ("orig /std:c11", ["/std:c11"], None, False),
+        ("orig /Zc:preprocessor", ["/Zc:preprocessor"], None, False),
+        ("orig /Od /Zi", ["/Od", "/Zi"], None, False),
+        ("orig /d2SSAOptimizer-", ["/d2SSAOptimizer-"], None, False),
+        ("x86tab+noparse", ["/DHAVE_CPU_ARCH_X86=1"], noparse, True),
+    ]
+    cl = Cl(None)
+    winner = None
+    for n, (name, flags, edit, needs_x86) in enumerate(variants):
+        src_v = path
+        if edit:
+            t2 = edit(text)
+            if t2 == text:
+                say("hwfeatures variant %-22s: edit did not apply, skipped" % name)
+                continue
+            src_v = os.path.join(shim, "hwfeatures_v%d.c" % n)
+            with open(src_v, "w", newline="") as f:
+                f.write(t2)
+        extra = ["/FI" + force] + flags
+        cmd = cl.compile_cmd(src_v, "hwf_probe_%d.obj" % n, includes(cwd), defines, extra)
+        rc, out = run(cmd, cwd=cwd, timeout=600, check=False, quiet=True)
+        o = out.decode("utf-8", "replace")
+        msg = " | ".join(l.strip() for l in o.splitlines() if "error" in l or "INTERNAL" in l)[:300]
+        say("hwfeatures variant %-22s: rc=%s %s" % (name, rc, msg if rc else "COMPILES"))
+        if rc == 0 and winner is None:
+            winner = (name, src_v, flags, needs_x86)
+    if winner is None:
+        say("hwfeatures: no variant compiles")
+        return items, False
+    name, src_v, flags, needs_x86 = winner
+    say("hwfeatures: using variant '%s'" % name)
+    items = list(items)
+    items[k] = (src_v, objname, cwd)
+    HWF_EXTRA.extend(flags)
+    return items, needs_x86
+
+
+HWF_EXTRA = []
+
+
 def gen_gost_sb(bld, src):
     """cipher/gost-sb.h is generated at build time by a build-host program."""
     c = os.path.join(src, "cipher", "gost-s-box.c")
@@ -591,7 +672,20 @@ def build_gcrypt(arch, src, work, prefix):
     # the GCC CPU macro is defined; with only that macro (no __GNUC__) it
     # compiles its CPUID-less fallback, which reports no features.
     extra = {"rndjent.c": ["/Od"], "jitterentropy-base.c": ["/Od"],
-             "hwf-x86.c": ["/D__x86_64__" if arch == "x64" else "/D__i386__"]}
+             "hwf-x86.c": ["/D__x86_64__" if arch == "x64" else "/D__i386__"],
+             }
+    base_defs = ["HAVE_CONFIG_H", "DLL_EXPORT",
+                 "HAVE_GCC_STORAGE_CLASS__THREAD=1", "__thread=__declspec(thread)"]
+    items, needs_x86 = resolve_hwfeatures(items, includes, base_defs,
+                                          os.path.join(shim, "gnupg_cl_fi.h"), arch, shim, bld, src)
+    if needs_x86 and not any(os.path.basename(i[0]) == "hwf-x86.c" for i in items):
+        hx = os.path.join(src, "src", "hwf-x86.c")
+        if os.path.isfile(hx):
+            items.append((hx, "src-hwf-x86.obj", os.path.join(bld, "src")))
+            say("libgcrypt: hwf-x86.c added (provides _gcry_hwf_detect_x86 for the x86 table variant)")
+    for i in items:
+        if os.path.basename(i[0]).startswith("hwfeatures"):
+            extra[os.path.basename(i[0])] = list(HWF_EXTRA)
     ok, bad = compile_all(items, bld, includes, ["HAVE_CONFIG_H", "DLL_EXPORT",
                            "HAVE_GCC_STORAGE_CLASS__THREAD=1", "__thread=__declspec(thread)"], extra,
                           force=os.path.join(shim, "gnupg_cl_fi.h"))
