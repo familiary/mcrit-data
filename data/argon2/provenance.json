@@ -166,7 +166,7 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "libargon2.dll",
     "family": "argon2",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "CC0-1.0 OR Apache-2.0",
     "mcrit": "data/argon2/x64/mcrit/argon2_20190702_msvc143_x64_libargon2.dll.mcrit",
@@ -333,12 +333,12 @@
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "libargon2.dll",
     "family": "argon2",
-    "generated": "2026-11-06",
+    "generated": "2026-11-07",
     "is_blob": false,
     "license": "CC0-1.0 OR Apache-2.0",
     "mcrit": "data/argon2/x86/mcrit/argon2_20190702_msvc143_x86_libargon2.dll.mcrit",
     "notes": "Same tag as the MinGW recipe, opt.c, SSE2 baseline. See the recipe docstring.",
-    "num_functions": 83,
+    "num_functions": 82,
     "removed_runtime_functions": [
       "DllMain",
       "NtCurrentTeb",
@@ -476,7 +476,8 @@
       "dllmain_dispatch$+0xce",
       "dllmain_raw",
       "find_pe_section",
-      "is_potentially_valid_image_base"
+      "is_potentially_valid_image_base",
+      "sprintf"
     ],
     "sha256": "8c6755d74578abb23173139db1878193873052e2b3a0f19361a4d9ae1ad60843",
     "smda": "data/argon2/x86/smda/argon2_20190702_msvc143_x86_libargon2.dll.7z",

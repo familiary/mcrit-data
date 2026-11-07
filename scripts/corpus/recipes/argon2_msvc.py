@@ -43,14 +43,14 @@ Counted on the windows-2022 runner, kept + removed = image total (removed is
 the baseline's compiler-runtime filter):
 
                 kept    removed    image
-    x86           83       137      220
+    x86           82       138      220
     x64           82       140      222
 
 Removed: DllMain and the static vcruntime startup (_DllMainCRTStartup,
 __scrt_*, __castguard_*, __security_*, __report_*), SEH helpers, CRT memory
-and string routines (malloc, free, calloc, memcpy, memset, strlen, strncmp)
-and kernel32 import thunks. Survivors that are not Argon2 code, by name and
-PicHash:
+and string routines (malloc, free, calloc, memcpy, memset, strlen, strncmp,
+sprintf on x86), and kernel32 import thunks. Survivors that are not Argon2
+code, by name and PicHash:
 
   * import thunks, one instruction each, all PicHash 1253497258561142223:
     x86 _WaitForSingleObject@8, __beginthreadex, __endthreadex; x64
@@ -59,16 +59,17 @@ PicHash:
   * RtlSecureZeroMemory, the winnt.h inline behind SecureZeroMemory (used by
     clear_internal_memory): 11 instructions, PicHash 3164917767828542777 on
     x86; 9, 4269566191566944164 on x64.
-  * sprintf (x86 only), the UCRT stdio inline wrapper compiled into
-    encoding.c: 18 instructions, PicHash 17914501890890951995.
-  No unnamed function survives in either image. The other 77 (x86) / 76 (x64)
+  * sprintf (x86 only) was the UCRT stdio inline wrapper compiled into
+    encoding.c (18 instructions, PicHash 17914501890890951995); the wide-stdio
+    glue baseline now removes it, so it is no longer a survivor.
+  No unnamed function survives in either image. The other 78 (x86) / 78 (x64)
   kept functions are Argon2's own.
 
 MinGW against MSVC, PicHash overlap over functions of 10 instructions or
 more (same tag, same arch):
 
                  mingw / msvc    shared
-    x86            56 / 58          0
+    x86            56 / 57          0
     x64            53 / 54          0
 
 Disjoint, as with Jansson: the two compilers share no exact function body, so
