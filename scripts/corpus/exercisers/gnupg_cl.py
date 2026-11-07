@@ -151,9 +151,23 @@ def compile_all(srcs, builddir, includes, defines, extra_for=None, jobs=4, force
         extra = list((extra_for or {}).get(os.path.basename(src), ()))
         if force:
             extra.append("/FI" + force)
+        extra = list(extra)
         cmd = cl.compile_cmd(src, obj, includes(cwd), defines, extra)
         rc, out = run(cmd, cwd=cwd, timeout=600, check=False, quiet=True)
-        return item, rc, out.decode("utf-8", "replace")
+        text = out.decode("utf-8", "replace")
+        if rc and "C1001" in text:
+            # internal compiler error: record it, then try the same unit with
+            # progressively less optimisation
+            say("C1001 in %s, compiler said: %s" % (os.path.basename(src), " | ".join(
+                l.strip() for l in text.splitlines() if "C1001" in l or "msc1" in l or "INTERNAL" in l)[:600]))
+            for opt in (["/Od"], ["/O1"], ["/Od", "/GS-"]):
+                cmd = cl.compile_cmd(src, obj, includes(cwd), defines, extra + opt)
+                rc, out = run(cmd, cwd=cwd, timeout=600, check=False, quiet=True)
+                text = out.decode("utf-8", "replace")
+                say("C1001 in %s: recompiled with %s -> rc=%d" % (os.path.basename(src), " ".join(opt), rc))
+                if rc == 0:
+                    break
+        return item, rc, text
 
     with concurrent.futures.ThreadPoolExecutor(jobs) as ex:
         for item, rc, out in ex.map(one, srcs):
@@ -214,6 +228,10 @@ typedef int pid_t;
 # define X_OK 1
 # define W_OK 2
 # define R_OK 4
+#endif
+#ifndef S_ISREG
+# define S_ISREG(m) (((m) & _S_IFMT) == _S_IFREG)
+# define S_ISDIR(m) (((m) & _S_IFMT) == _S_IFDIR)
 #endif
 #ifndef S_IRUSR
 # define S_IRUSR _S_IREAD
@@ -454,6 +472,37 @@ def build_gpg_error(arch, src, work, prefix, diag=False, lenient=False):
     return None if failed else dll
 
 
+def generic_mpi_modules(bld, src, items):
+    """mpi/config.links picks the C or assembler file of each standard
+    multi-precision primitive (mpih-add1 ...). Under this configure run its
+    conditionals came out false, so the generated mpi/Makefile lists none of
+    them and the DLL would lack _gcry_mpih_add_n and friends. They are added
+    here from the generic/ directory, which is the file config.links selects
+    with --disable-asm."""
+    try:
+        with open(os.path.join(src, "mpi", "Makefile.am"), encoding="utf-8", errors="replace") as f:
+            text = f.read()
+    except OSError:
+        return []
+    block = re.search(r"#BEGIN_ASM_LIST(.*?)#END_ASM_LIST", text, re.S)
+    mods = []
+    if block:
+        for m in re.finditer(r"^#\s*(\S+)\s+(\S+)\s*$", block.group(1), re.M):
+            if m.group(2) != "O":
+                mods.append(m.group(1))
+    have = {os.path.splitext(os.path.basename(i[0]))[0] for i in items}
+    added = []
+    for fn in mods:
+        if fn in have:
+            continue
+        path = os.path.join(src, "mpi", "generic", fn + ".c")
+        if os.path.isfile(path):
+            added.append((path, "mpi-" + fn + ".obj", os.path.join(bld, "mpi")))
+    say("libgcrypt: standard mpi modules %s; added from mpi/generic (absent from the generated "
+        "mpi/Makefile): %s" % (" ".join(mods), " ".join(os.path.basename(a[0]) for a in added) or "none"))
+    return added
+
+
 def gen_gost_sb(bld, src):
     """cipher/gost-sb.h is generated at build time by a build-host program."""
     c = os.path.join(src, "cipher", "gost-s-box.c")
@@ -479,7 +528,13 @@ def build_gcrypt(arch, src, work, prefix):
           ["--with-libgpg-error-prefix=" + fwd(prefix),
            # AC_TYPE_PID_T would #define pid_t __int64 on Win64, against the
            # `typedef int pid_t` that gcrypt.h itself makes for non-GNU compilers
-           "ac_cv_type_pid_t=yes"]
+           "ac_cv_type_pid_t=yes",
+           # configure's link tests mis-detect these under cl (they are
+           # intrinsics or CRT functions that exist); without them g10lib.h
+           # renames memmove to bcopy, atexit to on_exit and raise to kill
+           "ac_cv_func_memmove=yes", "ac_cv_func_strtoul=yes", "ac_cv_func_atexit=yes",
+           "ac_cv_func_raise=yes", "ac_cv_func_strerror=yes", "ac_cv_func_rand=yes",
+           "ac_cv_func_stricmp=yes"]
     env = dict(os.environ, MSYS2_PATH_TYPE="inherit",
                GNUPG_EXTRA_PATH=os.path.join(prefix, "bin"))
     rc, out = run(cmd, timeout=1800, check=False, env=env)
@@ -514,6 +569,7 @@ def build_gcrypt(arch, src, work, prefix):
                 if sub == "src" and oname.startswith("libgcrypt_la-"):
                     oname = oname[len("libgcrypt_la-"):]
                 items.append((s, sub + "-" + oname + ".obj", os.path.join(bld, sub)))
+    items += generic_mpi_modules(bld, src, items)
     say("libgcrypt: %d objects from upstream's Makefiles, %d GNU-syntax assembler modules "
         "not assembled by cl (the C code does not reference them: no USE_*_ASM is defined): %s"
         % (len(items) + len(missing) + len(asm_skipped), len(asm_skipped), " ".join(asm_skipped)))
@@ -531,10 +587,13 @@ def build_gcrypt(arch, src, work, prefix):
         return out
     # rndjent is compiled without optimisation upstream (its timing loop must
     # not be optimised away); the flag is the only change.
-    extra = {"rndjent.c": ["/Od"], "jitterentropy-base.c": ["/Od"]}
+    # hwf-x86.c (1.8.14 lists it for every x86 host) refuses to compile unless
+    # the GCC CPU macro is defined; with only that macro (no __GNUC__) it
+    # compiles its CPUID-less fallback, which reports no features.
+    extra = {"rndjent.c": ["/Od"], "jitterentropy-base.c": ["/Od"],
+             "hwf-x86.c": ["/D__x86_64__" if arch == "x64" else "/D__i386__"]}
     ok, bad = compile_all(items, bld, includes, ["HAVE_CONFIG_H", "DLL_EXPORT",
-                           "HAVE_GCC_STORAGE_CLASS__THREAD=1", "__thread=__declspec(thread)",
-                           "strcasecmp=_stricmp", "strncasecmp=_strnicmp"], extra,
+                           "HAVE_GCC_STORAGE_CLASS__THREAD=1", "__thread=__declspec(thread)"], extra,
                           force=os.path.join(shim, "gnupg_cl_fi.h"))
     report("libgcrypt", bad)
     out_dir = os.path.join(bld, "src")
