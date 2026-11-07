@@ -55,6 +55,23 @@ def _select_recipes(toolchain_ids):
             if wanted & {_normalise_toolchain(t) for t in recipe.toolchains}}
 
 
+def _select_by_module(selected, modules):
+    """Keep the recipes defined in the named recipe files.
+
+    A path outside scripts/corpus/recipes/ or one that is not a recipe module
+    (``__init__.py``, a helper) matches nothing, which is the right answer for
+    a changed file that is not itself a recipe.
+    """
+    wanted = set()
+    for module in modules:
+        name = os.path.basename(module.replace("\\", "/"))
+        if name.endswith(".py"):
+            name = name[:-3]
+        wanted.add(name)
+    return {name: recipe for name, recipe in selected.items()
+            if recipes.module_of(name) in wanted}
+
+
 def _one_line(text, limit=300):
     """Flatten an error for the end-of-run summary.
 
@@ -91,6 +108,13 @@ def main():
                               "what the recipe declares, not against what "
                               "this host has, so CI can ask one runner what "
                               "the other architecture's leg should build")
+    listing.add_argument("--modules", nargs="+", metavar="PATH",
+                         help="restrict the listing to recipes defined in "
+                              "these recipe files (paths such as "
+                              "scripts/corpus/recipes/foo.py, or bare module "
+                              "names). CI passes the recipe files a push "
+                              "changed, so it builds those recipes and not "
+                              "every recipe in the repository")
     listing.add_argument("--names-only", action="store_true",
                          help="print one recipe name per line and nothing "
                               "else, for feeding straight back into `build`")
@@ -155,6 +179,17 @@ def main():
         if args.names_only and args.families_only:
             parser.error("--names-only and --families-only are mutually exclusive")
         selected = _select_recipes(args.toolchains)
+        if args.modules:
+            selected = _select_by_module(selected, args.modules)
+            # Asked for specific files and none of them defines a recipe for
+            # this toolchain: that is "nothing to build", not an error, and
+            # CI tells the two apart by this exit code rather than by an
+            # empty list that a pipeline would swallow.
+            if not selected:
+                print("no recipe for %s is defined in: %s"
+                      % (", ".join(args.toolchains or ["any toolchain"]),
+                         ", ".join(args.modules)), file=sys.stderr)
+                return 3
         # An empty selection from an explicit filter is a mistyped toolchain id
         # or a recipe set that lost its last MSVC entry. Printing nothing and
         # exiting 0 would let a caller build nothing and call it success, which
