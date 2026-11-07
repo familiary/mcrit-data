@@ -63,6 +63,7 @@ def props(args):
     for key, value in {
         "RuntimeLibrary": "MultiThreadedDLL", "WholeProgramOptimization": "false",
         "DebugInformationFormat": "ProgramDatabase",
+        "BasicRuntimeChecks": "Default", "SupportJustMyCode": "false",
         "AdditionalOptions": "/Brepro %(AdditionalOptions)",
     }.items():
         ET.SubElement(compile_options, key).text = value
