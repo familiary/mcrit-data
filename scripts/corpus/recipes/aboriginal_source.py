@@ -54,7 +54,8 @@ helper script and none touching the distribution or component sources:
   * Only the cross-compiler stage is run, with NO_HOST_TOOLS=1 (skip the
     host-tools stage: busybox/toybox/distcc/e2fsprogs/squashfs helper
     programs for root-filesystem images), NO_CPLUSPLUS=1 (Aboriginal only;
-    no g++ and no libstdc++), NO_STAGE_TARBALLS=1. download.sh is not run; the
+    no g++ and no libstdc++), NO_STAGE_TARBALLS=1, SKIP_STRIP=1 (keep symbol
+    tables). download.sh is not run; the
     pinned tarballs are copied into packages/ instead. All three are
     documented `config` switches of the distributions.
   * No busybox, toybox or root-filesystem binaries are added: the Linux
@@ -175,7 +176,7 @@ for (_tag, _family, _version, _libc, _dist, _stage, _outdir, _components,
             drop_crt_glue=False,
             build_flags="Built from source by the " + _stage + ".sh of " + _producer +
                         " in a " + HOST_IMAGE + " container (NO_HOST_TOOLS=1 NO_CPLUSPLUS=1 "
-                        "NO_STAGE_TARBALLS=1); libc.a linked on the host with -nostdlib "
+                        "NO_STAGE_TARBALLS=1 SKIP_STRIP=1); libc.a linked on the host with -nostdlib "
                         "-no-pie -Wl,-e,0 " + _how + "; dynamic libgcc_s",
             notes="REBUILT FROM SOURCE, not the binary Landley shipped: " + _producer +
                   ". The distribution tarball and every component tarball are "
