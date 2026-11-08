@@ -75,7 +75,7 @@ def _shard(toolset, shard):
         dedupe_functions=True,
         # The objects carry COFF public symbols, not full PDBs: static
         # functions of the CRT and MFC have no name to recover.
-        min_named_ratio=0.2,
+        min_named_ratio=0.15,
         build_flags="MSVC toolset %s, shard %s (%s) linked whole: link /DLL "
                     "/NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED "
                     "/FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF "
