@@ -69,9 +69,11 @@ SHARDS = {
     "md": ["msvcrt"],
     "mdd": ["msvcrtd"],
     # Compatibility and helper libraries binaries link implicitly.
+    # iso_stdio_wide_specifiers.lib is the mutually exclusive twin of
+    # legacy_stdio_wide_specifiers.lib (LNK2038) and holds no code, so it is
+    # left out.
     "support": ["legacy_stdio_definitions", "legacy_stdio_wide_specifiers",
-                "iso_stdio_wide_specifiers", "delayimp", "aligned_new",
-                "exe_initialize_mta"],
+                "delayimp", "aligned_new", "exe_initialize_mta"],
     "com": ["comsupp", "comsuppw"],
     "comd": ["comsuppd", "comsuppwd"],
     "startup": None,
