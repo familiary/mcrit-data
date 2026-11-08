@@ -50,6 +50,16 @@ on this side rather than static executables:
 Nothing of glibc itself is in either list, which answers the question a
 glibc probe set would have been for: there is no glibc body in a dynamically
 linked .so to measure or to remove.
+
+The musl toolchains are the exception to all of that, and the reason they have
+a block of their own: a static executable does carry libc, libgcc, libstdc++
+and libatomic. There the probes are static executables too - the two Linux
+usage probes, and a ``--whole-archive`` link of each archive, which holds every
+function the archive can contribute - the baseline is 6,955 names on x64 and
+7,096 on x86, every alias of a function is recorded, and a function also
+matches by name and opcode hash, because a 32-bit PIC function's PicHash
+follows the layout of the image. scripts/corpus/README.md, "The musl half",
+has the measurement.
 """
 
 import functools
@@ -2959,6 +2969,19 @@ def _elf_alias_names(path):
 
 _PROBE_FAILURES = {}
 
+# musl only: name -> OpcHashes, measured beside the PicHashes by crt_glue. A
+# 32-bit position-independent function addresses its data through the GOT:
+# ``call __x86.get_pc_thunk.bx; add ebx, <delta>`` and ``lea eax, [ebx+<disp>]``,
+# and both numbers are distances inside the image that was linked, so the same
+# libstdc++ or libc function has a different PicHash in every static-pie
+# image. On the glibc side that left a handful of link-glue functions (README,
+# "The Linux half"); here, where libc and libstdc++ are linked in whole, it
+# left 3,046 of the 3,459 archive functions of an x86 XMRig. The opcode hash
+# ignores operands, so it is the same in all of them. A function is glue on
+# musl when its name matches and either hash does; the name still has to match,
+# which is what stops a project's own ``strlen`` from being deleted.
+_OPC_GLUE = {}
+
 
 def probe_failures():
     """Probes that did not build, per toolchain, for baselines measured here.
@@ -3093,6 +3116,7 @@ def crt_glue(toolchain_id):
                  ["-shared", "-D__USE_MINGW_ANSI_STDIO=0"]),
             ]
     glue = {}
+    opcodes = {}
     # Set before the loop, so that a toolchain whose probes all built is
     # recorded as measured-and-clean rather than as never measured.
     _PROBE_FAILURES.setdefault(toolchain_id, [])
@@ -3143,6 +3167,9 @@ def crt_glue(toolchain_id):
                 for name in aliases.get(function.offset, ()):
                     glue.setdefault(name, set()).add(function.pic_hash)
                 glue.setdefault(function.function_name, set()).add(function.pic_hash)
+                if toolchain.kind == "musl":
+                    for name in set(aliases.get(function.offset, ())) | {function.function_name}:
+                        opcodes.setdefault(name, set()).add(function.getOpcHash())
     # The probe's own function is the one thing here that is not runtime code.
     #
     # The names the four shared probes contribute are still listed one by one
@@ -3187,6 +3214,11 @@ def crt_glue(toolchain_id):
                                      "ProbeInterface", "ProbeImplementation",
                                      "ProbeArray", "ProbeEh"))]:
         glue.pop(name, None)
+    if toolchain.kind == "musl":
+        for name in [name for name in opcodes if name not in glue]:
+            # a name the prefix rules above removed from the PicHash side
+            opcodes.pop(name)
+        _OPC_GLUE[toolchain_id] = opcodes
     return glue
 
 
@@ -3194,4 +3226,9 @@ def is_glue(function, toolchain_id):
     glue = crt_glue(toolchain_id)
     if not function.function_name:
         return False
-    return function.pic_hash in glue.get(function.function_name, ())
+    if function.pic_hash in glue.get(function.function_name, ()):
+        return True
+    # Looked up by name first: the opcode hash is the expensive one, and
+    # almost every function of a static image is not named like glue at all.
+    candidates = _OPC_GLUE.get(toolchain_id, {}).get(function.function_name)
+    return bool(candidates) and function.getOpcHash() in candidates

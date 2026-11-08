@@ -173,10 +173,33 @@ class MuslBaselineMeasurementTest(unittest.TestCase):
             function_name = "memcpy"
             pic_hash = 0xDEADBEEF
 
+            @staticmethod
+            def getOpcHash():
+                return 0
+
         self.assertNotIn(_F.pic_hash, self.glue["memcpy"])
         self.assertFalse(baseline.is_glue(_F, "musl_x64"))
         _F.pic_hash = next(iter(self.glue["memcpy"]))
         self.assertTrue(baseline.is_glue(_F, "musl_x64"))
+
+    def test_the_opcode_hash_is_a_second_way_in_but_the_name_is_still_required(self):
+        opcodes = baseline._OPC_GLUE["musl_x64"]
+        opc = next(iter(opcodes["memcpy"]))
+
+        class _F(object):
+            function_name = "memcpy"
+            pic_hash = 0xDEADBEEF
+
+            def getOpcHash(self):
+                return opc
+
+        self.assertTrue(baseline.is_glue(_F(), "musl_x64"))
+        other = _F()
+        other.function_name = "memcpy_but_not_libc"
+        self.assertFalse(baseline.is_glue(other, "musl_x64"))
+        wrong = _F()
+        wrong.getOpcHash = lambda: opc ^ 1
+        self.assertFalse(baseline.is_glue(wrong, "musl_x64"))
 
     def test_a_static_program_keeps_its_own_code_and_loses_every_libc_body(self):
         """The check the baseline exists for, on a program none of its probes
