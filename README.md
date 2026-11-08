@@ -1042,13 +1042,25 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 <!-- /generated -->
 
 
-### Pantegana fingerprinting helpers
+### Pantegana
 
-Only the unmodified system-information helper is covered, with Go 1.24.13. The full client requires generated certificate assets and is not built.
+Go 1.24.13 references cover isolated fingerprinting helpers and client-source analysis images. Client references are non-operational: certificate initialization is unbound and the entry point calls no client function.
 
 <!-- generated: Pantegana -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Pantegana | 0.1.0-go1.24.13-fingerprint | Go 1.24.13 | [x86 ELF](data/Pantegana/x86/mcrit/Pantegana_0.1.0-go1.24.13-fingerprint_gcc14_x86_fingerprint.mcrit) / [x64 ELF](data/Pantegana/x64/mcrit/Pantegana_0.1.0-go1.24.13-fingerprint_gcc14_x64_fingerprint.mcrit) | [x86 ELF](data/Pantegana/x86/smda/Pantegana_0.1.0-go1.24.13-fingerprint_gcc14_x86_fingerprint.7z) / [x64 ELF](data/Pantegana/x64/smda/Pantegana_0.1.0-go1.24.13-fingerprint_gcc14_x64_fingerprint.7z) |
 | Pantegana | 0.1.0-go1.24.13-fingerprint | Go 1.24.13 | [x86 PE](data/Pantegana/x86/mcrit/Pantegana_0.1.0-go1.24.13-fingerprint_mingw13_x86_fingerprint.mcrit) / [x64 PE](data/Pantegana/x64/mcrit/Pantegana_0.1.0-go1.24.13-fingerprint_mingw13_x64_fingerprint.mcrit) | [x86 PE](data/Pantegana/x86/smda/Pantegana_0.1.0-go1.24.13-fingerprint_mingw13_x86_fingerprint.7z) / [x64 PE](data/Pantegana/x64/smda/Pantegana_0.1.0-go1.24.13-fingerprint_mingw13_x64_fingerprint.7z) |
+| Pantegana | 0.1.0-go1.24.13-client-analysis | Go 1.24.13 | [x86 ELF](data/Pantegana/x86/mcrit/Pantegana_0.1.0-go1.24.13-client-analysis_gcc14_x86_client-analysis.mcrit) / [x64 ELF](data/Pantegana/x64/mcrit/Pantegana_0.1.0-go1.24.13-client-analysis_gcc14_x64_client-analysis.mcrit) | [x86 ELF](data/Pantegana/x86/smda/Pantegana_0.1.0-go1.24.13-client-analysis_gcc14_x86_client-analysis.7z) / [x64 ELF](data/Pantegana/x64/smda/Pantegana_0.1.0-go1.24.13-client-analysis_gcc14_x64_client-analysis.7z) |
+| Pantegana | 0.1.0-go1.24.13-client-analysis | Go 1.24.13 | [x86 PE](data/Pantegana/x86/mcrit/Pantegana_0.1.0-go1.24.13-client-analysis_mingw13_x86_client-analysis.mcrit) / [x64 PE](data/Pantegana/x64/mcrit/Pantegana_0.1.0-go1.24.13-client-analysis_mingw13_x64_client-analysis.mcrit) | [x86 PE](data/Pantegana/x86/smda/Pantegana_0.1.0-go1.24.13-client-analysis_mingw13_x86_client-analysis.7z) / [x64 PE](data/Pantegana/x64/smda/Pantegana_0.1.0-go1.24.13-client-analysis_mingw13_x64_client-analysis.7z) |
+<!-- /generated -->
+
+
+### Sliver
+
+<!-- generated: Sliver -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Sliver | 1.5.42-go1.20.14-analysis | Go 1.20.14 | [x86 ELF](data/Sliver/x86/mcrit/Sliver_1.5.42-go1.20.14-analysis_gcc14_x86_implant-analysis.mcrit) / [x64 ELF](data/Sliver/x64/mcrit/Sliver_1.5.42-go1.20.14-analysis_gcc14_x64_implant-analysis.mcrit) | [x86 ELF](data/Sliver/x86/smda/Sliver_1.5.42-go1.20.14-analysis_gcc14_x86_implant-analysis.7z) / [x64 ELF](data/Sliver/x64/smda/Sliver_1.5.42-go1.20.14-analysis_gcc14_x64_implant-analysis.7z) |
+| Sliver | 1.5.42-go1.20.14-analysis | Go 1.20.14 | [x86 PE](data/Sliver/x86/mcrit/Sliver_1.5.42-go1.20.14-analysis_mingw13_x86_implant-analysis.mcrit) / [x64 PE](data/Sliver/x64/mcrit/Sliver_1.5.42-go1.20.14-analysis_mingw13_x64_implant-analysis.mcrit) | [x86 PE](data/Sliver/x86/smda/Sliver_1.5.42-go1.20.14-analysis_mingw13_x86_implant-analysis.7z) / [x64 PE](data/Sliver/x64/smda/Sliver_1.5.42-go1.20.14-analysis_mingw13_x64_implant-analysis.7z) |
 <!-- /generated -->
