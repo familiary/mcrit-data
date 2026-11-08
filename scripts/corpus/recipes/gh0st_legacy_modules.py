@@ -50,8 +50,16 @@ edits = [
 for name, before, after in edits:
     p = out / name
     data = p.read_bytes()
-    assert data.count(before) == 1, name
-    p.write_bytes(data.replace(before, after))
+    count = 2 if name.endswith('/loop.h') else 1
+    assert data.count(before) == count, name
+    # The earlier loop.h occurrence operates on a mutable local URL.
+    # Only UpdateServer's final occurrence needs the const conversion.
+    if count == 2:
+        left, right = data.rsplit(before, 1)
+        data = left + after + right
+    else:
+        data = data.replace(before, after)
+    p.write_bytes(data)
 (out / 'corpus-include').mkdir()
 (out / 'corpus-include/winable.h').write_text('#pragma once\n#include <windows.h>\n')
 (out / 'corpus_sdk.h').write_text(
