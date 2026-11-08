@@ -6,7 +6,7 @@ embeds RandomX, would be answered "XMRig" by a corpus that has only XMRig
 (data/XMRig, issue #8). This is the family that stops that.
 
 Versions. v1.2.1 (commit 102f8acf), v1.2.2 (6c4340ba), v1.2.3 (12f2c2ff),
-v2.0 (e0db3c4a) and v2.0.1 (aaafe713) are built (MSVC: randomx_msvc.py). The
+v2.0 (e0db3c4a) and v2.0.1 (aaafe713) are built (MSVC: randomx_msvc.py, below). The
 three tags added after the first two are near-duplicates of them, measured on the PicHashes of the
 functions of ten instructions or more: v1.2.1, v1.2.2 and v1.2.3 share all of
 them on Linux x64 (188), MinGW x64 (172) and MinGW x86 (140), and 321 of 322 on
@@ -24,7 +24,18 @@ difference is the whole addition) and of v2.0, and MinGW x86 and x64 of all
 three, which differ in bytes from the existing ones (the cause was not
 investigated) with the same functions, so a
 sample that names one of those releases finds its own label. They add no
-function that v1.2.1 or v2.0.1 does not already have. Upstream tevador/RandomX
+function that v1.2.1 or v2.0.1 does not already have.
+
+MSVC (randomx_msvc.py), built on the windows runner against the wide-stdio
+glue baseline, is filed for all three tags on x86 and x64: none of the six
+DLLs is byte-identical to a filed one, so validate accepts them, but the code
+is the same. Kept and removed are 848 and 378 on x64 and 862 and 369 on x86
+for v1.2.1, v1.2.2 and v1.2.3, and 881 and 378 on x64 and 886 and 369 on x86
+for v2.0 and v2.0.1. At ten instructions or more v1.2.1, v1.2.2 and v1.2.3
+share all of their PicHashes (254 on x64, 243 on x86) and v2.0 and v2.0.1
+share all of theirs (260, 245); the 1.2.x hashes found in 2.0.x are 195 of
+254 (77%) on x64 and 201 of 243 (83%) on x86. So the three new MSVC images
+are near-duplicates of the two built before them and add no PicHash. Upstream tevador/RandomX
 rather than XMRig's vendored tree, which the issue offers as the alternative:
 XMRig's copy is a fork (it has no argon2_core.c or assembly generator of its
 own, and adds RISC-V sources) and is already in
