@@ -428,7 +428,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-logs-${{ matrix.image }}-${{ matrix.arch }}
-          path: build/*.log
+          path: |
+            build/*.log
+            build/diag/*.txt
           if-no-files-found: ignore
 
       # The verdict, deliberately the last step so the summary lands on the

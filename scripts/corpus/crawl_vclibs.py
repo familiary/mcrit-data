@@ -125,6 +125,22 @@ def classify(name, kind):
     return "mfc_dll" + suffix
 
 
+def diagnose(label, text):
+    """Keep a failure's full text where the workflow uploads it.
+
+    The pipeline writes a step's output to one log per (recipe, toolchain), so
+    the next shard of the same toolset overwrites the reason for the last.
+    """
+    work = os.environ.get("MCRIT_DATA_WORK_DIR") or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__)))), "build")
+    directory = os.path.join(work, "diag")
+    os.makedirs(directory, exist_ok=True)
+    with open(os.path.join(directory, label + ".txt"), "w",
+              encoding="utf-8") as handle:
+        handle.write(text)
+
+
 def run(command):
     result = subprocess.run(command, capture_output=True, text=True,
                             errors="replace")
@@ -196,8 +212,8 @@ def sdk_import_dir(arch):
 def list_members(lib_tool, lib_path):
     code, output = run([lib_tool, "/NOLOGO", "/LIST", lib_path])
     if code != 0:
-        raise SystemExit("lib /LIST failed (exit %d) for %s:\n%s"
-                         % (code, lib_path, output))
+        raise RuntimeError("lib /LIST failed (exit %d) for %s: %s"
+                           % (code, lib_path, output.strip()[-300:]))
     return [line.strip() for line in output.splitlines() if line.strip()]
 
 
@@ -230,7 +246,13 @@ def scan(tool_root, arch, lib_tool):
             else:
                 entry["shard"] = classify(name, kind)
                 if name.lower().endswith(".lib"):
-                    members = list_members(lib_tool, path)
+                    try:
+                        members = list_members(lib_tool, path)
+                    except RuntimeError as error:
+                        entry["excluded"] = str(error)
+                        del entry["shard"]
+                        entries.append(entry)
+                        continue
                     entry["members"] = len(members)
                     entry["code_members"] = len(code_members(members))
                     if not entry["code_members"]:
@@ -285,10 +307,13 @@ def crawl(root, toolset, arch, shard, out_dir):
     excluded = [{"file": e["file"], "bytes": e["bytes"], "reason": e["excluded"]}
                 for e in entries if e["kind"] == kind and "excluded" in e]
     if not mine:
-        raise SystemExit("SHARD-EMPTY: %s has no input for shard %s (%s); "
-                         "excluded here: %s" % (
-                             os.path.join(tool_root, "lib"), shard, arch,
-                             ", ".join(x["file"] for x in excluded) or "none"))
+        message = ("SHARD-EMPTY: %s has no input for shard %s (%s); excluded "
+                   "here: %s; files seen: %s" % (
+                       tool_root, shard, arch,
+                       ", ".join(x["file"] for x in excluded) or "none",
+                       ", ".join(e["file"] for e in entries) or "none"))
+        diagnose("%s-%s-%s" % (full, arch, shard), message)
+        raise SystemExit(message)
     for entry in mine:
         entry["sha256"] = sha256_file(entry["path"])
     imports = []
@@ -318,8 +343,11 @@ def crawl(root, toolset, arch, shard, out_dir):
               encoding="utf-8") as handle:
         handle.write("$ " + " ".join(command) + "\n" + output)
     if code != 0 or not os.path.isfile(dll) or not os.path.isfile(pdb):
-        raise SystemExit("link failed for shard %s (exit %d):\n%s"
-                         % (shard, code, output[-4000:]))
+        diagnose("%s-%s-%s" % (full, arch, shard),
+                 "$ %s\n%s" % (" ".join(command), output[-60000:]))
+        errors = [l for l in output.splitlines() if "error" in l.lower()]
+        raise SystemExit("link failed for shard %s (exit %d), first errors:\n%s"
+                         % (shard, code, "\n".join(errors[:15])))
 
     duplicates = sorted(set(re.findall(
         r"LNK4006: (\S+) already defined", output)))
@@ -362,7 +390,8 @@ def main():
     parser.add_argument("--out", default=".")
     parser.add_argument("--inventory", action="store_true",
                         help="describe every installed toolset, link nothing")
-    parser.add_argument("shards", nargs="*", choices=sorted(SHARDS))
+    parser.add_argument("shards", nargs="*", metavar="SHARD",
+                        help="one of: " + ", ".join(sorted(SHARDS)))
     args = parser.parse_args()
     root = vc_root()
     os.makedirs(args.out, exist_ok=True)
@@ -371,6 +400,9 @@ def main():
         return 0
     if not args.toolset or not args.shards:
         parser.error("--toolset and at least one shard are required")
+    unknown = [s for s in args.shards if s not in SHARDS]
+    if unknown:
+        parser.error("unknown shard(s) %s" % ", ".join(unknown))
     for shard in args.shards:
         crawl(root, args.toolset, args.arch, shard, args.out)
     return 0
