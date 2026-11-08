@@ -138,6 +138,10 @@ def fetch_source(source, name):
     if os.path.exists(workspace):
         shutil.rmtree(workspace)
 
+    if source.local:
+        os.makedirs(workspace)
+        return workspace, {"local": source.local}
+
     if source.git_url:
         if not source.git_ref:
             raise FetchError("git sources must pin git_ref to a tag or commit")

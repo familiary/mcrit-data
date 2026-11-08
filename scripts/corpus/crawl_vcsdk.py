@@ -1,0 +1,722 @@
+#!/usr/bin/env python3
+"""Turn the C runtime of an old Visual C++ release into analysable PE images.
+
+    python crawl_vcsdk.py --iso-url URL --iso-sha256 HASH \\
+        --cab Setup/vc_stdamd64/vc_stdamd64.cab --out . libs
+    python crawl_vcsdk.py ... dlls
+
+data/MSVC was crawled from Visual Studio installs and holds Visual C++
+2005/2008/2010 for x86 only. The x64 libraries of those compilers shipped with
+the Windows SDK of the day, in a DVD image whose ``Setup\\vc_*`` directories
+hold one MSI and one CAB per target (the CAB is what carries the files; the
+MSI is only the installer's bookkeeping). The image is a UDF file system,
+which 7-Zip reads. This script:
+
+  * downloads the image once (``--cache``), refuses it unless its SHA-256
+    equals ``--iso-sha256``, and extracts only the one CAB it needs;
+  * unpacks that CAB. Its members are named after the installer's file keys
+    (``FL_libcmt_lib_74650_74650_amd64_ln.<guid>``, ``FL_libcpmt_lib_x64``,
+    ``F_CENTRAL_msvcr100_x64``); ``KEY_PATTERNS`` maps a key back to the file
+    name it installs, and the mapping is written into the inputs record;
+  * ``libs``: links each static library whole into one image, exactly as
+    crawl_ucrt.py does (``/WHOLEARCHIVE /NODEFAULTLIB /FORCE:UNRESOLVED
+    /FORCE:MULTIPLE``, no folding, no discarding), and the loose start-up
+    objects (binmode.obj, setargv.obj, ...) into one more;
+  * ``dlls``: copies the redistributable runtime DLLs and their PDBs, which
+    are real shipped images and need no linking.
+
+What each input is, is verified rather than assumed: the compiler records in
+the objects of every library (CodeView S_COMPILE3: front end / back end
+version and target machine) and the version resource of every DLL are written
+to ``<name>.inputs.json``, which the pipeline copies into provenance.
+"""
+
+import argparse
+import hashlib
+import json
+import os
+import re
+import shutil
+import struct
+import subprocess
+import sys
+import tempfile
+from collections import Counter
+
+
+# CAB member key -> installed file name. The first group is matched on the
+# whole key. Order matters: the first pattern that matches wins.
+KEY_PATTERNS = [
+    # F_CENTRAL_msvcr100_x64 -> msvcr100.dll
+    (re.compile(r"^F_CENTRAL_(?P<name>[A-Za-z0-9]+)_(?P<arch>x64|x86)$"), "dll"),
+    # F_PDB_msvcr100_x64 -> msvcr100.pdb
+    (re.compile(r"^F_PDB_(?P<name>[A-Za-z0-9]+)_(?P<arch>x64|x86)$"), "pdb"),
+    # FL_libcmt_lib_74650_74650_amd64_ln.<guid>, FL_nohetoc_obj_amd64_ln,
+    # FL_libcpmt_lib_x64 -> libcmt.lib, nohetoc.obj, libcpmt.lib
+    (re.compile(r"^FL_(?P<name>[A-Za-z0-9]+)_(?P<ext>lib|obj|pdb)"
+                r"(?:_\d+_\d+)?_(?:amd64_ln|x64)(?:\..*)?$"), None),
+]
+
+# Import libraries that make the runtime's calls into the OS visible as
+# imports. They come from the Windows SDK the build host's developer
+# environment (LIB) points at; a missing one only leaves those calls unresolved.
+IMPORT_LIBS = ("kernel32.lib", "advapi32.lib", "user32.lib", "ntdll.lib")
+
+# A low, fixed base: with /FORCE:UNRESOLVED an unresolved symbol is address 0
+# and a rel32 fixup from a high base would overflow.
+IMAGE_BASE = "0x10000000"
+
+CODEVIEW_COMPILE2, CODEVIEW_COMPILE3 = 0x1116, 0x113C
+MACHINES = {0xD0: "x64 (AMD64)", 0x06: "x86 (Pentium Pro)", 0x07: "x86 (Pentium II)"}
+
+
+def sha256_file(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def run(command, **kwargs):
+    result = subprocess.run(command, capture_output=True, text=True,
+                            errors="replace", **kwargs)
+    return result.returncode, (result.stdout or "") + (result.stderr or "")
+
+
+def find_7z():
+    for candidate in (shutil.which("7z"), shutil.which("7za"),
+                      r"C:\Program Files\7-Zip\7z.exe",
+                      r"C:\Program Files (x86)\7-Zip\7z.exe"):
+        if candidate and os.path.isfile(candidate):
+            return candidate
+    raise SystemExit("7-Zip is required to read the SDK image and its CAB")
+
+
+def download(url, destination):
+    """Fetch ``url``; large files with range support come in parallel parts."""
+    try:
+        download_parallel(url, destination)
+        return
+    except Exception as error:  # fall back to one plain transfer
+        print("parallel download failed (%s); using one connection" % error,
+              flush=True)
+        if os.path.exists(destination):
+            os.remove(destination)
+    curl = shutil.which("curl") or shutil.which("curl.exe")
+    if not curl:
+        raise SystemExit("curl is required to download %s" % url)
+    code, output = run([curl, "--fail", "--location", "--silent", "--show-error",
+                        "--retry", "5", "--retry-all-errors", "--retry-delay", "10",
+                        "-o", destination, url])
+    if code != 0:
+        raise SystemExit("download of %s failed (curl exit %d): %s"
+                         % (url, code, output.strip()))
+
+
+def download_parallel(url, destination, parts=8, chunk=32 << 20):
+    """Range-request the file over several connections into ``destination``."""
+    import concurrent.futures
+    import time
+    import urllib.request
+
+    request = urllib.request.Request(url, method="HEAD")
+    with urllib.request.urlopen(request, timeout=60) as response:
+        final = response.geturl()
+        size = int(response.headers["Content-Length"])
+        if response.headers.get("Accept-Ranges", "").lower() != "bytes":
+            raise RuntimeError("no range support")
+    with open(destination, "wb") as handle:
+        handle.truncate(size)
+    spans = [(start, min(start + chunk, size) - 1)
+             for start in range(0, size, chunk)]
+
+    def fetch(span):
+        start, end = span
+        for attempt in range(8):
+            try:
+                request = urllib.request.Request(
+                    final, headers={"Range": "bytes=%d-%d" % (start, end)})
+                with urllib.request.urlopen(request, timeout=120) as response:
+                    data = response.read()
+                if len(data) != end - start + 1:
+                    raise RuntimeError("short read")
+                with open(destination, "r+b") as handle:
+                    handle.seek(start)
+                    handle.write(data)
+                return
+            except Exception:
+                if attempt == 7:
+                    raise
+                time.sleep(3 * (attempt + 1))
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=parts) as pool:
+        for future in [pool.submit(fetch, span) for span in spans]:
+            future.result()
+
+
+def fetch_cab(args, cache):
+    """Return (cab path, record of what was downloaded)."""
+    os.makedirs(cache, exist_ok=True)
+    iso = os.path.join(cache, os.path.basename(args.iso_url))
+    if not os.path.isfile(iso) or sha256_file(iso) != args.iso_sha256:
+        print("downloading %s" % args.iso_url, flush=True)
+        download(args.iso_url, iso)
+    observed = sha256_file(iso)
+    print("image sha256 %s (%d bytes)" % (observed, os.path.getsize(iso)),
+          flush=True)
+    if observed != args.iso_sha256:
+        raise SystemExit("%s hashes to %s, expected %s; refusing to use it"
+                         % (args.iso_url, observed, args.iso_sha256))
+    sevenzip = find_7z()
+    extract = os.path.join(cache, "iso-members")
+    os.makedirs(extract, exist_ok=True)
+    cab = os.path.join(extract, *args.cab.split("/"))
+    if not os.path.isfile(cab):
+        code, output = run([sevenzip, "x", "-y", "-o" + extract, iso, args.cab])
+        if code != 0 or not os.path.isfile(cab):
+            code2, listing = run([sevenzip, "l", iso])
+            raise SystemExit("could not extract %s from the image (7z exit %d):"
+                             "\n%s\n--- image listing ---\n%s"
+                             % (args.cab, code, output[-2000:], listing[-6000:]))
+    record = {
+        "image_url": args.iso_url,
+        "image_sha256": observed,
+        "image_bytes": os.path.getsize(iso),
+        "cab": args.cab,
+        "cab_sha256": sha256_file(cab),
+        "cab_bytes": os.path.getsize(cab),
+    }
+    return cab, record
+
+
+def unpack_cab(cab, destination):
+    """Extract the CAB and return {installed file name: path}."""
+    sevenzip = find_7z()
+    os.makedirs(destination, exist_ok=True)
+    code, output = run([sevenzip, "x", "-y", "-o" + destination, cab])
+    # 7-Zip warns about the bytes after the CAB's end (the image pads it), and
+    # exits 2; the files are intact and the listing below is the check.
+    if code not in (0, 2):
+        raise SystemExit("7z could not unpack %s (exit %d):\n%s"
+                         % (cab, code, output[-2000:]))
+    files = {}
+    unmatched = []
+    for key in sorted(os.listdir(destination)):
+        full = os.path.join(destination, key)
+        installed = None
+        for pattern, ext in KEY_PATTERNS:
+            match = pattern.match(key)
+            if match:
+                extension = ext or match.group("ext")
+                installed = "%s.%s" % (match.group("name"), extension)
+                break
+        if installed is None:
+            unmatched.append(key)
+            continue
+        files.setdefault(installed.lower(), []).append((key, full))
+    ambiguous = {name: [k for k, _ in items] for name, items in files.items()
+                 if len(items) > 1}
+    if ambiguous:
+        raise SystemExit("several CAB members map to one file name: %s"
+                         % json.dumps(ambiguous, indent=1))
+    print("%d CAB members mapped to file names, %d are not libraries or "
+          "runtime DLLs (compilers, props, ...)" % (len(files), len(unmatched)),
+          flush=True)
+    # link.exe decides between an archive and an object by the file name's
+    # extension, and a key such as FL_libcpmt_lib_x64 has none, so every file
+    # is copied to its installed name first.
+    named = os.path.join(destination, "named")
+    os.makedirs(named, exist_ok=True)
+    result = {}
+    for name, items in files.items():
+        key, full = items[0]
+        target = os.path.join(named, name)
+        shutil.copyfile(full, target)
+        result[name] = (key, target)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Pooled profiles: media whose files are spread over many CABs, named by
+# installer keys that do not say which platform a file is for (every platform's
+# libcmt.lib is FL_libcmt_lib_<n>_<n>_x86_ln). The platform is read from the
+# files instead: the COFF machine field of the objects inside.
+#
+# Each pattern is (regex, extension or None for the captured group, whether
+# the machine of the file must be checked).
+PROFILES = {
+    # Visual Studio 2008 (VC9, cl 15.00.21022): root CABs of the DVD image.
+    "vs2008": {
+        "members": r"^cab\d+\.cab$",
+        "filters": ["FL_*_lib_*", "FL_*_obj_*",
+                    "msvc*90*.dll.*_x64.RTM", "F_msvc*_amd64_pdb"],
+        "patterns": [
+            # msvcr90.dll.21022.08.Microsoft_VC90_CRT_x64.RTM
+            (re.compile(r"^(?P<name>msvc[mpr]90d?)\.dll\.\d+\.\d+\."
+                        r"Microsoft_VC90_(?:Debug)?CRT_x64\.RTM$"), "dll", False),
+            (re.compile(r"^F_(?P<name>msvc[mpr]90d?)_amd64_pdb$"), "pdb", False),
+            (re.compile(r"^FL_(?P<name>[A-Za-z0-9]+)_(?P<ext>lib|obj)_\d+_\d+_"
+                        r"x86_ln(?:\..*)?$"), None, True),
+        ],
+    },
+    # Platform SDK for Windows Server 2003 R2 (March 2006): the AMD64 build
+    # CABs, members named <file>_<ext>.<guid>.
+    "psdk2003r2": {
+        "members": r"^Setup/PSDK-SDK_Core_BLD_AMD64-common\.\d+\.cab$",
+        "filters": ["*_lib.*", "*_obj.*"],
+        "patterns": [
+            (re.compile(r"^(?P<name>[A-Za-z0-9]+)_(?P<ext>lib|obj)\."
+                        r"[0-9A-F]{8}(?:_[0-9A-F]{4}){3}_[0-9A-F]{12}$"), None, True),
+        ],
+    },
+}
+
+IMAGE_FILE_MACHINE_AMD64 = 0x8664
+
+
+def member_machines(path):
+    """The set of COFF machine values of an object, or of an archive's members."""
+    with open(path, "rb") as handle:
+        data = handle.read()
+    if data[:8] != b"!<arch>\n":
+        return {struct.unpack_from("<H", data, 0)[0]}
+    machines, offset = set(), 8
+    while offset + 60 <= len(data):
+        header = data[offset:offset + 60]
+        name = header[:16].decode("latin1").strip()
+        size = int(header[48:58])
+        body = data[offset + 60:offset + 60 + size]
+        offset += 60 + size + (size & 1)
+        if name in ("/", "//") or len(body) < 8:
+            continue
+        if body[:4] == b"\x00\x00\xff\xff" and struct.unpack_from("<H", body, 4)[0] < 2:
+            machines.add(struct.unpack_from("<H", body, 6)[0])
+        else:
+            machines.add(struct.unpack_from("<H", body, 0)[0])
+    return machines
+
+
+def fetch_pool(args, profile, cache):
+    """Download and hash the image, extract the profile's CABs; return the
+    list of CAB paths and the provenance record."""
+    os.makedirs(cache, exist_ok=True)
+    marker = os.path.join(cache, args.profile + "-members.json")
+    if os.path.isfile(marker):
+        with open(marker, encoding="utf-8") as handle:
+            record = json.load(handle)
+        if record.get("image_sha256") == args.iso_sha256 and all(
+                os.path.isfile(m["path"]) for m in record["members"]):
+            print("reusing %d extracted CABs" % len(record["members"]), flush=True)
+            return [m["path"] for m in record["members"]], record
+    iso = os.path.join(cache, os.path.basename(args.iso_url))
+    if not os.path.isfile(iso):
+        print("downloading %s" % args.iso_url, flush=True)
+        download(args.iso_url, iso)
+    observed = sha256_file(iso)
+    print("image sha256 %s (%d bytes)" % (observed, os.path.getsize(iso)), flush=True)
+    if observed != args.iso_sha256:
+        raise SystemExit("%s hashes to %s, expected %s; refusing to use it"
+                         % (args.iso_url, observed, args.iso_sha256))
+    sevenzip = find_7z()
+    code, listing = run([sevenzip, "l", "-slt", iso])
+    wanted = re.compile(profile["members"])
+    names = [line[len("Path = "):].replace("\\", "/")
+             for line in listing.splitlines() if line.startswith("Path = ")]
+    chosen = sorted(n for n in names if wanted.match(n))
+    if not chosen:
+        raise SystemExit("no member of the image matches %s; the image holds:\n%s"
+                         % (profile["members"], "\n".join(names[:200])))
+    extract = os.path.join(cache, "iso-members")
+    os.makedirs(extract, exist_ok=True)
+    code, output = run([sevenzip, "x", "-y", "-o" + extract, iso] + chosen)
+    if code != 0:
+        raise SystemExit("7z could not extract the CABs (exit %d):\n%s"
+                         % (code, output[-3000:]))
+    members = []
+    for name in chosen:
+        path = os.path.join(extract, *name.split("/"))
+        members.append({"name": name, "path": path, "sha256": sha256_file(path),
+                        "bytes": os.path.getsize(path)})
+    record = {"image_url": args.iso_url, "image_sha256": observed,
+              "image_bytes": os.path.getsize(iso), "members": members}
+    with open(marker, "w", encoding="utf-8") as handle:
+        json.dump(record, handle)
+    if args.free_disk:
+        os.remove(iso)
+    return [m["path"] for m in members], record
+
+
+def unpack_pool(cabs, profile, destination):
+    """Extract the wanted members of every CAB into one directory and map
+    them to installed file names; returns {file name: (key, path)} and the
+    selection record."""
+    sevenzip = find_7z()
+    os.makedirs(destination, exist_ok=True)
+    for cab in cabs:
+        code, output = run([sevenzip, "x", "-y", "-o" + destination, cab]
+                           + profile["filters"])
+        # exit 1 / 2 are warnings (no matching file in this CAB, bytes after
+        # the CAB's end); a real failure leaves nothing to map below.
+        if code not in (0, 1, 2):
+            raise SystemExit("7z could not unpack %s (exit %d):\n%s"
+                             % (cab, code, output[-2000:]))
+    candidates = {}
+    for key in sorted(os.listdir(destination)):
+        full = os.path.join(destination, key)
+        if not os.path.isfile(full):
+            continue
+        for pattern, ext, check in profile["patterns"]:
+            match = pattern.match(key)
+            if match:
+                extension = ext or match.group("ext")
+                candidates.setdefault(
+                    ("%s.%s" % (match.group("name"), extension)).lower(),
+                    []).append((key, full, check))
+                break
+    named = os.path.join(destination, "named")
+    os.makedirs(named, exist_ok=True)
+    result, selection, skipped = {}, {}, {}
+    for name, items in sorted(candidates.items()):
+        if items[0][2]:
+            described = [(key, full, member_machines(full)) for key, full, _ in items]
+            # machine 0 is an object with no target (aliases, headers): ignored
+            amd64 = [d for d in described
+                     if d[2] - {0} == {IMAGE_FILE_MACHINE_AMD64}]
+            neutral = [d for d in described if d[2] <= {0}]
+            if amd64:
+                chosen = amd64
+            elif len(neutral) == 1:
+                chosen = neutral
+            else:
+                skipped[name] = [(k, sorted(m)) for k, _, m in described]
+                continue
+            digests = {sha256_file(full) for _, full, _ in chosen}
+            if len(digests) != 1:
+                # Several different AMD64 builds of one file name (the same
+                # object assembled for different targets): which one a given
+                # tool would have used cannot be told from the medium, so none
+                # is used and the names are recorded.
+                skipped[name] = [(k, "AMD64, %d different builds" % len(digests))
+                                 for k, _, _ in chosen]
+                continue
+            key, full, _ = chosen[0]
+            selection[name] = {"cab_member": key, "candidates": len(items),
+                               "machine": "AMD64" if amd64 else "none (alias-only)"}
+        else:
+            if len({sha256_file(full) for _, full, _ in items}) != 1:
+                skipped[name] = [(k, "several different CAB members")
+                                 for k, _, _ in items]
+                continue
+            key, full, _ = items[0]
+            selection[name] = {"cab_member": key, "candidates": len(items)}
+        target = os.path.join(named, name)
+        shutil.copyfile(full, target)
+        result[name] = (key, target)
+    print("%d files selected, %d skipped as ambiguous: %s" % (
+        len(result), len(skipped), json.dumps(skipped)), flush=True)
+    return result, {"selected_files": selection, "skipped_ambiguous": skipped}
+
+
+
+def compiler_records(data):
+    """Count CodeView compiler records: {(machine, front end, back end): n}.
+
+    S_COMPILE2/S_COMPILE3 sit in every object's .debug$S, directly before the
+    producer string; the version numbers in them are what the compiler
+    reported, not what a file name claims. The record is found from the
+    string backwards: the fixed fields end exactly where the string starts.
+    """
+    counts = Counter()
+    for match in re.finditer(rb"Microsoft \(R\) [A-Za-z ]*Compiler\x00", data):
+        for kind, fixed in ((CODEVIEW_COMPILE3, 4 + 22), (CODEVIEW_COMPILE2, 4 + 18)):
+            offset = match.start() - fixed
+            if offset < 0:
+                continue
+            _length, found = struct.unpack_from("<HH", data, offset)
+            if found != kind:
+                continue
+            if kind == CODEVIEW_COMPILE2:
+                _, machine, fma, fmi, fbd, bma, bmi, bbd = struct.unpack_from(
+                    "<IHHHHHHH", data, offset + 4)
+            else:
+                (_, machine, fma, fmi, fbd, _fq, bma, bmi, bbd,
+                 _bq) = struct.unpack_from("<IHHHHHHHHH", data, offset + 4)
+            counts[(MACHINES.get(machine, "machine 0x%X" % machine),
+                    "%d.%d.%d" % (fma, fmi, fbd),
+                    "%d.%d.%d" % (bma, bmi, bbd))] += 1
+            break
+    return counts
+
+
+def compiler_summary(paths):
+    counts = Counter()
+    for path in paths:
+        with open(path, "rb") as handle:
+            counts.update(compiler_records(handle.read()))
+    return [{"target": machine, "front_end": front, "back_end": back,
+             "objects": count}
+            for (machine, front, back), count in sorted(counts.items())]
+
+
+# Libraries that are mostly import-library members (short import records, no
+# object code behind them). link /WHOLEARCHIVE refuses those with LNK1127
+# "library is corrupt", so their real object members are written out and
+# linked as objects, and the import records - which carry no code - are
+# counted and left out.
+SPLIT_LIBS = ("msvcrt", "msvcrtd", "msvcprt", "msvcprtd", "oldnames")
+
+
+def split_archive(lib_path, dest_dir):
+    """Write the object members of an ar archive; return (paths, imports).
+
+    A member that opens with the null-and-0xFFFF signature and has a short
+    import header version (< 2) is an import record; anything else is an
+    object (an ANON_OBJECT_HEADER_BIGOBJ has version 2 and is kept).
+    """
+    os.makedirs(dest_dir, exist_ok=True)
+    with open(lib_path, "rb") as handle:
+        data = handle.read()
+    if data[:8] != b"!<arch>\n":
+        raise SystemExit("%s is not an ar archive" % lib_path)
+    offset, index, imports = 8, 0, 0
+    paths = []
+    base = os.path.splitext(os.path.basename(lib_path))[0]
+    while offset + 60 <= len(data):
+        header = data[offset:offset + 60]
+        name = header[:16].decode("latin1").strip()
+        size = int(header[48:58])
+        body = data[offset + 60:offset + 60 + size]
+        offset += 60 + size + (size & 1)
+        if name in ("/", "//"):
+            continue
+        if body[:4] == b"\x00\x00\xff\xff" and struct.unpack_from("<H", body, 4)[0] < 2:
+            imports += 1
+            continue
+        index += 1
+        path = os.path.join(dest_dir, "%s_%05d.obj" % (base, index))
+        with open(path, "wb") as out:
+            out.write(body)
+        paths.append(path)
+    return paths, imports
+
+
+def list_members(lib_path):
+    code, output = run(["lib", "/NOLOGO", "/LIST", lib_path])
+    if code != 0:
+        raise SystemExit("lib /LIST failed (exit %d) for %s:\n%s"
+                         % (code, lib_path, output))
+    return [line.strip() for line in output.splitlines() if line.strip()]
+
+
+def linker_banner():
+    _, banner = run(["link"])
+    return banner.splitlines()[0].strip() if banner.strip() else ""
+
+
+def write_json(path, info):
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(info, handle, indent=2, sort_keys=True)
+        handle.write("\n")
+
+
+def link_image(name, libs, objs, out_dir, source_record, files_note):
+    """Link ``libs`` (whole) and ``objs`` into ``<name>.dll`` with a PDB."""
+    dll = os.path.join(out_dir, name + ".dll")
+    pdb = os.path.join(out_dir, name + ".pdb")
+    command = ["link", "/NOLOGO", "/DLL", "/NOENTRY", "/NODEFAULTLIB",
+               "/MACHINE:X64"]
+    command += ["/WHOLEARCHIVE:" + path for path in libs] + list(libs)
+    if objs:
+        rsp = os.path.join(out_dir, name + ".objs.rsp")
+        with open(rsp, "w", encoding="utf-8") as handle:
+            handle.write("\n".join('"%s"' % path for path in objs) + "\n")
+        command.append("@" + rsp)
+    command += list(IMPORT_LIBS)
+    command += ["/OUT:" + dll, "/PDB:" + pdb, "/DEBUG", "/INCREMENTAL:NO",
+                "/OPT:NOREF", "/OPT:NOICF", "/Brepro",
+                "/FORCE:UNRESOLVED", "/FORCE:MULTIPLE",
+                "/BASE:" + IMAGE_BASE, "/DYNAMICBASE:NO", "/LARGEADDRESSAWARE:NO",
+                "/IGNORE:4099"]
+    code, output = run(command)
+    with open(os.path.join(out_dir, name + ".link.log"), "w",
+              encoding="utf-8") as handle:
+        handle.write("$ " + " ".join(command) + "\n" + output)
+    if code != 0 or not os.path.isfile(dll) or not os.path.isfile(pdb):
+        raise SystemExit("link failed for %s (exit %d):\n%s"
+                         % (name, code, output[-4000:]))
+    duplicates = sorted(set(re.findall(r"LNK4006: (\S+) already defined", output)))
+    unresolved = sorted(set(re.findall(r"unresolved external symbol (\S+)", output)))
+    members = sum(len(list_members(path)) for path in libs)
+    info = dict(source_record)
+    info.update({
+        "inputs": files_note,
+        "library_members": members,
+        "linked_objects": len(objs),
+        "compiler_records": compiler_summary(list(libs) + list(objs)),
+        "import_libraries": list(IMPORT_LIBS),
+        "linker": linker_banner(),
+        "ignored_duplicate_definitions": len(duplicates),
+        "ignored_duplicate_definition_names": duplicates[:50],
+        "unresolved_symbols": len(unresolved),
+    })
+    write_json(os.path.join(out_dir, name + ".inputs.json"), info)
+    print("%s: %d archive members + %d objects, %d duplicate definitions "
+          "ignored, %d unresolved symbols, compilers %s" % (
+              name, members, len(objs), len(duplicates), len(unresolved),
+              json.dumps(info["compiler_records"])), flush=True)
+
+
+def pe_version_info(path):
+    try:
+        import pefile
+    except ImportError:
+        return {}
+    pe = pefile.PE(path, fast_load=False)
+    info = {"machine": hex(pe.FILE_HEADER.Machine),
+            "linker_version": "%d.%d" % (pe.OPTIONAL_HEADER.MajorLinkerVersion,
+                                         pe.OPTIONAL_HEADER.MinorLinkerVersion)}
+    for entry in getattr(pe, "FileInfo", []) or []:
+        for item in entry:
+            for table in getattr(item, "StringTable", []) or []:
+                for key, value in table.entries.items():
+                    if key in (b"FileVersion", b"ProductVersion",
+                               b"OriginalFilename", b"ProductName",
+                               b"FileDescription"):
+                        info[key.decode()] = value.decode(errors="replace")
+    pe.close()
+    return info
+
+
+def cmd_libs(args, files, source_record, out_dir):
+    libs = {n: p for n, (_, p) in files.items() if n.endswith(".lib")}
+    all_objs = sorted(p for n, (_, p) in files.items() if n.endswith(".obj"))
+    # pbinmode.obj and friends are the /clr:pure (MSIL) twins of binmode.obj:
+    # the linker refuses to mix them with native modules (LNK1313) and they
+    # hold no x64 code. Detected by name: p<name>.obj next to <name>.obj.
+    stems = {os.path.basename(p)[:-4] for p in all_objs}
+    pure = [p for p in all_objs
+            if os.path.basename(p).startswith("p")
+            and os.path.basename(p)[1:-4] in stems]
+    objs = [p for p in all_objs if p not in pure]
+    source_record = dict(source_record)
+    source_record["clr_pure_objects_not_linked"] = sorted(
+        os.path.basename(p) for p in pure)
+    for spec in args.names:
+        # A trailing "~" marks a library that may be absent from the medium
+        # (or ambiguous in a pooled one); it is then left out and recorded.
+        parts = [part for part in spec.split("+") if part]
+        group, missing = [], []
+        for part in parts:
+            stem = part.rstrip("~")
+            if part.endswith("~") and stem != "objs" and stem + ".lib" not in libs:
+                missing.append(stem)
+            else:
+                group.append(stem)
+        paths, group_objs, split_info = [], [], []
+        for stem in group:
+            if stem == "objs":
+                group_objs += objs
+                continue
+            if stem + ".lib" not in libs:
+                raise SystemExit("%s.lib is not in the CAB; libraries present: "
+                                 "%s" % (stem, ", ".join(sorted(libs))))
+            if stem in SPLIT_LIBS:
+                parts, imports = split_archive(
+                    libs[stem + ".lib"], os.path.join(out_dir, "split_" + stem))
+                group_objs += parts
+                split_info.append({"library": stem + ".lib",
+                                   "object_members_linked": len(parts),
+                                   "import_records_left_out": imports})
+            else:
+                paths.append(libs[stem + ".lib"])
+        name = spec.replace("~", "").replace("+", "_")
+        note = {"libraries": [{"file": s + ".lib",
+                               "cab_member": files[s + ".lib"][0],
+                               "sha256": sha256_file(libs[s + ".lib"]),
+                               "bytes": os.path.getsize(libs[s + ".lib"]),
+                               "linked_as": "objects" if s in SPLIT_LIBS
+                               else "whole archive",
+                               "selection": getattr(args, "selection", {}).get(
+                                   s + ".lib")}
+                              for s in group if s != "objs"]}
+        if missing:
+            note["optional_libraries_not_found"] = missing
+        if split_info:
+            note["split_libraries"] = split_info
+        if "objs" in group:
+            note["start_up_objects"] = [{"file": os.path.basename(p),
+                                         "sha256": sha256_file(p)} for p in objs]
+        link_image(name, paths, group_objs, out_dir, source_record, note)
+
+
+def cmd_dlls(args, files, source_record, out_dir):
+    for stem in args.names:
+        for extension in ("dll", "pdb"):
+            key = "%s.%s" % (stem, extension)
+            if key not in files:
+                raise SystemExit("%s is not in the CAB; present: %s"
+                                 % (key, ", ".join(sorted(files))))
+            shutil.copyfile(files[key][1], os.path.join(out_dir, key))
+        info = dict(source_record)
+        info.update({
+            "cab_members": [files[stem + ".dll"][0], files[stem + ".pdb"][0]],
+            "selection": {k: getattr(args, "selection", {}).get(k)
+                          for k in (stem + ".dll", stem + ".pdb")},
+            "dll_sha256": sha256_file(os.path.join(out_dir, stem + ".dll")),
+            "pdb_sha256": sha256_file(os.path.join(out_dir, stem + ".pdb")),
+            "pe": pe_version_info(os.path.join(out_dir, stem + ".dll")),
+        })
+        write_json(os.path.join(out_dir, stem + ".inputs.json"), info)
+        print("%s: %s" % (stem, json.dumps(info["pe"])), flush=True)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--iso-url", required=True)
+    parser.add_argument("--iso-sha256", required=True)
+    parser.add_argument("--cab", help="path of the one CAB inside the image "
+                        "(single-CAB media: Windows SDK 7.1)")
+    parser.add_argument("--profile", choices=sorted(PROFILES),
+                        help="pooled media: see PROFILES")
+    parser.add_argument("--free-disk", action="store_true",
+                        help="delete the downloaded image once its CABs are out")
+    parser.add_argument("--cache", default=os.path.join(
+        tempfile.gettempdir(), "mcrit-vcsdk-cache"),
+        help="where the image and the unpacked CAB are kept between runs")
+    parser.add_argument("--out", default=".")
+    parser.add_argument("mode", choices=["libs", "dlls"])
+    parser.add_argument("names", nargs="+",
+                        help="libs: libcmt libcpmt+libcpmt1 objs ...; "
+                             "dlls: msvcr100 msvcp100")
+    args = parser.parse_args()
+    args.iso_sha256 = args.iso_sha256.lower()
+    if bool(args.cab) == bool(args.profile):
+        parser.error("give exactly one of --cab and --profile")
+    if args.cab:
+        cab, record = fetch_cab(args, args.cache)
+        unpacked = os.path.join(args.cache, "cab-" + record["cab_sha256"][:16])
+        files = unpack_cab(cab, unpacked)
+        files = {name: (key, path) for name, (key, path) in files.items()}
+    else:
+        profile = PROFILES[args.profile]
+        cabs, record = fetch_pool(args, profile, args.cache)
+        files, selection = unpack_pool(
+            cabs, profile, os.path.join(args.cache, args.profile + "-pool"))
+        record = dict(record)
+        args.selection = selection["selected_files"]
+        record["skipped_ambiguous"] = selection["skipped_ambiguous"]
+        record["members"] = [{k: v for k, v in m.items() if k != "path"}
+                             for m in record["members"]]
+        record["profile"] = args.profile
+    os.makedirs(args.out, exist_ok=True)
+    out_dir = os.path.abspath(args.out)
+    if args.mode == "libs":
+        cmd_libs(args, files, record, out_dir)
+    else:
+        cmd_dlls(args, files, record, out_dir)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
