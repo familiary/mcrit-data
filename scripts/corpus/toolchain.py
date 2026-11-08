@@ -12,6 +12,21 @@ gcc is on PATH and (for the 32-bit half) the -m32 multilib is installed. It
 is the only one here that does not produce a PE, and it exists because the
 portable half of this corpus - the header-only string obfuscators, obfstr -
 is used on Linux too, and a PE-only corpus cannot recognise it there.
+
+The fourth is a musl C/C++ toolchain from musl.cc, registered when
+``x86_64-linux-musl-gcc`` (and, for the 32-bit half, ``i686-linux-musl-gcc``)
+is on PATH. It exists for the one thing glibc's Linux toolchain cannot give
+this corpus: a *static* ELF. glibc's libc.a is not what a distribution ships
+and does not link cleanly into a C++ program with threads and name
+resolution, while musl's is designed for it - so the miners that are
+distributed as one self-contained file (XMRig's own release binaries are
+static) are built here. A static image carries libc, libgcc, libstdc++ and
+libatomic bodies, which is why this toolchain has a glue baseline of its own
+(corpus.baseline, the musl block) and why it is a kind of its own.
+
+The compilers are pinned by URL and SHA-256 in MUSL_PINS, which is what the
+provenance of every musl artefact records; exercisers/fetch_musl_toolchain.sh
+downloads, verifies and unpacks them.
 """
 
 import os
@@ -39,7 +54,7 @@ class Toolchain:
     ranlib: str
     cflags: str = "-O2"
     env: Dict[str, str] = field(default_factory=dict)
-    # "mingw", "msvc" or "linux"; selects how probes and compiler flags are
+    # "mingw", "msvc", "linux" or "musl"; selects how probes and compiler flags are
     # spelled, and which container the artefacts come out in.
     #
     # "linux" is a third value rather than a reuse of "mingw", even though
@@ -95,6 +110,15 @@ class Toolchain:
                        "/Fd:" + target + ".pdb", source, "/Fe:" + target]
             command += ["/LD"] if shared else []
             return command + ["/link", "/DEBUG", "/PDB:" + target + ".pdb"]
+        if self.kind == "musl":
+            # Always a static executable: that is the only thing this
+            # toolchain's recipes produce, and the libc bodies the baseline
+            # exists to measure are only in the image when it is linked
+            # statically. No -fPIC: the compiler is configured for PIE by
+            # default, and -static makes it a static-pie, which is what the
+            # recipes' own links give too. The ABI needs no flag - each of the
+            # two compilers targets exactly one.
+            return [compiler, "-O2", "-o", target, source, "-static"]
         if self.kind == "linux":
             # The ABI has to be named (one gcc serves both) and a shared
             # object has to be position-independent, which is not the default
@@ -116,6 +140,20 @@ class Toolchain:
             # The developer environment already exports everything cl, link,
             # ml64 and MSBuild need; overriding CC/AR here would break them.
             return dict(self.env)
+        if self.kind == "musl":
+            # As the Linux branch below, minus the ABI flag (each compiler
+            # targets one ABI) and with the compilers' own gcc-ar wrappers.
+            env = {
+                "CC": self.cc,
+                "CXX": self.cxx,
+                "AR": self.ar,
+                "RANLIB": self.ranlib,
+                "STRIP": "true",
+                "CFLAGS": self.cflags,
+                "CXXFLAGS": self.cflags,
+            }
+            env.update(self.env)
+            return env
         if self.kind == "linux":
             # No WINDRES: there is no resource compiler on this side, and
             # exporting it empty is worse than not exporting it at all - an
@@ -162,6 +200,9 @@ class Toolchain:
         if self.kind == "linux":
             cpu = "x86_64" if self.bitness == 64 else "i686"
             host = "%s-linux-gnu" % cpu
+        elif self.kind == "musl":
+            cpu = "x86_64" if self.bitness == 64 else "i686"
+            host = "%s-linux-musl" % cpu
         else:
             cpu = self.prefix.split("-")[0]
             host = self.prefix.rstrip("-")
@@ -188,7 +229,9 @@ class Toolchain:
             # lz4's lib/Makefile keys its DLL rule off this spelling.
             "mingw_os": "MINGW64" if self.bitness == 64 else "MINGW32",
             # OpenSSL's Configure target names.
-            "openssl_target": "mingw64" if self.bitness == 64 else "mingw",
+            "openssl_target": ("linux-x86_64" if self.bitness == 64 else "linux-x86")
+            if self.kind == "musl"
+            else ("mingw64" if self.bitness == 64 else "mingw"),
             # 7-Zip names its makefiles and output directories this way.
             "asm_arch": "x64" if self.bitness == 64 else "x86",
             # MSBuild and vcvarsall spellings.
@@ -279,6 +322,52 @@ def _has_multilib():
                          text=True)
     return any(line.startswith("32;") or ";@m32" in line
                for line in out.stdout.splitlines())
+
+
+# The musl.cc toolchains the musl axes are built and measured with. Pinned by
+# URL and SHA-256 (of the tarball as downloaded on 2026-11-08); both are GCC
+# 11.2.1 20211120 on musl 1.2.2 headers and libraries (the Last-Modified of
+# both tarballs is 2021-11-23). x64 is the native toolchain, which runs
+# on any x86-64 Linux host because its binaries are static; x86 is the
+# i686 cross toolchain. A new tarball under the same URL would fail the
+# checksum in exercisers/fetch_musl_toolchain.sh rather than change the data.
+MUSL_PINS = {
+    "x64": {
+        "name": "x86_64-linux-musl-native",
+        "url": "https://musl.cc/x86_64-linux-musl-native.tgz",
+        "sha256": "eb1db6f0f3c2bdbdbfb993d7ef7e2eeef82ac1259f6a6e1757c33a97dbcef3ad",
+        "triple": "x86_64-linux-musl",
+    },
+    "x86": {
+        "name": "i686-linux-musl-cross",
+        "url": "https://musl.cc/i686-linux-musl-cross.tgz",
+        "sha256": "93bd5504d5d0349258c43d7a668b506acbd627d31c0843a96e4b4c47b27a0180",
+        "triple": "i686-linux-musl",
+    },
+}
+
+
+def _musl(arch, bitness, triple, gcc_major):
+    """A musl.cc GCC, targeting static ELF on musl.
+
+    ar and ranlib are the toolchain's gcc-ar/gcc-ranlib wrappers, which both
+    tarballs ship under the triple's prefix (the native one has no
+    ``x86_64-linux-musl-ar``). No arch flag: each compiler has one target.
+    """
+    return Toolchain(
+        id="musl%s_%s" % (gcc_major, arch),
+        short_id="musl%s" % gcc_major,
+        arch=arch,
+        bitness=bitness,
+        prefix="%s-" % triple,
+        cc="%s-gcc" % triple,
+        cxx="%s-g++" % triple,
+        windres="",
+        strip="%s-strip" % triple if arch == "x86" else "strip",
+        ar="%s-gcc-ar" % triple,
+        ranlib="%s-gcc-ranlib" % triple,
+        kind="musl",
+    )
 
 
 def _msvc(arch, bitness, version):
@@ -380,9 +469,32 @@ def _register_gcc():
         _TOOLCHAINS["linux_%s" % arch] = toolchain
 
 
+def _register_musl():
+    # Found by name on PATH, like MinGW: the triple-prefixed driver exists
+    # only where the musl.cc toolchain was put on PATH, so the host's own
+    # gcc can never be mistaken for it. posix-only for the same reason as
+    # _register_gcc.
+    if os.name != "posix" or sys.platform.startswith("darwin"):
+        return
+    for arch, bitness in (("x86", 32), ("x64", 64)):
+        triple = MUSL_PINS[arch]["triple"]
+        cc = "%s-gcc" % triple
+        if shutil.which(cc) is None:
+            continue
+        out = subprocess.run([cc, "-dumpversion"], capture_output=True,
+                             text=True)
+        match = re.match(r"(\d+)", out.stdout.strip())
+        if not match:
+            continue
+        toolchain = _musl(arch, bitness, triple, match.group(1))
+        _TOOLCHAINS[toolchain.id] = toolchain
+        _TOOLCHAINS["musl_%s" % arch] = toolchain
+
+
 _register_mingw()
 _register_msvc()
 _register_gcc()
+_register_musl()
 
 
 # Alias prefixes that name the same toolchain as a versioned id's prefix, for
@@ -422,7 +534,7 @@ def image_format(toolchain_id):
     have been absent from every one of them and defaulted to something.
     """
     alias = canonical_alias(toolchain_id or "")
-    return "ELF" if alias.startswith("linux_") else "PE"
+    return "ELF" if alias.startswith(("linux_", "musl_")) else "PE"
 
 
 def get_toolchain(toolchain_id) -> Toolchain:
