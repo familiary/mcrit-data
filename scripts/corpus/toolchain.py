@@ -326,8 +326,8 @@ def _has_multilib():
 
 # The musl.cc toolchains the musl axes are built and measured with. Pinned by
 # URL and SHA-256 (of the tarball as downloaded on 2026-11-08); both are GCC
-# 11.2.1 20211120 on musl 1.2.2 headers and libraries (the Last-Modified of
-# both tarballs is 2021-11-23). x64 is the native toolchain, which runs
+# 11.2.1 20211120 on musl 1.2.2-git-50-gb76f37fd (what the native libc.so
+# prints; the Last-Modified of both tarballs is 2021-11-23). x64 is the native toolchain, which runs
 # on any x86-64 Linux host because its binaries are static; x86 is the
 # i686 cross toolchain. A new tarball under the same URL would fail the
 # checksum in exercisers/fetch_musl_toolchain.sh rather than change the data.
