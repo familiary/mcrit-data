@@ -26,6 +26,12 @@ class Source:
     # Directory inside the archive that holds the source, if it is not the
     # single top level directory the archive unpacks to.
     strip_prefix: Optional[str] = None
+    # A git source normally has its submodules checked out and recorded. Set
+    # False for a project whose submodule pin is not served by its upstream any
+    # more (a force-pushed or deleted commit) when the submodule contributes
+    # no code to the artefacts: the submodule is then left uninitialised, which
+    # ``git submodule status`` records in the provenance with a leading ``-``.
+    submodules: bool = True
 
 
 @dataclass
@@ -107,6 +113,22 @@ class Recipe:
     # Drop MinGW C runtime glue that every DLL links in, so it is not
     # mis-attributed to this family. See corpus.baseline.
     drop_crt_glue: bool = True
+    # Regular expressions (re.search) over SMDA's function names. A function
+    # whose name matches any of them is removed from the report, after the
+    # glue baseline has been applied, and counted in the artefact's
+    # provenance as excluded_function_count so kept + excluded is still the
+    # image total.
+    #
+    # This exists for statically linked code that cannot be kept out of the
+    # image and is not the recipe's family: a Rust cdylib carries the
+    # precompiled core and alloc whatever the crate does, and the linker
+    # policy of this corpus (no section folding or unreferenced-code
+    # elimination) keeps all of it. The baseline cannot remove it because
+    # that is measured from C probes; a name pattern can. Use a pattern that
+    # states what the family IS (a negative lookahead on its own namespace)
+    # rather than listing what it is not, so a runtime symbol nobody
+    # anticipated is excluded by default instead of filed under the project.
+    exclude_functions: List[str] = field(default_factory=list)
     # Minimum share of functions that must carry a recovered symbol before the
     # build is accepted. Lower it only for projects that genuinely cannot keep
     # symbols; 0 disables the check.

@@ -158,8 +158,9 @@ def fetch_source(source, name):
         # A submodule that fails to fetch used to be ignored, which produces a
         # build from an incomplete tree - and the artefact then silently lacks
         # whatever the submodule contributed.
-        subprocess.run(["git", "-C", workspace, "submodule", "update", "-q",
-                        "--init", "--recursive", "--depth", "1"], check=True)
+        if source.submodules:
+            subprocess.run(["git", "-C", workspace, "submodule", "update", "-q",
+                            "--init", "--recursive", "--depth", "1"], check=True)
         commit = subprocess.run(["git", "-C", workspace, "rev-parse", "HEAD"],
                                 capture_output=True, text=True, check=True).stdout.strip()
         root = workspace

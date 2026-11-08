@@ -2036,5 +2036,54 @@ class ElfReadmeRowTest(unittest.TestCase):
             "MinGW-w64 GCC 13.2.0")
 
 
+class ExcludeFunctionsTest(unittest.TestCase):
+    """Recipe.exclude_functions removes by name and says how many.
+
+    The orion recipe uses one pattern, a negative lookahead on its own
+    namespace, so the cases here are that shape: the family's own functions
+    and its trait impls stay, core/alloc code and an unnamed function go.
+    """
+
+    PATTERN = r"^(?!<?orion::)"
+
+    def _report(self, names):
+        class _R(object):
+            pass
+        report = _R()
+        report.xcfg = {}
+        for index, name in enumerate(names):
+            function = _Function(10, name, index)
+            report.xcfg[index] = function
+        report._sorted_functions = "stale"
+        return report
+
+    def test_removes_only_what_the_pattern_matches(self):
+        from corpus import smdaify
+        names = ["orion::hazardous::hash::sha2::sha256::Sha256::digest",
+                 "<orion::Secret<X> as core::cmp::PartialEq>::eq",
+                 "core::fmt::write",
+                 "<u8 as core::fmt::Debug>::fmt",
+                 "<alloc::string::String as core::fmt::Write>::write_str",
+                 "orion_x_sha256",
+                 ""]
+        report = self._report(names)
+        with mock.patch.object(smdaify, "_recompute_statistics") as recompute:
+            removed = smdaify._drop_excluded(report, [self.PATTERN])
+        self.assertEqual(removed, 5)
+        self.assertEqual(sorted(f.function_name for f in report.xcfg.values()),
+                         sorted(names[:2]))
+        self.assertIsNone(report._sorted_functions)
+        recompute.assert_called_once_with(report)
+
+    def test_no_match_changes_nothing(self):
+        from corpus import smdaify
+        report = self._report(["orion::a", "orion::b"])
+        with mock.patch.object(smdaify, "_recompute_statistics") as recompute:
+            removed = smdaify._drop_excluded(report, [r"^zzz"])
+        self.assertEqual(removed, 0)
+        self.assertEqual(len(report.xcfg), 2)
+        recompute.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
