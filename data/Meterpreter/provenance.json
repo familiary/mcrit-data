@@ -524,6 +524,722 @@
     "upstream": "https://github.com/rapid7/metasploit-payloads",
     "version": "2.0.258"
   },
+  "Meterpreter_2.0.258_msvc142_x86_dump_sam": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/dump_sam.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "dump_sam",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_dump_sam.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 27,
+    "sha256": "59fcfa5728682fa4633da376755cbfa839c38529e8d34ff92b30b06adcd2f27a",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_dump_sam.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_elevator": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/elevator.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "elevator",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_elevator.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 526,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "c02da5fc914b379c2571f0aec833833b5a1ffa6e8dc83545cd7b009d77168c67",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_elevator.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_bofloader": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_bofloader.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_bofloader",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_bofloader.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 652,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "6543af5ec2dd0352ff36686452ebb650823ff47da3f0345c93ea426d134b3d19",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_bofloader.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_espia": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_espia.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_espia",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_espia.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 858,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "2724821b4708ccbd4d272c805f2335df0921f431a8842c387d5f4c9f809accdb",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_espia.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_extapi": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_extapi.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_extapi",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_extapi.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 781,
+    "removed_excluded_pichashes": {
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "fb7972dde4dbc6a25e0b904f6d56827a25c4712ad974e534df6a905752ce2d4c",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_extapi.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_incognito": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_incognito.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_incognito",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_incognito.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 583,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "e1e386826861ebd4e6976acead485e6e45633831ce67eba5c8770ae530a103d9",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_incognito.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_lanattacks": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_lanattacks.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_lanattacks",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_lanattacks.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 1059,
+    "removed_excluded_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "68769e3d0f59efb61e114e99b2dd7676452b34fd44b2f1966e4d58bafdd155dc",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_lanattacks.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_peinjector": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_peinjector.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_peinjector",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_peinjector.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 577,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "1d6d0031f38e1f794d9c84f0be44e8681701ee435c85e29f0d626c90b1ca470b",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_peinjector.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_powershell": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_powershell.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_powershell",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_powershell.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 654,
+    "removed_excluded_pichashes": {
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "5f2d7eb2d9f919e922ae6704b7b1f16d84b1ab704d65ba67f22ecfc240be4db0",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_powershell.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_priv": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_priv.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_priv",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_priv.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 710,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "605548759b8af37e44e925c967bafbb1b4223c73c39b772f76fce4282eabedaa",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_priv.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_stdapi.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_stdapi",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 1356,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "fe73bc6ae1b918011d0bf6638020b0e4d9eb90da7e9e5790a4716b8c171e63ce",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_audio": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_stdapi_audio.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_stdapi_audio",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_audio.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 561,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "dccbc00565f04ba3f00b79b46167e58b6e35e53433411def488cfa58997d1fd2",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_audio.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_fs": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_stdapi_fs.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_stdapi_fs",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_fs.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 757,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "b9ed88ec6584b902b309f9e023d9c1c6df9e013552fda5b9c9f45ff0ad31d74b",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_fs.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_net": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_stdapi_net.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_stdapi_net",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_net.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 636,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "b179d7b26671c29e6702a3b24cabdcf6865b8c22579574be664844f2742e12b8",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_net.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_railgun": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_stdapi_railgun.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_stdapi_railgun",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_railgun.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 576,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "8ac33354a43640673510e55ca1ab341a7887110fa2197df9004e276dfcd56033",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_railgun.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_sys": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_stdapi_sys.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_stdapi_sys",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_sys.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 746,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "59e1cd638706018cd68c4051393177ca03de312b7d684dd2c59ac6727175508e",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_sys.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_ui": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_stdapi_ui.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_stdapi_ui",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_ui.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 1167,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "5cd0b5ebf3ce676014b174fac17521ed77c2a393dc3663a8b6aea5a4c23876a9",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_ui.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_webcam": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_stdapi_webcam.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_stdapi_webcam",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_webcam.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 1096,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "02814de8d9be1ad73421e391dc553ab67402bcbbcb6a98f24b20d6d053b4a904",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_stdapi_webcam.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_ext_server_unhook": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/ext_server_unhook.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "ext_server_unhook",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_ext_server_unhook.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 446,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "a03df82151408ddcdd14dae0c6183c9b491124cd5ee547dfb8c4510d4f08963b",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_ext_server_unhook.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_metsrv": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/metsrv.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "metsrv",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_metsrv.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 1174,
+    "removed_excluded_pichashes": {
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "52d007595ca7b43f7398be591276fea60b2a12c9aca9e31d5534c132cdabd661",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_metsrv.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
+  "Meterpreter_2.0.258_msvc142_x86_screenshot": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by Rapid7); exact flags not published",
+    "built_artifact": "plain/screenshot.x86.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "screenshot",
+    "exclude_pichashes": {
+      "11007584211390772839": "data/MSVC:__CIpow_pentium4",
+      "17085667784515999986": "data/MSVC:__EH_prolog",
+      "17596394674013296920": "data/libzlib:_putShortMSB",
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "family": "Meterpreter",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/Meterpreter/x86/mcrit/Meterpreter_2.0.258_msvc142_x86_screenshot.mcrit",
+    "notes": "Decrypted from the published metasploit-payloads gem with scripts/corpus/decrypt_msf.py, using the key table committed in the gem's own lib/metasploit-payloads/crypto.rb. Not rebuilt here: the MSVC source build needs an SDK older than any runner image carries. Release images only; the .debug.dll twins are skipped. ext_server_python (CPython), ext_server_kiwi (mimikatz, issue #60), ext_server_winpmem and ext_server_sniffer (proprietary PSSDK) are excluded as vendored third-party code. No PDBs are published, so only exported functions carry a name.",
+    "num_functions": 868,
+    "removed_excluded_pichashes": {
+      "18136989794466017840": "data/MSVC:__twoToTOS"
+    },
+    "sha256": "0b0cd83da1745d9d01e01211157aafbf37cbb01e6f6a9f986dcf4dcc16b6ae55",
+    "smda": "data/Meterpreter/x86/smda/Meterpreter_2.0.258_msvc142_x86_screenshot.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "archive": "metasploit-payloads-2.0.258.gem",
+      "sha256": "f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e",
+      "url": "https://rubygems.org/downloads/metasploit-payloads-2.0.258.gem"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rapid7/metasploit-payloads",
+    "version": "2.0.258"
+  },
   "Meterpreter_2.0.259_mingw13_x64_ext_server_stdapi.dll": {
     "architecture": "x64",
     "build_flags": "cmake --build Release (-O3 -DNDEBUG) for i686-w64-mingw32 / x86_64-w64-mingw32 via upstream's toolsets/*.cmake; upstream USE_STATIC_MSVC_RUNTIMES=ON adds -static-libgcc -mwindows -fms-extensions -Wl,--enable-stdcall-fixup; BUILD_ALL=OFF with BUILD_METSRV=ON and BUILD_ARCH=Win32/x64",
