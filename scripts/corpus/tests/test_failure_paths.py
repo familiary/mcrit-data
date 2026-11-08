@@ -315,6 +315,41 @@ class SlugTest(unittest.TestCase):
         own = Artifact(path="x.dll", component="x.dll")
         self.assertTrue(recipe.slug("mingw13_x64", own).startswith("Host_1.0_"))
 
+    def test_producer_overrides_the_running_toolchain(self):
+        """A harvested prebuilt is named for what compiled it, not for us."""
+        from corpus.recipe import Artifact, Recipe, Source
+
+        recipe = Recipe(family="Host", version="1.0", source=Source(),
+                        build=[], artifacts=[], toolchains=["linux_x64"])
+        # Extracted on this Linux host, but built by VS2019 wherever upstream
+        # publishes it. Naming it gcc13 would misdescribe the artefact.
+        harvested = Artifact(path="x.dll", component="x.dll",
+                             producer="msvc142")
+        self.assertEqual(recipe.slug("linux_x64", harvested),
+                         "Host_1.0_msvc142_x64_x.dll")
+
+    def test_producer_overrides_the_blob_default(self):
+        """is_blob's hardcoded msvc is a default, not a verdict."""
+        from corpus.recipe import Artifact, Recipe, Source
+
+        recipe = Recipe(family="Host", version="1.0", source=Source(),
+                        build=[], artifacts=[], toolchains=["mingw13_x64"])
+        blob = Artifact(path="s.bin", component="s", is_blob=True, bitness=64)
+        self.assertIn("_msvc_", recipe.slug("mingw13_x64", blob))
+        gcc_blob = Artifact(path="s.bin", component="s", is_blob=True,
+                            bitness=64, producer="mingw13")
+        self.assertIn("_mingw13_", recipe.slug("mingw13_x64", gcc_blob))
+
+    def test_absent_producer_changes_nothing(self):
+        """The default path stays exactly what it was."""
+        from corpus.recipe import Artifact, Recipe, Source
+
+        recipe = Recipe(family="Host", version="1.0", source=Source(),
+                        build=[], artifacts=[], toolchains=["mingw13_x64"])
+        own = Artifact(path="x.dll", component="x.dll")
+        self.assertEqual(recipe.slug("mingw13_x64", own),
+                         "Host_1.0_mingw13_x64_x.dll")
+
     def test_hostile_characters_still_raise(self):
         from corpus.recipe import Artifact, Recipe, Source
 
