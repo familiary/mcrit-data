@@ -20,12 +20,14 @@ os.makedirs(out, exist_ok=True)
 toolsets = crawl_vclib.find_toolsets()
 print("toolsets found:", ", ".join(sorted(toolsets)) or "none", flush=True)
 summary = []
-for version in sorted(toolsets):
+for version in sorted(toolsets, key=lambda v: [int(x) for x in v.split(".")]):
     if only and version not in only:
         continue
     work = os.path.join(out, "work_" + version)
     os.makedirs(work, exist_ok=True)
     for shard in crawl_vclib.SHARDS:
+        if os.environ.get("SHARDS") and shard not in os.environ["SHARDS"].split():
+            continue
         t0 = time.time()
         rec = {"toolset": version, "arch": arch, "shard": shard}
         try:

@@ -10,6 +10,10 @@ on:
         description: Recipes to build (space separated); empty = measure only
         required: false
         default: ""
+      shards:
+        description: shards to measure (empty = all)
+        required: false
+        default: ""
       mode:
         description: measure or build
         required: false
@@ -129,7 +133,7 @@ jobs:
         if: ${{ !cancelled() && github.event.inputs.mode != 'build' }}
         shell: pwsh
         run: |
-          python scripts/scratch/measure_oldtoolsets.py ${{ matrix.arch }} hashes 2>&1 | Tee-Object -FilePath measure.log
+          $env:SHARDS = "${{ github.event.inputs.shards }}"; python scripts/scratch/measure_oldtoolsets.py ${{ matrix.arch }} hashes 2>&1 | Tee-Object -FilePath measure.log
           exit 0
 
       - name: Build recipes

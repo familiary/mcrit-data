@@ -28,15 +28,17 @@ route scripts/corpus/crawl_ucrt.py takes for the Windows SDK's static UCRT):
 The linker is the one on PATH (the runner's own); only the *inputs* belong to
 the toolset being crawled, and its linker version is recorded.
 
-Shards (a shard with no library installed for the toolset is skipped):
+Shards (a shard with no library installed for the toolset is skipped); see
+SHARDS for the library lists:
 
-  mt       libcmt, libvcruntime, libcpmt(1), libconcrt   (/MT, release)
-  mtd      the same, debug (``d`` suffix)                (/MTd)
-  md       msvcrt, msvcprt  - the static half of /MD     (/MD)
-  mdd      msvcrtd, msvcprtd                             (/MDd)
-  startup  the *.obj files in the lib directory (binmode, chkstk, setargv...)
-  atlmfc   ATL and MFC static libraries, release (atls, nafxcw, uafxcw)
-  atlmfcd  the same, debug
+  mt, mt1, mtd, mtd0, mtd1   the /MT and /MTd runtime (libcmt, libvcruntime,
+                             libcpmt, libconcrt), one shard per
+                             _ITERATOR_DEBUG_LEVEL
+  md, mdd                    msvcrt(d).lib, the static half of /MD
+  support                    legacy_stdio_definitions, delayimp, ...
+  com, comd                  comsupp (_com_error, _bstr_t, _variant_t)
+  startup                    the *.obj files in the lib directory
+  atlmfc, atlmfcd            ATL and MFC static libraries
 
 Sanitizer, fuzzer and clang_rt libraries are never taken: they are not part of
 the runtime a binary links by default and no toolset here carries them in the
@@ -54,11 +56,24 @@ import sys
 
 
 SHARDS = {
-    "mt": ["libcmt", "libvcruntime", "libcpmt", "libcpmt1", "libconcrt"],
-    "mtd": ["libcmtd", "libvcruntimed", "libcpmtd", "libcpmtd0", "libcpmtd1",
-            "libconcrtd"],
-    "md": ["msvcrt", "msvcprt"],
-    "mdd": ["msvcrtd", "msvcprtd"],
+    # The /MT runtime. libcpmt1/libconcrt1 and libcpmtd0/1, libconcrtd0/1 are
+    # the same code built with another _ITERATOR_DEBUG_LEVEL; the linker
+    # refuses to mix levels (LNK2038), so each level is a shard of its own.
+    "mt": ["libcmt", "libvcruntime", "libcpmt", "libconcrt"],
+    "mt1": ["libcpmt1", "libconcrt1"],
+    "mtd": ["libcmtd", "libvcruntimed", "libcpmtd", "libconcrtd"],
+    "mtd0": ["libcpmtd0", "libconcrtd0"],
+    "mtd1": ["libcpmtd1", "libconcrtd1"],
+    # The static half of /MD. msvcprt(d).lib is not a shard: the linker
+    # rejects it as corrupt (LNK1127) in every toolset here.
+    "md": ["msvcrt"],
+    "mdd": ["msvcrtd"],
+    # Compatibility and helper libraries binaries link implicitly.
+    "support": ["legacy_stdio_definitions", "legacy_stdio_wide_specifiers",
+                "iso_stdio_wide_specifiers", "delayimp", "aligned_new",
+                "exe_initialize_mta"],
+    "com": ["comsupp", "comsuppw"],
+    "comd": ["comsuppd", "comsuppwd"],
     "startup": None,
     "atlmfc": ["atls", "nafxcw", "uafxcw"],
     "atlmfcd": ["atlsd", "nafxcwd", "uafxcwd"],
@@ -164,7 +179,13 @@ def shard_inputs(toolset, arch, shard):
     runtime, atlmfc = lib_dirs(toolset, arch)
     if shard == "startup":
         objs = sorted(glob.glob(os.path.join(runtime, "*.obj")))
-        return [], [o for o in objs if not EXCLUDE.search(os.path.basename(o))]
+        names = {os.path.basename(o) for o in objs}
+        # pbinmode.obj and friends are the /clr:pure twins of binmode.obj and
+        # cannot be linked with native objects (LNK1313).
+        return [], [o for o in objs
+                    if not EXCLUDE.search(os.path.basename(o))
+                    and not (os.path.basename(o).startswith("p")
+                             and os.path.basename(o)[1:] in names)]
     directory = atlmfc if shard in ATLMFC_SHARDS else runtime
     libs = []
     for name in SHARDS[shard]:
