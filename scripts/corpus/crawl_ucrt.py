@@ -79,8 +79,18 @@ def list_members(lib_path):
     return [line.strip() for line in output.splitlines() if line.strip()]
 
 
+def sdk_directory(root, sdk):
+    """The Lib subdirectory for ``sdk``; the SDK installs as 10.0.22621.0."""
+    base = os.path.join(root, "Lib")
+    for candidate in (sdk, sdk + ".0"):
+        if os.path.isdir(os.path.join(base, candidate)):
+            return candidate
+    return sdk
+
+
 def crawl(root, sdk, arch, name, out_dir):
-    lib_dir = os.path.join(root, "Lib", sdk, "ucrt", arch)
+    sdk_dir = sdk_directory(root, sdk)
+    lib_dir = os.path.join(root, "Lib", sdk_dir, "ucrt", arch)
     lib_path = os.path.join(lib_dir, name + ".lib")
     if not os.path.isfile(lib_path):
         available = []
@@ -90,7 +100,7 @@ def crawl(root, sdk, arch, name, out_dir):
         raise SystemExit("%s does not exist; Windows SDKs under %s: %s"
                          % (lib_path, base, ", ".join(available) or "none"))
     members = list_members(lib_path)
-    um_dir = os.path.join(root, "Lib", sdk, "um", arch)
+    um_dir = os.path.join(root, "Lib", sdk_dir, "um", arch)
     imports = [os.path.join(um_dir, lib) for lib in IMPORT_LIBS
                if os.path.isfile(os.path.join(um_dir, lib))]
 
@@ -123,7 +133,7 @@ def crawl(root, sdk, arch, name, out_dir):
     info = {
         "sdk_version": sdk,
         "architecture": arch,
-        "library": "Windows Kits/10/Lib/%s/ucrt/%s/%s.lib" % (sdk, arch, name),
+        "library": "Windows Kits/10/Lib/%s/ucrt/%s/%s.lib" % (sdk_dir, arch, name),
         "library_sha256": sha256_file(lib_path),
         "library_bytes": os.path.getsize(lib_path),
         "library_members": len(members),
