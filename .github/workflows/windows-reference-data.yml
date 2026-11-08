@@ -130,6 +130,7 @@ jobs:
           Get-Content toolsets-list.json -TotalCount 400
 
       - name: Measure the toolsets
+        timeout-minutes: 200
         if: ${{ !cancelled() && github.event.inputs.mode != 'build' }}
         shell: pwsh
         run: |
@@ -147,7 +148,7 @@ jobs:
           exit 0
 
       - name: Upload measurements
-        if: ${{ !cancelled() }}
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: oldtoolsets-${{ matrix.arch }}
