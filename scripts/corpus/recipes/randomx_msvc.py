@@ -62,5 +62,8 @@ def _randomx(version, tag):
 
 RECIPES = {
     "RandomX_1.2.1_msvc": _randomx("1.2.1", "v1.2.1"),
+    "RandomX_1.2.2_msvc": _randomx("1.2.2", "v1.2.2"),
+    "RandomX_1.2.3_msvc": _randomx("1.2.3", "v1.2.3"),
+    "RandomX_2.0_msvc": _randomx("2.0", "v2.0"),
     "RandomX_2.0.1_msvc": _randomx("2.0.1", "v2.0.1"),
 }

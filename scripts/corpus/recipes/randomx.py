@@ -5,8 +5,26 @@ identity of its own, so a Monero reference miner, or any other miner that
 embeds RandomX, would be answered "XMRig" by a corpus that has only XMRig
 (data/XMRig, issue #8). This is the family that stops that.
 
-Versions. v1.2.1 (commit 102f8acf) and v2.0.1 are built; the tags between them
-(v1.2.2, v1.2.3, v2.0) are not, and were not measured. Upstream tevador/RandomX
+Versions. v1.2.1 (commit 102f8acf), v1.2.2 (6c4340ba), v1.2.3 (12f2c2ff),
+v2.0 (e0db3c4a) and v2.0.1 (aaafe713) are built (MSVC: randomx_msvc.py). The
+three tags added after the first two are near-duplicates of them, measured on the PicHashes of the
+functions of ten instructions or more: v1.2.1, v1.2.2 and v1.2.3 share all of
+them on Linux x64 (188), MinGW x64 (172) and MinGW x86 (140), and 321 of 322 on
+Linux x86; v2.0 and v2.0.1 share all of them on all four axes (198, 353, 181,
+145). The function names and the kept and removed counts are the same too. Across the two
+lines, the 1.2.x hashes found in 2.0.x are 77% (Linux x64), 6% (Linux x86),
+72% (MinGW x64) and 81% (MinGW x86). So there are two bodies of code on these
+axes, not five. Where the shared object is byte-identical (same sha256)
+to an existing one, it is not filed again, because validate refuses a
+duplicate sample in a family and nothing would be gained (donut_1.1 does the
+same for v1.0): on Linux x64 v1.2.2, v1.2.3 and v2.0 (identical to v1.2.1,
+v1.2.1 and v2.0.1), and on Linux x86 v1.2.3 (identical to v1.2.2). What is
+filed: Linux x86 of v1.2.2 (321 of 322 PicHashes of v1.2.1's; the one
+difference is the whole addition) and of v2.0, and MinGW x86 and x64 of all
+three, which differ in bytes from the existing ones (the cause was not
+investigated) with the same functions, so a
+sample that names one of those releases finds its own label. They add no
+function that v1.2.1 or v2.0.1 does not already have. Upstream tevador/RandomX
 rather than XMRig's vendored tree, which the issue offers as the alternative:
 XMRig's copy is a fork (it has no argon2_core.c or assembly generator of its
 own, and adds RISC-V sources) and is already in
@@ -77,14 +95,14 @@ _WHOLE = ("-Wl,--whole-archive build-{arch}/librandomx.a "
           "-Wl,--no-whole-archive")
 
 
-def _randomx(version, tag, linux):
+def _randomx(version, tag, linux, archs=None):
     if linux:
         configure = "cmake -S . -B build-{arch} " + _CONFIG + _HIDDEN
         link = ("{cxx} {archflag} -shared -o build-{arch}/librandomx.so "
                 + _WHOLE)
         artifact = Artifact(path="build-{arch}/librandomx.so",
                             component="librandomx.so")
-        toolchains = ["linux_x86", "linux_x64"]
+        toolchains = archs or ["linux_x86", "linux_x64"]
     else:
         configure = ("cmake -S . -B build-{arch} -DCMAKE_SYSTEM_NAME=Windows "
                      "-DCMAKE_SYSTEM_PROCESSOR={platform} "
@@ -125,6 +143,17 @@ def _randomx(version, tag, linux):
 RECIPES = {
     "RandomX_1.2.1": _randomx("1.2.1", "v1.2.1", linux=False),
     "RandomX_1.2.1_linux": _randomx("1.2.1", "v1.2.1", linux=True),
+    "RandomX_1.2.2": _randomx("1.2.2", "v1.2.2", linux=False),
+    # Linux x86 only: the x64 shared object of v1.2.2, v1.2.3 and v2.0 is
+    # byte-identical (same sha256) to v1.2.1's, v1.2.1's and v2.0.1's, and
+    # validate refuses a sample filed twice in a family. v1.2.3 x86 is
+    # byte-identical to v1.2.2's, so v1.2.3 has no Linux recipe.
+    "RandomX_1.2.2_linux": _randomx("1.2.2", "v1.2.2", linux=True,
+                                    archs=["linux_x86"]),
+    "RandomX_1.2.3": _randomx("1.2.3", "v1.2.3", linux=False),
+    "RandomX_2.0": _randomx("2.0", "v2.0", linux=False),
+    "RandomX_2.0_linux": _randomx("2.0", "v2.0", linux=True,
+                                  archs=["linux_x86"]),
     "RandomX_2.0.1": _randomx("2.0.1", "v2.0.1", linux=False),
     "RandomX_2.0.1_linux": _randomx("2.0.1", "v2.0.1", linux=True),
 }

@@ -1049,7 +1049,7 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 
 ### RandomX<a id='randomx'></a>
 
-RandomX is the proof-of-work behind Monero and a good deal of CPU mining, built from upstream tevador/RandomX at v1.2.1 and v2.0.1 and linked into a shared object or DLL. XMRig carries its own fork of it (see XMRig below), so this family is what answers a Monero reference miner or another miner that embeds RandomX rather than XMRig. Argon2d and Blake2b are RandomX's own copies and are filed here. On x64 the JIT is compiled in; the x86 artefacts are the interpreter. Built with `-DARCH=default`: no `-march=native`, AES-NI and AVX2 are chosen at run time.  
+RandomX is the proof-of-work behind Monero and a good deal of CPU mining, built from upstream tevador/RandomX at v1.2.1, v1.2.2, v1.2.3, v2.0 and v2.0.1 (the last three, and v1.2.2, are near-duplicates of the first and last; see the recipe) and linked into a shared object or DLL. XMRig carries its own fork of it (see XMRig below), so this family is what answers a Monero reference miner or another miner that embeds RandomX rather than XMRig. Argon2d and Blake2b are RandomX's own copies and are filed here. On x64 the JIT is compiled in; the x86 artefacts are the interpreter. Built with `-DARCH=default`: no `-march=native`, AES-NI and AVX2 are chosen at run time.  
 Generated with `scripts/build_corpus.py`; see `data/RandomX/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: RandomX -->
@@ -1061,6 +1061,11 @@ Generated with `scripts/build_corpus.py`; see `data/RandomX/provenance.json` for
 | RandomX | 2.0.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/RandomX/x86/mcrit/RandomX_2.0.1_gcc13_x86_librandomx.so.mcrit) / [x64 ELF](data/RandomX/x64/mcrit/RandomX_2.0.1_gcc13_x64_librandomx.so.mcrit) | [x86 ELF](data/RandomX/x86/smda/RandomX_2.0.1_gcc13_x86_librandomx.so.7z) / [x64 ELF](data/RandomX/x64/smda/RandomX_2.0.1_gcc13_x64_librandomx.so.7z) |
 | RandomX | 2.0.1 | MinGW-w64 GCC 13 | [x86 PE](data/RandomX/x86/mcrit/RandomX_2.0.1_mingw13_x86_randomx.dll.mcrit) / [x64 PE](data/RandomX/x64/mcrit/RandomX_2.0.1_mingw13_x64_randomx.dll.mcrit) | [x86 PE](data/RandomX/x86/smda/RandomX_2.0.1_mingw13_x86_randomx.dll.7z) / [x64 PE](data/RandomX/x64/smda/RandomX_2.0.1_mingw13_x64_randomx.dll.7z) |
 | RandomX | 2.0.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/RandomX/x86/mcrit/RandomX_2.0.1_msvc143_x86_randomx.dll.mcrit) / [x64 PE](data/RandomX/x64/mcrit/RandomX_2.0.1_msvc143_x64_randomx.dll.mcrit) | [x86 PE](data/RandomX/x86/smda/RandomX_2.0.1_msvc143_x86_randomx.dll.7z) / [x64 PE](data/RandomX/x64/smda/RandomX_2.0.1_msvc143_x64_randomx.dll.7z) |
+| RandomX | 1.2.2 | GCC 13 (Linux, glibc) | [x86 ELF](data/RandomX/x86/mcrit/RandomX_1.2.2_gcc13_x86_librandomx.so.mcrit) | [x86 ELF](data/RandomX/x86/smda/RandomX_1.2.2_gcc13_x86_librandomx.so.7z) |
+| RandomX | 1.2.2 | MinGW-w64 GCC 13 | [x86 PE](data/RandomX/x86/mcrit/RandomX_1.2.2_mingw13_x86_randomx.dll.mcrit) / [x64 PE](data/RandomX/x64/mcrit/RandomX_1.2.2_mingw13_x64_randomx.dll.mcrit) | [x86 PE](data/RandomX/x86/smda/RandomX_1.2.2_mingw13_x86_randomx.dll.7z) / [x64 PE](data/RandomX/x64/smda/RandomX_1.2.2_mingw13_x64_randomx.dll.7z) |
+| RandomX | 1.2.3 | MinGW-w64 GCC 13 | [x86 PE](data/RandomX/x86/mcrit/RandomX_1.2.3_mingw13_x86_randomx.dll.mcrit) / [x64 PE](data/RandomX/x64/mcrit/RandomX_1.2.3_mingw13_x64_randomx.dll.mcrit) | [x86 PE](data/RandomX/x86/smda/RandomX_1.2.3_mingw13_x86_randomx.dll.7z) / [x64 PE](data/RandomX/x64/smda/RandomX_1.2.3_mingw13_x64_randomx.dll.7z) |
+| RandomX | 2.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/RandomX/x86/mcrit/RandomX_2.0_gcc13_x86_librandomx.so.mcrit) | [x86 ELF](data/RandomX/x86/smda/RandomX_2.0_gcc13_x86_librandomx.so.7z) |
+| RandomX | 2.0 | MinGW-w64 GCC 13 | [x86 PE](data/RandomX/x86/mcrit/RandomX_2.0_mingw13_x86_randomx.dll.mcrit) / [x64 PE](data/RandomX/x64/mcrit/RandomX_2.0_mingw13_x64_randomx.dll.mcrit) | [x86 PE](data/RandomX/x86/smda/RandomX_2.0_mingw13_x86_randomx.dll.7z) / [x64 PE](data/RandomX/x64/smda/RandomX_2.0_mingw13_x64_randomx.dll.7z) |
 <!-- /generated -->
 
 ### XMRig<a id='xmrig'></a>
