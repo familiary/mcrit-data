@@ -6,11 +6,15 @@ CMake minimum of 3.4 is lifted with CMAKE_POLICY_VERSION_MINIMUM=3.5 because a
 CMake 4 refuses anything below 3.5. The CryptoNight main loops are MASM
 (xmr-stak-asm), assembled by ml64. OpenSSL is built from the pinned source and
 linked through its import libraries, with FindOpenSSL's MSVC cache entries
-preset as in xmrig_msvc.py. 4101 functions after 1834 removed as runtime.
+preset as in xmrig_msvc.py. 4101 functions after 1834 removed as runtime; 68 more (rapidjson, standard
+library and __scrt_common_main_seh functions shared with the other miners,
+removed by exact name from the committed archive, see _stack_vendored.py)
+leave 4033.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
 from . import _stack_deps as deps
+from . import _stack_vendored as vendored
 
 
 # CMake's Release for NMake is already "/MD /O2 /Ob2 /DNDEBUG"; /Zi is added.
@@ -41,8 +45,14 @@ RECIPES = {
                             component="xmr-stak.exe",
                             pdb="build-{arch}/bin/xmr-stak.pdb")],
         toolchains=["msvc_x64"],
+        exclude_functions=vendored.patterns("xmr-stak_2.10.8_msvc"),
         build_flags="/MD /O2 /Ob2 /DNDEBUG /Zi (CMake Release, /Zi added); "
                     "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF "
                     "at link",
+        notes="rapidjson and C++ standard library functions that other families also carry, "
+              "and __scrt_common_main_seh, are removed by exact name (exclude_functions, "
+              "excluded_function_count; see _stack_vendored.py); the image was re-derived "
+              "from the committed archive, not rebuilt. OpenSSL is linked as a DLL import "
+              "library and is not in the image.",
     ),
 }

@@ -30,7 +30,7 @@ in other families:
   * RandomX (src/crypto/randomx, 17 sources) stays in this artefact: it is
     part of what XMRig is and what a sample carries. data/RandomX holds
     upstream tevador/RandomX, and the overlap between the two is small - 22
-    of this artefact's 2504 functions of ten instructions or more share a
+    of this artefact's 2466 functions of ten instructions or more share a
     PicHash with it on Linux x64, five of them the same RandomX function
     under the same name (randomx.py lists them). XMRig's own plumbing around
     it (src/crypto/rx, MSR and the Ryzen fix) is only here.
@@ -40,16 +40,18 @@ in other families:
     because XMRig's CMake offers no switch that removes either without also
     removing the HTTP stack or RandomX. They DO collide with those families:
     with the (not yet merged) llhttp and argon2 branches' data present,
-    `validate --deep` finds 121 PicHashes shared by this family,
-    xmrig-proxy and llhttp under identical names (MinGW and MSVC, both
-    architectures; the ELF axis has no llhttp artefact to meet) and 10
-    Argon2/Blake2b helper hashes shared with data/argon2, data/libsodium and
-    data/RandomX. That is the same code legitimately in several places, not
-    glue, and is recorded for whoever merges those branches.
+    `validate --deep` found 121 PicHashes shared by this family, xmrig-proxy
+    and llhttp under identical names (MinGW and MSVC, both architectures; the
+    ELF axis has no llhttp artefact to meet) and 10 Argon2/Blake2b helper
+    hashes shared with data/argon2, data/BLAKE2, data/libsodium and
+    data/RandomX. The functions that are llhttp's or Argon2's own are now
+    removed by exact name, see "Vendored code removed by name" below.
   * libethash, epee, fmt, base32, rapidjson and getopt: filed here; no
     other family covers them. rapidjson is also compiled into xmrig-proxy and
-    xmr-stak, which is the largest group of findings `validate --deep` gives
-    this stack (36 PicHashes, one symbol, three families).
+    xmr-stak, which was the largest group of findings `validate --deep` gave
+    this stack (83 PicHashes, one symbol, three families): the rapidjson
+    functions that all three carry are removed by exact name too, as are the
+    C++ standard library templates they share, see below.
 
 Flags. XMRig's flags.cmake sets `-Ofast -s` for Release on GNU, `-static`
 (MinGW) or `-static-libgcc -static-libstdc++` (ELF) at link, and -maes for
@@ -92,12 +94,14 @@ header that is read is the same file.
 
 Axes. MinGW x86 and x64, Linux ELF x86 and x64, MSVC x86 and x64 and static
 musl x86 and x64: eight, and measured to differ. At ten instructions or more, x64 shares 0 PicHashes
-between any two of GCC (2248), MinGW (2128) and MSVC (4224); x86 shares 76
+between any two of GCC (2215), MinGW (2095) and MSVC (4140); x86 shares 57
 between GCC and MinGW and none with MSVC. Counts (kept functions, and
-those removed as compiler runtime): Linux x64 3783 and 9, x86 3887 and 6;
-MinGW x64 3707 and 174, x86 4072 and 186; MSVC x64 14,384 and 2,300, x86
-14,600 and 2,172. The MSVC figure is four times the GCC one because MSVC
-instantiates the standard library's templates into the image (5,837 `std::`
+those removed as compiler runtime): Linux x64 3735 and 9, x86 3847 and 6;
+MinGW x64 3647 and 174, x86 4032 and 186; MSVC x64 14,256 and 2,307, x86
+14,477 and 2,179; a further 48 and 40 (Linux), 60 and 40 (MinGW) and 121 and
+116 (MSVC) are removed by exact name, see "Vendored code removed by name"
+below. The MSVC figure is four times the GCC one because MSVC
+instantiates the standard library's templates into the image (5,996 `std::`
 functions on x64) and keeps every unreferenced COMDAT under /OPT:NOREF; it is
 what an MSVC-built miner contains.
 
@@ -129,14 +133,18 @@ miner, and what they leave is measured:
     19,827 functions on x64, 19,572 on x86, recorded as
     excluded_function_count.
 
-Counts, kept + removed as runtime + excluded = total: x64 3,802 + 4,060 +
-19,827 = 27,689; x86 3,426 + 4,242 + 19,572 = 27,240. For scale, the glibc
-axis keeps 3,783 (x64) and 3,887 (x86) functions of the same source: the
-miner is the same ~3,800 functions, and the rest of the file is libc, libgcc,
-libstdc++, libuv and OpenSSL.
+Counts, kept + removed as runtime + excluded = total: x64 3,771 + 4,060 +
+19,858 = 27,689; x86 3,403 + 4,242 + 19,595 = 27,240. Of the excluded,
+19,827 and 19,572 are libuv and OpenSSL (the two patterns above) and 31 and 23
+are the vendored code removed by name (below); the image was 3,802 and 3,426
+functions kept before that. For scale, the glibc axis keeps 3,735 (x64) and
+3,847 (x86) functions of the same source: the miner is the same ~3,800
+functions, and the rest of the file is libc, libgcc, libstdc++, libuv and
+OpenSSL.
 
 How well that separates, measured against the linker and not against the
-names: each image was relinked with -Wl,-Map (byte-identical) and every SMDA
+names, on the images as they were before the vendored-code rule below removed
+31 and 23 more functions: each image was relinked with -Wl,-Map (byte-identical) and every SMDA
 function attributed to the archive member holding its input section. Of the
 3,802 functions x64 keeps, 3,553 are in the miner's own objects (and its
 vendored libraries), 123 are unnamed with no input section (SMDA's .cold
@@ -150,11 +158,11 @@ unattributed, 95 (19 libstdc++, 11 libc, 1 libgcc, 64 libuv/OpenSSL of which
 32 unnamed and 32 shared names). Those 126 and 95 are in the image under the
 miner's name and are the measured limit of this axis.
 
-The axis against the others, ten instructions or more: musl x64 has 2,326
-PicHashes and shares 31 with GCC/glibc (2,248), none with MinGW (2,128) and 1
-with MSVC (4,220) - so the earlier "0 between any two toolchains" holds for
-GCC, MinGW and MSVC and not for the second GCC; x86 has 2,645 and shares 115,
-33 and 0 with GCC, MinGW and MSVC. Against the dependency families, for the
+The axis against the others, ten instructions or more: musl x64 has 2,310
+PicHashes and shares 31 with GCC/glibc (2,215), none with MinGW (2,095) and 1
+with MSVC (4,140) - so the earlier "0 between any two toolchains" holds for
+GCC, MinGW and MSVC and not for the second GCC; x86 has 2,633 and shares 113,
+30 and 0 with GCC, MinGW and MSVC. Against the dependency families, for the
 code the exclusion removes (measured before it): of the musl x64 image's 8,430
 libcrypto PicHashes, 64 are in data/OpenSSL 3.5.8 (MinGW); of 2,529 libssl, 0;
 of 374 libuv, 0 are in data/libuv 1.52.1 (MinGW, MSVC). On x86: 104 of 13,218,
@@ -162,11 +170,33 @@ of 374 libuv, 0 are in data/libuv 1.52.1 (MinGW, MSVC). On x86: 104 of 13,218,
 by those families (neither has an ELF image), so excluding them leaves a
 gap in the corpus rather than a duplicate; they are not filed under the
 miner.
+
+Vendored code removed by name. Recipe.exclude_functions on all eight images
+also removes the functions of llhttp, the Argon2/Blake2b helpers, rapidjson and
+the C++ standard library that other corpus families carry too, by exact name
+and only where every function of that name in the recipe's images is shown to
+be the library's (_stack_vendored.py states the tests: PicHash against
+data/llhttp, data/argon2 and data/BLAKE2, a weaker same-name opcode similarity
+of at least 80% counted separately, and for rapidjson and the standard library
+the declaring namespace). 479 functions leave the eight images: 255 llhttp
+(212 PicHash-confirmed, 43 by opcode similarity), 18 Argon2/Blake2b
+helpers (PicHash-confirmed), 113 rapidjson, 92 standard library and 1
+`__scrt_common_main_seh`. Kept / removed as runtime / excluded by name, per
+image: Linux x64 3,735 / 9 / 48, x86 3,847 / 6 / 40; MinGW x64 3,647 / 174 / 60,
+x86 4,032 / 186 / 40; MSVC x64 14,256 / 2,307 / 121, x86 14,477 / 2,179 / 116;
+the musl pair is above. `validate --deep` with the llhttp, argon2 and BLAKE2
+branches' data present: 266 leakage findings before, 14 after, 13 of which still
+name XMRig. Left in on purpose, with the reasons in _stack_vendored.py: the
+ge_p1p1_*, slide and load_3/load_4 helpers of the ed25519 code the miner
+bundles (equal to OpenSSL's by PicHash in places, but 26 of its 61 names are not
+OpenSSL's), rotr64, the llhttp identifiers whose other-architecture function
+is not 80% similar, and the three MinGW CRT helpers.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
 from . import _musl_dep_symbols
 from . import _stack_deps as deps
+from . import _stack_vendored as vendored
 
 
 _TAG = "v6.25.0"
@@ -198,11 +228,19 @@ _NOTES = (
     "no -march is set, and AES-NI, SSE4.1, AVX2, VAES and AVX-512 code is in "
     "separate units that XMRig picks at run time. The vendored RandomX, "
     "Argon2, llhttp, libethash, epee, fmt and base32 are compiled in and stay "
-    "filed here."
+    "filed here, except the functions of llhttp, Argon2/Blake2b, rapidjson and "
+    "the C++ standard library that other families also carry, which are "
+    "removed by exact name (exclude_functions, see _stack_vendored.py)."
 )
 
 
 MUSL_EXCLUDE = _musl_dep_symbols.EXCLUDE
+
+_VENDORED_TEXT = (
+    "The llhttp, Argon2/Blake2b, rapidjson and C++ standard library functions "
+    "that other families also carry are removed by exact name as well "
+    "(_stack_vendored.py), in the same excluded_function_count."
+)
 
 _NOTES_MUSL = (
     "Static musl ELF built with XMRig's own -DBUILD_STATIC=ON: stock "
@@ -212,7 +250,7 @@ _NOTES_MUSL = (
     "XMRig's -s. -maes is XMRig's own; no -march is set. musl libc, libgcc, "
     "libgcc_eh, libstdc++ and libatomic code is removed by the musl glue "
     "baseline (removed_runtime_functions). " + deps.MUSL_EXCLUDE_TEXT + " "
-    + deps.MUSL_PIN_TEXT
+    + _VENDORED_TEXT + " " + deps.MUSL_PIN_TEXT
 )
 
 
@@ -241,6 +279,7 @@ def _mingw():
         artifacts=[Artifact(path="build-{arch}/xmrig.exe",
                             component="xmrig.exe")],
         toolchains=["mingw_x86", "mingw_x64"],
+        exclude_functions=vendored.patterns("XMRig_6.25.0"),
         build_flags="-O3 -DNDEBUG -Ofast (build type Corpus), -maes, "
                     "per-file -msse4.1/-mavx2/-mvaes as XMRig's CMake sets; "
                     "no -s, no -static",
@@ -266,6 +305,7 @@ def _linux():
         ]),
         artifacts=[Artifact(path="build-{arch}/xmrig", component="xmrig")],
         toolchains=["linux_x86", "linux_x64"],
+        exclude_functions=vendored.patterns("XMRig_6.25.0_linux"),
         build_flags="-O3 -DNDEBUG -Ofast (build type Corpus), -maes, "
                     "per-file -msse4.1/-mavx2/-mvaes as XMRig's CMake sets; "
                     "no -s, no -static-libstdc++",
@@ -292,7 +332,8 @@ def _musl():
         ]),
         artifacts=[Artifact(path="build-{arch}/xmrig", component="xmrig")],
         toolchains=["musl_x86", "musl_x64"],
-        exclude_functions=list(MUSL_EXCLUDE),
+        exclude_functions=(list(MUSL_EXCLUDE)
+                           + vendored.patterns("XMRig_6.25.0_musl")),
         build_flags="-O3 -DNDEBUG -Ofast (build type Corpus), -maes, "
                     "per-file -msse4.1/-mavx2/-mvaes as XMRig's CMake sets; "
                     "no -s; -DBUILD_STATIC=ON (-static, static-pie by the "

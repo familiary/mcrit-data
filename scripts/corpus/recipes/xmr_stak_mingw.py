@@ -66,20 +66,27 @@ only, `-include`): GCC's headers have no 64-bit-register intrinsics on i686,
 and cryptonight_aesni.h uses _mm_cvtsi64_si128, _mm_cvtsi128_si64,
 _addcarry_u64 and _subborrow_u64. The header defines them in plain C.
 
-Counts (kept / removed as runtime / total): x64 1123 / 167 / 1290; x86 1964 /
-172 / 2136. The x86 count includes the 528 stubs above and ~167 import
-thunks; 637 x86 functions have ten instructions or more.
+Counts (kept / removed as runtime / excluded by name / total): x64 1116 / 167 /
+7 / 1290; x86 1959 / 172 / 5 / 2136 (rapidjson and C++ standard library code
+shared with the other miners, removed by exact name from the committed
+archives; _stack_vendored.py). The x86 count includes the 528 stubs above and
+~167 import thunks; 892 x86 functions (633 distinct PicHashes) have ten
+instructions or more.
 
 Overlap (PicHashes of functions of ten instructions or more): MinGW x64 shares
-3 with Linux x64 (633 / 659) and 0 with MSVC x64 (1346); MinGW x86 shares 0
+3 with Linux x64 (628 / 643) and 0 with MSVC x64 (1288); MinGW x86 shares 0
 with MinGW x64, Linux x64 and MSVC x64. Surviving glue names in both:
 `__mingw_has_sse` and `__dynamic_cast` (underscore-prefixed once more on
 x86) and, on x86, `___register_frame_info`; they pass the glue baseline
-because the baseline does not list them.
+because the baseline does not list them. `___mingw_has_sse` is one of the
+`validate --deep` findings that remain (shared with XMRig and RandomX); it is
+not excluded, because no family in the corpus carries it to compare against
+and there is no evidence beyond its name.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
 from . import _stack_deps as deps
+from . import _stack_vendored as vendored
 
 _SRC = "xmrstak/backend/cpu/crypto/cryptonight_aesni.h"
 
@@ -151,11 +158,14 @@ RECIPES = {
         artifacts=[Artifact(path="build-{arch}/bin/xmr-stak.exe",
                             component="xmr-stak.exe")],
         toolchains=["mingw_x86", "mingw_x64"],
+        exclude_functions=vendored.patterns("xmr-stak_2.10.8_mingw"),
         build_flags="-O3 -DNDEBUG (CMake Release), -msse2 -maes; build tree patched by the recipe "
                     "(_umul128 renamed, -Wl,-z,noexecstack removed; x86 also: 32-bit #error removed, "
                     "_WIN64 -> _WIN32, 32-bit umul128, x86 compat header, asm stubs)",
         notes="NOT byte-identical to a build of unmodified upstream: recipe-applied patch, see the "
               "recipe docstring. The x86 image is an unsupported configuration (upstream #errors on "
-              "32-bit builds): its CryptoNight assembly is replaced by 528 one-instruction ret stubs.",
+              "32-bit builds): its CryptoNight assembly is replaced by 528 one-instruction ret stubs. "
+              "rapidjson and C++ standard library instantiations that other families also carry "
+              "are removed by exact name (exclude_functions, see _stack_vendored.py).",
     ),
 }

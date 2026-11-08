@@ -618,7 +618,14 @@ glue by the same rule as on every other toolchain (13 on XMRig x64, e.g.
 The image holds more than the C runtime: a static link of a TLS client
 carries libuv and OpenSSL as well, and no baseline measured from C probes
 removes them. That is `Recipe.exclude_functions`; see the XMRig and
-xmrig-proxy recipes.
+xmrig-proxy recipes. The same mechanism removes, by exact name, the llhttp,
+Argon2/Blake2b, rapidjson and C++ standard library functions that XMRig,
+xmrig-proxy and xmr-stak carry in common with other families, wherever every
+function of the name is shown to be the library's: PicHash against the
+library's family, a weaker same-name opcode similarity counted separately, or
+the declaring namespace for header-only code (`recipes/_stack_vendored.py`).
+That took `validate --deep` on a tree with the llhttp, argon2 and BLAKE2 data
+from 266 leakage findings to 14.
 
 ## Adding a recipe
 

@@ -26,14 +26,20 @@ the x86 leg passes -DWITH_ASM=OFF, which is also what cpu.cmake does for any
 branches, the same sources the Linux and MinGW x86 artefacts use.
 
 Built on windows-2022: 14,377 functions on x64 and 14,593 on x86 after 2,307
-and 2,179 compiler-runtime functions were removed. About 5,800 of them are
-`std::` instantiations; MSVC emits the standard library's templates into the
+and 2,179 compiler-runtime functions were removed. 121 and 116 more, the
+llhttp, Argon2/Blake2b, rapidjson, standard library and __scrt_common_main_seh
+functions that `validate --deep` reported and that are shown to be those
+libraries' (_stack_vendored.py), were then removed by exact name from the
+committed archives without a rebuild (Recipe.exclude_functions;
+excluded_function_count), which leaves 14,256 and 14,477. About 6,000 of the
+kept ones are `std::` instantiations; MSVC emits the standard library's templates into the
 image and /OPT:NOREF keeps every unreferenced COMDAT, so the count is four
 times the GCC one and describes an MSVC-built miner, not an inflation.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
 from . import _stack_deps as deps
+from . import _stack_vendored as vendored
 
 
 _OPT = "/MD /O2 /Oi /DNDEBUG /Zi"
@@ -76,8 +82,15 @@ RECIPES = {
                             component="xmrig.exe",
                             pdb="build-{arch}/xmrig.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
+        exclude_functions=vendored.patterns("XMRig_6.25.0_msvc"),
         build_flags="/MD /O2 /Oi /DNDEBUG /Zi (build type Corpus, without "
                     "XMRig's /MT and /GL); /DEBUG /Brepro /INCREMENTAL:NO "
                     "/OPT:NOREF /OPT:NOICF at link",
+        notes="llhttp, Argon2/Blake2b helpers, rapidjson and C++ standard library "
+              "functions that other families also carry, and __scrt_common_main_seh, are "
+              "removed by exact name (exclude_functions, excluded_function_count; see "
+              "_stack_vendored.py); the images were re-derived from the committed "
+              "archives, not rebuilt. libuv and OpenSSL are linked as DLL import "
+              "libraries and are not in the image.",
     ),
 }

@@ -10,6 +10,7 @@ with FindOpenSSL's MSVC cache entries preset as in xmrig_msvc.py.
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
 from . import _stack_deps as deps
+from . import _stack_vendored as vendored
 
 
 _OPT = "/MD /O2 /Oi /DNDEBUG /Zi"
@@ -38,8 +39,14 @@ RECIPES = {
                             component="xmrig-proxy.exe",
                             pdb="build-{arch}/xmrig-proxy.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
+        exclude_functions=vendored.patterns("xmrig-proxy_6.26.0_msvc"),
         build_flags="/MD /O2 /Oi /DNDEBUG /Zi (build type Corpus, without "
                     "xmrig-proxy's /MT and /GL); /DEBUG /Brepro "
                     "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
+        notes="llhttp, rapidjson and C++ standard library functions that other families "
+              "also carry, and __scrt_common_main_seh, are removed by exact name "
+              "(exclude_functions, excluded_function_count; see _stack_vendored.py); the "
+              "images were re-derived from the committed archives, not rebuilt. libuv and "
+              "OpenSSL are linked as DLL import libraries and are not in the image.",
     ),
 }

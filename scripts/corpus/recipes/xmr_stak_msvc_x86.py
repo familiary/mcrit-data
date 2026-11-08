@@ -45,17 +45,21 @@ never committed or modified in the repo):
    four 32x32->64 partial products, the same product as the MinGW x86 build's)
    and points the upstream spelling at it with a macro.
 
-Counts (CI run 42416031824): 4800 kept + 1845 removed as runtime = 6645. 539 of
-the kept functions are the generated one-instruction `ret` stubs (names
+Counts (CI run 42416031824): 4800 kept + 1845 removed as runtime = 6645; 63 of
+the kept functions (rapidjson and standard library code the other miners share,
+removed by exact name from the committed archive, see _stack_vendored.py) are
+now excluded, which leaves 4737 kept + 1845 removed + 63 excluded = 6645. 539
+of the kept functions are the generated one-instruction `ret` stubs (names
 containing CryptonightR_, CryptonightWOW_ or mainloop; none has ten
-instructions); 1854 kept functions have ten instructions or more, 1410 distinct
+instructions); 1795 kept functions have ten instructions or more, 1352 distinct
 PicHashes. Overlap (PicHashes of functions of ten instructions or more): 0 with
-MSVC x64 (1346), 0 with MinGW x86 (637), 0 with MinGW x64 (633) and 0 with
-Linux x64 (659).
+MSVC x64 (1288), 0 with MinGW x86 (633), 0 with MinGW x64 (628) and 0 with
+Linux x64 (643).
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
 from . import _stack_deps as deps
+from . import _stack_vendored as vendored
 
 _FI = "/FIxs_msvc_x86_compat.h"
 
@@ -87,12 +91,15 @@ RECIPES = {
                             component="xmr-stak.exe",
                             pdb="build-{arch}/bin/xmr-stak.pdb")],
         toolchains=["msvc_x86"],
+        exclude_functions=vendored.patterns("xmr-stak_2.10.8_msvc_x86"),
         build_flags="/MD /O2 /Ob2 /DNDEBUG /Zi (CMake Release, /Zi added); "
                     "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link; build tree "
                     "patched by the recipe (32-bit #error removed, _WIN64 -> _WIN32, MASM main "
                     "loops replaced by ret stubs, x86 compat header force-included)",
         notes="NOT byte-identical to a build of unmodified upstream: recipe-applied patch, see the "
               "recipe docstring. The x86 image is an unsupported configuration (upstream #errors on "
-              "32-bit builds): its CryptoNight assembly is replaced by 539 one-instruction ret stubs.",
+              "32-bit builds): its CryptoNight assembly is replaced by 539 one-instruction ret stubs. "
+              "rapidjson and C++ standard library functions that other families also carry "
+              "are removed by exact name (exclude_functions, see _stack_vendored.py).",
     ),
 }

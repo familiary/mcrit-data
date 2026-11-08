@@ -16,7 +16,9 @@ baseline is x86-64 with SSE2 and AES intrinsics. CMake
 Release, -O3 -DNDEBUG; nothing strips and the link is dynamic, so no
 libstdc++ is in the image. Own code, not separable: the CryptoNight and
 Keccak/Blake/Groestl/JH/Skein implementations are xmr-stak's, not an upstream
-of their own. 1158 functions, 9 removed as runtime.
+of their own. 1158 functions, 9 removed as runtime, 20 more (rapidjson and C++
+standard library code the miners share, removed by exact name) excluded: 1138
+kept.
 
 One source defect needs a compiler switch: xmrstak/misc/console.hpp uses FILE
 without including <cstdio> and does not compile with GCC 13 (`'FILE' does not
@@ -24,7 +26,7 @@ name a type`), so the build passes -include cstdio. The file is not touched.
 
 Axes built: Linux x64 (here), MSVC x64 (xmr_stak_msvc.py) and MinGW x64 and
 x86 (xmr_stak_mingw.py). At ten instructions or more Linux and MSVC x64 share
-0 of 659 and 1346 PicHashes. 32-bit is unsupported by upstream's own
+0 of 643 and 1288 PicHashes. 32-bit is unsupported by upstream's own
 declaration: cryptonight_aesni.h:52 is `#error You are trying to do a 32-bit
 build. This will all end in tears.` (reproduced here with -m32). The MSVC x86
 build died in MASM on the 64-bit registers of cryptonight_v8_main_loop_ivybridge
@@ -34,12 +36,19 @@ conflicts with mingw-w64's extern declaration, and for x86 the #error removed
 and the 64-bit assembly replaced by stubs), so those two images are not
 byte-identical to unmodified upstream; xmr_stak_mingw.py has the exact diffs.
 
-Overlap: 99 of the Linux x64 artefact's PicHashes are in data/XMRig and 99 in
-data/xmrig-proxy (rapidjson, std::), 452 and 385 on MSVC x64.
+Overlap: 84 of the Linux x64 artefact's PicHashes are in data/XMRig and 84 in
+data/xmrig-proxy (rapidjson, std::), 398 and 331 on MSVC x64. `validate --deep`
+used to fail on 125 PicHashes the three miners share (83 rapidjson, 41 standard
+library templates, 1 __scrt_common_main_seh); every function of those names is
+now removed by exact name (Recipe.exclude_functions, _stack_vendored.py:
+rapidjson and standard library code, name tier; 163 functions over the five
+xmr-stak images; Linux x64 1,138 / 9 / 20 kept / removed as runtime /
+excluded). The rest of the shared instantiations stay.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
 from . import _stack_deps as deps
+from . import _stack_vendored as vendored
 
 
 _TAG = "2.10.8"
@@ -59,7 +68,9 @@ _NOTES = (
     "CPU backend only (CUDA and OpenCL off), without libmicrohttpd and hwloc, "
     "with TLS: OpenSSL 3.5.8 built from a pinned source and linked as a "
     "shared library. XMR-STAK_COMPILE=generic, so no -march=native; xmr-stak "
-    "adds -msse2 -maes itself. CMake Release (-O3 -DNDEBUG)."
+    "adds -msse2 -maes itself. CMake Release (-O3 -DNDEBUG). rapidjson and C++ "
+    "standard library instantiations that other families also carry are "
+    "removed by exact name (exclude_functions, see _stack_vendored.py)."
 )
 
 
@@ -82,6 +93,7 @@ def _stak():
         artifacts=[Artifact(path="build-{arch}/bin/xmr-stak",
                             component="xmr-stak")],
         toolchains=["linux_x64"],
+        exclude_functions=vendored.patterns("xmr-stak_2.10.8_linux"),
         build_flags="-O3 -DNDEBUG (CMake Release), -msse2 -maes",
         notes=_NOTES,
     )

@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.join(ROOT, "scripts"))
 
 from corpus import recipes
 from corpus.recipes import _musl_dep_symbols as symbols
+from corpus.recipes import _stack_vendored as vendored
 
 
 def _excluded(name):
@@ -51,12 +52,16 @@ class MuslExcludeRulesTest(unittest.TestCase):
         for name in recipes.all_recipes():
             recipe = recipes.get(name)
             if name.endswith("_musl"):
-                self.assertEqual(recipe.exclude_functions, symbols.EXCLUDE, name)
+                # The libuv/OpenSSL rules first and unchanged, then the
+                # exact-name rules of _stack_vendored.py.
+                self.assertEqual(recipe.exclude_functions,
+                                 symbols.EXCLUDE + vendored.patterns(name), name)
                 self.assertEqual(sorted(recipe.toolchains), ["musl_x64", "musl_x86"])
                 self.assertIn("-DBUILD_STATIC=ON", " ".join(
                     step.command for step in recipe.build))
             elif name.startswith(("XMRig_", "xmrig-proxy_")):
-                self.assertEqual(recipe.exclude_functions, [], name)
+                self.assertEqual(recipe.exclude_functions,
+                                 vendored.patterns(name), name)
 
 
 @unittest.skipUnless(os.path.isdir(os.path.join(ROOT, "data", "XMRig")),
@@ -76,7 +81,8 @@ class MuslProvenanceCountsTest(unittest.TestCase):
                 seen += 1
                 self.assertEqual(entry["num_functions_before_exclusion"],
                                  entry["num_functions"] + entry["excluded_function_count"], key)
-                self.assertEqual(entry["exclude_functions"], symbols.EXCLUDE, key)
+                self.assertEqual(entry["exclude_functions"][:len(symbols.EXCLUDE)],
+                                 symbols.EXCLUDE, key)
                 self.assertGreater(entry["excluded_function_count"], 15000, key)
         self.assertGreaterEqual(seen, 0)
 

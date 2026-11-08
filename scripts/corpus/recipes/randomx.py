@@ -12,7 +12,7 @@ XMRig's copy is a fork (it has no argon2_core.c or assembly generator of its
 own, and adds RISC-V sources) and is already in
 data/XMRig as part of the miner, where it is filed under XMRig as the stock
 build ships it. Building it a second time as this family would have put the
-same bytes under two names. Measured the other way round, the overlap is small: of XMRig's 2504 functions
+same bytes under two names. Measured the other way round, the overlap is small: of XMRig's 2466 functions
 of ten instructions or more on Linux x64, 22 share a PicHash with RandomX
 (1.2.1 and 2.0.1 together) - seven libstdc++ vector instantiations, five
 RandomX functions under the same name (BytecodeMachine::executeInstruction,
@@ -21,8 +21,12 @@ ones) and the rest the same function under XMRig's `rx_blake2b_*`,
 `xmrig_ar2_*` and `hashAes1Rx4<0>` spellings against RandomX's `randomx_*` and
 `hashAes1Rx4<false>`. `validate --deep` flags a PicHash only when three or
 more families carry it, so a pair like this is not reported; with the open
-argon2 branch's data present it reports `xor_block`, `copy_block`, `rotr64`
-and `blake2b_*` under RandomX, XMRig and argon2 together.
+argon2 branch's data present it reported `xor_block`, `copy_block`, `rotr64`
+and `blake2b_*` under RandomX, XMRig and argon2 together. The XMRig side of
+those that are Argon2's own, by PicHash against data/argon2 and data/BLAKE2,
+is now removed by exact name (xmrig.py, _stack_vendored.py), which clears all
+but `blake2b_increment_counter` (BLAKE2, RandomX, argon2) and `rotr64` (those
+and OpenSSL, XMRig's MSVC image); RandomX's own copies are left in here.
 
 What is in it. Argon2d and Blake2b are RandomX's own copies of the PHC
 reference code (src/argon2_core.c, argon2_ref.c, blake2/blake2b.c) and stay
