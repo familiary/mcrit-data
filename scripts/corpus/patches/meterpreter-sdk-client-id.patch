@@ -1,0 +1,47 @@
+Drop metsrv's duplicate CLIENT_ID so it builds against a modern Windows SDK.
+
+Applies to rapid7/metasploit-payloads at 02c6032202f307926c2758fdc88827ccabe5afd2.
+
+pool_party_ext.h declares its own `struct _CLIENT_ID`, guarded only by
+`#ifndef __MINGW32__` - i.e. it assumes that MinGW's headers already have one
+and that MSVC's do not. That held on the XP-era SDKs upstream targets
+(`make.bat` pins `v141_xp`, Rapid7 ships `v120_xp`). It does not hold on
+10.0.26100, where winternl.h declares CLIENT_ID too, and the build dies with:
+
+    pool_party_ext.h(22,16): error C2011: '_CLIENT_ID': 'struct' type redefinition
+
+The removal is semantically null rather than a behaviour change, for a reason
+visible in the same file: `#include <winternl.h>` is already on line 7, four
+lines above the block being removed. So on any SDK whose winternl.h declares
+CLIENT_ID this typedef is pure duplication, and the SDK's declaration is
+field-for-field identical - `HANDLE UniqueProcess; HANDLE UniqueThread;`. No
+generated code can change; the only thing that changes is which of two
+identical declarations the compiler sees.
+
+What is NOT done here, and why: defining `__MINGW32__` to take upstream's own
+guarded branch looks like the smaller change and is far worse. That macro is
+tested again in source/common/common.h:32, where it stubs SEH out entirely
+(`#define __try`, `#define __except(x) if(0)`, `GetExceptionCode()` to 0)
+because MinGW has none - so defining it under MSVC would compile away every
+`__try`/`__except` in metsrv and change the artefact rather than a diagnostic.
+
+This patch is only correct against an SDK that declares CLIENT_ID. The recipe
+that applies it pins the runner image, which carries 10.0.26100.
+
+diff --git a/c/meterpreter/source/metsrv/pool_party_ext.h b/c/meterpreter/source/metsrv/pool_party_ext.h
+index 43dd349..979db11 100644
+--- a/c/meterpreter/source/metsrv/pool_party_ext.h
++++ b/c/meterpreter/source/metsrv/pool_party_ext.h
+@@ -18,12 +18,6 @@ typedef struct IUnknown IUnknown;
+ // Structs //
+ // --------//
+ 
+-#ifndef __MINGW32__
+-typedef struct _CLIENT_ID {
+-    HANDLE UniqueProcess;
+-    HANDLE UniqueThread;
+-} CLIENT_ID;
+-#endif
+ 
+ //typedef struct _FILE_IO_COMPLETION_INFORMATION
+ //{
