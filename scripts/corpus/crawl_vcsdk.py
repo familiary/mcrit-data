@@ -359,7 +359,18 @@ def pe_version_info(path):
 
 def cmd_libs(args, files, source_record, out_dir):
     libs = {n: p for n, (_, p) in files.items() if n.endswith(".lib")}
-    objs = sorted(p for n, (_, p) in files.items() if n.endswith(".obj"))
+    all_objs = sorted(p for n, (_, p) in files.items() if n.endswith(".obj"))
+    # pbinmode.obj and friends are the /clr:pure (MSIL) twins of binmode.obj:
+    # the linker refuses to mix them with native modules (LNK1313) and they
+    # hold no x64 code. Detected by name: p<name>.obj next to <name>.obj.
+    stems = {os.path.basename(p)[:-4] for p in all_objs}
+    pure = [p for p in all_objs
+            if os.path.basename(p).startswith("p")
+            and os.path.basename(p)[1:-4] in stems]
+    objs = [p for p in all_objs if p not in pure]
+    source_record = dict(source_record)
+    source_record["clr_pure_objects_not_linked"] = sorted(
+        os.path.basename(p) for p in pure)
     for spec in args.names:
         group = [part for part in spec.split("+") if part]
         paths, group_objs, split_info = [], [], []
