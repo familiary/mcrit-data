@@ -152,6 +152,7 @@ RECIPES = {
                     "/OPT:NOICF /INCREMENTAL:NO at link",
         notes="PATCHED UPSTREAM SOURCE: "
               "scripts/corpus/patches/meterpreter-sdk-client-id.patch "
+              "(sha256 726bf014348daa1480862e33dca11cac06a012f9f95a800a48a82755fc22b992) "
               "removes a duplicate CLIENT_ID declaration that collides with "
               "the 10.0.26100 SDK's winternl.h, which the same header "
               "includes; the two declarations are identical, so no generated "
