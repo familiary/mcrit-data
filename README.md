@@ -1046,6 +1046,8 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 
 Go 1.24.13 references cover isolated fingerprinting helpers and client-source analysis images. Client references are non-operational: certificate initialization is unbound and the entry point calls no client function.
 
+[Coverage, counts and limits](scripts/corpus/coverage/go-implants/README.md).
+
 <!-- generated: Pantegana -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
@@ -1057,6 +1059,8 @@ Go 1.24.13 references cover isolated fingerprinting helpers and client-source an
 
 
 ### Sliver
+
+[Coverage, counts and limits](scripts/corpus/coverage/go-implants/README.md).
 
 <!-- generated: Sliver -->
 | Name     | Version | Compiler | MCRIT | SMDA |
