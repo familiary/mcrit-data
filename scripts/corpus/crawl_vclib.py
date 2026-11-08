@@ -253,7 +253,7 @@ def main():
     parser.add_argument("--toolset", help="e.g. 14.16.27023, or 14.0")
     parser.add_argument("--arch", choices=["x86", "x64"])
     parser.add_argument("--out", default=".")
-    parser.add_argument("shards", nargs="*", choices=list(SHARDS))
+    parser.add_argument("shards", nargs="*")
     args = parser.parse_args()
     toolsets = find_toolsets()
     if args.list:
@@ -266,6 +266,9 @@ def main():
         return 0
     if not (args.toolset and args.arch and args.shards):
         parser.error("--toolset, --arch and at least one shard are required")
+    unknown = [s for s in args.shards if s not in SHARDS]
+    if unknown:
+        parser.error("unknown shard(s): %s" % ", ".join(unknown))
     if args.toolset not in toolsets:
         raise SystemExit("toolset %s is not installed; found: %s"
                          % (args.toolset, ", ".join(sorted(toolsets)) or "none"))
