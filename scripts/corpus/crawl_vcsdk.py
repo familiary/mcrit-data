@@ -94,6 +94,15 @@ def find_7z():
 
 
 def download(url, destination):
+    """Fetch ``url``; large files with range support come in parallel parts."""
+    try:
+        download_parallel(url, destination)
+        return
+    except Exception as error:  # fall back to one plain transfer
+        print("parallel download failed (%s); using one connection" % error,
+              flush=True)
+        if os.path.exists(destination):
+            os.remove(destination)
     curl = shutil.which("curl") or shutil.which("curl.exe")
     if not curl:
         raise SystemExit("curl is required to download %s" % url)
@@ -103,6 +112,47 @@ def download(url, destination):
     if code != 0:
         raise SystemExit("download of %s failed (curl exit %d): %s"
                          % (url, code, output.strip()))
+
+
+def download_parallel(url, destination, parts=8, chunk=32 << 20):
+    """Range-request the file over several connections into ``destination``."""
+    import concurrent.futures
+    import time
+    import urllib.request
+
+    request = urllib.request.Request(url, method="HEAD")
+    with urllib.request.urlopen(request, timeout=60) as response:
+        final = response.geturl()
+        size = int(response.headers["Content-Length"])
+        if response.headers.get("Accept-Ranges", "").lower() != "bytes":
+            raise RuntimeError("no range support")
+    with open(destination, "wb") as handle:
+        handle.truncate(size)
+    spans = [(start, min(start + chunk, size) - 1)
+             for start in range(0, size, chunk)]
+
+    def fetch(span):
+        start, end = span
+        for attempt in range(8):
+            try:
+                request = urllib.request.Request(
+                    final, headers={"Range": "bytes=%d-%d" % (start, end)})
+                with urllib.request.urlopen(request, timeout=120) as response:
+                    data = response.read()
+                if len(data) != end - start + 1:
+                    raise RuntimeError("short read")
+                with open(destination, "r+b") as handle:
+                    handle.seek(start)
+                    handle.write(data)
+                return
+            except Exception:
+                if attempt == 7:
+                    raise
+                time.sleep(3 * (attempt + 1))
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=parts) as pool:
+        for future in [pool.submit(fetch, span) for span in spans]:
+            future.result()
 
 
 def fetch_cab(args, cache):
@@ -343,15 +393,21 @@ def unpack_pool(cabs, profile, destination):
                 continue
             digests = {sha256_file(full) for _, full, _ in chosen}
             if len(digests) != 1:
-                raise SystemExit("%s: %d different AMD64 candidates: %s"
-                                 % (name, len(digests), [k for k, _, _ in chosen]))
+                # Several different AMD64 builds of one file name (the same
+                # object assembled for different targets): which one a given
+                # tool would have used cannot be told from the medium, so none
+                # is used and the names are recorded.
+                skipped[name] = [(k, "AMD64, %d different builds" % len(digests))
+                                 for k, _, _ in chosen]
+                continue
             key, full, _ = chosen[0]
             selection[name] = {"cab_member": key, "candidates": len(items),
                                "machine": "AMD64" if amd64 else "none (alias-only)"}
         else:
             if len({sha256_file(full) for _, full, _ in items}) != 1:
-                raise SystemExit("%s: several different CAB members: %s"
-                                 % (name, [k for k, _, _ in items]))
+                skipped[name] = [(k, "several different CAB members")
+                                 for k, _, _ in items]
+                continue
             key, full, _ = items[0]
             selection[name] = {"cab_member": key, "candidates": len(items)}
         target = os.path.join(named, name)
