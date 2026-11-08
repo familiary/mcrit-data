@@ -522,9 +522,10 @@ no such problem and their glue is removed in full.
 
 The Linux userland recipes also harvest shipped static runtime archives:
 libgcc 4.1.2/4.2.1, uClibc 0.9.30.1/0.9.33.2, its maintained uClibc-ng
-continuation 1.0.39, and musl 1.1.12. Their host GCC version describes only
+continuation 1.0.39, and musl 1.1.12 (the Aboriginal 1.4.4 binary archives, and separately musl 1.1.12 built from the official tarball with the host GCC 13.3.0, source unmodified). Their host GCC version describes only
 the final link driver; source URLs, digests and notes identify the original
-producer. No runtime code is rebuilt. These families disable the glue
+producer. No runtime code is rebuilt, except musl 1.1.12, which is also built
+from its official tarball. These families disable the glue
 filter because the runtime itself is the subject, and link with no startup
 objects, an entry address of zero, and dynamic dependencies for external
 runtime references. They are disassembly containers, not runnable programs.
@@ -553,7 +554,8 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
-| musl 1.1.12 dynamic-loader TLS descriptor member | #5 | x64 whole-archive link: `libc.a(tlsdesc.o): in function __tlsdesc_dynamic: undefined reference to __tls_get_new`; `hidden symbol __tls_get_new isn't defined`; `final link failed: bad value`. The recipe forces global text symbols except `__tlsdesc_*` from the unchanged archive; all static libc API code remains reachable |
+| musl 1.1.12 dynamic-loader TLS descriptor member (whole-archive link) | #5 | reproduced on musl 1.1.12 built from the official tarball (`musl-1.1.12.tar.gz`, sha256 `720b83c7e276b4b679c0bffe9509340d5f81fd601508e607e708177df0d31c0e`, `--disable-shared`, host GCC 13.3.0) on both ABIs. x64: ``libc.a(tlsdesc.o): in function `__tlsdesc_dynamic': (.text+0x3f): undefined reference to `__tls_get_new'``; ``hidden symbol `__tls_get_new' isn't defined``; `final link failed: bad value`. x86 additionally ``libc.a(tls.o): in function `___tls_get_addr': (.text+0x16): undefined reference to `__tls_get_new'``. Cause: `src/ldso/*/tlsdesc.s` is always archived, but `__tls_get_new` is defined in `dynlink.c` only for the shared build. The recipes force every other global text symbol of the unchanged libc.a (`-u`; all but `__tlsdesc_dynamic` and `__tlsdesc_static`) and link cleanly; no source or archive member is changed |
+| musl 1.1.12 Aboriginal 1.4.4 cross-compiler archives, re-test | #5 | `https://web.archive.org/web/20171205071925id_/http://landley.net/aboriginal/downloads/old/binaries/1.4.4/cross-compiler-x86_64.tar.gz` fails with `curl: (35) Recv failure: Connection reset by peer`; `https://landley.net/aboriginal/downloads/old/binaries/1.4.4/cross-compiler-x86_64.tar.gz` returns HTTP 404 (landley.net `binaries/` only redirects to web.archive.org). The committed `musl_1.1.12-aboriginal1.4.4_*` images keep their recorded digests but could not be rebuilt in this session; the -u selection was verified on the source build instead |
 | Firmware Linux 0.9.6 original distribution | #4, #5 | archived directory `https://web.archive.org/web/20171205071925id_/http://landley.net/aboriginal/downloads/old/binaries/0.9.6/` returns `curl: (22) The requested URL returned error: 404`. uClibc.org's original mini-native 0.9.30.1 / GCC 4.1.2 archives are harvested under their own provenance, without claiming they are the Firmware tarballs |
 | Aboriginal Linux 1.0.3 / uClibc 0.9.32 | #5 | archived directory and `cross-compiler-i686.tar.bz2` / `cross-compiler-x86_64.tar.bz2` under `https://web.archive.org/web/20171205071925id_/http://landley.net/aboriginal/downloads/old/binaries/1.0.3/` return `curl: (22) The requested URL returned error: 404`. 1.2.0 / uClibc 0.9.33.2 is harvested separately |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |

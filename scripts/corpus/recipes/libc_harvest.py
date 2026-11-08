@@ -1,16 +1,38 @@
-"""Shipped uClibc 0.9.30.1 and musl 1.1.12 static bodies.
+"""Shipped uClibc and Aboriginal musl static bodies, plus musl 1.1.12 built from source.
 
-No libc code is rebuilt. The host compiler only drives a no-startup ELF
-link; its version in provenance is the link driver, not the producer.
+Except for musl_1.1.12_x86/x64 no libc code is rebuilt. The host compiler
+only drives a no-startup ELF link; its version in provenance is the link
+driver, not the producer. The two musl_1.1.12_* recipes are the exception:
+they build musl 1.1.12 from the official release tarball
+(https://musl.libc.org/releases/musl-1.1.12.tar.gz, sha256
+720b83c7e276b4b679c0bffe9509340d5f81fd601508e607e708177df0d31c0e) with the
+host GCC 13.3.0 (artefact names carry gcc13), `./configure --target=<cpu>
+--disable-shared`, `make lib/libc.a`, source unmodified, and harvest that
+libc.a. They are NOT the Aboriginal binaries. The x86 image is built with
+-m32 on the same host.
 The digest-pinned zlib source is an unpackable staging directory, never
 built or linked. Actual subjects are the pinned toolchain dependencies.
 Only libc.a is extracted, leaving absolute distribution symlinks alone.
 
 uClibc is linked whole. musl forces every defined global text symbol except
-__tlsdesc_* through -u: the x64 archive contains tlsdesc.o but lacks its
-hidden __tls_get_new dependency (the whole-archive error is recorded in the
-README). Excluding these dynamic-loader-only symbols allows static libc
-coverage without changing the archive or leaving unresolved relocations.
+__tlsdesc_* through -u. Root cause, reproduced on the source build of 1.1.12
+for both ABIs: even with --disable-shared the Makefile compiles
+src/ldso/{i386,x86_64}/tlsdesc.s into libc.a, but __tls_get_new is defined
+in src/ldso/dynlink.c only for the shared build, so --whole-archive fails:
+  libc.a(tlsdesc.o): in function `__tlsdesc_dynamic': undefined reference to `__tls_get_new'
+  hidden symbol `__tls_get_new' isn't defined; final link failed: bad value
+(x86 also reports it from libc.a(tls.o): in function `___tls_get_addr').
+Nothing in a static program references tlsdesc.o, so excluding the two
+dynamic-loader-only symbols __tlsdesc_dynamic/__tlsdesc_static is the only
+omission; the rest of the archive is linked unchanged (checked: every other
+global T/W symbol of libc.a, 1853 on x64 and 1864 on x86 including the two
+excluded, is defined in the image) and no relocation is ignored.
+The musl_1.1.12-aboriginal1.4.4 recipes were run against the Aboriginal 1.4.4
+cross-compiler tarballs when web.archive.org was reachable; the digests below
+are those recorded then. That archive (and landley.net, which no longer
+hosts binaries: .../old/binaries/1.4.4/ returns 404) was unreachable when the
+fix was re-tested, so the Aboriginal images were not rebuilt here and the
+source build above is what verified the -u fix.
 Compiler arithmetic dependencies use dynamic libgcc_s, keeping its bodies
 out of the libc family. No startup driver is added; entry address is zero,
 and these images are for disassembly, not execution.
@@ -31,7 +53,11 @@ Measured coverage (SMDA 5.0.2; unique PicHashes, functions >=10 instructions):
   uClibc: every x86/x64 pairing has zero shared hashes.
   musl_1.1.12-aboriginal1.4.4_gcc14_x64_libc.elf: 1879 kept + 0 removed = 1879 image functions; 1150 >=10 instructions, 1080 unique hashes.
   musl_1.1.12-aboriginal1.4.4_gcc14_x86_libc.elf: 1848 kept + 0 removed = 1848 image functions; 1235 >=10 instructions, 1173 unique hashes.
-  musl: every x86/x64 pairing has zero shared hashes.
+  musl_1.1.12_gcc13_x64_libc.elf: 1784 kept + 0 removed = 1784 image functions; 1130 >=10 instructions, 1075 unique hashes.
+  musl_1.1.12_gcc13_x86_libc.elf: 1864 kept + 0 removed = 1864 image functions; 1181 >=10 instructions, 1145 unique hashes.
+  musl_1.1.12-aboriginal1.4.4_gcc14_x64_libc.elf vs musl_1.1.12_gcc13_x64_libc.elf: 17 shared; 1063/1058 unique to each.
+  musl_1.1.12-aboriginal1.4.4_gcc14_x86_libc.elf vs musl_1.1.12_gcc13_x86_libc.elf: 82 shared; 1091/1063 unique to each.
+  musl: every x86/x64 pairing has zero shared hashes (all four images).
 
 Named link/glue survivors (name, PicHash, instruction count):
   uClibc_0.9.30.1_gcc14_x64_libc.elf: none.
@@ -42,6 +68,8 @@ Named link/glue survivors (name, PicHash, instruction count):
   uClibc_ng-1.0.39-bootlin2021.11-5_gcc14_x64_libc.elf: none.
   musl_1.1.12-aboriginal1.4.4_gcc14_x64_libc.elf: _init 0x9266c017df971c7c (1); _fini 0x9266c017df971c7c (1)
   musl_1.1.12-aboriginal1.4.4_gcc14_x86_libc.elf: _init 0x9266c017df971c7c (1); _fini 0x9266c017df971c7c (1)
+  musl_1.1.12_gcc13_x64_libc.elf: _init 0xc66bd29b7dfdc47f (2); _fini 0xc66bd29b7dfdc47f (2)
+  musl_1.1.12_gcc13_x86_libc.elf: __x86.get_pc_thunk.bx 0x65ab80d640d961a1 (2); __x86.get_pc_thunk.dx 0x1872e6a0bbf1e5a2 (2); __x86.get_pc_thunk.cx 0x769f0aed4b5feefe (2); __x86.get_pc_thunk.si 0x99104660fd4df449 (2); __x86.get_pc_thunk.bp 0x7c99608cc56520ba (2); __x86.get_pc_thunk.ax 0x780400859718c5b0 (2); __x86.get_pc_thunk.di 0xd74c7b06352452d3 (2); _init 0x9266c017df971c7c (1); _fini 0x9266c017df971c7c (1)
 Unnamed import/PLT stubs remain where the host link needs them; these are
 below the 10-instruction comparison floor. The runtime families deliberately
 keep their own runtime code; no startup driver is added to those images.
@@ -100,6 +128,47 @@ for _family, _version, _arch, _cpu, _digest in (
               "are forced from the original archive. Whole-archive x64 "
               "cannot resolve the hidden __tls_get_new from tlsdesc.o; "
               "no archive members are changed and no relocation is ignored."),
+    )
+
+# musl 1.1.12 built from the official release tarball (sha256 recorded below)
+# with the host GCC; libc.a is the product of this build, not a shipped binary.
+# A --disable-shared build still compiles src/ldso/*/tlsdesc.s into libc.a, but
+# __tls_get_new exists only in the SHARED build of dynlink.c, so linking the
+# archive whole fails on both ABIs (see the README row). Every other global
+# text symbol is forced with -u and no archive member or relocation is altered.
+_MUSL_SELECT = ("$(nm -g --defined-only lib/libc.a 2>/dev/null | "
+                "awk '$2 ~ /^[TW]$/ && $3 !~ /^__tlsdesc_/ {print \"-Wl,-u,\" $3}') lib/libc.a")
+for _arch, _cpu in (("x86", "i686"), ("x64", "x86_64")):
+    RECIPES["musl_1.1.12_" + _arch] = Recipe(
+        family="musl", version="1.1.12",
+        source=Source(url="https://musl.libc.org/releases/musl-1.1.12.tar.gz",
+                      sha256="720b83c7e276b4b679c0bffe9509340d5f81fd601508e607e708177df0d31c0e"),
+        upstream="https://musl.libc.org/",
+        license="MIT",
+        build=[
+            BuildStep("make distclean", allow_failure=True),
+            BuildStep('CC="{cc} {archflag}" ./configure --target=' + _cpu + " --disable-shared"),
+            BuildStep("make -j2 lib/libc.a"),
+            BuildStep("{cc} {archflag} -nostdlib -no-pie -Wl,-e,0 " + _MUSL_SELECT + " -lgcc_s -o libc.elf"),
+        ],
+        artifacts=[Artifact(path="libc.elf", component="libc.elf")],
+        toolchains=["linux_" + _arch], requires=["make", "nm"], drop_crt_glue=False,
+        build_flags="musl 1.1.12 ./configure --target=" + _cpu + " --disable-shared (upstream default "
+                    "CFLAGS), host GCC; final link -nostdlib -no-pie -Wl,-e,0; -u every global "
+                    "text symbol of libc.a except __tlsdesc_*; dynamic libgcc_s",
+        notes="musl 1.1.12 built by this recipe from the official release "
+              "tarball with the host GCC (so the artefact name carries the "
+              "host gcc version) and unmodified source. Not the Aboriginal "
+              "binary. libc.a is linked with every global text symbol "
+              "forced except the dynamic-loader-only __tlsdesc_dynamic and "
+              "__tlsdesc_static: a --disable-shared build still puts "
+              "tlsdesc.o in libc.a but never defines the hidden "
+              "__tls_get_new it calls (dynlink.c defines it only for the "
+              "shared build), so --whole-archive fails with 'hidden symbol "
+              "__tls_get_new isn't defined'. No archive member is edited and "
+              "no relocation is ignored. No startup objects, entry zero; "
+              "not runnable. Dynamic libgcc_s keeps compiler arithmetic "
+              "bodies out. Runtime filter off because libc is the subject.",
     )
 
 # uClibc 0.9.33.2: distinct historical static archive from Aboriginal 1.2.0.

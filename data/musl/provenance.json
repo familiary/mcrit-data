@@ -62,5 +62,55 @@
     "toolchain": "gcc14_x86",
     "upstream": "https://musl.libc.org/; https://landley.net/aboriginal/",
     "version": "1.1.12-aboriginal1.4.4"
+  },
+  "musl_1.1.12_gcc13_x64_libc.elf": {
+    "architecture": "x64",
+    "build_flags": "musl 1.1.12 ./configure --target=x86_64 --disable-shared (upstream default CFLAGS), host GCC; final link -nostdlib -no-pie -Wl,-e,0; -u every global text symbol of libc.a except __tlsdesc_*; dynamic libgcc_s",
+    "built_artifact": "libc.elf",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libc.elf",
+    "family": "musl",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "MIT",
+    "mcrit": "data/musl/x64/mcrit/musl_1.1.12_gcc13_x64_libc.elf.mcrit",
+    "notes": "musl 1.1.12 built by this recipe from the official release tarball with the host GCC (so the artefact name carries the host gcc version) and unmodified source. Not the Aboriginal binary. libc.a is linked with every global text symbol forced except the dynamic-loader-only __tlsdesc_dynamic and __tlsdesc_static: a --disable-shared build still puts tlsdesc.o in libc.a but never defines the hidden __tls_get_new it calls (dynlink.c defines it only for the shared build), so --whole-archive fails with 'hidden symbol __tls_get_new isn't defined'. No archive member is edited and no relocation is ignored. No startup objects, entry zero; not runnable. Dynamic libgcc_s keeps compiler arithmetic bodies out. Runtime filter off because libc is the subject.",
+    "num_functions": 1784,
+    "sha256": "30f960fd6bdbf3049cd44cfb48ee65bb7ec9cd8ef54cd6433ffe374da2100cf0",
+    "smda": "data/musl/x64/smda/musl_1.1.12_gcc13_x64_libc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "musl-1.1.12.tar.gz",
+      "sha256": "720b83c7e276b4b679c0bffe9509340d5f81fd601508e607e708177df0d31c0e",
+      "url": "https://musl.libc.org/releases/musl-1.1.12.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://musl.libc.org/",
+    "version": "1.1.12"
+  },
+  "musl_1.1.12_gcc13_x86_libc.elf": {
+    "architecture": "x86",
+    "build_flags": "musl 1.1.12 ./configure --target=i686 --disable-shared (upstream default CFLAGS), host GCC; final link -nostdlib -no-pie -Wl,-e,0; -u every global text symbol of libc.a except __tlsdesc_*; dynamic libgcc_s",
+    "built_artifact": "libc.elf",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libc.elf",
+    "family": "musl",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "MIT",
+    "mcrit": "data/musl/x86/mcrit/musl_1.1.12_gcc13_x86_libc.elf.mcrit",
+    "notes": "musl 1.1.12 built by this recipe from the official release tarball with the host GCC (so the artefact name carries the host gcc version) and unmodified source. Not the Aboriginal binary. libc.a is linked with every global text symbol forced except the dynamic-loader-only __tlsdesc_dynamic and __tlsdesc_static: a --disable-shared build still puts tlsdesc.o in libc.a but never defines the hidden __tls_get_new it calls (dynlink.c defines it only for the shared build), so --whole-archive fails with 'hidden symbol __tls_get_new isn't defined'. No archive member is edited and no relocation is ignored. No startup objects, entry zero; not runnable. Dynamic libgcc_s keeps compiler arithmetic bodies out. Runtime filter off because libc is the subject.",
+    "num_functions": 1864,
+    "sha256": "40cc3a34efc2c1f311490845666bd2f92718253bd671baff487f49b926ef97ea",
+    "smda": "data/musl/x86/smda/musl_1.1.12_gcc13_x86_libc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "musl-1.1.12.tar.gz",
+      "sha256": "720b83c7e276b4b679c0bffe9509340d5f81fd601508e607e708177df0d31c0e",
+      "url": "https://musl.libc.org/releases/musl-1.1.12.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://musl.libc.org/",
+    "version": "1.1.12"
   }
 }

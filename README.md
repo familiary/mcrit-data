@@ -1076,13 +1076,14 @@ Built with `scripts/build_corpus.py`; source digests, producer details and link 
 
 ### musl<a id='musl'></a>
 
-Original musl 1.1.12 static libc archives from Aboriginal Linux 1.4.4, produced by GCC 4.2.1. GCC 14 in the Compiler column is only the host link driver. Every global text symbol except dynamic-loader-only `__tlsdesc_*` is forced from the unchanged archive; the omitted loader member has an unresolved hidden `__tls_get_new`. Runtime dependencies are dynamic. No startup driver is added, and the ELF images are for disassembly rather than execution.
+musl 1.1.12 in two forms. `1.1.12` is built from the official release tarball (`musl-1.1.12.tar.gz`, sha256 `720b83c7e276b4b679c0bffe9509340d5f81fd601508e607e708177df0d31c0e`) with the host GCC 13.3.0, source unmodified, `--disable-shared`; GCC 13 in the Compiler column is the compiler that built libc.a and links the image. `1.1.12-aboriginal1.4.4` is the original static libc archive from Aboriginal Linux 1.4.4, produced by GCC 4.2.1; GCC 14 there is only the host link driver. In both, every global text symbol except dynamic-loader-only `__tlsdesc_*` is forced from the unchanged archive; the omitted loader member has an unresolved hidden `__tls_get_new` (a `--disable-shared` libc.a archives `tlsdesc.o` but never defines that symbol). Runtime dependencies are dynamic. No startup driver is added, and the ELF images are for disassembly rather than execution.
 
 Built with `scripts/build_corpus.py`; source digests, producer details and link flags are in `data/musl/provenance.json`.
 
 <!-- generated: musl -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| musl | 1.1.12 | GCC 13 (Linux, glibc) | [x86 ELF](data/musl/x86/mcrit/musl_1.1.12_gcc13_x86_libc.elf.mcrit) / [x64 ELF](data/musl/x64/mcrit/musl_1.1.12_gcc13_x64_libc.elf.mcrit) | [x86 ELF](data/musl/x86/smda/musl_1.1.12_gcc13_x86_libc.elf.7z) / [x64 ELF](data/musl/x64/smda/musl_1.1.12_gcc13_x64_libc.elf.7z) |
 | musl | 1.1.12-aboriginal1.4.4 | GCC 14 (Linux, glibc) | [x86 ELF](data/musl/x86/mcrit/musl_1.1.12-aboriginal1.4.4_gcc14_x86_libc.elf.mcrit) / [x64 ELF](data/musl/x64/mcrit/musl_1.1.12-aboriginal1.4.4_gcc14_x64_libc.elf.mcrit) | [x86 ELF](data/musl/x86/smda/musl_1.1.12-aboriginal1.4.4_gcc14_x86_libc.elf.7z) / [x64 ELF](data/musl/x64/smda/musl_1.1.12-aboriginal1.4.4_gcc14_x64_libc.elf.7z) |
 <!-- /generated -->
 
