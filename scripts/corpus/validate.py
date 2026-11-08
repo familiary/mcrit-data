@@ -22,8 +22,11 @@ class ValidationError(RuntimeError):
 # What find_cross_family_functions reports per shared PicHash. A namedtuple
 # rather than a bare tuple because the third field arrived after callers were
 # written, and "which of these is the size" should not be a question.
-Collision = collections.namedtuple("Collision",
-                                   "families num_instructions names")
+Collision = collections.namedtuple(
+    "Collision", "families num_instructions names naming_families")
+# naming_families defaults to empty so a caller constructing one by hand - the
+# tests do - still gets the pre-refinement classification.
+Collision.__new__.__defaults__ = ((),)
 
 # The four kinds of cross-family PicHash, and the only one that fails a run.
 # scripts/explain_collisions.py renders the same four; both get them from
@@ -34,6 +37,10 @@ LEAKAGE = "leakage"
 STDLIB = "stdlib"
 DIFFERENT_NAMES = "different-names"
 UNNAMED = "unnamed"
+# A fifth kind, and the only one that was carved out of LEAKAGE rather than
+# added beside it. See classify_collision for what it means and why it does
+# not weaken the gate.
+RUNTIME_REFERENCE = "runtime-reference"
 
 # libstdc++, libsupc++ and their extensions. A symbol in one of these
 # namespaces legitimately carries one name and one body across unrelated
@@ -176,7 +183,8 @@ def stdlib_lambda_ids(names):
     return hosts
 
 
-def classify_collision(names, stdlib_lambdas=()):
+def classify_collision(names, stdlib_lambdas=(), naming_families=(),
+                       families=()):
     """Which kind of cross-family PicHash a set of symbol names describes.
 
     * Every family calls it the same thing, and it is not standard library
@@ -195,6 +203,34 @@ def classify_collision(names, stdlib_lambdas=()):
     * No name anywhere: unclassifiable. Reported, never failed on, because
       nothing here can tell a stripped runtime helper from a stripped library
       function.
+    * Every name comes from a *reference* family and none from a generated
+      one: a stripped runtime helper after all, with the runtime's own data
+      saying which. Reported, never failed on, for the reason the case above
+      is - and this is the one kind carved out of leakage rather than added
+      beside it, so it is worth being exact about why it does not weaken the
+      gate.
+
+      The guard in this whole check is the name. is_glue drops a function when
+      its symbol *and* its PicHash match the baseline, and it refuses to touch
+      an unnamed one, so that a project keeping its own version of a runtime
+      symbol keeps it. That means a leakage finding is actionable exactly when
+      some generated family names the function: there is a symbol for the
+      filter to match, so a baseline round can remove it and the gate is right
+      to insist. When the only name in the corpus comes from data/MinGW,
+      data/MSVC or another family this tooling does not generate, there is
+      nothing for the filter to act on in the artefacts at all - they carry
+      the body unnamed - and the finding is unactionable by construction.
+
+      The measurement that decided it: over the whole corpus with
+      ext_server_stdapi present, this reclassifies exactly one of 26 leakage
+      findings - PicHash 15783546699244376028, `_Unwind_ForcedUnwind_Phase2`,
+      18 instructions, under 7-Zip, Meterpreter and MinGW and named only by
+      MinGW. All 25 others have a generated family supplying the name and
+      still fail. In particular `__cxa_init_primary_exception` is *named* in
+      7-Zip, so it stayed a failure under this rule and had to be fixed
+      properly, by making the C++ probe reach it - which is what the baseline
+      round above did. A rule that had silenced that one would have been a
+      weakening; this one could not have.
     """
     if not names:
         return UNNAMED
@@ -202,6 +238,22 @@ def classify_collision(names, stdlib_lambdas=()):
            or _lambda_of(name) in stdlib_lambdas for name in names):
         return STDLIB
     if _same_symbol(names):
+        # naming_families or families empty means the caller did not say, so
+        # nothing is carved out and the answer is what it always was.
+        #
+        # Both halves of the condition are load-bearing. No generated family
+        # naming it is what makes the finding unactionable. At least one
+        # generated family *carrying* it is what keeps this away from the
+        # separate, older case of leakage confined to reference families
+        # altogether - data/MSVC sharing a symbol with data/Golang, which is
+        # somebody else's data and already has its own handling further down:
+        # reported as a note and attributed to the family it came from, not
+        # silently dropped. Without the second half this would swallow that.
+        if (naming_families and families
+                and not any(is_generated_family(family)
+                            for family in naming_families)
+                and any(is_generated_family(family) for family in families)):
+            return RUNTIME_REFERENCE
         return LEAKAGE
     return DIFFERENT_NAMES
 
@@ -352,6 +404,11 @@ def find_cross_family_functions(root=None, threshold=3, min_instructions=None,
     by_hash = {}
     sizes = {}
     names = {}
+    # Which families supplied a name, as opposed to merely carrying the body.
+    # classify_collision needs the difference: a finding is actionable only
+    # where some generated family names the function, because the filter
+    # matches on a symbol.
+    naming = {}
     decompress_decode = None
     for path in _iter_data_files(".mcrit", root):
         with open(path, encoding="utf-8") as handle:
@@ -396,25 +453,30 @@ def find_cross_family_functions(root=None, threshold=3, min_instructions=None,
                 sizes[pichash] = instructions
                 if entry.get("function_name"):
                     names.setdefault(pichash, set()).add(entry["function_name"])
-    return {h: Collision(sorted(f), sizes[h], sorted(names.get(h) or []))
+                    naming.setdefault(pichash, set()).add(family)
+    return {h: Collision(sorted(f), sizes[h], sorted(names.get(h) or []),
+                         sorted(naming.get(h) or []))
             for h, f in by_hash.items() if len(f) >= threshold}
 
 
 def group_cross_family_functions(root=None, min_instructions=None):
-    """The cross-family PicHashes, sorted into the four kinds.
+    """The cross-family PicHashes, sorted into the five kinds.
 
     Returns {kind: [(pichash, Collision), ...]}, every kind present even when
     empty, each list ordered by size so the largest - the ones worth opening
     first - come out at the top.
     """
-    grouped = {kind: [] for kind in (LEAKAGE, STDLIB, DIFFERENT_NAMES, UNNAMED)}
+    grouped = {kind: [] for kind in (LEAKAGE, STDLIB, DIFFERENT_NAMES,
+                                     UNNAMED, RUNTIME_REFERENCE)}
     stdlib_lambdas = set()
     found = find_cross_family_functions(root, min_instructions=min_instructions,
                                         stdlib_lambdas=stdlib_lambdas)
     for pichash, collision in sorted(
             found.items(), key=lambda item: (-item[1].num_instructions, item[0])):
-        grouped[classify_collision(collision.names,
-                                   stdlib_lambdas)].append((pichash, collision))
+        kind = classify_collision(collision.names, stdlib_lambdas,
+                                  collision.naming_families,
+                                  collision.families)
+        grouped[kind].append((pichash, collision))
     return grouped
 
 
@@ -425,10 +487,11 @@ def describe_collisions(grouped, min_instructions=None):
     total = sum(len(rows) for rows in grouped.values())
     return ["%d cross-family PicHash(es) at >= %d instructions: %d leakage, "
             "%d standard library instantiation(s), %d whose symbol names "
-            "differ between families, %d carrying no symbol at all"
+            "differ between families, %d carrying no symbol at all, "
+            "%d named only by a reference family"
             % (total, min_instructions, len(grouped[LEAKAGE]),
                len(grouped[STDLIB]), len(grouped[DIFFERENT_NAMES]),
-               len(grouped[UNNAMED]))]
+               len(grouped[UNNAMED]), len(grouped.get(RUNTIME_REFERENCE) or []))]
 
 
 def _counterpart(path, from_kind, to_kind, from_suffix, to_suffix):

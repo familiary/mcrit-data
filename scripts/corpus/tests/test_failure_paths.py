@@ -456,7 +456,7 @@ class CrossFamilyFloorTest(TempCase):
                       "B": [("deadbeef", 40)],
                       "C": [("deadbeef", 40)]})
         self.assertEqual(validate.find_cross_family_functions(self.data),
-                         {"deadbeef": (["A", "B", "C"], 40, [])})
+                         {"deadbeef": (["A", "B", "C"], 40, [], [])})
 
     def test_zero_counts_everything_for_investigating_by_hand(self):
         from corpus import validate
@@ -466,7 +466,7 @@ class CrossFamilyFloorTest(TempCase):
                       "C": [("deadbeef", 3)]})
         found = validate.find_cross_family_functions(self.data,
                                                      min_instructions=0)
-        self.assertEqual(found, {"deadbeef": (["A", "B", "C"], 3, [])})
+        self.assertEqual(found, {"deadbeef": (["A", "B", "C"], 3, [], [])})
 
     def test_two_families_are_below_the_family_threshold(self):
         from corpus import validate
@@ -2420,6 +2420,85 @@ class VendoredLibraryTest(TempCase):
                 removed = smdaify._drop_vendored(report, ["libzlib"])
         self.assertEqual(removed, ["putShortMSB"])
         self.assertEqual(list(report.xcfg), [0])
+
+
+class RuntimeReferenceCollisionTest(unittest.TestCase):
+    """The fifth collision kind, carved out of leakage rather than added beside it.
+
+    The guard in the whole cross-family check is the symbol name. is_glue drops
+    a function when its name *and* its PicHash match the baseline and refuses
+    to touch an unnamed one, so that a project keeping its own version of a
+    runtime symbol keeps it. A leakage finding is therefore actionable exactly
+    when some generated family names the function - there is a symbol for a
+    baseline round to match. When the only name in the corpus comes from
+    data/MinGW or another family this tooling does not generate, the artefacts
+    carry the body unnamed and nothing can act on it.
+
+    Measured over the whole corpus with ext_server_stdapi present, this
+    reclassifies 1 of 26 leakage findings. The other 25 all have a generated
+    family supplying the name.
+    """
+
+    def test_a_name_from_a_reference_family_alone_is_not_failed_on(self):
+        from corpus import validate
+
+        with mock.patch.object(validate, "is_generated_family",
+                               side_effect=lambda f: f not in ("MinGW",)):
+            kind = validate.classify_collision(
+                ["_Unwind_ForcedUnwind_Phase2"], (),
+                naming_families=["MinGW"],
+                families=["7-Zip", "Meterpreter", "MinGW"])
+        self.assertEqual(kind, validate.RUNTIME_REFERENCE)
+
+    def test_a_generated_family_naming_it_still_fails(self):
+        """The regression guard, and the reason this is not a weakening.
+
+        __cxa_init_primary_exception was named in 7-Zip, so it stayed a failure
+        under this rule and had to be fixed properly - by making the C++ probe
+        reach it. A rule that had silenced that one would have been a
+        weakening; this one cannot.
+        """
+        from corpus import validate
+
+        with mock.patch.object(validate, "is_generated_family",
+                               side_effect=lambda f: f not in ("MinGW",)):
+            kind = validate.classify_collision(
+                ["__cxa_init_primary_exception"], (),
+                naming_families=["7-Zip", "MinGW"],
+                families=["7-Zip", "Meterpreter", "MinGW"])
+        self.assertEqual(kind, validate.LEAKAGE)
+
+    def test_leakage_among_reference_families_alone_is_untouched(self):
+        """The older, separate case this must not swallow.
+
+        data/MSVC sharing a symbol with data/Golang is somebody else's data and
+        already has its own handling: reported as a note and attributed to the
+        family it came from. It stays LEAKAGE so that path still runs.
+        """
+        from corpus import validate
+
+        with mock.patch.object(validate, "is_generated_family",
+                               side_effect=lambda f: f not in ("MSVC", "Golang",
+                                                               "MinGW")):
+            kind = validate.classify_collision(
+                ["_floor"], (), naming_families=["MSVC"],
+                families=["MSVC", "Golang", "MinGW"])
+        self.assertEqual(kind, validate.LEAKAGE)
+
+    def test_saying_nothing_keeps_the_old_answer(self):
+        """Every caller that does not pass the two new arguments is unchanged."""
+        from corpus import validate
+
+        self.assertEqual(validate.classify_collision(["_floor"]),
+                         validate.LEAKAGE)
+
+    def test_the_census_records_which_family_supplied_each_name(self):
+        """naming_families has to be populated or the rule can never fire."""
+        from corpus import validate
+
+        collision = validate.Collision(["A", "B"], 40, ["x"], ["A"])
+        self.assertEqual(collision.naming_families, ["A"])
+        self.assertEqual(validate.Collision(["A"], 1, []).naming_families, ())
 
 
 if __name__ == "__main__":
