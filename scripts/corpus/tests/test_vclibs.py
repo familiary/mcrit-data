@@ -11,34 +11,44 @@ from corpus import crawl_vclibs, recipes
 
 
 class ClassifyTest(unittest.TestCase):
-    def check(self, kind, expected):
+    def check(self, kind, expected, siblings=()):
         for name, shard in expected.items():
-            self.assertEqual(crawl_vclibs.classify(name, kind), shard, name)
+            self.assertEqual(crawl_vclibs.classify(name, kind, siblings),
+                             shard, name)
 
     def test_crt(self):
+        names = ["libcmt.lib", "libcmtd.lib", "libcpmt.lib", "libcpmt1.lib",
+                 "libcpmtd.lib", "libcpmtd0.lib", "libcpmtd1.lib", "msvcrt.lib",
+                 "msvcrtd.lib", "msvcprtd.lib", "comsupp.lib", "comsuppwd.lib",
+                 "vcompd.lib", "chkstk.obj"]
         self.check("crt", {
             "libcmt.lib": "crt_mt", "LIBVCRUNTIME.lib": "crt_mt",
-            "libcpmt.lib": "crt_mt", "libcpmt1.lib": "crt_mt",
-            "libconcrt.lib": "crt_mt", "oldnames.lib": "crt_mt",
-            "legacy_stdio_definitions.lib": "crt_mt", "chkstk.obj": "crt_mt",
-            "libcmtd.lib": "crt_mt_debug", "libcpmtd1.lib": "crt_mt_debug",
-            "libvcruntimed.lib": "crt_mt_debug",
+            "libcpmt.lib": "crt_mt", "libconcrt.lib": "crt_mt",
+            "oldnames.lib": "crt_mt", "chkstk.obj": "crt_mt",
+            "legacy_stdio_definitions.lib": "crt_mt",
+            "libcpmt1.lib": "crt_mt_idl1", "libconcrt1.lib": "crt_mt_idl1",
+            "libcmtd.lib": "crt_mt_debug", "libcpmtd.lib": "crt_mt_debug",
+            "libcpmtd0.lib": "crt_mt_debug_idl0",
+            "libconcrtd1.lib": "crt_mt_debug_idl1",
             "msvcrt.lib": "crt_md", "msvcprt.lib": "crt_md",
-            "vcomp.lib": "crt_md", "vcruntime.lib": "crt_md",
+            "comsupp.lib": "crt_md", "vcomp.lib": "crt_md",
             "msvcrtd.lib": "crt_md_debug", "msvcprtd.lib": "crt_md_debug",
-            "vcompd.lib": "crt_md_debug"})
+            "comsuppwd.lib": "crt_md_debug", "vcompd.lib": "crt_md_debug"},
+            siblings=["comsuppw.lib", "vcomp.lib", "msvcrt.lib", "msvcprt.lib"])
 
     def test_atlmfc(self):
         self.check("atlmfc", {
-            "atls.lib": "atl", "atlthunk.lib": "atl", "atlsd.lib": "atl_debug",
-            "nafxcw.lib": "mfc_ansi", "nafxcwd.lib": "mfc_ansi_debug",
-            "uafxcw.lib": "mfc_unicode", "uafxcwd.lib": "mfc_unicode_debug",
-            "mfc140u.lib": "mfc_dll", "mfcs140u.lib": "mfc_dll",
-            "mfc140ud.lib": "mfc_dll_debug", "mfcm140d.lib": "mfc_dll_debug"})
+            "atls.lib": "atl", "nafxcw.lib": "mfc_ansi",
+            "nafxcwd.lib": "mfc_ansi_debug", "uafxcw.lib": "mfc_unicode",
+            "uafxcwd.lib": "mfc_unicode_debug", "mfc140u.lib": "mfc_dll",
+            "mfcs140u.lib": "mfc_dll", "mfc140ud.lib": "mfc_dll_debug",
+            "MFCM140Ud.lib": "mfc_dll_debug", "afxnmcd.lib": "mfc_dll",
+            "afxnmcdd.lib": "mfc_dll_debug"})
 
     def test_every_assignment_is_a_declared_shard_of_its_directory(self):
         for kind, names in (("crt", ["libcmt.lib", "libcmtd.lib", "msvcrt.lib",
-                                     "msvcrtd.lib", "x.obj", "foo.lib"]),
+                                     "msvcrtd.lib", "x.obj", "foo.lib",
+                                     "libcpmt1.lib", "libcpmtd0.lib"]),
                             ("atlmfc", ["atls.lib", "nafxcw.lib", "foo.lib",
                                         "uafxcwd.lib"])):
             for name in names:
@@ -51,10 +61,39 @@ class ClassifyTest(unittest.TestCase):
         self.assertTrue(crawl_vclibs.is_excluded("clang_rt.asan-i386.lib"))
         self.assertIsNone(crawl_vclibs.is_excluded("libcmt.lib"))
 
-    def test_import_descriptors_are_not_code(self):
-        self.assertEqual(crawl_vclibs.code_members(
-            ["VCRUNTIME140.dll", "a.obj", "B.OBJ", "msvcp140.DLL"]),
-            ["a.obj", "B.OBJ"])
+    def test_managed_and_pure_objects_are_excluded(self):
+        self.assertTrue(crawl_vclibs.is_excluded("msvcurt.lib"))
+        self.assertTrue(crawl_vclibs.is_excluded("msvcmrtd_netcore.lib"))
+        self.assertTrue(crawl_vclibs.is_excluded(
+            "pbinmode.obj", ["binmode.obj", "pbinmode.obj"]))
+        self.assertIsNone(crawl_vclibs.is_excluded("pgort.lib", ["pgort.lib"]))
+
+    def test_archive_unpacking_skips_import_objects(self):
+        import tempfile
+        coff = b"\x64\x86" + b"\x00" * 40
+        imp = b"\x00\x00\xff\xff\x00\x00" + b"\x00" * 20
+
+        def member(name, body):
+            header = ("%-16s%-12s%-6s%-6s%-8s%-10d`\n" % (
+                name, "0", "0", "0", "0", len(body))).encode()
+            return header + body + (b"\n" if len(body) & 1 else b"")
+
+        data = (b"!<arch>\n" + member("/", b"\x00" * 8) +
+                member("//", b"long_member_name.obj/\n") +
+                member("a.obj/", coff) + member("/0", coff) +
+                member("MSVCP140.dll/", imp))
+        with tempfile.TemporaryDirectory() as tmp:
+            lib = os.path.join(tmp, "x.lib")
+            with open(lib, "wb") as handle:
+                handle.write(data)
+            members, objects = crawl_vclibs.unpack_archive(lib)
+            self.assertEqual((members, len(objects)), (3, 2))
+            dest = os.path.join(tmp, "o")
+            os.mkdir(dest)
+            members, objects = crawl_vclibs.unpack_archive(lib, dest)
+            self.assertEqual(sorted(os.listdir(dest)),
+                             sorted(os.path.basename(o) for o in objects))
+            self.assertTrue(any("long_member_name" in o for o in objects))
 
 
 class RecipeTest(unittest.TestCase):
@@ -64,7 +103,10 @@ class RecipeTest(unittest.TestCase):
 
     def test_one_recipe_per_toolset_and_shard(self):
         found = self.found()
-        self.assertEqual(len(found), 3 * len(crawl_vclibs.SHARDS))
+        expected = sum(len(crawl_vclibs.shards_for(t))
+                       for t in ("14.29", "14.44", "14.51"))
+        self.assertEqual(len(found), expected)
+        self.assertNotIn("MSVC_TOOLSETS_14.29_atl", found)
         for name, recipe in found.items():
             self.assertEqual(recipe.family, "MSVC_TOOLSETS")
             self.assertFalse(recipe.drop_crt_glue)

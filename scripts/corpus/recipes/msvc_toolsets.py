@@ -20,9 +20,13 @@ debug), which also keeps every committed file below
 config.MAX_COMMITTED_FILE_SIZE (100 MB): the 2022 x86 non-MFC export of
 data/MSVC would have been about 150 MB and was dropped for that reason.
 
-Not crawled: clang_rt.* (sanitizer and libFuzzer runtimes, LLVM code), pure
-import libraries (no code member), the onecore/store/spectre variant
-directories, and the static UCRT (libucrt, see MSVC_UCRT). What each shard
+14.29 has the CRT shards only: the images install ATL and MFC for the newest
+toolset alone (measured: no ATLMFC directory under 14.29.30133).
+
+Not crawled: clang_rt.* (sanitizer and libFuzzer runtimes, LLVM code), managed
+(/clr) runtimes, pure import libraries (no object member), the
+onecore/spectre variant directories, and the static UCRT (libucrt, see
+MSVC_UCRT). What each shard
 excluded is recorded per artefact under ``inputs.excluded`` in provenance,
 next to the SHA-256 of every library that went in.
 
@@ -30,7 +34,7 @@ This is Visual Studio content, a different kind of input from data/MSVC. Only
 function hashes and SMDA reports are committed, never the libraries.
 """
 
-from ..crawl_vclibs import SHARDS
+from ..crawl_vclibs import SHARDS, shards_for
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
@@ -83,4 +87,5 @@ def recipe_name(toolset, shard):
     return "MSVC_TOOLSETS_%s_%s" % (toolset, shard)
 
 
-RECIPES = {recipe_name(t, s): _shard(t, s) for t in TOOLSETS for s in SHARDS}
+RECIPES = {recipe_name(t, s): _shard(t, s)
+           for t in TOOLSETS for s in shards_for(t)}
