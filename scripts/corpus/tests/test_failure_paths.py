@@ -2071,5 +2071,77 @@ class ElfReadmeRowTest(unittest.TestCase):
             "MinGW-w64 GCC 13.2.0")
 
 
+
+class ProducerLabelTest(unittest.TestCase):
+    """The Compiler column for an artefact this pipeline did not compile.
+
+    The column is the only place a reader is told whether a row is upstream's
+    own build or a reproduction of it, which decides what a match against it
+    means. It used to come off the toolchain that ran, so a harvested MSVC
+    artefact was labelled with the Linux host that unpacked it.
+    """
+
+    def _entry(self, stem, toolchain, compiler="", is_blob=False):
+        return {"toolchain": toolchain, "compiler": compiler, "version": "1.0",
+                "component": "c", "architecture": "x64", "is_blob": is_blob,
+                "mcrit": "data/F/x64/mcrit/%s.mcrit" % stem,
+                "smda": "data/F/x64/smda/%s.7z" % stem}
+
+    def test_a_harvested_prebuilt_names_the_compiler_that_built_it(self):
+        from corpus import readme
+
+        # Decrypted on this Linux host under the mingw toolchain, built by
+        # Rapid7 with v142. The toolchain must not reach the column.
+        label = readme._compiler_label(self._entry(
+            "Meterpreter_2.0.258_msvc142_x64_metsrv", "mingw13_x64",
+            "x86_64-w64-mingw32-gcc (GCC) 13.2.0"))
+        self.assertEqual(label,
+                         "MSVC v142 (Visual Studio 2019), as distributed upstream")
+
+    def test_a_blob_can_say_it_is_not_msvc(self):
+        from corpus import readme
+
+        label = readme._compiler_label(self._entry(
+            "AdaptixC2_2026-03-04_mingw_x64_stub_x64", "", is_blob=True))
+        self.assertEqual(label, "MinGW-w64 GCC (as committed upstream)")
+
+    def test_a_blob_with_no_producer_field_keeps_the_old_default(self):
+        from corpus import readme
+
+        label = readme._compiler_label(self._entry(
+            "sRDI_2018-05-27_msvc_x64_ShellcodeRDI_x64", "", is_blob=True))
+        self.assertEqual(label, "MSVC (as committed upstream)")
+
+    def test_an_artefact_compiled_here_is_unchanged(self):
+        """The regression guard: producer == toolchain, so nothing happens."""
+        from corpus import readme
+
+        label = readme._compiler_label(self._entry(
+            "libzlib_1.3.1_mingw13_x64_zlib1.dll", "mingw13_x64",
+            "x86_64-w64-mingw32-gcc (GCC) 13.2.0"))
+        self.assertEqual(label, "MinGW-w64 GCC 13.2.0")
+
+    def test_an_unreadable_stem_falls_through_rather_than_claiming_unknown(self):
+        """A filename the producer parser cannot read must not win.
+
+        This is not hypothetical: the first version of this code returned
+        "unknown (as distributed upstream)" for any entry whose stem did not
+        parse, which is every synthetic entry in these tests and would be any
+        hand-placed file in data/.
+        """
+        from corpus import readme
+
+        entry = self._entry("f", "gcc13_x64",
+                            "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0")
+        self.assertEqual(readme._producer_of(entry), "")
+        self.assertEqual(readme._compiler_label(entry), "GCC 13 (Linux, glibc)")
+
+    def test_an_unrecognised_toolset_number_is_not_given_a_year(self):
+        from corpus import readme
+
+        self.assertEqual(readme._producer_label("msvc199", False),
+                         "MSVC v199, as distributed upstream")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
