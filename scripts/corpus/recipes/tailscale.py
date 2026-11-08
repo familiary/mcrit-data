@@ -17,8 +17,9 @@ Build flags follow build_dist.sh: no extra tags (a plain `go build`, TAGS
 empty), -trimpath, and the two version stamps as -ldflags -X, minus the
 `-w -s` that only the --extra-small/--min/--strip modes add and that would
 remove the symbol table the Go glue filter needs. The stamps are
-VERSION_SHORT=1.102.5 and VERSION_LONG=1.102.5-t5fb2a81b0 (the form
-cmd/mkversion prints for the tag commit).
+VERSION_SHORT=1.102.5 and VERSION_LONG=1.102.5-1-t5fb2a81b0 (the value
+`go run ./cmd/mkversion` prints at the tag commit,
+which is what build_dist.sh would stamp; the "-1" is mkversion's own).
 
 Toolchain: go.mod declares go 1.26.6, newer than the host's go1.24.7, so
 GOTOOLCHAIN is pinned to go1.26.6 (the go command fetches and verifies it
@@ -77,6 +78,6 @@ def _tailscale(version, commit, long_stamp, go_sum_sha256):
 RECIPES = {
     "tailscale_1.102.5": _tailscale(
         "1.102.5", "5fb2a81b065b0a0bbbfc67ab20a0d9c6a1108115",
-        "1.102.5-t5fb2a81b0",
+        "1.102.5-1-t5fb2a81b0",
         "b52dcc94289be95d6b2f1d3f5766b308bc1f9d99425c6f6dbb8df6bdee148816"),
 }

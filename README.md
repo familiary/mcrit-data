@@ -95,6 +95,7 @@ String obfuscation
 
 Go applications
 * [tailcat](#tailcat)
+* [tailscale](#tailscale)
 
 ## Compilers
 
@@ -1059,4 +1060,31 @@ Generated with `scripts/build_corpus.py`; see `data/tailcat/provenance.json` for
 | Name     | Version | Compiler | MCRIT | SMDA |
 | tailcat | 0.7.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/tailcat/x86/mcrit/tailcat_0.7.0_gcc13_x86_tailcat.mcrit) / [x64 ELF](data/tailcat/x64/mcrit/tailcat_0.7.0_gcc13_x64_tailcat.mcrit) | [x86 ELF](data/tailcat/x86/smda/tailcat_0.7.0_gcc13_x86_tailcat.7z) / [x64 ELF](data/tailcat/x64/smda/tailcat_0.7.0_gcc13_x64_tailcat.7z) |
 | tailcat | 0.7.0 | MinGW-w64 GCC 13 | [x86 PE](data/tailcat/x86/mcrit/tailcat_0.7.0_mingw13_x86_tailcat.mcrit) / [x64 PE](data/tailcat/x64/mcrit/tailcat_0.7.0_mingw13_x64_tailcat.mcrit) | [x86 PE](data/tailcat/x86/smda/tailcat_0.7.0_mingw13_x86_tailcat.7z) / [x64 PE](data/tailcat/x64/smda/tailcat_0.7.0_mingw13_x64_tailcat.7z) |
+<!-- /generated -->
+
+### tailscale/tailscale<a id='tailscale'></a>
+
+The Tailscale node daemon `tailscaled` and the `tailscale` command-line client; BSD-3-Clause. v1.102.5 (tag object `8908149cab70`, commit `5fb2a81b065b`, 2026-09-24), the newest release tag before the Malwarebytes report (2026-09-25); the report gives no version, so the build is not tied to the sample. Built from the tag's own `go.mod`/`go.sum` with go1.26.6 (`GOTOOLCHAIN=go1.26.6`; the host's go1.24.7 cannot build it) and the flags of upstream's `build_dist.sh` (no `-tags`, `-trimpath`, `-X tailscale.com/version.longStamp/shortStamp`) minus `-w -s`. The long stamp is `1.102.5-1-t5fb2a81b0`, the value `go run ./cmd/mkversion` printed at the tag commit. No source is patched. `cmd/tailscale` builds from this graph although it does not from tailcat's. Kept + removed = total (counts verified against `provenance.json`):
+
+| Artefact | Kept | Removed (Go runtime and standard library) | Total |
+|----------|------|------|-------|
+| `tailscaled` windows/amd64 | 16,711 | 10,360 | 27,071 |
+| `tailscaled` windows/386 | 17,897 | 10,654 | 28,551 |
+| `tailscaled` linux/amd64 | 22,059 | 10,838 | 32,897 |
+| `tailscaled` linux/386 | 19,596 | 10,811 | 30,407 |
+| `tailscale` windows/amd64 | 6,561 | 10,095 | 16,656 |
+| `tailscale` windows/386 | 6,802 | 10,358 | 17,160 |
+| `tailscale` linux/amd64 | 14,067 | 13,035 | 27,102 |
+| `tailscale` linux/386 | 13,916 | 13,077 | 26,993 |
+
+What is kept is mostly not `main`. By function-name prefix, `tailscaled` linux/amd64 keeps 22,059 functions: 9,021 `tailscale.com/`, 3,768 `gvisor.dev/gvisor`, 589 other `github.com/tailscale/*`, 358 `github.com/tailscale/wireguard-go`, 945 `golang.org/x`, 1,016 compiler-written `type:.eq`/`.hash` functions, 117 `main`, 1,413 unnamed functions kept between named neighbours, and 4,832 from other modules (aws-sdk-go-v2 1,765, go-tpm 526, go-json-experiment 382, klauspost/compress 289, godbus/dbus 257, pkg/sftp 214). Windows/amd64 `tailscaled` keeps 8,588 `tailscale.com/`, 3,750 gVisor, 411 other `tailscale/*`, 298 wireguard-go, 172 `main`, 2,095 other modules. The `tailscale` client is dominated by dependencies: linux/amd64 6,408 `tailscale.com/` of 14,067 against 2,207 aws-sdk-go-v2 and 455 smithy-go, 517 godbus/dbus, 591 go-json-experiment. Distinct PicHashes of functions of 10 or more instructions: `tailscaled` 10,202 (windows/amd64), 11,918 (windows/386), 12,671 (linux/amd64), 13,241 (linux/386); `tailscale` 4,430, 5,075, 7,955, 9,860. Within the family only the two same-bitness Windows/Linux images share much: `tailscaled` windows/amd64 and linux/amd64 share 8,712, `tailscale` 3,867; the 32-bit pair shares 15 and 0, every other pair 0. On one target `tailscaled` and `tailscale` share 2,536 (windows/amd64), 932 (windows/386), 4,447 (linux/amd64) and 1,233 (linux/386). **Overlap with the tailcat family** (same target, distinct PicHashes of 10+ instructions): the two share `tailscale.com`, gVisor and wireguard-go code, and that is not removed. `tailscaled` shares 1,655 (windows/amd64), 1,202 (windows/386), 1,990 (linux/amd64) and 1,415 (linux/386) with `tailcat`, which is 27, 16, 30 and 18 percent of tailcat's images and 16, 10, 16 and 11 percent of `tailscaled`'s; `tailscale` shares 503, 363, 730 and 532 (5 to 11 percent of tailcat's). No cross-target pair against tailcat exceeds 1,725.  
+Generated with `scripts/build_corpus.py`; see `data/tailscale/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: tailscale -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| tailscale | 1.102.5 | GCC 13 (Linux, glibc) | [x86 ELF](data/tailscale/x86/mcrit/tailscale_1.102.5_gcc13_x86_tailscale.mcrit) / [x64 ELF](data/tailscale/x64/mcrit/tailscale_1.102.5_gcc13_x64_tailscale.mcrit) | [x86 ELF](data/tailscale/x86/smda/tailscale_1.102.5_gcc13_x86_tailscale.7z) / [x64 ELF](data/tailscale/x64/smda/tailscale_1.102.5_gcc13_x64_tailscale.7z) |
+| tailscale | 1.102.5 | GCC 13 (Linux, glibc) | [x86 ELF](data/tailscale/x86/mcrit/tailscale_1.102.5_gcc13_x86_tailscaled.mcrit) / [x64 ELF](data/tailscale/x64/mcrit/tailscale_1.102.5_gcc13_x64_tailscaled.mcrit) | [x86 ELF](data/tailscale/x86/smda/tailscale_1.102.5_gcc13_x86_tailscaled.7z) / [x64 ELF](data/tailscale/x64/smda/tailscale_1.102.5_gcc13_x64_tailscaled.7z) |
+| tailscale | 1.102.5 | MinGW-w64 GCC 13 | [x86 PE](data/tailscale/x86/mcrit/tailscale_1.102.5_mingw13_x86_tailscale.mcrit) / [x64 PE](data/tailscale/x64/mcrit/tailscale_1.102.5_mingw13_x64_tailscale.mcrit) | [x86 PE](data/tailscale/x86/smda/tailscale_1.102.5_mingw13_x86_tailscale.7z) / [x64 PE](data/tailscale/x64/smda/tailscale_1.102.5_mingw13_x64_tailscale.7z) |
+| tailscale | 1.102.5 | MinGW-w64 GCC 13 | [x86 PE](data/tailscale/x86/mcrit/tailscale_1.102.5_mingw13_x86_tailscaled.mcrit) / [x64 PE](data/tailscale/x64/mcrit/tailscale_1.102.5_mingw13_x64_tailscaled.mcrit) | [x86 PE](data/tailscale/x86/smda/tailscale_1.102.5_mingw13_x86_tailscaled.7z) / [x64 PE](data/tailscale/x64/smda/tailscale_1.102.5_mingw13_x64_tailscaled.7z) |
 <!-- /generated -->
