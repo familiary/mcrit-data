@@ -18,7 +18,7 @@ How the x86 image is built, in the order the options were tried:
    older than 10.0.26090 and Microsoft.Windows.SDK.CPP.x86 ships user-mode
    libraries only. Option 1 cannot link a driver.
 2. An older WDK installed beside the runner's: WDK 10.0.22621 (Windows 11 22H2),
-   the last kit that carries Lib\\10.0.22621.0\\km\\x86. ``scripts/install_wdk_x86.py``
+   the last kit that carries Lib\\10.0.22621.0\\km\\x86. ``scripts/corpus/install_wdk_x86.py``
    downloads the installer stub, checks its sha256
    (f3948d1486f8a7821bcef431487d3893fcd3a053d97ab37a1333a0c26e0bd232, version
    10.1.22621.382), installs the kit with /quiet and falls back to the
@@ -110,10 +110,10 @@ RECIPES = {
  "DiskCryptorDrv_1.1.846.118_msvc_x86": Recipe(
   family="DiskCryptorDrv", version="1.1.846.118", source=Source(url="https://raw.githubusercontent.com/DavidXanatos/DiskCryptor/b9e8463bc73cde0fd906cea8c483e290a7eb53ed/ntldr/1.1.846.118/dcrypt_1.1.846.118_src.zip", sha256="5720eb2725d67803ef585ed5bd155c439489dd606f8b62ff0e89ddfc60da2f32"),
   upstream="https://github.com/DavidXanatos/DiskCryptor/tree/b9e8463bc73cde0fd906cea8c483e290a7eb53ed/ntldr/1.1.846.118", license="GPL-3.0 (original archive license.txt)", toolchains=["msvc_x86"],
-  build=[BuildStep('python "{repo}/scripts/install_wdk_x86.py"'), BuildStep(_PROPS), BuildStep(_SUPPRESS_STUB), BuildStep("if not exist out\\obj\\crypto_fast mkdir out\\obj\\crypto_fast"),
+  build=[BuildStep('python "{repo}/scripts/corpus/install_wdk_x86.py"'), BuildStep(_PROPS), BuildStep(_SUPPRESS_STUB), BuildStep("if not exist out\\obj\\crypto_fast mkdir out\\obj\\crypto_fast"),
    BuildStep('msbuild driver\\driver.vcxproj /p:Configuration=Release /p:Platform={msbuild_platform} /p:PlatformToolset=WindowsKernelModeDriver10.0 /p:WindowsTargetPlatformVersion=' + _KIT + ' /p:DriverType=WDM /p:TargetVersion=Windows10 /p:SignMode=Off /p:SkipPackageVerification=true /p:SolutionDir=%CD%\\ /p:OutDir=%CD%\\out\\ /p:WholeProgramOptimization=false /p:ForceImportBeforeCppTargets=%CD%\\corpus-drv.props /m /v:normal'), BuildStep("dir /s out", allow_failure=True)],
   artifacts=[Artifact(path="out/dcrypt.sys", component="dcrypt.sys", pdb="out/dcrypt.pdb")],
   build_flags="Original 1.1.846.118 Release Win32, WDK 10.0.22621.0 (installed beside 10.0.26100.0), /O2 /MD /Zi /GL- /Gz /DEBUG /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO /SAFESEH:NO; SignMode=Off; /I corpus-inc (stub suppress.h), WDK 10.0.22621.0 km, km\\crt and shared. NOT byte-identical to unmodified upstream",
-  notes="Original driver, separate from user-mode DiskCryptor; x86 build of the same pinned source as the x64 image. WDK 10.0.26100.0 has no x86 kernel target and Microsoft.Windows.WDK.x86 carries no km libraries, so WDK 10.0.22621.0 is installed by scripts/install_wdk_x86.py (installer stub pinned by sha256 f3948d14...d232). Recipe-applied, NOT byte-identical to unmodified upstream: the WDK 10.0.22621 toolchain, a generated corpus-inc/suppress.h stub, and a forced props file (WDK 10 km include directories, /MD, no /GL, /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO, /IGNORE:4266, /SAFESEH:NO). The driver is linked and disassembled only, never loaded or installed.",
+  notes="Original driver, separate from user-mode DiskCryptor; x86 build of the same pinned source as the x64 image. WDK 10.0.26100.0 has no x86 kernel target and Microsoft.Windows.WDK.x86 carries no km libraries, so WDK 10.0.22621.0 is installed by scripts/corpus/install_wdk_x86.py (installer stub pinned by sha256 f3948d14...d232). Recipe-applied, NOT byte-identical to unmodified upstream: the WDK 10.0.22621 toolchain, a generated corpus-inc/suppress.h stub, and a forced props file (WDK 10 km include directories, /MD, no /GL, /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO, /IGNORE:4266, /SAFESEH:NO). The driver is linked and disassembled only, never loaded or installed.",
  ),
 }
