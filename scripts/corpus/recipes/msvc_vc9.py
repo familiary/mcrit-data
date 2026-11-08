@@ -41,7 +41,7 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 
 ISO_URL = ("https://archive.org/download/microsoft-visual-studio-2008/"
            "Microsoft_Visual_Studio_2008.iso")
-ISO_SHA256 = "__VS2008_SHA256__"
+ISO_SHA256 = "52ebf5731b75ccc460384ce3fd25bc984fb2d828ae51501ebaf0cadc27a33ee9"
 
 LIB_IMAGES = [
     "libcmt", "libcmtd", "libcpmt", "libcpmtd",
