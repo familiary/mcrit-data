@@ -206,6 +206,13 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
             # the compiler, a vendored one to another project in this corpus.
             if removed_vendored:
                 entry["removed_vendored_functions"] = sorted(removed_vendored)
+            # Recorded whenever the recipe declares one, not only when
+            # something matched, so a record says the filter ran rather than
+            # leaving "no vendored functions removed" and "no vendored filter
+            # applied" looking identical. The x64 metsrv is exactly that case:
+            # it vendors the same zlib as the x86 one and loses nothing,
+            # because its copy of putShortMSB has a different PicHash.
+            if recipe.vendors:
                 entry["vendors"] = sorted(recipe.vendors)
             if dependency_provenance:
                 entry["dependencies"] = dependency_provenance
