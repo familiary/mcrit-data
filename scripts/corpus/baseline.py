@@ -3604,9 +3604,18 @@ def crt_glue(toolchain_id):
 # one-instruction function only when its name is in the runtime's namespace
 # (``__chkstk``, ``_local_unwind``, ``memcmp``), not the kernel API's.
 #
-# x64 only. WDK 10.0.26100 has no x86 kernel target at all (the playbook in
-# this directory has the exact error), so there is no x86 .sys to measure or
-# to filter, and kernel_glue("msvc..._x86") is empty by construction.
+# x64 and x86. WDK 10.0.26100, the kit on the runner, has no x86 kernel target
+# at all (the playbook in this directory has the exact error), so an x86 image
+# is built against a WDK that does - the recipes install 10.0.22621 on the x86
+# leg - and the x86 baseline is measured from that kit's own libraries with
+# the same three probes: Win32 instead of x64 in the msbuild project, _X86_ and
+# /Gz instead of the AMD64 defines on the cl line, /MACHINE:X86 and
+# GsDriverEntry@8 on the link line, and the km\x86 library directory.
+# _wdk_layout() finds that kit by looking for km\<arch>\ntoskrnl.lib, not by
+# the version the developer environment names, so on the x64 leg it still
+# resolves to the runner's own 10.0.26100 exactly as before. An x86 baseline
+# measured on a runner with no x86 kernel libraries is empty and recorded as
+# the kernel/wdk probe failure, never filled in from the x64 one.
 # ---------------------------------------------------------------------------
 
 _KERNEL_INCLUDES = "#include <ntifs.h>\n"
@@ -3742,9 +3751,48 @@ def _kernel_sources():
 # no whole-program optimisation, /Brepro /INCREMENTAL:NO, warnings not errors),
 # which Hidden and APICallProxy share, and DiskCryptorDrv's additions for the
 # nogs flavour. RuntimeLibrary is left alone as it is there.
-def _kernel_props(flavour):
+def _kernel_props(flavour, arch="x64"):
     compile_extra = ""
-    if flavour == "wdm_nogs":
+    link_extra = ""
+    if arch == "x86":
+        # The WDK msbuild toolset (WindowsKernelModeDriver10.0) rejects Win32
+        # in 10.0.22621 as well as in 10.0.26100: "'Win32' is not a valid
+        # architecture for Kernel mode drivers or UMDF drivers". So the x86
+        # probes are ordinary v143 projects that the props turn into a driver
+        # the way the x86 DiskCryptorDrv recipe does: the 22621 km headers and
+        # libraries, /kernel /Gz, /DRIVER, /NODEFAULTLIB, /SAFESEH:NO.
+        nogs = flavour == "wdm_nogs"
+        compile_extra = (
+            "<AdditionalIncludeDirectories>"
+            "$(WindowsSdkDir)Include\\$(WindowsTargetPlatformVersion)\\km;"
+            "$(WindowsSdkDir)Include\\$(WindowsTargetPlatformVersion)\\km\\crt;"
+            "$(WindowsSdkDir)Include\\$(WindowsTargetPlatformVersion)\\shared"
+            "</AdditionalIncludeDirectories>"
+            "<PreprocessorDefinitions>_X86_;WIN32;_WIN32;_KERNEL_MODE;"
+            "NTDDI_VERSION=0x0A000000;_WIN32_WINNT=0x0A00;WINVER=0x0A00;"
+            "%(PreprocessorDefinitions)</PreprocessorDefinitions>"
+            "<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>"
+            "<CallingConvention>StdCall</CallingConvention>"
+            "<Optimization>MaxSpeed</Optimization>"
+            "<BufferSecurityCheck>" + ("false" if nogs else "true")
+            + "</BufferSecurityCheck>"
+            "<AdditionalOptions>/kernel /GL- %(AdditionalOptions)"
+            "</AdditionalOptions>")
+        link_extra = (
+            "<ImageHasSafeExceptionHandlers>false"
+            "</ImageHasSafeExceptionHandlers>"
+            "<SubSystem>Native</SubSystem><Driver>WDM</Driver>"
+            "<IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>"
+            "<EntryPointSymbol>"
+            + ("DriverEntry" if nogs else "GsDriverEntry@8")
+            + "</EntryPointSymbol>"
+            "<AdditionalLibraryDirectories>$(WindowsSdkDir)Lib\\"
+            "$(WindowsTargetPlatformVersion)\\km\\x86"
+            "</AdditionalLibraryDirectories>"
+            "<AdditionalDependencies>ntoskrnl.lib;hal.lib;"
+            + ("" if nogs else "BufferOverflowFastFailK.lib;")
+            + "libcntpr.lib</AdditionalDependencies>")
+    elif flavour == "wdm_nogs":
         compile_extra = ("<BufferSecurityCheck>false</BufferSecurityCheck>"
                          "<Optimization>MaxSpeed</Optimization>")
     return (
@@ -3762,36 +3810,52 @@ def _kernel_props(flavour):
         "<EnableCOMDATFolding>false</EnableCOMDATFolding>"
         "<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>"
         "<TreatLinkerWarningAsErrors>false</TreatLinkerWarningAsErrors>"
+        + link_extra +
         "<AdditionalOptions>%(AdditionalOptions) /Brepro /INCREMENTAL:NO "
         "/IGNORE:4266</AdditionalOptions>"
         "</Link></ItemDefinitionGroup></Project>")
 
 
-def _kernel_project(tags):
+def _kernel_project(tags, platform="x64"):
     items = "".join('<ClCompile Include="src\\%s.c" />' % tag for tag in tags)
+    if platform == "Win32":
+        # See _kernel_props: the WDK toolset refuses Win32, so a plain v143
+        # application project that the props turn into a driver.
+        configuration = ('<UseDebugLibraries>false</UseDebugLibraries>'
+                         '<PlatformToolset>v143</PlatformToolset>'
+                         '<ConfigurationType>Application</ConfigurationType>')
+        target_ext = '<TargetExt>.sys</TargetExt><GenerateManifest>false</GenerateManifest>'
+    else:
+        target_ext = ''
+        configuration = ('<TargetVersion>Windows10</TargetVersion>'
+                         '<UseDebugLibraries>false</UseDebugLibraries>'
+                         '<PlatformToolset>WindowsKernelModeDriver10.0'
+                         '</PlatformToolset>'
+                         '<ConfigurationType>Driver</ConfigurationType>'
+                         '<DriverType>WDM</DriverType>')
     return (
         '<?xml version="1.0" encoding="utf-8"?>\n'
         '<Project DefaultTargets="Build" ToolsVersion="Current" '
         'xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\n'
         '<ItemGroup Label="ProjectConfigurations">'
-        '<ProjectConfiguration Include="Release|x64">'
-        '<Configuration>Release</Configuration><Platform>x64</Platform>'
+        '<ProjectConfiguration Include="Release|' + platform + '">'
+        '<Configuration>Release</Configuration><Platform>' + platform
+        + '</Platform>'
         '</ProjectConfiguration></ItemGroup>\n'
         '<PropertyGroup Label="Globals">'
         '<ProjectGuid>{3F0C6B2E-7A41-4C38-9E52-6D1B8A0F4C77}</ProjectGuid>'
         '<RootNamespace>probe</RootNamespace>'
         '<Configuration>Release</Configuration>'
-        '<Platform Condition="\'$(Platform)\' == \'\'">x64</Platform>'
+        '<Platform Condition="\'$(Platform)\' == \'\'">' + platform
+        + '</Platform>'
         '</PropertyGroup>\n'
         '<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />\n'
         '<PropertyGroup Label="Configuration">'
-        '<TargetVersion>Windows10</TargetVersion>'
-        '<UseDebugLibraries>false</UseDebugLibraries>'
-        '<PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>'
-        '<ConfigurationType>Driver</ConfigurationType>'
-        '<DriverType>WDM</DriverType></PropertyGroup>\n'
+        + configuration +
+        '</PropertyGroup>\n'
         '<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.props" />\n'
-        '<PropertyGroup><TargetName>probe</TargetName></PropertyGroup>\n'
+        '<PropertyGroup><TargetName>probe</TargetName>' + target_ext
+        + '</PropertyGroup>\n'
         '<ItemGroup>' + items + '</ItemGroup>\n'
         '<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />\n'
         '</Project>\n')
@@ -3808,8 +3872,13 @@ def _kernel_thunk_is_runtime(name):
     return bool(letters) and not any(character.isupper() for character in letters)
 
 
-def _wdk_layout():
-    """(km include dir, km\\crt dir, shared dir, km lib dir) or None."""
+def _wdk_layout(arch="x64"):
+    """(km include dir, km\\crt dir, shared dir, km lib dir, version) or None.
+
+    The kit is the newest one that carries km\\<arch>\\ntoskrnl.lib: for x64
+    that is the runner's 10.0.26100.0, for x86 the 10.0.22621.0 the recipes
+    install, because 10.0.26100.0 has no km\\x86 directory.
+    """
     sdk = os.environ.get("WindowsSdkDir", "")
     if not sdk:
         sdk = r"C:\Program Files (x86)\Windows Kits\10" + os.sep
@@ -3823,7 +3892,7 @@ def _wdk_layout():
                             if name.startswith("10.")), reverse=True)
     for version in versions:
         km = os.path.join(sdk, "Include", version, "km")
-        lib = os.path.join(sdk, "Lib", version, "km", "x64")
+        lib = os.path.join(sdk, "Lib", version, "km", arch)
         if os.path.isfile(os.path.join(km, "ntddk.h")) \
                 and os.path.isfile(os.path.join(lib, "ntoskrnl.lib")):
             return (km, os.path.join(km, "crt"),
@@ -3848,7 +3917,7 @@ def _tail(completed, limit=3000):
     return text[-limit:]
 
 
-def _kernel_probe_images(toolchain_id, tmp, layout):
+def _kernel_probe_images(toolchain_id, tmp, layout, arch="x64"):
     """Build the three flavours; returns [(flavour, image, pdb)].
 
     Every failure is logged and recorded, never raised: the family being
@@ -3870,9 +3939,17 @@ def _kernel_probe_images(toolchain_id, tmp, layout):
     # directly.
     object_dir = os.path.join(tmp, "obj")
     os.makedirs(object_dir)
+    if arch == "x86":
+        # /Gz because the WDK builds x86 drivers stdcall, which also decides
+        # the decoration (_name@N) the import libraries are looked up under.
+        arch_flags = ["/Gz", "/D_X86_", "/DWIN32", "/D_WIN32"]
+        machine, entry, platform = "X86", "/ENTRY:GsDriverEntry@8", "Win32"
+    else:
+        arch_flags = ["/D_AMD64_", "/DAMD64", "/DWIN64", "/D_WIN64"]
+        machine, entry, platform = "X64", "/ENTRY:DriverEntry", "x64"
     compile_command = [
         "cl", "/nologo", "/c", "/O2", "/MD", "/Zi", "/GL-", "/kernel", "/Zl",
-        "/GS", "/D_AMD64_", "/DAMD64", "/DWIN64", "/D_WIN64", "/D_KERNEL_MODE",
+        "/GS"] + arch_flags + ["/D_KERNEL_MODE",
         "/I" + km, "/I" + crt, "/I" + shared,
         "/Fdobj\\compiler.pdb", "/Foobj\\"]
     compile_command += ["src\\%s.c" % tag for tag, _ in sources]
@@ -3899,7 +3976,7 @@ def _kernel_probe_images(toolchain_id, tmp, layout):
     for _ in range(4):
         link_command = [
             "link", "/nologo", "/DRIVER", "/SUBSYSTEM:NATIVE",
-            "/ENTRY:DriverEntry", "/NODEFAULTLIB", "/MACHINE:X64", "/DEBUG",
+            entry, "/NODEFAULTLIB", "/MACHINE:" + machine, "/DEBUG",
             "/OPT:NOREF", "/OPT:NOICF", "/INCREMENTAL:NO", "/Brepro",
             "/OUT:probe_cl_link.sys", "/PDB:probe_cl_link.pdb"]
         link_command += ["obj\\%s.obj" % tag for tag in linked]
@@ -3937,18 +4014,22 @@ def _kernel_probe_images(toolchain_id, tmp, layout):
             with open(os.path.join(work, "src", tag + ".c"), "w") as handle:
                 handle.write(dict(sources)[tag])
         with open(os.path.join(work, "probe.vcxproj"), "w") as handle:
-            handle.write(_kernel_project(linked))
+            handle.write(_kernel_project(linked, platform))
         with open(os.path.join(work, "corpus-msvc.props"), "w") as handle:
-            handle.write(_kernel_props(flavour))
+            handle.write(_kernel_props(flavour, arch))
         command = [
             "msbuild", "probe.vcxproj", "/nologo", "/p:Configuration=Release",
-            "/p:Platform=x64", "/p:TargetVersion=Windows10",
+            "/p:Platform=" + platform, "/p:TargetVersion=Windows10",
             "/p:SignMode=Off", "/p:SkipPackageVerification=true",
             "/p:WholeProgramOptimization=false", "/p:OutDir=out\\",
             "/p:IntDir=obj\\",
             "/p:ForceImportBeforeCppTargets=" + os.path.join(
                 work, "corpus-msvc.props"),
             "/m", "/v:minimal"]
+        if arch == "x86":
+            # Without it the project resolves to 10.0.26100.0, whose targets
+            # refuse Win32: pin the kit that has the x86 kernel libraries.
+            command.append("/p:WindowsTargetPlatformVersion=" + version)
         result = subprocess.run(command, capture_output=True, cwd=work,
                                 text=True, errors="replace")
         image = os.path.join(work, "out", "probe.sys")
@@ -3971,12 +4052,13 @@ def kernel_glue(toolchain_id):
     from .smdaify import disassemble
 
     toolchain = get_toolchain(toolchain_id)
-    if toolchain.kind != "msvc" or toolchain.arch != "x64":
+    if toolchain.kind != "msvc" or toolchain.arch not in ("x64", "x86"):
         LOGGER.info("%s: no kernel-mode baseline (the WDK has no kernel "
                     "target for this architecture)", toolchain_id)
         return {}
     _PROBE_FAILURES.setdefault(toolchain_id, [])
-    layout = _wdk_layout()
+    layout = _wdk_layout() if toolchain.arch == "x64" \
+        else _wdk_layout(toolchain.arch)
     if layout is None:
         LOGGER.warning("%s: no WDK (km headers and ntoskrnl.lib) found, so "
                        "the kernel-mode baseline is empty", toolchain_id)
@@ -3985,7 +4067,10 @@ def kernel_glue(toolchain_id):
     dump = os.environ.get("CORPUS_BASELINE_DUMP")
     glue = {}
     with tempfile.TemporaryDirectory() as tmp:
-        images = _kernel_probe_images(toolchain_id, tmp, layout)
+        images = _kernel_probe_images(toolchain_id, tmp, layout) \
+            if toolchain.arch == "x64" \
+            else _kernel_probe_images(toolchain_id, tmp, layout,
+                                      toolchain.arch)
         for flavour, image, pdb in images:
             report = disassemble(image, pdb_path=pdb)
             before = len(glue)

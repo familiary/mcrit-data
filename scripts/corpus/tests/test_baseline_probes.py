@@ -441,6 +441,18 @@ class KernelProbeProjectTest(unittest.TestCase):
             self.assertIn("<EnableCOMDATFolding>false<", text, flavour)
             self.assertIn("<WholeProgramOptimization>false<", text, flavour)
 
+    def test_the_x86_project_and_props_name_win32(self):
+        import xml.etree.ElementTree as ElementTree
+        text = baseline._kernel_project(["driver_entry"], "Win32")
+        ElementTree.fromstring(text.split("\n", 1)[1])
+        self.assertIn("Release|Win32", text)
+        self.assertNotIn("x64", text)
+        props = baseline._kernel_props("wdm", "x86")
+        ElementTree.fromstring(props)
+        self.assertIn("<ImageHasSafeExceptionHandlers>false<", props)
+        self.assertNotIn("ImageHasSafeExceptionHandlers",
+                         baseline._kernel_props("wdm"))
+
     def test_only_the_nogs_flavour_turns_the_cookie_off(self):
         self.assertIn("<BufferSecurityCheck>false<",
                       baseline._kernel_props("wdm_nogs"))
@@ -609,14 +621,49 @@ class KernelGlueMeasurementTest(unittest.TestCase):
                      "/OPT:NOREF", "/OPT:NOICF", "/Brepro", "BufferOverflowK.lib"):
             self.assertIn(flag, link_command)
 
-    def test_x86_has_no_kernel_baseline(self):
-        original = baseline.get_toolchain
+    def test_x86_without_an_x86_wdk_is_empty_and_recorded(self):
+        original = (baseline.get_toolchain, baseline._wdk_layout)
         baseline.get_toolchain = lambda toolchain_id: _toolchain(arch="x86")
+        seen = []
+        baseline._wdk_layout = lambda arch="x64": seen.append(arch)
         try:
             self.assertEqual(baseline.kernel_glue("t86"), {})
         finally:
-            baseline.get_toolchain = original
-        self.assertEqual(baseline.probe_failures(), {})
+            baseline.get_toolchain, baseline._wdk_layout = original
+        self.assertEqual(seen, ["x86"])
+        self.assertEqual(baseline.probe_failures(), {"t86": ["kernel/wdk"]})
+
+    def test_x86_uses_the_x86_flags_and_the_pinned_kit(self):
+        self._fake()
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            images = baseline._kernel_probe_images("t", tmp, self.layout,
+                                                   "x86")
+        self.assertEqual([flavour for flavour, _, _ in images],
+                         ["cl_link", "wdm", "wdm_nogs"])
+        compile_command = [c for c in self.commands if c[0] == "cl"][0]
+        for flag in ("/Gz", "/D_X86_", "/kernel", "/GS"):
+            self.assertIn(flag, compile_command)
+        self.assertNotIn("/D_AMD64_", compile_command)
+        link_command = [c for c in self.commands if c[0] == "link"][0]
+        for flag in ("/MACHINE:X86", "/ENTRY:GsDriverEntry@8",
+                     "BufferOverflowK.lib"):
+            self.assertIn(flag, link_command)
+        self.assertNotIn("/MACHINE:X64", link_command)
+        for command in [c for c in self.commands if c[0] == "msbuild"]:
+            self.assertIn("/p:Platform=Win32", command)
+            self.assertIn("/p:WindowsTargetPlatformVersion=10.0.0.0", command)
+
+    def test_x64_is_unchanged_by_the_x86_support(self):
+        self._fake()
+        self._images()
+        compile_command = [c for c in self.commands if c[0] == "cl"][0]
+        self.assertIn("/D_AMD64_", compile_command)
+        self.assertNotIn("/Gz", compile_command)
+        for command in [c for c in self.commands if c[0] == "msbuild"]:
+            self.assertIn("/p:Platform=x64", command)
+            self.assertFalse([a for a in command
+                              if a.startswith("/p:WindowsTargetPlatformVersion")])
 
     def test_the_failure_log_keeps_the_errors_and_not_the_warning_noise(self):
         noise = "\n".join("src\\u%d.c: warning C4117: reserved" % n
@@ -659,8 +706,8 @@ class KernelGlueResultTest(unittest.TestCase):
         class Report(object):
             def getFunctions(self_inner):
                 return functions
-        baseline._wdk_layout = lambda: ("km", "crt", "shared", "lib", "10.0")
-        baseline._kernel_probe_images = lambda toolchain_id, tmp, layout: [
+        baseline._wdk_layout = lambda arch="x64": ("km", "crt", "shared", "lib", "10.0")
+        baseline._kernel_probe_images = lambda toolchain_id, tmp, layout, arch="x64": [
             ("wdm", "x.sys", "x.pdb"), ("cl_link", "y.sys", "y.pdb")]
         smdaify.disassemble = lambda path, pdb_path="": Report()
         self._get = baseline.get_toolchain
@@ -690,7 +737,7 @@ class KernelGlueResultTest(unittest.TestCase):
         self.assertNotIn("RtlInitUnicodeString", glue)
 
     def test_a_missing_wdk_is_a_recorded_failure_and_an_empty_baseline(self):
-        baseline._wdk_layout = lambda: None
+        baseline._wdk_layout = lambda arch="x64": None
         baseline.kernel_glue.cache_clear()
         self.assertEqual(baseline.kernel_glue("t"), {})
         self.assertEqual(baseline.probe_failures(), {"t": ["kernel/wdk"]})
