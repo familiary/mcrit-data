@@ -2143,5 +2143,137 @@ class ProducerLabelTest(unittest.TestCase):
                          "MSVC v199, as distributed upstream")
 
 
+class DecryptMsfTest(unittest.TestCase):
+    """The key-table parser and container reader in corpus.decrypt_msf.
+
+    Worth testing because the gem's crypto.rb is the *only* place the key
+    exists - the helper deliberately carries none of its own - so a parser
+    that silently read the wrong entry would decrypt to garbage, and the only
+    symptom would be "plaintext does not start with MZ" with no hint why.
+    """
+
+    # The shape of lib/metasploit-payloads/crypto.rb, trimmed to what the
+    # parser reads: two ciphers, nested ivs/keys hashes whose own "1 => {"
+    # must not be mistaken for a third cipher, and `.b` suffixes on values.
+    TABLE = '''
+module MetasploitPayloads
+  module Crypto
+    CIPHERS = {
+      1 => {
+        name: 'chacha20'.b,
+        version: { iv: 1, key: 1 },
+        ivs:  { 1 => { value: "%s".b } },
+        keys: { 1 => { value: "%s".b } }
+      },
+      2 => {
+        name: 'aes-256-cbc'.b,
+        version: { iv: 1, key: 1 },
+        ivs:  { 1 => { value: "%s".b } },
+        keys: { 1 => { value: "%s".b } }
+      }
+    }.freeze
+  end
+end
+'''
+
+    CHACHA_IV = bytes(range(0x10))
+    CHACHA_KEY = bytes(range(0x20, 0x40))
+    AES_IV = bytes(range(0x40, 0x50))
+    AES_KEY = bytes(range(0x60, 0x80))
+
+    @staticmethod
+    def _escape(raw):
+        return "".join("\\x%02x" % byte for byte in raw)
+
+    def _crypto_rb(self):
+        handle = tempfile.NamedTemporaryFile("w", suffix=".rb", delete=False)
+        self.addCleanup(os.unlink, handle.name)
+        handle.write(self.TABLE % (self._escape(self.CHACHA_IV),
+                                   self._escape(self.CHACHA_KEY),
+                                   self._escape(self.AES_IV),
+                                   self._escape(self.AES_KEY)))
+        handle.close()
+        return handle.name
+
+    def test_the_key_table_parses_to_both_ciphers(self):
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        # Exactly two entries: the nested `1 => {` of each ivs/keys hash is
+        # inside a consumed span and must not appear as a cipher of its own.
+        self.assertEqual(sorted(ciphers), [1, 2])
+        self.assertEqual(ciphers[1]["name"], "chacha20")
+        self.assertEqual(ciphers[2]["name"], "aes-256-cbc")
+        self.assertEqual(ciphers[2]["keys"][1], self.AES_KEY)
+        self.assertEqual(ciphers[2]["ivs"][1], self.AES_IV)
+        # The two ciphers' material must not be crossed over.
+        self.assertEqual(ciphers[1]["keys"][1], self.CHACHA_KEY)
+
+    def test_a_round_trip_through_the_real_container_shape(self):
+        from cryptography.hazmat.primitives.ciphers import (
+            Cipher, algorithms, modes)
+
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        plaintext = b"MZ" + b"\x90" * 61
+        pad = 16 - len(plaintext) % 16
+        encryptor = Cipher(algorithms.AES(self.AES_KEY),
+                           modes.CBC(self.AES_IV)).encryptor()
+        body = encryptor.update(plaintext + bytes([pad]) * pad)
+        body += encryptor.finalize()
+        # 'msf' then cipher 2, IV 1, key 1, per ENCRYPTED_PAYLOAD_HEADER.
+        container = b"msf" + bytes([2, 1, 1]) + body
+        self.assertEqual(decrypt_msf.decrypt(container, ciphers), plaintext)
+
+    def test_a_file_with_no_msf_header_is_passed_through(self):
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        already_plain = b"MZ\x90\x00\x03"
+        self.assertEqual(decrypt_msf.decrypt(already_plain, ciphers),
+                         already_plain)
+
+    def test_the_wrong_key_is_reported_and_not_returned(self):
+        from cryptography.hazmat.primitives.ciphers import (
+            Cipher, algorithms, modes)
+
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        encryptor = Cipher(algorithms.AES(bytes(32)),
+                           modes.CBC(bytes(16))).encryptor()
+        body = encryptor.update(b"MZ" + b"\x00" * 30) + encryptor.finalize()
+        with self.assertRaises(decrypt_msf.DecryptError) as caught:
+            decrypt_msf.decrypt(b"msf" + bytes([2, 1, 1]) + body, ciphers)
+        # The padding check is what catches it, which is the only signal a
+        # block cipher gives for a wrong key.
+        self.assertIn("padding", str(caught.exception))
+
+    def test_an_unknown_cipher_version_names_itself(self):
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        with self.assertRaises(decrypt_msf.DecryptError) as caught:
+            decrypt_msf.decrypt(b"msf" + bytes([9, 1, 1]) + bytes(16), ciphers)
+        self.assertIn("version 9", str(caught.exception))
+
+    def test_chacha20_is_refused_rather_than_guessed_at(self):
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        with self.assertRaises(decrypt_msf.DecryptError) as caught:
+            decrypt_msf.decrypt(b"msf" + bytes([1, 1, 1]) + bytes(16), ciphers)
+        self.assertIn("chacha20", str(caught.exception))
+
+    def test_a_truncated_ciphertext_is_refused(self):
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        with self.assertRaises(decrypt_msf.DecryptError) as caught:
+            decrypt_msf.decrypt(b"msf" + bytes([2, 1, 1]) + bytes(17), ciphers)
+        self.assertIn("16-byte block", str(caught.exception))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
