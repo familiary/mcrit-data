@@ -39,14 +39,17 @@ helper script and none touching the distribution or component sources:
     host image named in HOST_IMAGE (ubuntu:14.04, GCC 4.8, pinned by the
     digest the CI log recorded), because GCC
     4.1.2 / 4.2.1 do not build with a current host compiler. The container's
-    apt packages (build-essential, bzip2, patch, bison, flex, texinfo, m4,
+    apt packages (build-essential, bzip2, patch, bison, flex, m4,
     gawk, file) are installed unpinned at build time and the image tag is not
     digest-pinned in the recipe; the digest actually used is printed by the
     docker pull in the build log.
-  * Firmware Linux 0.9.6 only: a host-gcc wrapper in the container renames
-    getline for the single compile of uClibc's host tool extra/scripts/
-    unifdef.c (-Dgetline=unifdef_getline), because that file's own getline()
-    conflicts with the host glibc's POSIX getline(); no source is edited.
+  * Firmware Linux 0.9.6 only: a host-gcc wrapper in the container adds
+    -D_POSIX_C_SOURCE=200112L to the single compile of uClibc's host tool
+    extra/scripts/unifdef.c, because that file's own getline() conflicts with
+    the host glibc's POSIX 2008 getline(); no source is edited.
+  * The container gets a do-nothing makeinfo (texinfo is not installed), so
+    the .info manuals of the binutils snapshot (Aboriginal 1.4.4), which do
+    not build with the host's makeinfo, are skipped; no code is affected.
   * The distribution tarball is a pinned extra source, extracted by a build
     step, because the corpus extractor refuses its absolute-symlink
     etc/mtab; the recipe's main source is the zlib staging directory used by

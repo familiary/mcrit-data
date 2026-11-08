@@ -25,7 +25,22 @@ apt-get update || {
   apt-get update
 }
 apt-get install -y --no-install-recommends build-essential bzip2 patch bison flex \
-  texinfo m4 gawk file ca-certificates
+  m4 gawk file ca-certificates
+# No texinfo: the binutils snapshot of Aboriginal 1.4.4 fails to build its
+# .info manuals with the host's makeinfo ("unknown command `colophon'"). A
+# makeinfo that does nothing keeps the documentation out of the build; no
+# code is affected.
+cat > /usr/local/bin/makeinfo <<'STUB'
+#!/bin/sh
+out=
+while [ $# -gt 0 ]; do
+  case "$1" in -o) out="$2"; shift ;; esac
+  shift
+done
+[ -n "$out" ] && : > "$out"
+exit 0
+STUB
+chmod +x /usr/local/bin/makeinfo
 gcc --version | head -1
 
 # Settings the distributions document in their own `config` files. The
@@ -38,17 +53,18 @@ export HOME=/tmp
 
 # Firmware Linux 0.9.6 only. uClibc 0.9.30.1 builds a host tool,
 # extra/scripts/unifdef.c, that defines its own getline(); glibc 2.19 of the
-# host image declares the POSIX getline() and the compile stops with
+# host image declares the POSIX 2008 getline() and the compile stops with
 # "conflicting types for 'getline'" (seen in CI). Without touching the uClibc
-# source, a host-gcc wrapper renames that one identifier for that one file
-# (-Dgetline=unifdef_getline); every other host compile passes through.
+# source, a host-gcc wrapper selects the pre-2008 POSIX feature level for that
+# one file (-D_POSIX_C_SOURCE=200112L, under which glibc does not declare
+# getline); every other host compile passes through unchanged.
 if [ "$STAGE" = cross-compiler ]; then
   mkdir -p /opt/hostfix
   cat > /opt/hostfix/gcc <<'WRAP'
 #!/bin/sh
 for a in "$@"; do
   case "$a" in
-    *unifdef.c) set -- "$@" -Dgetline=unifdef_getline; break ;;
+    *unifdef.c) set -- "$@" -D_POSIX_C_SOURCE=200112L; break ;;
   esac
 done
 exec /usr/bin/gcc "$@"
