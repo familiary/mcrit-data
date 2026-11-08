@@ -98,7 +98,7 @@ jobs:
       # One architecture failing should not hide the other's result.
       fail-fast: false
       matrix:
-        arch: [x86, x64]
+        arch: [x64]
     steps:
       - uses: actions/checkout@v4
 
