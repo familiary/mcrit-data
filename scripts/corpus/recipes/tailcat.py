@@ -110,6 +110,18 @@ def _tailcat(version, commit, go_sum_sha256, tailscale_pin):
 
 
 RECIPES = {
+    "tailcat_0.4.0": _tailcat(
+        "0.4.0", "ce6fedcabc220bab3b94d470ab330219111eeae8",
+        "ff7c683fd11ba420004e22437bcd6c4e7cd36f23eab8e7a68188a706fbc86d85",
+        "v1.103.0-pre.0.20260830144538-72780705eda8"),
+    "tailcat_0.5.0": _tailcat(
+        "0.5.0", "cc6db4948e324e2c3434155a13d0d787ec9df7a4",
+        "ff7c683fd11ba420004e22437bcd6c4e7cd36f23eab8e7a68188a706fbc86d85",
+        "v1.103.0-pre.0.20260830144538-72780705eda8"),
+    "tailcat_0.6.0": _tailcat(
+        "0.6.0", "790406204c002a6f109ef7c6a30a436601a1f6a8",
+        "ad835c5a36913f461826189746619fffbba97feef9ab18d9f7c51f10be9fb34f",
+        "v1.103.0-pre.0.20260904030409-31d8badb3bfb"),
     "tailcat_0.7.0": _tailcat(
         "0.7.0", "15ab9e68bfc6534a61797d7af28cedd42b54a3a5",
         "8a1b346e4a2f6b4bc9104aeb7939f13e274651ddcf002d9360fca32d6753feeb",
