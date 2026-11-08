@@ -49,27 +49,34 @@ UseOfMfc is false in every project (the .rc files include afxres.h, so the MFC
 headers must exist, which the windows-2022 image provides), so there is no
 static/dynamic MFC choice to record.
 
-Vendored libraries are not split out. They are statically linked into the exe
-by upstream's own project files, so their functions are in the image under the
-UltraVNC family exactly as a sample in the wild carries them; the overlap with
-the zlib, liblzma, libsodium and lzo families is measured and listed in the
-README, not removed. That is how BlackBone's AsmJit and rewolf-wow64ext are
-handled in this corpus.
+Vendored libraries are mostly not split out. They are statically linked into
+the exe by upstream's own project files, so their functions are in the image
+under the UltraVNC family exactly as a sample in the wild carries them; the
+overlap with the liblzma, libsodium and lzo families is measured and listed in
+the README, not removed. That is how BlackBone's AsmJit and rewolf-wow64ext are
+handled in this corpus. zlib is the exception (see "zlib" below): it is the one
+vendored library whose functions `validate --deep` reports as leakage, and
+Recipe.exclude_functions (PR #94, which this change therefore depends on)
+removes them.
 
 Overlaps, measured by PicHash over functions of ten instructions or more
 (counts of distinct hashes; the artefacts are the four built here):
 
-  * with TightVNC: 84 on x86 and 107 on x64, of 5314 and 5059 UltraVNC
-    hashes. That is the RFB code both inherit, plus the zlib and libjpeg
-    they both link.
-  * with data/libzlib: 4 (x86) and 79 (x64); with data/liblzma 287 and 257;
-    with data/libsodium 140 and 113, all from the vcpkg libraries. The zlib
-    functions are the ones the deep check fails on: 59 PicHashes share one
-    symbol name across TightVNC, UltraVNC and libzlib (`deflate`, `inflate`,
-    `_tr_flush_block` and so on). No mechanism in this tooling excludes a
-    vendored library from its host family, so they are reported rather than
-    hidden; `validate --deep` on a corpus holding these families fails on
-    exactly those 59 hashes.
+  * with TightVNC: 83 on x86 and 48 on x64, of 5228 and 4973 UltraVNC
+    hashes (84 and 107, of 5314 and 5059, before the zlib functions were
+    excluded). That is the RFB code both inherit, plus the libjpeg they both
+    link.
+  * with data/libzlib: 2 (x86) and 11 (x64) (4 and 79 before the exclusion);
+    with data/liblzma 287 and 257; with data/libsodium 140 and 113, all from
+    the vcpkg libraries. The zlib functions were the ones the deep check
+    failed on: with a sparse checkout of UltraVNC, TightVNC, libzlib, liblzma
+    and libsodium it reported 80 PicHashes sharing one symbol name across
+    TightVNC, UltraVNC and libzlib (`deflate`, `inflate`, `_tr_flush_block` and
+    so on); a further hash, `adler32` against `adler32_z`, was listed as
+    differently named. They are now removed by name, see "zlib" below, and the
+    same check reports 0 leakage. The 2 and 11 hashes that remain are
+    zlib-named functions the exclusion leaves in the image on purpose, and
+    libsodium's `crypto_generichash_*` thunk.
   * with the lzo 2.10 reference data (MinGW and MSVC, the lzo branches): 0
     on x86 and 8 on x64 against the MSVC build, from miniLZO.
 
@@ -79,7 +86,61 @@ artefacts (their hash differs, so the name-and-PicHash rule keeps them).
 They are MSVC STL and CRT inline instantiations - `std::vector<...>`,
 `__std_remove_4`, `wmemchr`/`wmemcmp` in vncviewer x86, `ATL::AtlThrowImpl` and
 `ATL::CAtlException` in winvnc x86 - not project code. The x86 artefacts
-also carry unnamed exception funclets (503 and 853 unnamed of 6252 and 7582).
+also carry unnamed exception funclets (503 and 853 unnamed of 6172 and 7503).
+
+zlib (PR #69; Recipe.exclude_functions comes from PR #94, so #69 depends on
+#94). Every image links zlib statically: vcpkg's 1.3.1 in 1.8.x, the in-tree
+1.2.11 (zlibstatv12) in 1.2.1.x. Each recipe now sets exclude_functions to one
+anchored pattern over exact zlib identifiers (the _ZLIB_* tuples below;
+_vendored_zlib.py states the test an identifier has to pass and builds the
+pattern). The committed images were re-derived from their own archives, not
+rebuilt: the removal the pipeline performs after the glue baseline was applied
+to each .7z and .mcrit, and provenance records `exclude_functions`,
+`excluded_function_count` and `num_functions_before_exclusion`, so kept +
+removed + excluded = total.
+
+  * Removed, per recipe (functions over its four images; identifiers):
+    1.2.1.4 154 (41), 1.2.1.5 60 (16), 1.8.2.9 / 1.8.3.0 / 1.8.3.1 318 (80)
+    each, 1.8.3.2 372 (93). By evidence, in that order: PicHash of 10 or more
+    instructions found in data/libzlib 90 / 28 / 122 / 162; fewer than 10
+    instructions and the PicHash of a libzlib function of the same name 40 /
+    24 / 43 / 54; neither, but the same exact name and architecture and an
+    opcode sequence at least 80% similar to libzlib's function of that name
+    24 / 8 / 153 / 156. The last group is zlib built with other flags: the
+    libzlib x86 images keep frame pointers and vcpkg's do not, so PicHash
+    cannot confirm them (of the 80 functions removed from an x86 1.8.x image
+    only 2 have a libzlib PicHash). Every such identifier has a
+    PicHash-confirmed function in the same recipe, usually the x64 one.
+  * Left in although the name is zlib's: an identifier is dropped from the
+    pattern if any function of that name in the recipe fails the test, since
+    a name pattern cannot tell two functions apart. 1.8.2.9 to 1.8.3.1 leave
+    20 identifiers and 1.8.3.2 leaves 7. Six (`_tr_tally`, `compress_block`,
+    `crc32_z`, `deflate_fast`, `deflate_slow`, `inflate`) have no
+    PicHash-confirmed function in the recipe. The others share their name
+    with a function that is not libzlib's: winvnc.exe also contains a
+    differently built zlib-compatible implementation, whose `compress`,
+    `compress2`, `compressBound`, `uncompress`, `uncompress2`,
+    `deflateBound`, `crc32_combine*`, `adler32_combine` and `_tr_stored_block`
+    do not match libzlib (its `deflateBound` is 10 instructions where zlib's
+    is 78 or more), and liblzma has its own `fill_window` (PicHash in
+    data/liblzma). Functions of those names that are PicHash-identical to
+    libzlib therefore stay under UltraVNC: 12 in the four images of a 1.8.2.9,
+    1.8.3.0 or 1.8.3.1 recipe, 2 in 1.8.3.2 (`fill_window`), 30 in 1.2.1.4 and
+    16 in 1.2.1.5. Only two families hold those hashes, so the deep check does
+    not report them. 1.2.1.4 leaves 50 identifiers and 1.2.1.5 leaves 62: 22
+    and 27 without a PicHash-confirmed function, 28 and 35 that also name a
+    function which is not zlib's (`crc32`, `get_crc_table`, `copy_block` and
+    a second `fill_window`, `build_tree`, `compress_block`, `gen_bitlen`,
+    `send_tree` and others per image). Those 1.2.1.x functions are probably
+    the in-tree Info-ZIP zip sources, which name their deflate, trees and crc
+    routines the same way; that was not checked against the source.
+  * Not reachable by name: unnamed functions (a few share a PicHash with a
+    library family; the check counts them as "no symbol", none is a leakage
+    hit), and libsodium's `crypto_generichash_blake2b_update` /
+    `crypto_generichash_update`, whose 10-instruction body is PicHash-identical
+    to zlib's `adler32_combine64` thunk. Result of the deep check on the
+    sparse checkout described above: 80 leakage hashes before (an earlier
+    version of this docstring said 59), 0 after.
 
 Forced from the command line, because the projects ask for the opposite:
 /MT -> /MD, /GL and /LTCG off (the projects' Link AdditionalOptions carry a
@@ -170,18 +231,20 @@ unmodified upstream. Every change, with its reason:
     with every argument type the callers pass, and ViewerJpeg round-tripped
     through libjpeg (a full image decodes with the flag clear; a truncated one
     sets it). The MSVC build is the run above. winvnc.exe includes neither
-    header. Kept / removed / total: 6343 / 1588 / 7931 (x86 viewer), 6107 /
-    1617 / 7724 (x64 viewer). PicHash overlap (functions of 10+ instructions,
-    distinct hashes) against the 1.8.3.1 viewer: 3235 of 3574 (90.5%) x86,
-    2849 of 3321 (85.8%) x64; the hardening commit changed much of the viewer.
+    header. Kept / removed / excluded / total: 6250 / 1588 / 93 / 7931 (x86
+    viewer), 6014 / 1617 / 93 / 7724 (x64 viewer) (6343 and 6107 kept before
+    the zlib exclusion). PicHash overlap (functions of 10+ instructions,
+    distinct hashes) against the 1.8.3.1 viewer: 3158 of 3497 (90.3%) x86,
+    2771 of 3243 (85.4%) x64; the hardening commit changed much of the viewer.
     Surviving glue names (kept functions whose name is in another UltraVNC
     msvc143 image's removed list, same architecture): x86 4 (std::bad_alloc,
     std::bad_array_new_length, std::bad_cast, std::exception constructors),
     x64 0. The same run also rebuilt winvnc.exe, which was not adopted: the
     committed images (run before this one) stay, because the rebuild differs
-    (x64 7245 functions against 7258, x86 7658 against 7670; same compiler
-    19.44.35229) and the cause was not isolated. Kept / removed / total of the
-    committed winvnc: 7258 / 1716 / 8974 (x64), 7670 / 1648 / 9318 (x86).
+    (x64 7245 functions against 7258, x86 7658 against 7670, both before the
+    zlib exclusion; same compiler 19.44.35229) and the cause was not isolated.
+    Kept / removed / excluded / total of the committed winvnc: 7165 / 1716 /
+    93 / 8974 (x64), 7577 / 1648 / 93 / 9318 (x86).
   * 1.2.1.5 (9761329e) needed six things.
     (1) zip32 failed with 240 errors from winnt.h, `error C2143: syntax error:
     missing ':' before 'constant'`. Cause, found by reading winnt.h of SDK
@@ -227,11 +290,12 @@ unmodified upstream. Every change, with its reason:
     two workarounds, both executables, x86 and x64 (run 42417689317). Its
     images are carried although they are almost the same code as versions
     already carried: PicHash overlap (functions of 10+ instructions,
-    distinct hashes) is 99.97% against 1.8.2.9 for the x86 viewer (3528 of
-    3529), 97.0% for the x64 viewer, 98.8% / 95.4% for the x86 / x64 server
-    against 1.8.2.9 and 99.8% / 98.2% against 1.8.3.1. Kept / removed / total: 6252 / 1587 / 7839
-    (x86 viewer), 6023 / 1611 / 7634 (x64 viewer), 7590 / 1662 / 9252 (x86
-    server), 7189 / 1722 / 8911 (x64 server).
+    distinct hashes) is 99.97% against 1.8.2.9 for the x86 viewer (3460 of
+    3461), 96.9% for the x64 viewer, 98.8% / 95.3% for the x86 / x64 server
+    against 1.8.2.9 and 99.8% / 98.2% against 1.8.3.1. Kept / removed /
+    excluded / total: 6172 / 1587 / 80 / 7839 (x86 viewer), 5943 / 1611 / 80 /
+    7634 (x64 viewer), 7511 / 1662 / 79 / 9252 (x86 server), 7110 / 1722 / 79 /
+    8911 (x64 server).
   * 1.2.1.4 (b4034d51) builds, both executables, x86 and x64 (run
     42419034988), with three more things the tree does not supply, on top of
     the 1.2.1.5 workarounds (1)-(6) above (which remove the d3dx9.h,
@@ -258,12 +322,13 @@ unmodified upstream. Every change, with its reason:
     this commit has a ProjectReference to
     zlib-1.2.11\\contrib\\vstudio\\vc10\\zlibstatv12.vcxproj, which the solution
     builds and links, so no zlib workaround is applied; I cannot say why that
-    run lacked the library. Kept / removed / total: 2577 / 1513 / 4090
-    (x86 viewer), 2335 / 1521 / 3856 (x64 viewer), 3874 / 1560 / 5434 (x86
-    server), 3562 / 1584 / 5146 (x64 server). Carried although redundant:
-    against 1.2.1.5 the PicHash overlap is 95.1% / 88.8% (x86 / x64 viewer, of 1436
-    and 1245 hashes) and 96.7% / 93.0% (server, of 2000 and 1790), 93.8% over
-    the four images together (6068 of 6471 hashes). Surviving glue names (kept
+    run lacked the library. Kept / removed / excluded / total: 2535 / 1513 /
+    42 / 4090 (x86 viewer), 2300 / 1521 / 35 / 3856 (x64 viewer), 3832 / 1560 /
+    42 / 5434 (x86 server), 3527 / 1584 / 35 / 5146 (x64 server). Carried
+    although redundant: against 1.2.1.5 the PicHash overlap is 96.4% / 89.9%
+    (x86 / x64 viewer, of 1403 and 1221 hashes) and 97.7% / 93.8% (server, of
+    1967 and 1766), 94.8% over the four images together (6028 of 6357
+    hashes). Surviving glue names (kept
     functions named like something the baseline removed from another UltraVNC
     image): 1.2.1.4 has 25 (x86 viewer), 25 (x86 server) and 5 / 5 (x64), the
     same as 1.2.1.5; 1.8.3.0 has 34, 45 and 5 / 5, the same as 1.8.3.1; they
@@ -271,6 +336,7 @@ unmodified upstream. Every change, with its reason:
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
+from ._vendored_zlib import zlib_functions
 
 
 _PROPS = (
@@ -291,6 +357,75 @@ _PROPS = (
     "</AdditionalOptions>'"
     "'</Link></ItemDefinitionGroup></Project>')"
     '"')
+
+# zlib as each version links it (vcpkg's 1.3.1 for 1.8.x, the in-tree 1.2.11 for
+# 1.2.1.x): exact identifiers whose every function in the recipe's four images
+# is zlib's. See _vendored_zlib.py for the test and the docstring for the
+# identifiers that are left in.
+_ZLIB_1_2_1_4 = (
+    '_tr_align', '_tr_flush_bits', '_tr_init', 'adler32', 'adler32_combine',
+    'adler32_combine64', 'adler32_combine_', 'adler32_z', 'bi_flush',
+    'bi_reverse', 'build_bl_tree', 'compress', 'compress2', 'compressBound',
+    'deflateInit_', 'deflateStateCheck', 'detect_data_type', 'fixedtables',
+    'flush_pending', 'inflateCopy', 'inflateGetDictionary', 'inflateInit_',
+    'inflateMark', 'inflatePrime', 'inflateSetDictionary',
+    'inflateStateCheck', 'match_init', 'putShortMSB', 'read_buf', 'scan_tree',
+    'send_all_trees', 'slide_hash', 'syncsearch', 'uncompress', 'uncompress2',
+    'updatewindow', 'zError', 'zcalloc', 'zcfree', 'zlibCompileFlags',
+    'zlibVersion',
+)
+_ZLIB_1_2_1_5 = (
+    'bi_flush', 'bi_reverse', 'build_bl_tree', 'compressBound',
+    'deflateInit_', 'detect_data_type', 'inflateUndermine', 'match_init',
+    'putShortMSB', 'scan_tree', 'syncsearch', 'zError', 'zcalloc', 'zcfree',
+    'zlibCompileFlags', 'zlibVersion',
+)
+_ZLIB_1_8_X = (
+    '_tr_align', '_tr_flush_bits', '_tr_flush_block', '_tr_init', 'adler32',
+    'adler32_combine64', 'adler32_combine_', 'adler32_z', 'bi_flush',
+    'bi_reverse', 'bi_windup', 'build_bl_tree', 'build_tree', 'crc32',
+    'crc_word', 'crc_word_big', 'deflate', 'deflateCopy', 'deflateEnd',
+    'deflateGetDictionary', 'deflateInit2_', 'deflateInit_', 'deflateParams',
+    'deflatePending', 'deflatePrime', 'deflateReset', 'deflateResetKeep',
+    'deflateSetDictionary', 'deflateSetHeader', 'deflateStateCheck',
+    'deflateTune', 'deflate_huff', 'deflate_rle', 'deflate_stored',
+    'detect_data_type', 'fixedtables', 'flush_pending', 'gen_bitlen',
+    'gen_codes', 'get_crc_table', 'inflateCodesUsed', 'inflateCopy',
+    'inflateEnd', 'inflateGetDictionary', 'inflateGetHeader', 'inflateInit2_',
+    'inflateInit_', 'inflateMark', 'inflatePrime', 'inflateReset',
+    'inflateReset2', 'inflateResetKeep', 'inflateSetDictionary',
+    'inflateStateCheck', 'inflateSync', 'inflateSyncPoint',
+    'inflateUndermine', 'inflateValidate', 'inflate_fast', 'inflate_table',
+    'init_block', 'lm_init', 'longest_match', 'multmodp', 'pqdownheap',
+    'putShortMSB', 'read_buf', 'scan_tree', 'send_all_trees', 'send_tree',
+    'slide_hash', 'syncsearch', 'tr_static_init', 'updatewindow', 'x2nmodp',
+    'zError', 'zcalloc', 'zcfree', 'zlibCompileFlags', 'zlibVersion',
+)
+_ZLIB_1_8_3_2 = (
+    '_tr_align', '_tr_flush_bits', '_tr_flush_block', '_tr_init',
+    '_tr_stored_block', 'adler32', 'adler32_combine', 'adler32_combine64',
+    'adler32_combine_', 'adler32_z', 'bi_flush', 'bi_reverse', 'bi_windup',
+    'build_bl_tree', 'build_tree', 'compress', 'compress2', 'compressBound',
+    'crc32', 'crc32_combine', 'crc32_combine64', 'crc32_combine_gen',
+    'crc32_combine_gen64', 'crc32_combine_op', 'crc_word', 'crc_word_big',
+    'deflate', 'deflateBound', 'deflateCopy', 'deflateEnd',
+    'deflateGetDictionary', 'deflateInit2_', 'deflateInit_', 'deflateParams',
+    'deflatePending', 'deflatePrime', 'deflateReset', 'deflateResetKeep',
+    'deflateSetDictionary', 'deflateSetHeader', 'deflateStateCheck',
+    'deflateTune', 'deflate_huff', 'deflate_rle', 'deflate_stored',
+    'detect_data_type', 'fixedtables', 'flush_pending', 'gen_bitlen',
+    'gen_codes', 'get_crc_table', 'inflateCodesUsed', 'inflateCopy',
+    'inflateEnd', 'inflateGetDictionary', 'inflateGetHeader', 'inflateInit2_',
+    'inflateInit_', 'inflateMark', 'inflatePrime', 'inflateReset',
+    'inflateReset2', 'inflateResetKeep', 'inflateSetDictionary',
+    'inflateStateCheck', 'inflateSync', 'inflateSyncPoint',
+    'inflateUndermine', 'inflateValidate', 'inflate_fast', 'inflate_table',
+    'init_block', 'lm_init', 'longest_match', 'multmodp', 'pqdownheap',
+    'putShortMSB', 'read_buf', 'scan_tree', 'send_all_trees', 'send_tree',
+    'slide_hash', 'syncsearch', 'tr_static_init', 'uncompress', 'uncompress2',
+    'updatewindow', 'x2nmodp', 'zError', 'zcalloc', 'zcfree',
+    'zlibCompileFlags', 'zlibVersion',
+)
 
 # Copies each built exe and its PDB to corpusout\ so the artefact paths do not
 # depend on where OutDir resolves for Win32 against x64. Newest match wins.
@@ -473,8 +608,10 @@ _NEW_NOTES = ("Commit %s, version %s. NOT byte-identical to a build of "
               "(see the recipe docstring). %sDependencies come from vcpkg per "
               "vcpkg.json, statically linked into the exes, so those "
               "libraries' functions are present here under the UltraVNC "
-              "family; miniLZO is compiled from lzo\\minilzo.c. The CRT is "
-              "imported (/MD) and stays attributed to data/MSVC.")
+              "family, except zlib's, which are removed by name "
+              "(exclude_functions, see the recipe docstring); miniLZO is "
+              "compiled from lzo\\minilzo.c. The CRT is imported (/MD) and "
+              "stays attributed to data/MSVC.")
 
 
 # 1.8.3.2 only: the two headers upstream never committed, written into the
@@ -533,6 +670,7 @@ RECIPES = {
         ],
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags=_FLAGS,
+        exclude_functions=[zlib_functions(_ZLIB_1_8_X)],
         notes="Commit 97a077cc (2026-09-06), version 1.8.2.9, the newest "
               "release whose submodule can be fetched; FOSSIL's 1.2.13 "
               "viewer has no buildable source state (see the recipe "
@@ -541,9 +679,10 @@ RECIPES = {
               "Dependencies come from vcpkg per vcpkg.json: zlib, zstd, "
               "libjpeg-turbo, liblzma, libsodium and minizip-ng, statically "
               "linked into the exes, so those libraries' functions are "
-              "present here under the UltraVNC family; miniLZO is compiled "
-              "from lzo\\minilzo.c. The CRT is imported (/MD) and stays "
-              "attributed to data/MSVC.",
+              "present here under the UltraVNC family, except zlib's, which "
+              "are removed by name (exclude_functions, see the recipe "
+              "docstring); miniLZO is compiled from lzo\\minilzo.c. The CRT "
+              "is imported (/MD) and stays attributed to data/MSVC.",
     ),
     "UltraVNC_1.2.1.5_msvc": Recipe(
         family="UltraVNC",
@@ -583,6 +722,7 @@ RECIPES = {
                     "disabled; windows.h force-included for zip32 and <string> "
                     "for C++ items, _WIN32_WINNT/_WIN32_IE as in Release|Win32 for winvnc x64; D3DX9 headers from the Microsoft.DXSDK.D3DX "
                     "9.29.952.8 NuGet package",
+        exclude_functions=[zlib_functions(_ZLIB_1_2_1_5)],
         notes="Commit 9761329e (2017-06-10), FILEVERSION 1.2.1.5: the "
               "nearest buildable state to the 1.2.13 viewer FOSSIL used, "
               "which has no commit of its own. NOT byte-identical to a build "
@@ -595,8 +735,10 @@ RECIPES = {
               "evidence points at; winvnc.exe, the server, is the second "
               "target. Both statically link the in-tree zlib, libjpeg-turbo, "
               "miniLZO and the Info-ZIP sources, so those functions are "
-              "present here under the UltraVNC family. The CRT is imported "
-              "(/MD) and stays attributed to data/MSVC.",
+              "present here under the UltraVNC family, except the zlib "
+              "functions the recipe removes by name (exclude_functions: 16 "
+              "exact identifiers, see the recipe docstring). The CRT is "
+              "imported (/MD) and stays attributed to data/MSVC.",
     ),
     "UltraVNC_1.2.1.4_msvc": Recipe(
         family="UltraVNC",
@@ -646,6 +788,7 @@ RECIPES = {
                     "libjpeg-turbo 1.5.1 (cb88e5da); the NuGet package "
                     "Libjpeg-Turbo 1.5.15 that winvncv12.vcxproj imports "
                     "unpacked under winvnc\\packages (headers only under v143)",
+        exclude_functions=[zlib_functions(_ZLIB_1_2_1_4)],
         notes="Commit b4034d51 (FILEVERSION 1.2.1.4), the half-committed "
               "state before 1.2.1.5. NOT byte-identical to a build of "
               "unmodified upstream: the tree lacks four libjpeg private "
@@ -657,8 +800,10 @@ RECIPES = {
               "Info-ZIP project, <string> for C++ items, D3DX9 headers from "
               "a NuGet package). See the recipe docstring. Both executables "
               "statically link the in-tree zlib 1.2.11, libjpeg-turbo, "
-              "miniLZO and the Info-ZIP sources. The CRT is imported (/MD) "
-              "and stays attributed to data/MSVC.",
+              "miniLZO and the Info-ZIP sources; 41 exact zlib identifiers "
+              "are removed by name (exclude_functions, see the recipe "
+              "docstring), the rest is present under the UltraVNC family. "
+              "The CRT is imported (/MD) and stays attributed to data/MSVC.",
     ),
     "UltraVNC_1.8.3.0_msvc": Recipe(
         family="UltraVNC",
@@ -673,6 +818,7 @@ RECIPES = {
         artifacts=_ARTIFACTS,
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags=_NEW_FLAGS,
+        exclude_functions=[zlib_functions(_ZLIB_1_8_X)],
         notes=_NEW_NOTES % ("36c2389f (2026-09-12)", "1.8.3.0", ""),
     ),
     "UltraVNC_1.8.3.1_msvc": Recipe(
@@ -688,6 +834,7 @@ RECIPES = {
         artifacts=_ARTIFACTS,
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags=_NEW_FLAGS,
+        exclude_functions=[zlib_functions(_ZLIB_1_8_X)],
         notes=_NEW_NOTES % ("92bb19b9 (2026-10-18)", "1.8.3.1", ""),
     ),
     "UltraVNC_1.8.3.2_msvc": Recipe(
@@ -704,6 +851,7 @@ RECIPES = {
         artifacts=_ARTIFACTS,
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags=_NEW_FLAGS + _VB_FLAGS,
+        exclude_functions=[zlib_functions(_ZLIB_1_8_3_2)],
         notes=_NEW_NOTES % (
             "c757708e (2026-11-02)", "1.8.3.2", _VB_NOTES),
     ),

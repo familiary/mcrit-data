@@ -12,7 +12,8 @@ vcpkg is not used here. The six libraries of vcpkg.json are built from pinned
 sources as static libraries into deps-<arch>\\prefix (see _DEPS); the exe links
 them statically, as the vcpkg static triplet does, so those libraries'
 functions are in the image under the UltraVNC family exactly as in the MSVC
-images (overlap is measured in the README, not removed).
+images (overlap is measured in the README, not removed), except zlib: its
+functions are removed by name, see "zlib" below.
 
 Pinned dependencies (all CMake Release, static, no shared objects):
   zlib 1.3.1 (tarball, sha256 9a93b2b7...df23), zstd v1.5.7 (f8745da6),
@@ -123,52 +124,99 @@ three pinned commits; the cmake directory does not change between 1.8.2.9 and
     parser: syntax error.`; workgrpdomnt4 depends on it.
 
 Data. UltraVNC 1.8.3.1 (92bb19b9) has images (16: eight components, x86 and
-x64); 1.8.2.9 and 1.8.3.0 are described after this table. Counts, kept + removed = total,
-read from data/UltraVNC/provenance.json (kept = num_functions, removed =
-removed_runtime_functions):
+x64); 1.8.2.9 and 1.8.3.0 are described after this table. Counts, kept +
+removed + excluded = total, read from data/UltraVNC/provenance.json (kept =
+num_functions, removed = removed_runtime_functions, excluded =
+excluded_function_count, the zlib functions removed by name, see below):
 
-  x86  vncviewer.exe        4332 +  189 =  4521
-  x86  createpassword.exe     30 +   62 =    92
-  x86  setpasswd.exe          30 +  127 =   157
-  x86  setcad.exe              8 +   59 =    67
-  x86  testauth.exe            9 +  127 =   136
-  x86  authadmin.dll           9 +  114 =   123
-  x86  logging.dll            58 +  115 =   173
-  x86  vnchooks.dll           28 +   49 =    77
-  x64  vncviewer.exe        4118 +  182 =  4300
-  x64  createpassword.exe     53 +   64 =   117
-  x64  setpasswd.exe          53 +  123 =   176
-  x64  setcad.exe             21 +   61 =    82
-  x64  testauth.exe           28 +  124 =   152
-  x64  authadmin.dll          26 +  109 =   135
-  x64  logging.dll            52 +  110 =   162
-  x64  vnchooks.dll           69 +   50 =   119
+  x86  vncviewer.exe        4258 +  189 + 74 =  4521
+  x86  createpassword.exe     30 +   62 +  0 =    92
+  x86  setpasswd.exe          30 +  127 +  0 =   157
+  x86  setcad.exe              8 +   59 +  0 =    67
+  x86  testauth.exe            9 +  127 +  0 =   136
+  x86  authadmin.dll           9 +  114 +  0 =   123
+  x86  logging.dll            58 +  115 +  0 =   173
+  x86  vnchooks.dll           28 +   49 +  0 =    77
+  x64  vncviewer.exe        4044 +  182 + 74 =  4300
+  x64  createpassword.exe     53 +   64 +  0 =   117
+  x64  setpasswd.exe          53 +  123 +  0 =   176
+  x64  setcad.exe             21 +   61 +  0 =    82
+  x64  testauth.exe           28 +  124 +  0 =   152
+  x64  authadmin.dll          26 +  109 +  0 =   135
+  x64  logging.dll            52 +  110 +  0 =   162
+  x64  vnchooks.dll           69 +   50 +  0 =   119
 
-  Total over the 16 images: 8924 kept + 1665 removed = 10589.
+  Total over the 16 images: 8776 kept + 1665 removed + 148 excluded = 10589.
 
 Overlap with the MSVC images of the same version, 1.8.3.1 (distinct PicHashes of
-functions of 10+ instructions): the MinGW viewer has 2854 (x86) and 2570 (x64),
-the MSVC viewer 3534 and 3288, and they share 84 and 47. All eight MinGW
-components together (2919 / 2630) share 84 / 49 with the MSVC viewer plus
+functions of 10+ instructions): the MinGW viewer has 2792 (x86) and 2509 (x64),
+the MSVC viewer 3466 and 3220, and they share 84 and 47. All eight MinGW
+components together (2857 / 2569) share 84 / 49 with the MSVC viewer plus
 server; nothing beyond the viewer adds more than 2. A different compiler
 and standard library mostly changes the hashes, so this is a different axis
-rather than a duplicate.
+rather than a duplicate. (Before the zlib functions were excluded the viewers
+had 2854 / 2570 and 3534 / 3288 and the eight components 2919 / 2630; the
+shared counts did not change, since zlib's hashes are not shared between the
+two compilers.)
 
 UltraVNC 1.8.2.9 (97a077cc) and 1.8.3.0 (36c2389f) were built through the same
 pipeline with the same patches (patch 5 applies at both; every pattern matched
-the stated number of times) and have the same 16 images each. kept + removed =
-total per image, from data/UltraVNC/provenance.json (the 1.8.2.9 and 1.8.3.0
-numbers equal the 1.8.3.1 ones except for the viewer):
+the stated number of times) and have the same 16 images each. kept + removed +
+excluded = total per image, from data/UltraVNC/provenance.json (the 1.8.2.9 and
+1.8.3.0 numbers equal the 1.8.3.1 ones except for the viewer):
 
-  version  x86 vncviewer.exe  x64 vncviewer.exe  seven tools (x86 / x64)
-  1.8.2.9  4337 + 189 = 4526  4115 + 182 = 4297  as 1.8.3.1 above
-  1.8.3.0  4337 + 189 = 4526  4115 + 182 = 4297  as 1.8.3.1 above
+  version  x86 vncviewer.exe       x64 vncviewer.exe       seven tools (x86 / x64)
+  1.8.2.9  4263 + 189 + 74 = 4526  4041 + 182 + 74 = 4297  as 1.8.3.1 above
+  1.8.3.0  4263 + 189 + 74 = 4526  4041 + 182 + 74 = 4297  as 1.8.3.1 above
 
-  Totals over the 16 images: 8926 kept + 1665 removed = 10591 at both
-  versions. 1.8.3.1 (above): 8924 + 1665 = 10589.
+  Totals over the 16 images: 8778 kept + 1665 removed + 148 excluded = 10591 at
+  both versions. 1.8.3.1 (above): 8776 + 1665 + 148 = 10589.
+
+zlib (PR #69; Recipe.exclude_functions comes from PR #94, so #69 depends on
+#94). The viewer links zlib 1.3.1 statically, and its functions are PicHash-
+identical to data/libzlib, which `validate --deep` reported as leakage (one
+symbol name under TightVNC, UltraVNC and libzlib). The recipe now sets
+exclude_functions to one anchored pattern over 74 exact zlib identifiers
+(_ZLIB_FUNCTIONS; _vendored_zlib.py builds the pattern and states the test an
+identifier must pass). Per version, the 74 + 74 = 148 functions removed from the
+x86 and x64 viewers are, by evidence: 117 with a PicHash of 10 or more
+instructions in data/libzlib, 18 with fewer than 10 instructions and the
+PicHash of a libzlib function of the same name, and 13 (x86 only) whose hash
+differs from every libzlib build but whose opcode sequence is at least 80%
+similar to libzlib's function of that name. One zlib-named identifier is left
+in: `copy_block`, a 13-instruction function that does not match libzlib's. The
+tools contain no zlib: the recipe's pattern removes nothing from their images,
+so their kept counts are unchanged and only their provenance gains
+`excluded_function_count` 0. The images were re-derived from their archives,
+not rebuilt.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
+from ._vendored_zlib import zlib_functions
+
+# zlib 1.3.1, built statically into the viewer: exact identifiers whose every
+# function in the three recipes' viewers is zlib's (see _vendored_zlib.py).
+_ZLIB_FUNCTIONS = (
+    '_tr_align', '_tr_flush_bits', '_tr_flush_block', '_tr_init',
+    '_tr_stored_block', '_tr_tally', 'adler32', 'adler32_combine',
+    'adler32_combine64', 'adler32_z', 'build_tree', 'compress', 'compress2',
+    'compressBound', 'compress_block', 'crc32', 'crc32_combine',
+    'crc32_combine64', 'crc32_combine_gen', 'crc32_combine_gen64',
+    'crc32_combine_op', 'crc32_z', 'deflate', 'deflateBound', 'deflateCopy',
+    'deflateEnd', 'deflateGetDictionary', 'deflateInit2_', 'deflateInit_',
+    'deflateParams', 'deflatePending', 'deflatePrime', 'deflateReset',
+    'deflateResetKeep', 'deflateSetDictionary', 'deflateSetHeader',
+    'deflateTune', 'deflate_fast', 'deflate_slow', 'deflate_stored',
+    'fill_window', 'get_crc_table', 'inflate', 'inflateCodesUsed',
+    'inflateCopy', 'inflateEnd', 'inflateGetDictionary', 'inflateGetHeader',
+    'inflateInit2_', 'inflateInit_', 'inflateMark', 'inflatePrime',
+    'inflateReset', 'inflateReset2', 'inflateResetKeep',
+    'inflateSetDictionary', 'inflateSync', 'inflateSyncPoint',
+    'inflateUndermine', 'inflateValidate', 'inflate_fast', 'inflate_table',
+    'longest_match', 'pqdownheap', 'scan_tree', 'send_tree', 'uncompress',
+    'uncompress2', 'updatewindow', 'zError', 'zcalloc', 'zcfree',
+    'zlibCompileFlags', 'zlibVersion',
+)
 
 _ENV = {"CFLAGS": "", "CXXFLAGS": ""}
 
@@ -293,6 +341,7 @@ def _ultravnc(version, commit, patch_note):
         toolchains=["mingw_x86", "mingw_x64"],
         requires=["cmake", "make", "python3"],
         build_flags=_FLAGS,
+        exclude_functions=[zlib_functions(_ZLIB_FUNCTIONS)],
         notes="NOT byte-identical to a build of unmodified upstream: "
               "recipe-applied build-tree patches, see the recipe docstring. "
               "Commit %s; the 3rdparty/noVNC submodule is left uninitialised "
@@ -300,7 +349,10 @@ def _ultravnc(version, commit, patch_note):
               "1.5.7, xz 5.8.1, libjpeg-turbo 3.1.1, minizip-ng 4.0.10, "
               "libsodium 1.0.20) are built from pinned source as static "
               "libraries, so their functions are present under the UltraVNC "
-              "family. The MinGW C runtime glue is removed by the baseline. "
+              "family, except zlib's, which are removed by name "
+              "(exclude_functions: 74 exact zlib identifiers, see the recipe "
+              "docstring). The MinGW C runtime glue is removed by the "
+              "baseline. "
               "winvnc.exe is not built: upstream's CMake does not offer it."
               % (commit[:8], patch_note),
     )

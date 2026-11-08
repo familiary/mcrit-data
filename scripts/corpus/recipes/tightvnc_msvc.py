@@ -30,14 +30,32 @@ the exes (zlib, libjpeg); there is no external dependency and no DirectX SDK
 reference in the vcxproj files. No source patch.
 
 Overlaps, measured by PicHash over functions of ten instructions or more:
-84 (x86) and 107 (x64) hashes shared with UltraVNC, of 4083 and 3961 here;
-73 (x86) and 63 (x64) with data/libzlib, from the in-tree zlib 1.2.13 the
-exes link statically, and none with liblzma or libsodium. Those zlib
-functions are among the 59 PicHashes `validate --deep` fails on (TightVNC,
-UltraVNC and libzlib share one symbol name for each); see ultravnc_msvc.py.
+83 (x86) and 48 (x64) hashes shared with UltraVNC 1.8.2.9, of 4010 and 3890
+here (84 and 107, of 4083 and 3961, before the zlib functions were excluded);
+none with data/libzlib, liblzma or libsodium (73 and 63 with libzlib before).
+The zlib 1.2.13 the exes link statically was what `validate --deep` failed on
+(TightVNC, UltraVNC and libzlib shared one symbol name for each of 80
+PicHashes); it is now removed by name, see below and ultravnc_msvc.py.
 Kept functions per artefact whose name another artefact's baseline removed:
 8 on x64 and 23 on x86, STL and CRT inline instantiations. The x86 server
-has 3505 unnamed functions of 8143 (exception funclets).
+has 3505 unnamed functions of 8059 (exception funclets).
+
+zlib (PR #69, which depends on PR #94 for Recipe.exclude_functions). The
+exclude_functions pattern is anchored on 85 exact zlib identifiers
+(_ZLIB_FUNCTIONS, built by _vendored_zlib.py). Every function the pattern
+removes is zlib's: of the 250 removed from the eight images, 194 have a
+PicHash of 10 or more instructions that is in data/libzlib, 48 have fewer
+than 10 instructions and the PicHash of a libzlib function of the same name,
+and 8 (x64 `_tr_tally`, `compress_block`, `crc32_z` twice, `deflate_fast`,
+`deflate_slow` and `inflate` twice, whose hash differs from every libzlib
+build) match the libzlib function of that name and architecture in opcode
+sequence at 100% (frame-pointer set-up ignored). Every zlib-named function in
+the images matches the pattern; none is left in. The images were re-derived from their
+archives, not rebuilt. Kept / removed / excluded / total, 2.8.85: tvnserver
+8059 / 1501 / 84 / 9644 (x86), 6845 / 1513 / 83 / 8441 (x64); tvnviewer 5553 /
+1547 / 42 / 7142 (x86), 4834 / 1554 / 41 / 6429 (x64). 2.8.90: tvnserver 8071
+/ 1501 / 84 / 9656 (x86), 6849 / 1513 / 83 / 8445 (x64); tvnviewer 5545 /
+1548 / 42 / 7135 (x86), 4829 / 1555 / 41 / 6425 (x64).
 
 Flags forced from the command line, because the projects ask for the
 opposite: /MT -> /MD (the CRT is imported rather than linked, so it stays
@@ -50,6 +68,35 @@ there is no static/dynamic MFC choice to record.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
+from ._vendored_zlib import zlib_functions
+
+
+# The zlib 1.2.13 the exes link statically: exact identifiers, every function
+# of each name in the four images of a version is zlib's (see
+# _vendored_zlib.py for the test and the docstring above for the counts).
+_ZLIB_FUNCTIONS = (
+    '_tr_align', '_tr_flush_bits', '_tr_flush_block', '_tr_init',
+    '_tr_stored_block', '_tr_tally', 'adler32', 'adler32_combine',
+    'adler32_combine64', 'adler32_combine_', 'adler32_z', 'bi_flush',
+    'bi_windup', 'build_tree', 'compress_block', 'crc32', 'crc32_combine',
+    'crc32_combine64', 'crc32_combine_gen', 'crc32_combine_gen64',
+    'crc32_combine_op', 'crc32_z', 'deflate', 'deflateBound', 'deflateCopy',
+    'deflateEnd', 'deflateGetDictionary', 'deflateInit2_', 'deflateInit_',
+    'deflateParams', 'deflatePending', 'deflatePrime', 'deflateReset',
+    'deflateResetKeep', 'deflateSetDictionary', 'deflateSetHeader',
+    'deflateTune', 'deflate_fast', 'deflate_huff', 'deflate_rle',
+    'deflate_slow', 'deflate_stored', 'fill_window', 'flush_pending',
+    'gen_bitlen', 'gen_codes', 'get_crc_table', 'inflate', 'inflateCodesUsed',
+    'inflateCopy', 'inflateEnd', 'inflateGetDictionary', 'inflateGetHeader',
+    'inflateInit2_', 'inflateInit_', 'inflateMark', 'inflatePrime',
+    'inflateReset', 'inflateReset2', 'inflateResetKeep',
+    'inflateSetDictionary', 'inflateSync', 'inflateSyncPoint',
+    'inflateUndermine', 'inflateValidate', 'inflate_fast', 'inflate_table',
+    'init_block', 'longest_match', 'multmodp', 'pqdownheap', 'putShortMSB',
+    'read_buf', 'scan_tree', 'send_all_trees', 'send_tree', 'slide_hash',
+    'syncsearch', 'updatewindow', 'x2nmodp', 'zError', 'zcalloc', 'zcfree',
+    'zlibCompileFlags', 'zlibVersion',
+)
 
 
 _PROPS = (
@@ -137,13 +184,16 @@ def _tightvnc(version, sha256):
         ],
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags=_FLAGS,
+        exclude_functions=[zlib_functions(_ZLIB_FUNCTIONS)],
         notes="No version is evidenced for the Kimsuky sample (issue #70); "
               "this is one of two 2.8 releases pinned by judgement. The "
               "exes statically link the in-tree zlib and libjpeg projects, "
-              "so functions from those libraries are present here under "
-              "the TightVNC family; the CRT is imported (/MD) and stays "
-              "attributed to data/MSVC. tvnserver.exe is the service-capable "
-              "server the issue names; tvnviewer.exe shares its RFB code.",
+              "so libjpeg's functions are present here under the TightVNC "
+              "family; zlib's are removed by name (exclude_functions: 85 exact "
+              "zlib identifiers, see the recipe docstring); the CRT is "
+              "imported (/MD) and stays attributed to data/MSVC. "
+              "tvnserver.exe is the service-capable server the issue names; "
+              "tvnviewer.exe shares its RFB code.",
     )
 
 
