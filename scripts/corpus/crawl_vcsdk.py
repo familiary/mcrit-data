@@ -173,7 +173,18 @@ def unpack_cab(cab, destination):
     print("%d CAB members mapped to file names, %d are not libraries or "
           "runtime DLLs (compilers, props, ...)" % (len(files), len(unmatched)),
           flush=True)
-    return {name: items[0] for name, items in files.items()}
+    # link.exe decides between an archive and an object by the file name's
+    # extension, and a key such as FL_libcpmt_lib_x64 has none, so every file
+    # is copied to its installed name first.
+    named = os.path.join(destination, "named")
+    os.makedirs(named, exist_ok=True)
+    result = {}
+    for name, items in files.items():
+        key, full = items[0]
+        target = os.path.join(named, name)
+        shutil.copyfile(full, target)
+        result[name] = (key, target)
+    return result
 
 
 def compiler_records(data):
