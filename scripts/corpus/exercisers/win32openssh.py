@@ -33,7 +33,9 @@ VCPKG_BASELINE = "9eec002df1cd109f8f104cd966a763daf9751489"
 
 OPENSSH = os.path.join("contrib", "win32", "openssh")
 
-# _ACRTIMP= : the fork's win32compat\\inc headers rename CRT functions with
+# _ACRTIMP= and _DCRTIMP= (the second added after run 42511463886, whose
+# only remaining error was process.h(48,26) C2375 for w32_system, declared
+# _DCRTIMP in the SDK; not built again): the fork's win32compat\\inc headers rename CRT functions with
 # macros (#define system w32_system) and declare the replacement plainly; the
 # SDK's own declaration of the same function carries __declspec(dllimport)
 # under /MD (_ACRTIMP), and cl stops with C2375 "redefinition; different
@@ -49,7 +51,7 @@ PROPS = """<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <PreprocessorDefinitions>_ACRTIMP=;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_ACRTIMP=;_DCRTIMP=;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>%(vcpkg)s\\include;%%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Lib>
