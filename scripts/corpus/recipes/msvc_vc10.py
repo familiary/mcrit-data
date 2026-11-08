@@ -25,6 +25,32 @@ sharing PicHash and name are collapsed (dedupe_functions); the number
 collapsed is in provenance. The image is verified by SHA-256 before use and the
 compiler records of every library object (front end and back end 16.0.30319,
 machine AMD64) are written to provenance.
+
+Measured (CI run 42513443097, scratch/msvc-vc10x64; kept + collapsed = functions
+before collapsing; no runtime baseline removes anything):
+
+  libcmt 4653 (+140 collapsed)      libcmtd 4904 (+134)
+  libcpmt 2617 (+96)   libcpmt1 2729 (+105)   libcpmtd 3356 (+106)
+  libcpmtd0 3129 (+111)   libcpmtd1 3309 (+111)
+  msvcrt+msvcprt+oldnames 139 (+13)   msvcrtd+msvcprtd 145 (+12)
+  comsupp+comsuppw+delayimp 64 (+7)   comsuppd+comsuppwd+runtmchk 98 (+9)
+  objs 36 (+1)
+  msvcr100 2822 (+3)   msvcp100 2021 (+350)
+  msvcr100d 4585 (+118)   msvcp100d 4390 (+394)
+  total 38997 kept, 1710 collapsed.
+
+PicHash overlap (functions of 10+ instructions; 8430 distinct in the new data):
+0 with data/MSVC 2010_Express_x86 (11488 distinct; a different instruction
+set, so none is expected), 1479 (17.5% of the new, 17.4% of the old) with
+data/MSVC 2012_Express_x64 (8492 distinct). Inside the family, 1320 of libcmt's
+2203 hashes are also in msvcr100 and 2592 of libcmtd's 2781 in msvcr100d.
+
+The start-up objects are linked without their /clr:pure twins (pbinmode.obj
+and the like, LNK1313); msvcrt, msvcprt and oldnames are linked from their
+object members because link /WHOLEARCHIVE rejects import records (LNK1127).
+oldnames.lib and chkstk.obj are assembler/alias thunks and carry no compiler
+record. The x64 msvcr100.dll in the SDK is the CLR 4.0 build
+(OriginalFilename msvcr100_clr0400.dll, FileVersion 10.00.30319.1).
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

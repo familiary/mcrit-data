@@ -540,6 +540,8 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| VC9 (VS 2008) x64 CRT | - | no reachable, verifiable source. The Windows SDK 7.0 / 6.1 pages are gone from microsoft.com (`details.aspx?id=18950` and `id=11310` answer 404 through the proxy; `id=8442` is SDK 7.1, which ships VC10), web.archive.org answers 403 / connection reset for page content, and `download.microsoft.com/.../GRMSDKX_EN_DVD.iso` under the SDK 7.0 folder GUID I tried answered 400, `GRMSDK_EN_DVD.iso` 404, two `6.0.6001.18000.367-KRMSDK_EN.iso` paths 404 each. archive.org only holds the SDK 7.1 ISOs (same bytes size 598589440), a Visual Studio 2008 ISO of unknown edition (3.5 GB, uploader hash only) and a Server 2008 RC0 SDK (a release candidate); none can be checked against a Microsoft digest. |
+| VC8 (VS 2005) x64 CRT | - | no reachable, verifiable source: the Platform SDK for Windows Server 2003 R2 (March 2006) exists on archive.org (`en_platformsdk_windowsr2_march2006.iso`, 429840384 bytes) with only the uploader's SHA-1, and no Microsoft page or digest could be reached to verify it; not built. |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |
