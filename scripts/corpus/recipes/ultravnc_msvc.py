@@ -109,15 +109,79 @@ unmodified upstream. Every change, with its reason:
     v1.7.0 lacks core/clipboard.js). The resource section of winvnc.exe
     therefore carries the web viewer scripts of that older noVNC, not of
     b493d9bb. Code is unaffected.
-  * 1.8.3.2 (c757708e, the head of upstream's default branch) builds winvnc.exe
-    but not vncviewer.exe: `ClientConnectionUltra2.cpp(18,10): error C1083:
-    Cannot open include file: 'ViewerBounds.h'`. 6c44cfc ("harden code against
-    buffer overruns") added `#include "ViewerBounds.h"` to ClientConnectionCursor,
-    ClientConnectionUltra2 and FileTransfer and never committed the header; it is
-    in none of upstream's four branches (main, 1.9.0.0, 1.8.4.0_feature_requests,
-    feature/VeNCryptTLS). Nothing is invented to stand in for it:
-    1.8.3.2 is built with its server only, and the viewer is taken from 1.8.3.1
-    (92bb19b9), the last release before that commit, which builds both.
+  * 1.8.3.2 (c757708e, the head of upstream's default branch) builds both
+    executables, x86 and x64 (run 42440991418), only with two headers the
+    recipe writes into the build tree: this vncviewer.exe is NOT byte-identical
+    to unmodified upstream, and neither header is upstream's. Commit 6c44cfc
+    ("harden code against buffer overruns") added `#include "ViewerBounds.h"`
+    to ClientConnection, ClientConnectionCursor, ClientConnectionUltra2 and
+    FileTransfer (.cpp) and `#include "ViewerJpegSource.h"` to
+    ClientConnectionTight and ClientConnectionUltra2, and committed neither
+    header; they are in none of upstream's four branches (main, 1.9.0.0,
+    1.8.4.0_feature_requests, feature/VeNCryptTLS; upstream has no tags) and
+    GitHub code search finds no file of either name. Run 42440127604 (before
+    any stand-in) failed at the first one:
+        ClientConnectionUltra2.cpp(18,10): error C1083: Cannot open include
+        file: 'ViewerBounds.h': No such file or directory
+    and, with ViewerBounds.h supplied, at the second:
+        ClientConnectionUltra2.cpp(25,10): error C1083: Cannot open include
+        file: 'ViewerJpegSource.h': No such file or directory
+    A scan of every quoted and angle-bracket include in vncviewer\\ and rfb\\
+    found no other header absent from the tree (the rest are system, vcpkg or
+    sibling-directory headers that the 1.8.3.1 viewer resolves the same way).
+    scripts/corpus/exercisers/ultravnc_standin_headers.py writes both files
+    into vncviewer\\ of the build tree before msbuild runs; nothing is added to
+    a source tree. Both are RECONSTRUCTIONS from the 24 + 6 call sites and
+    from the code 6c44cfc deleted at them. What is known and what is chosen:
+      ViewerBounds (namespace of function templates, any integer types):
+      - clipAxis(position, length, limit, offset): in-out ints and an out
+        offset; the per-axis clipping that 6c44cfc removed from
+        SoftCursorToScreen, copied in behaviour.
+      - rectangle(x, y, w, h, fbW, fbH): the removed body of
+        Check_Rectangle_borders (x, y >= 0, x + w <= fbW, y + h <= fbH, no
+        wrap-around), written without overflowing additions. Also the new test
+        in Copyto0buffer, where the removed test was weaker.
+      - framebuffer(w, h, bytesPerPixel): the removed ReadNewFBSize test
+        ("a screensize > 20 000 is not possible with current OS"): 0 <= each
+        side <= 20000. The bytes-per-pixel argument is accepted and only
+        required to be non-negative. CHOSEN, not known: whether upstream also
+        caps the byte total.
+      - payload(n): 0 <= n <= 104857600. CHOSEN from the literal 104857600 that
+        ReadCursorShape and DecompressJpegRect pass as a buffer limit and the
+        104857596 (= that - 4) cap ReadScreenUpdate puts on compressed sizes
+        before asking for size + 4 bytes.
+      - range(offset, length, size): [offset, offset + length) inside
+        [0, size], all non-negative, overflow-free. Replaces `m_nCSOffset <
+        m_nCSBufferSize` (now with length 4) and `nIndex < nLen - 3`.
+      - pixels(w, h, bytesPerPixel, limit): w * h * bytesPerPixel <= limit,
+        all non-negative, overflow-free (zero sizes pass: ReadCursorShape
+        returns early on an empty cursor after calling it).
+      ViewerJpeg (three functions forwarded to by the JpegInitSource,
+      JpegFillInputBuffer and JpegSkipInputData callbacks):
+      - their bodies are the callbacks' removed bodies (error flag set, input
+        window reset, or the skip performed). The error flag is reached through
+        cinfo->client_data, which both callers set to &jpegError.
+      - RECONSTRUCTED: the removed code reset the window from file-scope
+        jpegBufferPtr / jpegBufferLen, which 6c44cfc turned into caller locals
+        a callback cannot see. initSource therefore records
+        cinfo->src->next_input_byte / bytes_in_buffer, which the callers have
+        set when libjpeg calls it from jpeg_read_header, per thread.
+    Verified here only with g++ (-std=c++11/14): the six ViewerBounds shapes
+    with every argument type the callers pass, and ViewerJpeg round-tripped
+    through libjpeg (a full image decodes with the flag clear; a truncated one
+    sets it). The MSVC build is the run above. winvnc.exe includes neither
+    header. Kept / removed / total: 6343 / 1588 / 7931 (x86 viewer), 6107 /
+    1617 / 7724 (x64 viewer). PicHash overlap (functions of 10+ instructions,
+    distinct hashes) against the 1.8.3.1 viewer: 3235 of 3574 (90.5%) x86,
+    2849 of 3321 (85.8%) x64; the hardening commit changed much of the viewer.
+    Surviving glue names (kept functions whose name is in another UltraVNC
+    msvc143 image's removed list, same architecture): x86 4 (std::bad_alloc,
+    std::bad_array_new_length, std::bad_cast, std::exception constructors),
+    x64 0. The same run also rebuilt winvnc.exe, which was not adopted: the
+    committed images (run before this one) stay, because the rebuild differs
+    (x64 7245 functions against 7258, x86 7658 against 7670; same compiler
+    19.44.35229) and the cause was not isolated. Kept / removed / total of the
+    committed winvnc: 7258 / 1716 / 8974 (x64), 7670 / 1648 / 9318 (x86).
   * 1.2.1.5 (9761329e) needed six things.
     (1) zip32 failed with 240 errors from winnt.h, `error C2143: syntax error:
     missing ':' before 'constant'`. Cause, found by reading winnt.h of SDK
