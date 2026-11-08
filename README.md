@@ -53,6 +53,7 @@ Libraries
 * [protobuf](#protobuf)
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
+* [gperftools](#gperftools)
 * [libstdc++](#libstdcxx)
 
 Runtimes
@@ -662,6 +663,22 @@ Generated with `scripts/build_corpus.py`; see `data/jemalloc/provenance.json` fo
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | jemalloc | 5.3.0 | MinGW-w64 GCC 13 | [x86 PE](data/jemalloc/x86/mcrit/jemalloc_5.3.0_mingw13_x86_jemalloc.dll.mcrit) / [x64 PE](data/jemalloc/x64/mcrit/jemalloc_5.3.0_mingw13_x64_jemalloc.dll.mcrit) | [x86 PE](data/jemalloc/x86/smda/jemalloc_5.3.0_mingw13_x86_jemalloc.dll.7z) / [x64 PE](data/jemalloc/x64/smda/jemalloc_5.3.0_mingw13_x64_jemalloc.dll.7z) |
+<!-- /generated -->
+
+### gperftools<a id='gperftools'></a>
+
+`tcmalloc_minimal` from gperftools, the thread-caching malloc. One of the allocators that genuinely ends up statically linked into Windows binaries, so its bodies turn up wearing the host program's name - which is what a reference family is for.  
+**This family was in the not-built table and the reason had gone stale.** It was excluded because gperftools' Windows port targeted MSVC and `src/windows/port.h` clashed with mingw's `nanosleep` linkage, needing a source patch. That was true of a much older release, whose only Windows builds were autotools and the checked-in Visual Studio projects. Modern gperftools ships a top-level `CMakeLists.txt` with explicit `if(MINGW OR MSVC)` branches, and nanosleep is now settled by a feature probe rather than a header clash - configuring the cross-build prints `-- Looking for nanosleep - not found` and carries on. The MinGW cross-build completes with **no patch of any kind**.  
+`tcmalloc_minimal` rather than the full `tcmalloc`: it is the variant projects actually link, it needs no stack-trace or profiler machinery, and the heap-profiler half of the full library wants libunwind support that does not cross-build. `--target` names it, so the tests and benchmarks are never built.  
+Counts are kept / removed as compiler runtime / image total: **626 / 140 / 766** on x86 and **603 / 133 / 736** on x64. Symbol coverage is high for a C++ library - 95.2 per cent of all functions on x64 carry a name, and the ratio over functions of three instructions or more is 1.00.  
+Upstream's own CMakeLists ends by warning that *"gperftools' cmake support is incomplete and is best-effort only"*. That is recorded rather than argued with: it is a statement about feature coverage, and what this recipe needs from it - one cross-compiled, optimised shared library with symbols - it delivers.
+
+Generated with `scripts/build_corpus.py`; see `data/gperftools/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: gperftools -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| gperftools | 2.19.2 | MinGW-w64 GCC 13 | [x86 PE](data/gperftools/x86/mcrit/gperftools_2.19.2_mingw13_x86_tcmalloc_minimal.dll.mcrit) / [x64 PE](data/gperftools/x64/mcrit/gperftools_2.19.2_mingw13_x64_tcmalloc_minimal.dll.mcrit) | [x86 PE](data/gperftools/x86/smda/gperftools_2.19.2_mingw13_x86_tcmalloc_minimal.dll.7z) / [x64 PE](data/gperftools/x64/smda/gperftools_2.19.2_mingw13_x64_tcmalloc_minimal.dll.7z) |
 <!-- /generated -->
 
 ### libstdc++<a id='libstdcxx'></a>
