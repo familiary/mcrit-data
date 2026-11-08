@@ -187,23 +187,198 @@ def unpack_cab(cab, destination):
     return result
 
 
+# ---------------------------------------------------------------------------
+# Pooled profiles: media whose files are spread over many CABs, named by
+# installer keys that do not say which platform a file is for (every platform's
+# libcmt.lib is FL_libcmt_lib_<n>_<n>_x86_ln). The platform is read from the
+# files instead: the COFF machine field of the objects inside.
+#
+# Each pattern is (regex, extension or None for the captured group, whether
+# the machine of the file must be checked).
+PROFILES = {
+    # Visual Studio 2008 (VC9, cl 15.00.21022): root CABs of the DVD image.
+    "vs2008": {
+        "members": r"^cab\d+\.cab$",
+        "filters": ["FL_*_lib_*", "FL_*_obj_*",
+                    "msvc*90*.dll.*_x64.RTM", "F_msvc*_amd64_pdb"],
+        "patterns": [
+            # msvcr90.dll.21022.08.Microsoft_VC90_CRT_x64.RTM
+            (re.compile(r"^(?P<name>msvc[mpr]90d?)\.dll\.\d+\.\d+\."
+                        r"Microsoft_VC90_(?:Debug)?CRT_x64\.RTM$"), "dll", False),
+            (re.compile(r"^F_(?P<name>msvc[mpr]90d?)_amd64_pdb$"), "pdb", False),
+            (re.compile(r"^FL_(?P<name>[A-Za-z0-9]+)_(?P<ext>lib|obj)_\d+_\d+_"
+                        r"x86_ln(?:\..*)?$"), None, True),
+        ],
+    },
+    # Platform SDK for Windows Server 2003 R2 (March 2006): the AMD64 build
+    # CABs, members named <file>_<ext>.<guid>.
+    "psdk2003r2": {
+        "members": r"^Setup/PSDK-SDK_Core_BLD_AMD64-common\.\d+\.cab$",
+        "filters": ["*_lib.*", "*_obj.*"],
+        "patterns": [
+            (re.compile(r"^(?P<name>[A-Za-z0-9]+)_(?P<ext>lib|obj)\."
+                        r"[0-9A-F]{8}(?:_[0-9A-F]{4}){3}_[0-9A-F]{12}$"), None, True),
+        ],
+    },
+}
+
+IMAGE_FILE_MACHINE_AMD64 = 0x8664
+
+
+def member_machines(path):
+    """The set of COFF machine values of an object, or of an archive's members."""
+    with open(path, "rb") as handle:
+        data = handle.read()
+    if data[:8] != b"!<arch>\n":
+        return {struct.unpack_from("<H", data, 0)[0]}
+    machines, offset = set(), 8
+    while offset + 60 <= len(data):
+        header = data[offset:offset + 60]
+        name = header[:16].decode("latin1").strip()
+        size = int(header[48:58])
+        body = data[offset + 60:offset + 60 + size]
+        offset += 60 + size + (size & 1)
+        if name in ("/", "//") or len(body) < 8:
+            continue
+        if body[:4] == b"\x00\x00\xff\xff" and struct.unpack_from("<H", body, 4)[0] < 2:
+            machines.add(struct.unpack_from("<H", body, 6)[0])
+        else:
+            machines.add(struct.unpack_from("<H", body, 0)[0])
+    return machines
+
+
+def fetch_pool(args, profile, cache):
+    """Download and hash the image, extract the profile's CABs; return the
+    list of CAB paths and the provenance record."""
+    os.makedirs(cache, exist_ok=True)
+    marker = os.path.join(cache, args.profile + "-members.json")
+    if os.path.isfile(marker):
+        with open(marker, encoding="utf-8") as handle:
+            record = json.load(handle)
+        if record.get("image_sha256") == args.iso_sha256 and all(
+                os.path.isfile(m["path"]) for m in record["members"]):
+            print("reusing %d extracted CABs" % len(record["members"]), flush=True)
+            return [m["path"] for m in record["members"]], record
+    iso = os.path.join(cache, os.path.basename(args.iso_url))
+    if not os.path.isfile(iso):
+        print("downloading %s" % args.iso_url, flush=True)
+        download(args.iso_url, iso)
+    observed = sha256_file(iso)
+    print("image sha256 %s (%d bytes)" % (observed, os.path.getsize(iso)), flush=True)
+    if observed != args.iso_sha256:
+        raise SystemExit("%s hashes to %s, expected %s; refusing to use it"
+                         % (args.iso_url, observed, args.iso_sha256))
+    sevenzip = find_7z()
+    code, listing = run([sevenzip, "l", "-slt", iso])
+    wanted = re.compile(profile["members"])
+    names = [line[len("Path = "):].replace("\\", "/")
+             for line in listing.splitlines() if line.startswith("Path = ")]
+    chosen = sorted(n for n in names if wanted.match(n))
+    if not chosen:
+        raise SystemExit("no member of the image matches %s; the image holds:\n%s"
+                         % (profile["members"], "\n".join(names[:200])))
+    extract = os.path.join(cache, "iso-members")
+    os.makedirs(extract, exist_ok=True)
+    code, output = run([sevenzip, "x", "-y", "-o" + extract, iso] + chosen)
+    if code != 0:
+        raise SystemExit("7z could not extract the CABs (exit %d):\n%s"
+                         % (code, output[-3000:]))
+    members = []
+    for name in chosen:
+        path = os.path.join(extract, *name.split("/"))
+        members.append({"name": name, "path": path, "sha256": sha256_file(path),
+                        "bytes": os.path.getsize(path)})
+    record = {"image_url": args.iso_url, "image_sha256": observed,
+              "image_bytes": os.path.getsize(iso), "members": members}
+    with open(marker, "w", encoding="utf-8") as handle:
+        json.dump(record, handle)
+    if args.free_disk:
+        os.remove(iso)
+    return [m["path"] for m in members], record
+
+
+def unpack_pool(cabs, profile, destination):
+    """Extract the wanted members of every CAB into one directory and map
+    them to installed file names; returns {file name: (key, path)} and the
+    selection record."""
+    sevenzip = find_7z()
+    os.makedirs(destination, exist_ok=True)
+    for cab in cabs:
+        code, output = run([sevenzip, "x", "-y", "-o" + destination, cab]
+                           + profile["filters"])
+        # exit 1 / 2 are warnings (no matching file in this CAB, bytes after
+        # the CAB's end); a real failure leaves nothing to map below.
+        if code not in (0, 1, 2):
+            raise SystemExit("7z could not unpack %s (exit %d):\n%s"
+                             % (cab, code, output[-2000:]))
+    candidates = {}
+    for key in sorted(os.listdir(destination)):
+        full = os.path.join(destination, key)
+        if not os.path.isfile(full):
+            continue
+        for pattern, ext, check in profile["patterns"]:
+            match = pattern.match(key)
+            if match:
+                extension = ext or match.group("ext")
+                candidates.setdefault(
+                    ("%s.%s" % (match.group("name"), extension)).lower(),
+                    []).append((key, full, check))
+                break
+    named = os.path.join(destination, "named")
+    os.makedirs(named, exist_ok=True)
+    result, selection, skipped = {}, {}, {}
+    for name, items in sorted(candidates.items()):
+        if items[0][2]:
+            described = [(key, full, member_machines(full)) for key, full, _ in items]
+            # machine 0 is an object with no target (aliases, headers): ignored
+            amd64 = [d for d in described
+                     if d[2] - {0} == {IMAGE_FILE_MACHINE_AMD64}]
+            neutral = [d for d in described if d[2] <= {0}]
+            if amd64:
+                chosen = amd64
+            elif len(neutral) == 1:
+                chosen = neutral
+            else:
+                skipped[name] = [(k, sorted(m)) for k, _, m in described]
+                continue
+            digests = {sha256_file(full) for _, full, _ in chosen}
+            if len(digests) != 1:
+                raise SystemExit("%s: %d different AMD64 candidates: %s"
+                                 % (name, len(digests), [k for k, _, _ in chosen]))
+            key, full, _ = chosen[0]
+            selection[name] = {"cab_member": key, "candidates": len(items),
+                               "machine": "AMD64" if amd64 else "none (alias-only)"}
+        else:
+            if len({sha256_file(full) for _, full, _ in items}) != 1:
+                raise SystemExit("%s: several different CAB members: %s"
+                                 % (name, [k for k, _, _ in items]))
+            key, full, _ = items[0]
+            selection[name] = {"cab_member": key, "candidates": len(items)}
+        target = os.path.join(named, name)
+        shutil.copyfile(full, target)
+        result[name] = (key, target)
+    print("%d files selected, %d skipped as ambiguous: %s" % (
+        len(result), len(skipped), json.dumps(skipped)), flush=True)
+    return result, {"selected_files": selection, "skipped_ambiguous": skipped}
+
+
+
 def compiler_records(data):
     """Count CodeView compiler records: {(machine, front end, back end): n}.
 
     S_COMPILE2/S_COMPILE3 sit in every object's .debug$S, directly before the
     producer string; the version numbers in them are what the compiler
-    reported, not what a file name claims.
+    reported, not what a file name claims. The record is found from the
+    string backwards: the fixed fields end exactly where the string starts.
     """
     counts = Counter()
     for match in re.finditer(rb"Microsoft \(R\) [A-Za-z ]*Compiler\x00", data):
-        end = match.end()
-        for back in range(8, 48):
-            offset = match.start() - back
+        for kind, fixed in ((CODEVIEW_COMPILE3, 4 + 22), (CODEVIEW_COMPILE2, 4 + 18)):
+            offset = match.start() - fixed
             if offset < 0:
-                break
-            length, kind = struct.unpack_from("<HH", data, offset)
-            if kind not in (CODEVIEW_COMPILE2, CODEVIEW_COMPILE3) \
-                    or offset + 2 + length != end:
+                continue
+            _length, found = struct.unpack_from("<HH", data, offset)
+            if found != kind:
                 continue
             if kind == CODEVIEW_COMPILE2:
                 _, machine, fma, fmi, fbd, bma, bmi, bbd = struct.unpack_from(
@@ -372,7 +547,16 @@ def cmd_libs(args, files, source_record, out_dir):
     source_record["clr_pure_objects_not_linked"] = sorted(
         os.path.basename(p) for p in pure)
     for spec in args.names:
-        group = [part for part in spec.split("+") if part]
+        # A trailing "~" marks a library that may be absent from the medium
+        # (or ambiguous in a pooled one); it is then left out and recorded.
+        parts = [part for part in spec.split("+") if part]
+        group, missing = [], []
+        for part in parts:
+            stem = part.rstrip("~")
+            if part.endswith("~") and stem != "objs" and stem + ".lib" not in libs:
+                missing.append(stem)
+            else:
+                group.append(stem)
         paths, group_objs, split_info = [], [], []
         for stem in group:
             if stem == "objs":
@@ -390,14 +574,18 @@ def cmd_libs(args, files, source_record, out_dir):
                                    "import_records_left_out": imports})
             else:
                 paths.append(libs[stem + ".lib"])
-        name = spec.replace("+", "_")
+        name = spec.replace("~", "").replace("+", "_")
         note = {"libraries": [{"file": s + ".lib",
                                "cab_member": files[s + ".lib"][0],
                                "sha256": sha256_file(libs[s + ".lib"]),
                                "bytes": os.path.getsize(libs[s + ".lib"]),
                                "linked_as": "objects" if s in SPLIT_LIBS
-                               else "whole archive"}
+                               else "whole archive",
+                               "selection": getattr(args, "selection", {}).get(
+                                   s + ".lib")}
                               for s in group if s != "objs"]}
+        if missing:
+            note["optional_libraries_not_found"] = missing
         if split_info:
             note["split_libraries"] = split_info
         if "objs" in group:
@@ -417,6 +605,8 @@ def cmd_dlls(args, files, source_record, out_dir):
         info = dict(source_record)
         info.update({
             "cab_members": [files[stem + ".dll"][0], files[stem + ".pdb"][0]],
+            "selection": {k: getattr(args, "selection", {}).get(k)
+                          for k in (stem + ".dll", stem + ".pdb")},
             "dll_sha256": sha256_file(os.path.join(out_dir, stem + ".dll")),
             "pdb_sha256": sha256_file(os.path.join(out_dir, stem + ".pdb")),
             "pe": pe_version_info(os.path.join(out_dir, stem + ".dll")),
@@ -430,8 +620,12 @@ def main():
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--iso-url", required=True)
     parser.add_argument("--iso-sha256", required=True)
-    parser.add_argument("--cab", required=True,
-                        help="path of the CAB inside the image")
+    parser.add_argument("--cab", help="path of the one CAB inside the image "
+                        "(single-CAB media: Windows SDK 7.1)")
+    parser.add_argument("--profile", choices=sorted(PROFILES),
+                        help="pooled media: see PROFILES")
+    parser.add_argument("--free-disk", action="store_true",
+                        help="delete the downloaded image once its CABs are out")
     parser.add_argument("--cache", default=os.path.join(
         tempfile.gettempdir(), "mcrit-vcsdk-cache"),
         help="where the image and the unpacked CAB are kept between runs")
@@ -442,10 +636,24 @@ def main():
                              "dlls: msvcr100 msvcp100")
     args = parser.parse_args()
     args.iso_sha256 = args.iso_sha256.lower()
-    cab, record = fetch_cab(args, args.cache)
-    unpacked = os.path.join(args.cache, "cab-" + record["cab_sha256"][:16])
-    files = unpack_cab(cab, unpacked)
-    files = {name: (key, path) for name, (key, path) in files.items()}
+    if bool(args.cab) == bool(args.profile):
+        parser.error("give exactly one of --cab and --profile")
+    if args.cab:
+        cab, record = fetch_cab(args, args.cache)
+        unpacked = os.path.join(args.cache, "cab-" + record["cab_sha256"][:16])
+        files = unpack_cab(cab, unpacked)
+        files = {name: (key, path) for name, (key, path) in files.items()}
+    else:
+        profile = PROFILES[args.profile]
+        cabs, record = fetch_pool(args, profile, args.cache)
+        files, selection = unpack_pool(
+            cabs, profile, os.path.join(args.cache, args.profile + "-pool"))
+        record = dict(record)
+        args.selection = selection["selected_files"]
+        record["skipped_ambiguous"] = selection["skipped_ambiguous"]
+        record["members"] = [{k: v for k, v in m.items() if k != "path"}
+                             for m in record["members"]]
+        record["profile"] = args.profile
     os.makedirs(args.out, exist_ok=True)
     out_dir = os.path.abspath(args.out)
     if args.mode == "libs":

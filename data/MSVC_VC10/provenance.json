@@ -1,0 +1,1225 @@
+{
+  "MSVC_VC10_10.0.30319_msvc143_x64_comsupp_comsuppw_delayimp": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "comsupp_comsuppw_delayimp.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "comsupp_comsuppw_delayimp",
+    "deduplicated_functions": 7,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "clr_pure_objects_not_linked": [
+        "pbinmode.obj",
+        "pcommode.obj",
+        "pinvalidcontinue.obj",
+        "pnewmode.obj",
+        "pnoarg.obj",
+        "pnoenv.obj",
+        "pnothrownew.obj",
+        "psetargv.obj",
+        "pthreadlocale.obj",
+        "pwsetargv.obj"
+      ],
+      "compiler_records": [
+        {
+          "back_end": "16.0.30319",
+          "front_end": "16.0.30319",
+          "objects": 13,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 428206,
+            "cab_member": "FL_comsupp_lib_74642_74642_amd64_ln.3643236F_FC70_11D3_A536_0090278A1BB8",
+            "file": "comsupp.lib",
+            "linked_as": "whole archive",
+            "sha256": "137cb7012eca12ca51d2723400c10af891e871bb9916913b585e4d34c824ff3a"
+          },
+          {
+            "bytes": 428010,
+            "cab_member": "FL_comsuppw_lib_74644_74644_amd64_ln.3643236F_FC70_11D3_A536_0090278A1BB8",
+            "file": "comsuppw.lib",
+            "linked_as": "whole archive",
+            "sha256": "ebcb0be2cb002f1b4c7e116aae49e31c6a13b026d88a1cd61b088590e5aa841d"
+          },
+          {
+            "bytes": 64438,
+            "cab_member": "FL_delayimp_lib_74645_74645_amd64_ln.3643236F_FC70_11D3_A536_0090278A1BB8",
+            "file": "delayimp.lib",
+            "linked_as": "whole archive",
+            "sha256": "188b37ed51f463d663826356ca2716dd19c1975d088ff598466f4e68b0d863bb"
+          }
+        ]
+      },
+      "library_members": 13,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "unresolved_symbols": 21
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_comsupp_comsuppw_delayimp.mcrit",
+    "num_functions": 64,
+    "sha256": "8a2c4a5cad188d9731032b2196be7123fd17d4b5ba40d14162d6f8d82741f085",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_comsupp_comsuppw_delayimp.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_comsuppd_comsuppwd_runtmchk": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "comsuppd_comsuppwd_runtmchk.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "comsuppd_comsuppwd_runtmchk",
+    "deduplicated_functions": 9,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "clr_pure_objects_not_linked": [
+        "pbinmode.obj",
+        "pcommode.obj",
+        "pinvalidcontinue.obj",
+        "pnewmode.obj",
+        "pnoarg.obj",
+        "pnoenv.obj",
+        "pnothrownew.obj",
+        "psetargv.obj",
+        "pthreadlocale.obj",
+        "pwsetargv.obj"
+      ],
+      "compiler_records": [
+        {
+          "back_end": "16.0.30319",
+          "front_end": "16.0.30319",
+          "objects": 30,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 453294,
+            "cab_member": "FL_comsuppd_lib_74641_74641_amd64_ln.3643236F_FC70_11D3_A536_0090278A1BB8",
+            "file": "comsuppd.lib",
+            "linked_as": "whole archive",
+            "sha256": "c1b7951dbc3c642e5c86e519eea217a8468acdc9c3ac42d262fad7b2e2129df4"
+          },
+          {
+            "bytes": 453154,
+            "cab_member": "FL_comsuppwd_lib_74643_74643_amd64_ln.3643236F_FC70_11D3_A536_0090278A1BB8",
+            "file": "comsuppwd.lib",
+            "linked_as": "whole archive",
+            "sha256": "2f47d619a34eac2dbd0d77462e6d622e6a3049a017a67bc5afffcdf76470683f"
+          },
+          {
+            "bytes": 428662,
+            "cab_member": "FL_runtmchk_lib_107256_107256_amd64_ln.3643236F_FC70_11D3_A536_0090278A1BB8",
+            "file": "runtmchk.lib",
+            "linked_as": "whole archive",
+            "sha256": "3b329ed8b68854525fa2df755cceaed4e93cef6327abad0e7979f7e8feb8d207"
+          }
+        ]
+      },
+      "library_members": 32,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "unresolved_symbols": 18
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_comsuppd_comsuppwd_runtmchk.mcrit",
+    "num_functions": 98,
+    "sha256": "c43df160ed46cfabc15210edcd0e3e127294fc13d644d985156d97f85580206d",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_comsuppd_comsuppwd_runtmchk.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_libcmt": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "libcmt.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcmt",
+    "deduplicated_functions": 140,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "clr_pure_objects_not_linked": [
+        "pbinmode.obj",
+        "pcommode.obj",
+        "pinvalidcontinue.obj",
+        "pnewmode.obj",
+        "pnoarg.obj",
+        "pnoenv.obj",
+        "pnothrownew.obj",
+        "psetargv.obj",
+        "pthreadlocale.obj",
+        "pwsetargv.obj"
+      ],
+      "compiler_records": [
+        {
+          "back_end": "16.0.30319",
+          "front_end": "16.0.30319",
+          "objects": 793,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "__app_type",
+        "__error_mode",
+        "_aenvptr",
+        "_freea",
+        "_wenvptr"
+      ],
+      "ignored_duplicate_definitions": 5,
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 18194350,
+            "cab_member": "FL_libcmt_lib_74650_74650_amd64_ln.3643236F_FC70_11D3_A536_0090278A1BB8",
+            "file": "libcmt.lib",
+            "linked_as": "whole archive",
+            "sha256": "9b65352417eca80fa258ead0529a43f7d09d91f31bc89a25e38d82534fe18c90"
+          }
+        ]
+      },
+      "library_members": 958,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "unresolved_symbols": 7
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_libcmt.mcrit",
+    "num_functions": 4653,
+    "sha256": "02882c9ac771bdacdd290ea3ab4c9e785a6fa283058921ae0501918a55bdea3b",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_libcmt.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_libcmtd": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "libcmtd.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcmtd",
+    "deduplicated_functions": 134,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "clr_pure_objects_not_linked": [
+        "pbinmode.obj",
+        "pcommode.obj",
+        "pinvalidcontinue.obj",
+        "pnewmode.obj",
+        "pnoarg.obj",
+        "pnoenv.obj",
+        "pnothrownew.obj",
+        "psetargv.obj",
+        "pthreadlocale.obj",
+        "pwsetargv.obj"
+      ],
+      "compiler_records": [
+        {
+          "back_end": "16.0.30319",
+          "front_end": "16.0.30319",
+          "objects": 793,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "__app_type",
+        "__error_mode",
+        "_aenvptr",
+        "_freea",
+        "_wenvptr"
+      ],
+      "ignored_duplicate_definitions": 5,
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 21006478,
+            "cab_member": "FL_libcmtd_lib_74652_74652_amd64_ln.3643236F_FC70_11D3_A536_0090278A1BB8",
+            "file": "libcmtd.lib",
+            "linked_as": "whole archive",
+            "sha256": "a8a1804db5297a746acff7733c985236faae88a86d8751427ea75941b4a12e97"
+          }
+        ]
+      },
+      "library_members": 958,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "unresolved_symbols": 7
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_libcmtd.mcrit",
+    "num_functions": 4904,
+    "sha256": "100b612f8c14ad4ac70e901b082c07b069a78a02c9a51b11d7ac2db4a3d612fd",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_libcmtd.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_libcpmt": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "libcpmt.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcpmt",
+    "deduplicated_functions": 96,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "clr_pure_objects_not_linked": [
+        "pbinmode.obj",
+        "pcommode.obj",
+        "pinvalidcontinue.obj",
+        "pnewmode.obj",
+        "pnoarg.obj",
+        "pnoenv.obj",
+        "pnothrownew.obj",
+        "psetargv.obj",
+        "pthreadlocale.obj",
+        "pwsetargv.obj"
+      ],
+      "compiler_records": [
+        {
+          "back_end": "16.0.30319",
+          "front_end": "16.0.30319",
+          "objects": 95,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 9477448,
+            "cab_member": "FL_libcpmt_lib_x64",
+            "file": "libcpmt.lib",
+            "linked_as": "whole archive",
+            "sha256": "48b0dee406b171f941bb0963d7bb620b229eafa47cbfc184d0a13b7320d6aa46"
+          }
+        ]
+      },
+      "library_members": 95,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "unresolved_symbols": 85
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_libcpmt.mcrit",
+    "num_functions": 2617,
+    "sha256": "4dae888a6fc9c22e67a93d979c824ea913de2b6473512c73c43556a9a30dbf63",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_libcpmt.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_libcpmt1": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "libcpmt1.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcpmt1",
+    "deduplicated_functions": 105,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "clr_pure_objects_not_linked": [
+        "pbinmode.obj",
+        "pcommode.obj",
+        "pinvalidcontinue.obj",
+        "pnewmode.obj",
+        "pnoarg.obj",
+        "pnoenv.obj",
+        "pnothrownew.obj",
+        "psetargv.obj",
+        "pthreadlocale.obj",
+        "pwsetargv.obj"
+      ],
+      "compiler_records": [
+        {
+          "back_end": "16.0.30319",
+          "front_end": "16.0.30319",
+          "objects": 95,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 9938404,
+            "cab_member": "FL_libcpmt1_lib_x64",
+            "file": "libcpmt1.lib",
+            "linked_as": "whole archive",
+            "sha256": "b7be3c5b0d0d8689b0df22f40ac1bd29dcc41eafae2dedbb8f757a7a0b9104aa"
+          }
+        ]
+      },
+      "library_members": 95,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "unresolved_symbols": 86
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_libcpmt1.mcrit",
+    "num_functions": 2729,
+    "sha256": "17ea2bcf2c352a5849be12416e4a59c77fd4c507ad647fa149ac343018690641",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_libcpmt1.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_libcpmtd": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "libcpmtd.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcpmtd",
+    "deduplicated_functions": 106,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "clr_pure_objects_not_linked": [
+        "pbinmode.obj",
+        "pcommode.obj",
+        "pinvalidcontinue.obj",
+        "pnewmode.obj",
+        "pnoarg.obj",
+        "pnoenv.obj",
+        "pnothrownew.obj",
+        "psetargv.obj",
+        "pthreadlocale.obj",
+        "pwsetargv.obj"
+      ],
+      "compiler_records": [
+        {
+          "back_end": "16.0.30319",
+          "front_end": "16.0.30319",
+          "objects": 95,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 11655654,
+            "cab_member": "FL_libcpmtd_lib_x64",
+            "file": "libcpmtd.lib",
+            "linked_as": "whole archive",
+            "sha256": "2ab39e5a3944eab781c53e9b85575dd50b2582580fa3590f02ffb0866aaa1246"
+          }
+        ]
+      },
+      "library_members": 95,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "unresolved_symbols": 88
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_libcpmtd.mcrit",
+    "num_functions": 3356,
+    "sha256": "5a6175891d6ff5aec73be36fe107cbb8de9255c5df43b8d8191abb202bab4a8e",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_libcpmtd.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_libcpmtd0": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "libcpmtd0.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcpmtd0",
+    "deduplicated_functions": 111,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "clr_pure_objects_not_linked": [
+        "pbinmode.obj",
+        "pcommode.obj",
+        "pinvalidcontinue.obj",
+        "pnewmode.obj",
+        "pnoarg.obj",
+        "pnoenv.obj",
+        "pnothrownew.obj",
+        "psetargv.obj",
+        "pthreadlocale.obj",
+        "pwsetargv.obj"
+      ],
+      "compiler_records": [
+        {
+          "back_end": "16.0.30319",
+          "front_end": "16.0.30319",
+          "objects": 95,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 10517026,
+            "cab_member": "FL_libcpmtd0_lib_x64",
+            "file": "libcpmtd0.lib",
+            "linked_as": "whole archive",
+            "sha256": "c741fbe2cbdd35dac5832754a6172712b826663db045b2c273e247b20d7c1a78"
+          }
+        ]
+      },
+      "library_members": 95,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "unresolved_symbols": 87
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_libcpmtd0.mcrit",
+    "num_functions": 3129,
+    "sha256": "ef396e2dc2cb41b85065c8228d6a7434ff2cdf3cc44bc4132abcc411f9cf7491",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_libcpmtd0.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_libcpmtd1": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "libcpmtd1.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcpmtd1",
+    "deduplicated_functions": 111,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "clr_pure_objects_not_linked": [
+        "pbinmode.obj",
+        "pcommode.obj",
+        "pinvalidcontinue.obj",
+        "pnewmode.obj",
+        "pnoarg.obj",
+        "pnoenv.obj",
+        "pnothrownew.obj",
+        "psetargv.obj",
+        "pthreadlocale.obj",
+        "pwsetargv.obj"
+      ],
+      "compiler_records": [
+        {
+          "back_end": "16.0.30319",
+          "front_end": "16.0.30319",
+          "objects": 95,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 11331062,
+            "cab_member": "FL_libcpmtd1_lib_x64",
+            "file": "libcpmtd1.lib",
+            "linked_as": "whole archive",
+            "sha256": "78c2d4237d932393efbf711923e4ea5b9b9ba8daaab9e6b18c8f1f6561e5e152"
+          }
+        ]
+      },
+      "library_members": 95,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "unresolved_symbols": 88
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_libcpmtd1.mcrit",
+    "num_functions": 3309,
+    "sha256": "370755a2f45345d1e648d7c794e362d944c032149bb01820031ebab237bce3ec",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_libcpmtd1.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_msvcp100": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "msvcp100.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "msvcp100",
+    "deduplicated_functions": 350,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_members": [
+        "F_CENTRAL_msvcp100_x64",
+        "F_PDB_msvcp100_x64"
+      ],
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "dll_sha256": "a55f33a3a03273a8ba957506946a6b7e51576eb76e588e8de8c14fa46a886860",
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "pdb_sha256": "75db1c788835cda2eecb10f871f0a40a75b8f1844c4218bfcddb460c91b9877b",
+      "pe": {
+        "FileDescription": "Microsoft\u00ae C Runtime Library",
+        "FileVersion": "10.00.30319.1",
+        "OriginalFilename": "msvcp100.dll",
+        "ProductName": "Microsoft\u00ae Visual Studio\u00ae 2010",
+        "ProductVersion": "10.00.30319.1",
+        "linker_version": "10.0",
+        "machine": "0x8664"
+      }
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_msvcp100.mcrit",
+    "num_functions": 2021,
+    "sha256": "a55f33a3a03273a8ba957506946a6b7e51576eb76e588e8de8c14fa46a886860",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_msvcp100.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_msvcp100d": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "msvcp100d.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "msvcp100d",
+    "deduplicated_functions": 394,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_members": [
+        "F_CENTRAL_msvcp100d_x64",
+        "F_PDB_msvcp100d_x64"
+      ],
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "dll_sha256": "3c70c175b3b871785c4cb85a08dc998bf581a8e31a2bcd45edf6ab246ced2c68",
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "pdb_sha256": "7f74bf0827fc5b7da78f0e431b1b58066fcaa5b16378e7ee38421332c8fd102a",
+      "pe": {
+        "FileDescription": "Microsoft\u00ae C Runtime Library",
+        "FileVersion": "10.00.30319.1",
+        "OriginalFilename": "msvcp100d.dll",
+        "ProductName": "Microsoft\u00ae Visual Studio\u00ae 2010",
+        "ProductVersion": "10.00.30319.1",
+        "linker_version": "10.0",
+        "machine": "0x8664"
+      }
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_msvcp100d.mcrit",
+    "num_functions": 4390,
+    "sha256": "3c70c175b3b871785c4cb85a08dc998bf581a8e31a2bcd45edf6ab246ced2c68",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_msvcp100d.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_msvcr100": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "msvcr100.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "msvcr100",
+    "deduplicated_functions": 3,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_members": [
+        "F_CENTRAL_msvcr100_x64",
+        "F_PDB_msvcr100_x64"
+      ],
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "dll_sha256": "b4bfa27f677295b00a1df9a7e14db4b75cac2dd41b898d4e9a378eccce3699f0",
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "pdb_sha256": "9be3a0c66f7eb8f02572971502c51ff0a2009364fa66dc8f27b7e522d530bde7",
+      "pe": {
+        "FileDescription": "Microsoft\u00ae C Runtime Library",
+        "FileVersion": "10.00.30319.1",
+        "OriginalFilename": "msvcr100_clr0400.dll",
+        "ProductName": "Microsoft\u00ae Visual Studio\u00ae 2010",
+        "ProductVersion": "10.00.30319.1",
+        "linker_version": "10.0",
+        "machine": "0x8664"
+      }
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_msvcr100.mcrit",
+    "num_functions": 2822,
+    "sha256": "b4bfa27f677295b00a1df9a7e14db4b75cac2dd41b898d4e9a378eccce3699f0",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_msvcr100.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_msvcr100d": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "msvcr100d.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "msvcr100d",
+    "deduplicated_functions": 118,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_members": [
+        "F_CENTRAL_msvcr100d_x64",
+        "F_PDB_msvcr100d_x64"
+      ],
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "dll_sha256": "c9fff0b1022356e563929ccdc89936f6a2c0e39a5550c3d12e3d08cd784013e6",
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "pdb_sha256": "db405a5e84b074ae3926c4fd3864fe5444873c4795286a65b645c194df9faab2",
+      "pe": {
+        "FileDescription": "Microsoft\u00ae C Runtime Library",
+        "FileVersion": "10.00.30319.1",
+        "OriginalFilename": "msvcr100d_clr0400.dll",
+        "ProductName": "Microsoft\u00ae Visual Studio\u00ae 2010",
+        "ProductVersion": "10.00.30319.1",
+        "linker_version": "10.0",
+        "machine": "0x8664"
+      }
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_msvcr100d.mcrit",
+    "num_functions": 4585,
+    "sha256": "c9fff0b1022356e563929ccdc89936f6a2c0e39a5550c3d12e3d08cd784013e6",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_msvcr100d.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_msvcrt_msvcprt_oldnames": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "msvcrt_msvcprt_oldnames.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "msvcrt_msvcprt_oldnames",
+    "deduplicated_functions": 13,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "clr_pure_objects_not_linked": [
+        "pbinmode.obj",
+        "pcommode.obj",
+        "pinvalidcontinue.obj",
+        "pnewmode.obj",
+        "pnoarg.obj",
+        "pnoenv.obj",
+        "pnothrownew.obj",
+        "psetargv.obj",
+        "pthreadlocale.obj",
+        "pwsetargv.obj"
+      ],
+      "compiler_records": [
+        {
+          "back_end": "16.0.30319",
+          "front_end": "16.0.30319",
+          "objects": 60,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "__NULL_IMPORT_DESCRIPTOR"
+      ],
+      "ignored_duplicate_definitions": 1,
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 1396182,
+            "cab_member": "FL_msvcrt_lib_74664_74664_amd64_ln.3643236F_FC70_11D3_A536_0090278A1BB8",
+            "file": "msvcrt.lib",
+            "linked_as": "objects",
+            "sha256": "2c09c61a54c35c599e556fc3165caff546f26dd92ebb99136903d3648d3f7548"
+          },
+          {
+            "bytes": 964484,
+            "cab_member": "FL_msvcprt_lib_74662_74662_amd64_ln.3643236F_FC70_11D3_A536_0090278A1BB8",
+            "file": "msvcprt.lib",
+            "linked_as": "objects",
+            "sha256": "a79165354f429ec4eb156eaf3c7e6e598805831d312deaea62792e9d2121a44c"
+          },
+          {
+            "bytes": 101352,
+            "cab_member": "FL_oldnames_lib_74667_74667_amd64_ln.3643236F_FC70_11D3_A536_0090278A1BB8",
+            "file": "oldnames.lib",
+            "linked_as": "objects",
+            "sha256": "13d2048b3690f5945a3c8ec96c0b531e689cab18efb2bb3383ea94705c301516"
+          }
+        ],
+        "split_libraries": [
+          {
+            "import_records_left_out": 1581,
+            "library": "msvcrt.lib",
+            "object_members_linked": 344
+          },
+          {
+            "import_records_left_out": 1676,
+            "library": "msvcprt.lib",
+            "object_members_linked": 6
+          },
+          {
+            "import_records_left_out": 0,
+            "library": "oldnames.lib",
+            "object_members_linked": 278
+          }
+        ]
+      },
+      "library_members": 0,
+      "linked_objects": 628,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "unresolved_symbols": 985
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_msvcrt_msvcprt_oldnames.mcrit",
+    "num_functions": 139,
+    "sha256": "c77d4d4ddbe79995f4bf362559820de64ccc01192f09ef3f9eff43d79a04bac6",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_msvcrt_msvcprt_oldnames.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_msvcrtd_msvcprtd": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "msvcrtd_msvcprtd.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "msvcrtd_msvcprtd",
+    "deduplicated_functions": 12,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "clr_pure_objects_not_linked": [
+        "pbinmode.obj",
+        "pcommode.obj",
+        "pinvalidcontinue.obj",
+        "pnewmode.obj",
+        "pnoarg.obj",
+        "pnoenv.obj",
+        "pnothrownew.obj",
+        "psetargv.obj",
+        "pthreadlocale.obj",
+        "pwsetargv.obj"
+      ],
+      "compiler_records": [
+        {
+          "back_end": "16.0.30319",
+          "front_end": "16.0.30319",
+          "objects": 60,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "__NULL_IMPORT_DESCRIPTOR"
+      ],
+      "ignored_duplicate_definitions": 1,
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 1423132,
+            "cab_member": "FL_msvcrtd_lib_74665_74665_amd64_ln.3643236F_FC70_11D3_A536_0090278A1BB8",
+            "file": "msvcrtd.lib",
+            "linked_as": "objects",
+            "sha256": "d3a7bd4c50583993314b14910658901322821c5d5495bec6f32e4d55c4a2356b"
+          },
+          {
+            "bytes": 980626,
+            "cab_member": "FL_msvcprtd_lib_74663_74663_amd64_ln.3643236F_FC70_11D3_A536_0090278A1BB8",
+            "file": "msvcprtd.lib",
+            "linked_as": "objects",
+            "sha256": "42f7d0066abf3521c5967b4fd45d58e0cd61e9de4e5261d5b4dd87a51bda740d"
+          }
+        ],
+        "split_libraries": [
+          {
+            "import_records_left_out": 1645,
+            "library": "msvcrtd.lib",
+            "object_members_linked": 344
+          },
+          {
+            "import_records_left_out": 1683,
+            "library": "msvcprtd.lib",
+            "object_members_linked": 6
+          }
+        ]
+      },
+      "library_members": 0,
+      "linked_objects": 350,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "unresolved_symbols": 558
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_msvcrtd_msvcprtd.mcrit",
+    "num_functions": 145,
+    "sha256": "85c210b01abffcf0b1d067e912717f56aca8dad455f5e0ca3ac3377903089980",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_msvcrtd_msvcprtd.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  },
+  "MSVC_VC10_10.0.30319_msvc143_x64_objs": {
+    "architecture": "x64",
+    "build_flags": "VC10 (cl 16.00.30319) x64 objects from Windows SDK 7.1; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro; the msvcr100/msvcp100 DLLs are the shipped images",
+    "built_artifact": "objs.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "objs",
+    "deduplicated_functions": 1,
+    "family": "MSVC_VC10",
+    "generated": "2026-11-08",
+    "inputs": {
+      "cab": "Setup/vc_stdamd64/vc_stdamd64.cab",
+      "cab_bytes": 24785124,
+      "cab_sha256": "293dae3c98624f3a9a6c46b31d187808eb21b1228d1bb157be7cb782358451db",
+      "clr_pure_objects_not_linked": [
+        "pbinmode.obj",
+        "pcommode.obj",
+        "pinvalidcontinue.obj",
+        "pnewmode.obj",
+        "pnoarg.obj",
+        "pnoenv.obj",
+        "pnothrownew.obj",
+        "psetargv.obj",
+        "pthreadlocale.obj",
+        "pwsetargv.obj"
+      ],
+      "compiler_records": [
+        {
+          "back_end": "16.0.30319",
+          "front_end": "16.0.30319",
+          "objects": 14,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "_setargv",
+        "_wsetargv"
+      ],
+      "ignored_duplicate_definitions": 2,
+      "image_bytes": 598589440,
+      "image_sha256": "9f495e52f33d68125277cbca3565ce57904af7d506758a14691fa6e2479ad65c",
+      "image_url": "https://download.microsoft.com/download/F/1/0/F10113F5-B750-4969-A255-274341AC6BCE/GRMSDKX_EN_DVD.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [],
+        "start_up_objects": [
+          {
+            "file": "binmode.obj",
+            "sha256": "41f8c359dfa6d7419b744179d3df586ea608a7deaa37a6a9501b0120d59e5f9a"
+          },
+          {
+            "file": "chkstk.obj",
+            "sha256": "a6ddee5ea4bebde4d53ece4a143650ccd205c52a2328e2c78e5c60091b0b83ff"
+          },
+          {
+            "file": "commode.obj",
+            "sha256": "25e477d2bf22334fe840fe1e3590211882e8b15537d6242c0e02d2be51504f50"
+          },
+          {
+            "file": "invalidcontinue.obj",
+            "sha256": "96c7bb6fc34709f534498ed02617740b35d1746ee36152ced3838e2da93b4810"
+          },
+          {
+            "file": "loosefpmath.obj",
+            "sha256": "b2e9e6c8153a61abbaacebc45535a55d41b7cdf24dfa7ec1bbd5870b9500db01"
+          },
+          {
+            "file": "newmode.obj",
+            "sha256": "fe2a2a7fdaf7599be93d32b347918a43d9b6e5a2a11d439262c2fa3532813ae6"
+          },
+          {
+            "file": "noarg.obj",
+            "sha256": "b994aa3bff863af70a870121d1cb35d8702358f15295151d32246c0da5a33872"
+          },
+          {
+            "file": "nochkclr.obj",
+            "sha256": "b61855bb76994eef6e637f6da49db2e9804d69c2f89e454f38c28a07fd71ff87"
+          },
+          {
+            "file": "noenv.obj",
+            "sha256": "182c439cfc90b7b09152f229733f7fc08963485414a6f9e07ea7fa4dfe58fcd5"
+          },
+          {
+            "file": "nohetoc.obj",
+            "sha256": "28c4184a61476ecfec36fce034653447a5ac2043220417466f243f8e6abf03b7"
+          },
+          {
+            "file": "nothrownew.obj",
+            "sha256": "141de6bc1b75c3fe58d9ab3b992c0e828edf040e9548b3612831422ec8dfc4e6"
+          },
+          {
+            "file": "setargv.obj",
+            "sha256": "3887f4c1660f14ba23306567a11af3616db5ffb4e6e2aff1e542cdee97433881"
+          },
+          {
+            "file": "smalheap.obj",
+            "sha256": "69cfe77854b78aa238b9375b4291f858a374405573b53a61c08aa7e8e8c64d3d"
+          },
+          {
+            "file": "threadlocale.obj",
+            "sha256": "88c453d7cad0c1440049d5e19741b9785a4de09c8a4d001966c67aa36151c029"
+          },
+          {
+            "file": "wsetargv.obj",
+            "sha256": "90c7f8540a3c518d5f3eaa41e4ffda7b6df30e3731298561e2cc5d46a6545adf"
+          }
+        ]
+      },
+      "library_members": 0,
+      "linked_objects": 15,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "unresolved_symbols": 6
+    },
+    "is_blob": false,
+    "license": "Microsoft Windows SDK 7.1 / Visual C++ 2010 runtime; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_VC10/x64/mcrit/MSVC_VC10_10.0.30319_msvc143_x64_objs.mcrit",
+    "num_functions": 36,
+    "sha256": "cf1ce86c6e260b5ddc6ae50db2cc71f22ee3e01aee27232b07b1a2b44d624f6c",
+    "smda": "data/MSVC_VC10/x64/smda/MSVC_VC10_10.0.30319_msvc143_x64_objs.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Windows SDK 7.1 GRMSDKX_EN_DVD.iso, Setup/vc_stdamd64/vc_stdamd64.cab, downloaded by the build step and verified by SHA-256"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2010/ms164311(v=vs.100)",
+    "version": "10.0.30319"
+  }
+}
