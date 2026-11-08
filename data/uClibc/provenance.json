@@ -56,6 +56,63 @@
     "upstream": "https://landley.net/aboriginal/; https://uclibc.org/",
     "version": "0.9.30.1-firmware0.9.6-src"
   },
+  "uClibc_0.9.30.1-firmware0.9.6-src_gcc14_x86_libc.elf": {
+    "architecture": "x86",
+    "build_flags": "Built from source by the cross-compiler.sh of Firmware Linux 0.9.6 (uClibc 0.9.30.1, GCC 4.1.2, binutils 2.17, Linux 2.6.29 headers) in a ubuntu:14.04@sha256:64483f3496c1373bfd55348e88694d1c4d0c9b660dee6bfef5e12f43b9933b30 container (NO_HOST_TOOLS=1 NO_CPLUSPLUS=1 NO_STAGE_TARBALLS=1 SKIP_STRIP=1); libc.a linked on the host with -nostdlib -no-pie -Wl,-e,0 --whole-archive; dynamic libgcc_s",
+    "built_artifact": "libc.elf",
+    "compiler": "gcc (Ubuntu 14.2.0-4ubuntu2~24.04.1) 14.2.0",
+    "component": "libc.elf",
+    "dependencies": {
+      "c_binutils": {
+        "archive": "binutils-2.17.tar.bz2",
+        "sha256": "e2c33ce6f23c9a366f109ced295626cb2f8bd6b2f08ff9df6dafb5448505a25e",
+        "url": "http://landley.net/aboriginal/mirror/binutils-2.17.tar.bz2"
+      },
+      "c_dist": {
+        "archive": "firmware-0.9.6.tar.bz2",
+        "sha256": "d26e1a7306f8efb13f92667ea1dc3b81954b7805fd8dcdfb20746a3175f0b786",
+        "url": "https://landley.net/aboriginal/downloads/old/firmware-0.9.6.tar.bz2"
+      },
+      "c_gcc": {
+        "archive": "gcc-core-4.1.2.tar.bz2",
+        "sha256": "7be9c5df8000ae35d0928f0a254bfb5e8478cad5e5e57fd07820530c03b3711d",
+        "url": "http://landley.net/aboriginal/mirror/gcc-core-4.1.2.tar.bz2"
+      },
+      "c_gxx": {
+        "archive": "gcc-g++-4.1.2.tar.bz2",
+        "sha256": "0c06aa415f10679bc334f4627242e2b383387d0d44930da2922028dbd98fa2e2",
+        "url": "http://landley.net/aboriginal/mirror/gcc-g++-4.1.2.tar.bz2"
+      },
+      "c_linux": {
+        "archive": "linux-2.6.29.tar.bz2",
+        "sha256": "58a5ea16d499fe06f90fcbf1d687d1235d2cb9bc28bf979867bd3faadf38fc3f",
+        "url": "http://landley.net/aboriginal/mirror/linux-2.6.29.tar.bz2"
+      },
+      "c_uclibc": {
+        "archive": "uClibc-0.9.30.1.tar.bz2",
+        "sha256": "2d9769a02c46cff73f56a076268192da1ce91c913e2e4e31c120be098f704c8c",
+        "url": "http://landley.net/aboriginal/mirror/uClibc-0.9.30.1.tar.bz2"
+      }
+    },
+    "family": "uClibc",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "LGPL-2.1-or-later",
+    "mcrit": "data/uClibc/x86/mcrit/uClibc_0.9.30.1-firmware0.9.6-src_gcc14_x86_libc.elf.mcrit",
+    "notes": "REBUILT FROM SOURCE, not the binary Landley shipped: Firmware Linux 0.9.6 (uClibc 0.9.30.1, GCC 4.1.2, binutils 2.17, Linux 2.6.29 headers). The distribution tarball and every component tarball are pinned by sha256; the distribution's own cross-compiler.sh builds the cross toolchain and target libc inside a ubuntu:14.04@sha256:64483f3496c1373bfd55348e88694d1c4d0c9b660dee6bfef5e12f43b9933b30 container (the era's host; GCC 4.x does not build with a current compiler). The container's apt packages and the image digest are not pinned. No patch is applied to the distribution or to any component source by this recipe. The host compiler in the artefact name only drives the final link of libc.a into an ELF container; entry address zero, no startup objects, dynamic libgcc_s, not runnable. Runtime filter off because libc is the subject.",
+    "num_functions": 1316,
+    "sha256": "5e56e3428ec4f49d9e555ae07603b16bc026ee47d00a0e68745f83017019fab0",
+    "smda": "data/uClibc/x86/smda/uClibc_0.9.30.1-firmware0.9.6-src_gcc14_x86_libc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://landley.net/aboriginal/; https://uclibc.org/",
+    "version": "0.9.30.1-firmware0.9.6-src"
+  },
   "uClibc_0.9.30.1_gcc14_x64_libc.elf": {
     "architecture": "x64",
     "build_flags": "Prebuilt static libc; host link only: -nostdlib -no-pie -Wl,-e,0; --whole-archive; dynamic libgcc_s",

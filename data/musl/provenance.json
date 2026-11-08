@@ -1,4 +1,108 @@
 {
+  "musl_1.1.12-aboriginal1.4.4-src_gcc14_x64_libc.elf": {
+    "architecture": "x64",
+    "build_flags": "Built from source by the simple-cross-compiler.sh of Aboriginal Linux 1.4.4 (musl 1.1.12, GCC 4.2.1, binutils 397a64b3, Linux 4.2 headers) in a ubuntu:14.04@sha256:64483f3496c1373bfd55348e88694d1c4d0c9b660dee6bfef5e12f43b9933b30 container (NO_HOST_TOOLS=1 NO_CPLUSPLUS=1 NO_STAGE_TARBALLS=1 SKIP_STRIP=1); libc.a linked on the host with -nostdlib -no-pie -Wl,-e,0 -u every global text symbol except __tlsdesc_*; dynamic libgcc_s and libc",
+    "built_artifact": "libc.elf",
+    "compiler": "gcc (Ubuntu 14.2.0-4ubuntu2~24.04.1) 14.2.0",
+    "component": "libc.elf",
+    "dependencies": {
+      "c_binutils": {
+        "archive": "binutils-397a64b3.tar.bz2",
+        "sha256": "c7e0f0dfd2f53df76d2196b5bec0a2f0922c68c8719f9127efaf703c4f35939c",
+        "url": "http://landley.net/aboriginal/mirror/binutils-397a64b3.tar.bz2"
+      },
+      "c_dist": {
+        "archive": "aboriginal-1.4.4.tar.gz",
+        "sha256": "ae85cf840550853c413d33d151ca859dbaacc7dfc1b4181fa8b3fdee9d6e241f",
+        "url": "https://landley.net/aboriginal/downloads/aboriginal-1.4.4.tar.gz"
+      },
+      "c_gcc": {
+        "archive": "gcc-core-4.2.1.tar.bz2",
+        "sha256": "476fe4a6f10493fdb53070aa31515326975d2fdc38f2dce931526a528b9ca453",
+        "url": "http://landley.net/aboriginal/mirror/gcc-core-4.2.1.tar.bz2"
+      },
+      "c_linux": {
+        "archive": "linux-4.2.tar.gz",
+        "sha256": "1ba3e38b5cde8e4369800426991be78b1e0ce420aeb4404d1b477f912c1d668f",
+        "url": "http://landley.net/aboriginal/mirror/linux-4.2.tar.gz"
+      },
+      "c_musl": {
+        "archive": "musl-1.1.12.tar.gz",
+        "sha256": "720b83c7e276b4b679c0bffe9509340d5f81fd601508e607e708177df0d31c0e",
+        "url": "http://landley.net/aboriginal/mirror/musl-1.1.12.tar.gz"
+      }
+    },
+    "family": "musl",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "MIT",
+    "mcrit": "data/musl/x64/mcrit/musl_1.1.12-aboriginal1.4.4-src_gcc14_x64_libc.elf.mcrit",
+    "notes": "REBUILT FROM SOURCE, not the binary Landley shipped: Aboriginal Linux 1.4.4 (musl 1.1.12, GCC 4.2.1, binutils 397a64b3, Linux 4.2 headers). The distribution tarball and every component tarball are pinned by sha256; the distribution's own simple-cross-compiler.sh builds the cross toolchain and target libc inside a ubuntu:14.04@sha256:64483f3496c1373bfd55348e88694d1c4d0c9b660dee6bfef5e12f43b9933b30 container (the era's host; GCC 4.x does not build with a current compiler). The container's apt packages and the image digest are not pinned. No patch is applied to the distribution or to any component source by this recipe. The host compiler in the artefact name only drives the final link of libc.a into an ELF container; entry address zero, no startup objects, dynamic libgcc_s, not runnable. Runtime filter off because libc is the subject.",
+    "num_functions": 1879,
+    "sha256": "cb394c8c099c2765f75493746c57035dd5a14606a4f2f4c979fbd78d0a7a104d",
+    "smda": "data/musl/x64/smda/musl_1.1.12-aboriginal1.4.4-src_gcc14_x64_libc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://landley.net/aboriginal/; https://musl.libc.org/",
+    "version": "1.1.12-aboriginal1.4.4-src"
+  },
+  "musl_1.1.12-aboriginal1.4.4-src_gcc14_x86_libc.elf": {
+    "architecture": "x86",
+    "build_flags": "Built from source by the simple-cross-compiler.sh of Aboriginal Linux 1.4.4 (musl 1.1.12, GCC 4.2.1, binutils 397a64b3, Linux 4.2 headers) in a ubuntu:14.04@sha256:64483f3496c1373bfd55348e88694d1c4d0c9b660dee6bfef5e12f43b9933b30 container (NO_HOST_TOOLS=1 NO_CPLUSPLUS=1 NO_STAGE_TARBALLS=1 SKIP_STRIP=1); libc.a linked on the host with -nostdlib -no-pie -Wl,-e,0 -u every global text symbol except __tlsdesc_*; dynamic libgcc_s and libc",
+    "built_artifact": "libc.elf",
+    "compiler": "gcc (Ubuntu 14.2.0-4ubuntu2~24.04.1) 14.2.0",
+    "component": "libc.elf",
+    "dependencies": {
+      "c_binutils": {
+        "archive": "binutils-397a64b3.tar.bz2",
+        "sha256": "c7e0f0dfd2f53df76d2196b5bec0a2f0922c68c8719f9127efaf703c4f35939c",
+        "url": "http://landley.net/aboriginal/mirror/binutils-397a64b3.tar.bz2"
+      },
+      "c_dist": {
+        "archive": "aboriginal-1.4.4.tar.gz",
+        "sha256": "ae85cf840550853c413d33d151ca859dbaacc7dfc1b4181fa8b3fdee9d6e241f",
+        "url": "https://landley.net/aboriginal/downloads/aboriginal-1.4.4.tar.gz"
+      },
+      "c_gcc": {
+        "archive": "gcc-core-4.2.1.tar.bz2",
+        "sha256": "476fe4a6f10493fdb53070aa31515326975d2fdc38f2dce931526a528b9ca453",
+        "url": "http://landley.net/aboriginal/mirror/gcc-core-4.2.1.tar.bz2"
+      },
+      "c_linux": {
+        "archive": "linux-4.2.tar.gz",
+        "sha256": "1ba3e38b5cde8e4369800426991be78b1e0ce420aeb4404d1b477f912c1d668f",
+        "url": "http://landley.net/aboriginal/mirror/linux-4.2.tar.gz"
+      },
+      "c_musl": {
+        "archive": "musl-1.1.12.tar.gz",
+        "sha256": "720b83c7e276b4b679c0bffe9509340d5f81fd601508e607e708177df0d31c0e",
+        "url": "http://landley.net/aboriginal/mirror/musl-1.1.12.tar.gz"
+      }
+    },
+    "family": "musl",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "MIT",
+    "mcrit": "data/musl/x86/mcrit/musl_1.1.12-aboriginal1.4.4-src_gcc14_x86_libc.elf.mcrit",
+    "notes": "REBUILT FROM SOURCE, not the binary Landley shipped: Aboriginal Linux 1.4.4 (musl 1.1.12, GCC 4.2.1, binutils 397a64b3, Linux 4.2 headers). The distribution tarball and every component tarball are pinned by sha256; the distribution's own simple-cross-compiler.sh builds the cross toolchain and target libc inside a ubuntu:14.04@sha256:64483f3496c1373bfd55348e88694d1c4d0c9b660dee6bfef5e12f43b9933b30 container (the era's host; GCC 4.x does not build with a current compiler). The container's apt packages and the image digest are not pinned. No patch is applied to the distribution or to any component source by this recipe. The host compiler in the artefact name only drives the final link of libc.a into an ELF container; entry address zero, no startup objects, dynamic libgcc_s, not runnable. Runtime filter off because libc is the subject.",
+    "num_functions": 1848,
+    "sha256": "5626c192d65a3651a929099b17dd8461217b92882763aaa99585472dc51e7f64",
+    "smda": "data/musl/x86/smda/musl_1.1.12-aboriginal1.4.4-src_gcc14_x86_libc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://landley.net/aboriginal/; https://musl.libc.org/",
+    "version": "1.1.12-aboriginal1.4.4-src"
+  },
   "musl_1.1.12-aboriginal1.4.4_gcc14_x64_libc.elf": {
     "architecture": "x64",
     "build_flags": "Prebuilt static libc; host link only: -nostdlib -no-pie -Wl,-e,0; -u every global text symbol except __tlsdesc_*; dynamic libgcc_s",

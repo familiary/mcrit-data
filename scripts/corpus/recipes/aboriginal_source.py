@@ -69,25 +69,15 @@ helper script and none touching the distribution or component sources:
     libgcc images already exist from the original archives).
 
 CI status (GitHub Actions, scratch branch scratch/aboriginal-src, Ubuntu 24.04
-runner, GCC 14.2.0 link driver, SMDA 5.0.2, MCRIT 1.16.0; three dispatches):
-  BUILT
+runner, GCC 14.2.0 link driver, SMDA 5.0.2, MCRIT 1.16.0; four dispatches).
+All six recipes built:
     uClibc_0.9.32-aboriginal1.0.3-src_gcc14_x86_libc.elf  1357 kept + 0 removed = 1357 image functions; 1105 >=10 instructions, 1035 unique hashes (run 42470274475)
     uClibc_0.9.32-aboriginal1.0.3-src_gcc14_x64_libc.elf  1335 kept + 0 removed = 1335 image functions; 1015 >=10 instructions, 952 unique hashes (run 42470274475)
+    uClibc_0.9.30.1-firmware0.9.6-src_gcc14_x86_libc.elf  1316 kept + 0 removed = 1316 image functions; 1075 >=10 instructions, 1009 unique hashes (run 42471733343)
     uClibc_0.9.30.1-firmware0.9.6-src_gcc14_x64_libc.elf  1324 kept + 0 removed = 1324 image functions; 1017 >=10 instructions, 941 unique hashes (run 42470850364)
-  NOT BUILT (recorded, exact errors)
-    musl_1.1.12_aboriginal1.4.4_src_x64: the Aboriginal 1.4.4 stage and musl built
-      (run 42470850364), then the host link failed:
-        /usr/bin/ld: libc.a(getopt.o): undefined reference to symbol 'optopt@@GLIBC_2.2.5'
-        /usr/bin/ld: /lib/x86_64-linux-gnu/libc.so.6: error adding symbols: DSO missing from command line
-      The sibling musl recipes pass -lc for exactly this reason; the link line
-      here now does too. That corrected line has NOT been run in CI (the
-      three-dispatch limit was used), so these two recipes are unverified.
-    musl_1.1.12_aboriginal1.4.4_src_x86 and uClibc_0.9.30.1_firmware0.9.6_src_x86
-      (run 42470850364): failed before building, in the corpus fetcher:
-        sha256 mismatch for https://zlib.net/fossils/zlib-1.3.1.tar.gz: expected 9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23, got 7540b291c52141d8c77eead30a9f6548caf72a6e05643aad187ad10cf2053d8b
-      (the staging zlib download; the mismatch is refused as designed; the
-      x64 job of the same run fetched the correct file).
-  Earlier failed attempts that shaped the recipe (kept for the record):
+    musl_1.1.12-aboriginal1.4.4-src_gcc14_x86_libc.elf    1848 kept + 0 removed = 1848 image functions; 1235 >=10 instructions, 1173 unique hashes (run 42471733343)
+    musl_1.1.12-aboriginal1.4.4-src_gcc14_x64_libc.elf    1879 kept + 0 removed = 1879 image functions; 1150 >=10 instructions, 1080 unique hashes (run 42471733343)
+Failed attempts that shaped the recipe (kept for the record):
     run 42469751149: the corpus extractor refused the distribution tarball,
       "'aboriginal-1.0.3/sources/root-filesystem/etc/mtab' is a link to an
       absolute path" (now staged as a dependency); Firmware: uClibc
@@ -97,18 +87,29 @@ runner, GCC 14.2.0 link driver, SMDA 5.0.2, MCRIT 1.16.0; three dispatches):
       manuals, now skipped); Firmware: "-Dgetline=unifdef_getline" itself
       conflicted ("error: conflicting types for 'unifdef_getline'"), replaced
       by -D_POSIX_C_SOURCE=200112L for that one file.
+    run 42470850364: musl x64 host link "/usr/bin/ld: libc.a(getopt.o):
+      undefined reference to symbol 'optopt@@GLIBC_2.2.5'" / "DSO missing from
+      command line" (fixed by -lc, as in the sibling musl recipes); musl x86
+      and Firmware x86 stopped in the fetcher with "sha256 mismatch for
+      https://zlib.net/fossils/zlib-1.3.1.tar.gz: expected 9a93b2b7..., got
+      7540b291..." - transient: the same URL later served the pinned digest
+      9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23.
 
 Measured overlap (unique PicHashes of functions >=10 instructions):
+  The source rebuilds reproduce the earlier harvested archives: musl 1.1.12-aboriginal1.4.4-src
+  shares ALL hashes with the harvested original-binary musl 1.1.12-aboriginal1.4.4 (x86 1173/1173, x64 1080/1080,
+  0 unique to either), and Firmware x86 shares all 1009 with the uClibc.org
+  0.9.30.1 archive; Firmware x64 shares 938 of 941 (3/3 unique). These -src
+  images are therefore near-duplicates of existing images by design.
+  musl-src vs the official-tarball musl 1.1.12 (gcc13): x86 82 shared (1091/1063 unique); x64 17 shared (1063/1058).
   uClibc 0.9.32-aboriginal1.0.3-src vs the shipped 0.9.33.2-aboriginal1.2.0: x86 586 shared (449/508 unique); x64 923 shared (29/48 unique).
   uClibc 0.9.32-aboriginal1.0.3-src vs shipped 0.9.30.1: x86 381 shared (654/628 unique); x64 461 shared (491/480 unique).
   uClibc 0.9.32-aboriginal1.0.3-src vs uClibc-ng 1.0.39: x86 30 shared; x64 17 shared.
-  uClibc 0.9.30.1-firmware0.9.6-src x64 vs the shipped uClibc.org 0.9.30.1 x64:
-    938 shared, 3/3 unique: the source rebuild of the same uClibc version with
-    GCC 4.1.2 is almost identical to the archive harvested earlier, which is
-    evidence that the rebuild reproduces the historical code.
-  Every x86/x64 pairing has zero shared hashes. Named link/glue survivors: none
-  in the three built images (the only crt-like name, __cxa_finalize, is uClibc's
-  own function). 1293/1324, 1335/1335 and 1354/1357 functions carry names.
+  Every x86/x64 pairing has zero shared hashes.
+
+Named link/glue survivors (name, PicHash, instruction count):
+  musl_1.1.12-aboriginal1.4.4-src x86 and x64: _init 0x9266c017df971c7c (1); _fini 0x9266c017df971c7c (1)
+  the uClibc -src images: none (the only crt-like name, __cxa_finalize, is uClibc's own function).
 
 The final step is the one the shipped-archive recipes in libc_harvest.py use:
 the produced libc.a is linked by the host GCC with -nostdlib -no-pie
