@@ -85,6 +85,49 @@ def linux_libuv():
     ]
 
 
+def musl_openssl():
+    """OpenSSL as static libcrypto.a/libssl.a, under deps-<arch>/ssl.
+
+    The only axis where the dependencies are linked statically: a static musl
+    ELF cannot load a shared library, so the image holds libuv and OpenSSL
+    whatever the recipe wants. The recipes deal with that by name, in
+    Recipe.exclude_functions, and record what it removed; see xmrig.py.
+    CC, AR and RANLIB come from the toolchain's environment (the musl.cc
+    driver and its gcc-ar wrappers); Configure's linux-x86 target supplies
+    -m32 itself, which the i686 cross compiler accepts.
+    """
+    env = {"CFLAGS": "", "CXXFLAGS": ""}
+    return [
+        BuildStep(_untar_openssl()),
+        BuildStep("[ -f Makefile ] || ./Configure {openssl_target} no-shared "
+                  "no-tests no-docs", cwd="deps-{arch}/ssl", env=env),
+        BuildStep(_SSL_MAKE, cwd="deps-{arch}/ssl", env=env),
+    ]
+
+
+def musl_libuv():
+    """libuv as a static libuv.a, under deps-<arch>/uv."""
+    return [
+        BuildStep("cmake -S {uv} -B deps-{arch}/uv -DCMAKE_BUILD_TYPE=Release "
+                  "-DCMAKE_C_COMPILER={cc} -DLIBUV_BUILD_TESTS=OFF "
+                  "-DLIBUV_BUILD_SHARED=OFF -DBUILD_SHARED_LIBS=OFF",
+                  env={"CFLAGS": "", "CXXFLAGS": ""}),
+        BuildStep("cmake --build deps-{arch}/uv --target uv_a -j$(nproc)"),
+    ]
+
+
+def musl_dep_options(uv=True):
+    """The -D options for the static archives; BUILD_STATIC is XMRig's own
+    switch (it adds -static and sets OPENSSL_USE_STATIC_LIBS)."""
+    ssl = ("-DOPENSSL_ROOT_DIR=$PWD/deps-{arch}/ssl "
+           "-DOPENSSL_INCLUDE_DIR=$PWD/deps-{arch}/ssl/include "
+           "-DOPENSSL_SSL_LIBRARY=$PWD/deps-{arch}/ssl/libssl.a "
+           "-DOPENSSL_CRYPTO_LIBRARY=$PWD/deps-{arch}/ssl/libcrypto.a")
+    libuv = ("-DUV_INCLUDE_DIR={uv}/include "
+             "-DUV_LIBRARY=$PWD/deps-{arch}/uv/libuv.a")
+    return ssl + (" " + libuv if uv else "")
+
+
 def mingw_openssl():
     """OpenSSL as libcrypto/libssl DLLs plus their import libraries."""
     env = {"CC": "gcc", "CXX": "g++", "AR": "ar", "RANLIB": "ranlib",
@@ -230,3 +273,30 @@ def msvc_dep_options(uv=True):
 
 # What every MSVC link in this corpus carries (see libuv_msvc.py for why each).
 MSVC_LINK = "/INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF /OPT:NOICF"
+
+
+# ---------------------------------------------------------------------------
+# musl: the static ELF axis.
+
+MUSL_PIN_TEXT = (
+    "Toolchains from musl.cc, pinned: x64 "
+    "https://musl.cc/x86_64-linux-musl-native.tgz sha256 "
+    "eb1db6f0f3c2bdbdbfb993d7ef7e2eeef82ac1259f6a6e1757c33a97dbcef3ad, x86 "
+    "https://musl.cc/i686-linux-musl-cross.tgz sha256 "
+    "93bd5504d5d0349258c43d7a668b506acbd627d31c0843a96e4b4c47b27a0180 "
+    "(GCC 11.2.1 20211120, musl 1.2.2-git-50-gb76f37fd)."
+)
+
+MUSL_EXCLUDE_TEXT = (
+    "libuv.a and OpenSSL libcrypto.a/libssl.a are linked statically (a static "
+    "musl ELF cannot load a shared library), so their functions are in the "
+    "image; they are removed by name with Recipe.exclude_functions, from the "
+    "function names of those pinned archives (_musl_dep_symbols.py, generated "
+    "by exercisers/musl_dep_symbols.py) and counted in excluded_function_count "
+    "so kept + removed + excluded is the image total. Not removed, and so "
+    "still in the image under the miner's name: unnamed functions (SMDA's "
+    ".cold partitions and tail fragments), 32 OpenSSL helper names the miner "
+    "also defines (fe_*, ge_*, load_3, ...), and the few libc/libstdc++ "
+    "functions whose bytes differ from the baseline's copy (README, \"The "
+    "musl half\")."
+)

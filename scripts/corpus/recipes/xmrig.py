@@ -1,4 +1,4 @@
-"""XMRig 6.25.0 - the miner, as PE (MinGW) and ELF (glibc) executables.
+"""XMRig 6.25.0 - the miner, as PE (MinGW), ELF (glibc) and static ELF (musl) executables.
 
 Backlog issue #8. The tag v6.25.0 is commit 753859ca. MSVC is in xmrig_msvc.py.
 
@@ -15,9 +15,10 @@ with the two things a CPU reference does not want switched off:
         cut. It costs four small files: NUMAMemoryPool.cpp,
         VirtualMemory_hwloc.cpp, Platform_hwloc.cpp and RxNUMAStorage.cpp.
 
-libuv and OpenSSL are linked as shared libraries (see _stack_deps.py), so the
-executable holds the miner and the trees it vendors and not those two
-families, which data/libuv and data/OpenSSL already carry. Linked the way
+libuv and OpenSSL are linked as shared libraries (see _stack_deps.py) on the
+MinGW, glibc and MSVC axes, so the executable holds the miner and the trees it
+vendors and not those two families, which data/libuv and data/OpenSSL already
+carry. The static musl image cannot do that; see "The musl axis" below. Linked the way
 XMRig's own FindUV.cmake prefers (its find_library list starts with
 `libuv.a`) about 540 uv_* functions and all of libcrypto would be filed
 here.
@@ -89,8 +90,8 @@ case-sensitive cross-build cannot find. Symlinks to mingw-w64's lower-case
 headers in a directory of their own, passed with -isystem, supply them; the
 header that is read is the same file.
 
-Axes. MinGW x86 and x64, Linux ELF x86 and x64 and MSVC x86 and x64: six, and
-measured to differ. At ten instructions or more, x64 shares 0 PicHashes
+Axes. MinGW x86 and x64, Linux ELF x86 and x64, MSVC x86 and x64 and static
+musl x86 and x64: eight, and measured to differ. At ten instructions or more, x64 shares 0 PicHashes
 between any two of GCC (2248), MinGW (2128) and MSVC (4224); x86 shares 76
 between GCC and MinGW and none with MSVC. Counts (kept functions, and
 those removed as compiler runtime): Linux x64 3783 and 9, x86 3887 and 6;
@@ -100,11 +101,71 @@ instantiates the standard library's templates into the image (5,837 `std::`
 functions on x64) and keeps every unreferenced COMDAT under /OPT:NOREF; it is
 what an MSVC-built miner contains.
 
-Not built: the static-musl ELF the issue lists. See scripts/corpus/README.md,
-"Targets investigated but not built".
+The musl axis (XMRig_6.25.0_musl, x86 and x64) is the static ELF the issue
+lists. It is built with musl.cc's GCC 11.2.1 20211120 on musl
+1.2.2-git-50-gb76f37fd (x64 https://musl.cc/x86_64-linux-musl-native.tgz,
+SHA-256 eb1db6f0f3c2bdbdbfb993d7ef7e2eeef82ac1259f6a6e1757c33a97dbcef3ad;
+x86 https://musl.cc/i686-linux-musl-cross.tgz, SHA-256
+93bd5504d5d0349258c43d7a668b506acbd627d31c0843a96e4b4c47b27a0180; pinned in
+corpus.toolchain.MUSL_PINS and fetched by exercisers/fetch_musl_toolchain.sh)
+with XMRig's own -DBUILD_STATIC=ON, and it is the one image where the
+dependencies cannot be shared: a static ELF cannot load libuv.so or
+libssl.so, so libuv 1.52.1 and OpenSSL 3.5.8, the pinned sources of every
+other axis, are built as static archives and are in the image, with musl
+libc, libgcc, libstdc++ and libatomic. Two filters keep the family to the
+miner, and what they leave is measured:
+
+  * The musl glue baseline (corpus.baseline, scripts/corpus/README.md "The
+    musl half") removes the libc, libgcc, libgcc_eh, libstdc++ and libatomic
+    code by name and PicHash (name and opcode hash as well on these
+    toolchains, because a 32-bit PIC function's PicHash follows the image's
+    layout): 4,060 functions on x64, 4,242 on x86.
+  * Recipe.exclude_functions removes libuv and OpenSSL by name, with two
+    patterns generated from the function symbols of the pinned libuv.a,
+    libcrypto.a and libssl.a of both architectures (_musl_dep_symbols.py:
+    495 prefix rules and 1,643 exact names, by exercisers/musl_dep_symbols.py;
+    19,956 names in all). The archives define them, not the image, so what
+    the rule removes does not depend on what this miner happens to pull in:
+    19,827 functions on x64, 19,572 on x86, recorded as
+    excluded_function_count.
+
+Counts, kept + removed as runtime + excluded = total: x64 3,802 + 4,060 +
+19,827 = 27,689; x86 3,426 + 4,242 + 19,572 = 27,240. For scale, the glibc
+axis keeps 3,783 (x64) and 3,887 (x86) functions of the same source: the
+miner is the same ~3,800 functions, and the rest of the file is libc, libgcc,
+libstdc++, libuv and OpenSSL.
+
+How well that separates, measured against the linker and not against the
+names: each image was relinked with -Wl,-Map (byte-identical) and every SMDA
+function attributed to the archive member holding its input section. Of the
+3,802 functions x64 keeps, 3,553 are in the miner's own objects (and its
+vendored libraries), 123 are unnamed with no input section (SMDA's .cold
+partitions and tail fragments), and 126 are not the miner's: 70 libstdc++, 4
+libc, 1 libgcc_eh (named like the baseline's copy but with other bytes - a
+symbol several archive members define), and 51 libuv/OpenSSL (19 unnamed, 32
+whose names the miner also defines, e.g. Argon2's blake2b_compress and
+fill_block, and OpenSSL's ed25519 fe_*/ge_*, which the rule leaves alone
+because deleting them would delete miner code). On x86, of 3,426: 3,251, 80
+unattributed, 95 (19 libstdc++, 11 libc, 1 libgcc, 64 libuv/OpenSSL of which
+32 unnamed and 32 shared names). Those 126 and 95 are in the image under the
+miner's name and are the measured limit of this axis.
+
+The axis against the others, ten instructions or more: musl x64 has 2,326
+PicHashes and shares 31 with GCC/glibc (2,248), none with MinGW (2,128) and 1
+with MSVC (4,220) - so the earlier "0 between any two toolchains" holds for
+GCC, MinGW and MSVC and not for the second GCC; x86 has 2,645 and shares 115,
+33 and 0 with GCC, MinGW and MSVC. Against the dependency families, for the
+code the exclusion removes (measured before it): of the musl x64 image's 8,430
+libcrypto PicHashes, 64 are in data/OpenSSL 3.5.8 (MinGW); of 2,529 libssl, 0;
+of 374 libuv, 0 are in data/libuv 1.52.1 (MinGW, MSVC). On x86: 104 of 13,218,
+0 of 3,528 and 2 of 441. The static musl OpenSSL and libuv are not carried
+by those families (neither has an ELF image), so excluding them leaves a
+gap in the corpus rather than a duplicate; they are not filed under the
+miner.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
+from . import _musl_dep_symbols
 from . import _stack_deps as deps
 
 
@@ -138,6 +199,20 @@ _NOTES = (
     "separate units that XMRig picks at run time. The vendored RandomX, "
     "Argon2, llhttp, libethash, epee, fmt and base32 are compiled in and stay "
     "filed here."
+)
+
+
+MUSL_EXCLUDE = _musl_dep_symbols.EXCLUDE
+
+_NOTES_MUSL = (
+    "Static musl ELF built with XMRig's own -DBUILD_STATIC=ON: stock "
+    "configuration with the GPU backends and hwloc off, libuv 1.52.1 and "
+    "OpenSSL 3.5.8 built from pinned sources as static archives. Build type "
+    "Corpus carries CMake's Release optimisation and XMRig's -Ofast without "
+    "XMRig's -s. -maes is XMRig's own; no -march is set. musl libc, libgcc, "
+    "libgcc_eh, libstdc++ and libatomic code is removed by the musl glue "
+    "baseline (removed_runtime_functions). " + deps.MUSL_EXCLUDE_TEXT + " "
+    + deps.MUSL_PIN_TEXT
 )
 
 
@@ -198,7 +273,37 @@ def _linux():
     )
 
 
+def _musl():
+    return Recipe(
+        family="XMRig",
+        version="6.25.0",
+        upstream="https://github.com/xmrig/xmrig",
+        license=_LICENSE,
+        source=Source(git_url="https://github.com/xmrig/xmrig.git",
+                      git_ref=_TAG),
+        extra_sources=dict(deps.EXTRA_SOURCES),
+        build=(deps.musl_openssl() + deps.musl_libuv() + [
+            BuildStep(
+                "cmake -S . -B build-{arch} -DCMAKE_C_COMPILER={cc} "
+                "-DCMAKE_CXX_COMPILER={cxx} -DBUILD_STATIC=ON "
+                + _CONFIG + " " + deps.musl_dep_options(),
+                env={"CFLAGS": "", "CXXFLAGS": ""}),
+            BuildStep("cmake --build build-{arch} -j$(nproc)"),
+        ]),
+        artifacts=[Artifact(path="build-{arch}/xmrig", component="xmrig")],
+        toolchains=["musl_x86", "musl_x64"],
+        exclude_functions=list(MUSL_EXCLUDE),
+        build_flags="-O3 -DNDEBUG -Ofast (build type Corpus), -maes, "
+                    "per-file -msse4.1/-mavx2/-mvaes as XMRig's CMake sets; "
+                    "no -s; -DBUILD_STATIC=ON (-static, static-pie by the "
+                    "toolchain's default), libuv.a and OpenSSL libcrypto.a/"
+                    "libssl.a",
+        notes=_NOTES_MUSL,
+    )
+
+
 RECIPES = {
     "XMRig_6.25.0": _mingw(),
     "XMRig_6.25.0_linux": _linux(),
+    "XMRig_6.25.0_musl": _musl(),
 }

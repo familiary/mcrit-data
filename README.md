@@ -1065,7 +1065,7 @@ Generated with `scripts/build_corpus.py`; see `data/RandomX/provenance.json` for
 
 ### XMRig<a id='xmrig'></a>
 
-XMRig 6.25.0 miner, stock configuration with the GPU backends and hwloc off, linked against shared libuv and OpenSSL so neither is in the image. RandomX, Argon2, llhttp, libethash and the other trees under `src/3rdparty` are compiled in and filed here; `data/RandomX` overlaps with the RandomX part. The ELF and PE builds carry no libstdc++: XMRig's `-static` link flags are removed, not accepted. MSVC counts are about four times the GCC ones because MSVC instantiates the standard library's templates into the image.  
+XMRig 6.25.0 miner, stock configuration with the GPU backends and hwloc off, linked against shared libuv and OpenSSL so neither is in the image. The static musl ELF cannot do that: its libuv and OpenSSL are linked in, and removed again by name (`exclude_functions`; 19,827 functions on x64, 19,572 on x86) beside musl's libc, libgcc and libstdc++ (the musl glue baseline); what the name rule could not separate (126 functions on x64, 95 on x86 that the linker map attributes to other archives, and about 120 unnamed fragments) is in the recipe docstring. RandomX, Argon2, llhttp, libethash and the other trees under `src/3rdparty` are compiled in and filed here; `data/RandomX` overlaps with the RandomX part. The ELF and PE builds carry no libstdc++: XMRig's `-static` link flags are removed, not accepted. MSVC counts are about four times the GCC ones because MSVC instantiates the standard library's templates into the image.  
 Generated with `scripts/build_corpus.py`; see `data/XMRig/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: XMRig -->
@@ -1074,11 +1074,12 @@ Generated with `scripts/build_corpus.py`; see `data/XMRig/provenance.json` for s
 | XMRig | 6.25.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/XMRig/x86/mcrit/XMRig_6.25.0_gcc13_x86_xmrig.mcrit) / [x64 ELF](data/XMRig/x64/mcrit/XMRig_6.25.0_gcc13_x64_xmrig.mcrit) | [x86 ELF](data/XMRig/x86/smda/XMRig_6.25.0_gcc13_x86_xmrig.7z) / [x64 ELF](data/XMRig/x64/smda/XMRig_6.25.0_gcc13_x64_xmrig.7z) |
 | XMRig | 6.25.0 | MinGW-w64 GCC 13 | [x86 PE](data/XMRig/x86/mcrit/XMRig_6.25.0_mingw13_x86_xmrig.exe.mcrit) / [x64 PE](data/XMRig/x64/mcrit/XMRig_6.25.0_mingw13_x64_xmrig.exe.mcrit) | [x86 PE](data/XMRig/x86/smda/XMRig_6.25.0_mingw13_x86_xmrig.exe.7z) / [x64 PE](data/XMRig/x64/smda/XMRig_6.25.0_mingw13_x64_xmrig.exe.7z) |
 | XMRig | 6.25.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/XMRig/x86/mcrit/XMRig_6.25.0_msvc143_x86_xmrig.exe.mcrit) / [x64 PE](data/XMRig/x64/mcrit/XMRig_6.25.0_msvc143_x64_xmrig.exe.mcrit) | [x86 PE](data/XMRig/x86/smda/XMRig_6.25.0_msvc143_x86_xmrig.exe.7z) / [x64 PE](data/XMRig/x64/smda/XMRig_6.25.0_msvc143_x64_xmrig.exe.7z) |
+| XMRig | 6.25.0 | GCC 11 (Linux, musl, static) | [x86 ELF](data/XMRig/x86/mcrit/XMRig_6.25.0_musl11_x86_xmrig.mcrit) / [x64 ELF](data/XMRig/x64/mcrit/XMRig_6.25.0_musl11_x64_xmrig.mcrit) | [x86 ELF](data/XMRig/x86/smda/XMRig_6.25.0_musl11_x86_xmrig.7z) / [x64 ELF](data/XMRig/x64/smda/XMRig_6.25.0_musl11_x64_xmrig.7z) |
 <!-- /generated -->
 
 ### xmrig-proxy<a id='xmrig-proxy'></a>
 
-xmrig-proxy 6.26.0, the stratum proxy: XMRig's `src/base` plus the proxy and network layers, with no mining backend. Between 8% (Linux x86) and 76% (MSVC x64) of its functions of ten instructions or more also appear in `data/XMRig`; see the recipe docstring for the numbers.  
+xmrig-proxy 6.26.0, the stratum proxy: XMRig's `src/base` plus the proxy and network layers, with no mining backend. Between 8% (Linux x86) and 76% (MSVC x64) of its functions of ten instructions or more also appear in `data/XMRig`; see the recipe docstring for the numbers. The static musl ELF carries libuv and OpenSSL like XMRig's and has them removed the same way (19,827 functions on x64, 19,574 on x86).  
 Generated with `scripts/build_corpus.py`; see `data/xmrig-proxy/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: xmrig-proxy -->
@@ -1087,6 +1088,7 @@ Generated with `scripts/build_corpus.py`; see `data/xmrig-proxy/provenance.json`
 | xmrig-proxy | 6.26.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/xmrig-proxy/x86/mcrit/xmrig-proxy_6.26.0_gcc13_x86_xmrig-proxy.mcrit) / [x64 ELF](data/xmrig-proxy/x64/mcrit/xmrig-proxy_6.26.0_gcc13_x64_xmrig-proxy.mcrit) | [x86 ELF](data/xmrig-proxy/x86/smda/xmrig-proxy_6.26.0_gcc13_x86_xmrig-proxy.7z) / [x64 ELF](data/xmrig-proxy/x64/smda/xmrig-proxy_6.26.0_gcc13_x64_xmrig-proxy.7z) |
 | xmrig-proxy | 6.26.0 | MinGW-w64 GCC 13 | [x86 PE](data/xmrig-proxy/x86/mcrit/xmrig-proxy_6.26.0_mingw13_x86_xmrig-proxy.exe.mcrit) / [x64 PE](data/xmrig-proxy/x64/mcrit/xmrig-proxy_6.26.0_mingw13_x64_xmrig-proxy.exe.mcrit) | [x86 PE](data/xmrig-proxy/x86/smda/xmrig-proxy_6.26.0_mingw13_x86_xmrig-proxy.exe.7z) / [x64 PE](data/xmrig-proxy/x64/smda/xmrig-proxy_6.26.0_mingw13_x64_xmrig-proxy.exe.7z) |
 | xmrig-proxy | 6.26.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/xmrig-proxy/x86/mcrit/xmrig-proxy_6.26.0_msvc143_x86_xmrig-proxy.exe.mcrit) / [x64 PE](data/xmrig-proxy/x64/mcrit/xmrig-proxy_6.26.0_msvc143_x64_xmrig-proxy.exe.mcrit) | [x86 PE](data/xmrig-proxy/x86/smda/xmrig-proxy_6.26.0_msvc143_x86_xmrig-proxy.exe.7z) / [x64 PE](data/xmrig-proxy/x64/smda/xmrig-proxy_6.26.0_msvc143_x64_xmrig-proxy.exe.7z) |
+| xmrig-proxy | 6.26.0 | GCC 11 (Linux, musl, static) | [x86 ELF](data/xmrig-proxy/x86/mcrit/xmrig-proxy_6.26.0_musl11_x86_xmrig-proxy.mcrit) / [x64 ELF](data/xmrig-proxy/x64/mcrit/xmrig-proxy_6.26.0_musl11_x64_xmrig-proxy.mcrit) | [x86 ELF](data/xmrig-proxy/x86/smda/xmrig-proxy_6.26.0_musl11_x86_xmrig-proxy.7z) / [x64 ELF](data/xmrig-proxy/x64/smda/xmrig-proxy_6.26.0_musl11_x64_xmrig-proxy.7z) |
 <!-- /generated -->
 
 ### xmr-stak<a id='xmr-stak'></a>

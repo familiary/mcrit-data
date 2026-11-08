@@ -1,4 +1,4 @@
-"""xmrig-proxy 6.26.0 - the stratum proxy, as PE (MinGW) and ELF (glibc).
+"""xmrig-proxy 6.26.0 - the stratum proxy, as PE (MinGW), ELF (glibc) and static ELF (musl).
 
 Backlog issue #84. The tag v6.26.0 is commit 0dc23f69. MSVC is in
 xmrig_proxy_msvc.py.
@@ -33,6 +33,31 @@ MinGW x64 2157 and 170, x86 2671 and 180; MSVC x64 10,065 and 2,141, x86
 architecture at ten instructions or more: none on x64, 39 (GCC/MinGW) and 1
 (MinGW/MSVC) on x86.
 
+The musl axis (xmrig-proxy_6.26.0_musl, x86 and x64) is the static ELF: built
+with the musl.cc GCC 11.2.1 toolchains pinned in corpus.toolchain.MUSL_PINS
+(x64 https://musl.cc/x86_64-linux-musl-native.tgz, SHA-256
+eb1db6f0f3c2bdbdbfb993d7ef7e2eeef82ac1259f6a6e1757c33a97dbcef3ad; x86
+https://musl.cc/i686-linux-musl-cross.tgz, SHA-256
+93bd5504d5d0349258c43d7a668b506acbd627d31c0843a96e4b4c47b27a0180) and
+-DBUILD_STATIC=ON, with CMake Release as on the other axes. A static ELF
+cannot load libuv or OpenSSL, so they are linked in as static archives built
+from the same pinned sources, and removed again as in xmrig.py: the musl glue
+baseline (libc, libgcc, libstdc++, libatomic) and Recipe.exclude_functions
+with the patterns generated from the pinned libuv.a, libcrypto.a and
+libssl.a (_musl_dep_symbols.py; excluded_function_count). Counts, kept +
+removed as runtime + excluded = total: x64 2,250 + 3,932 + 19,827 = 26,009;
+x86 2,139 + 4,134 + 19,574 = 25,847. Against the linker map (see xmrig.py for
+the method), of the 2,250 functions x64 keeps 2,059 are in the proxy's own
+objects, 56 are unnamed with no input section and 135 are not the proxy's:
+76 libstdc++, 6 libc, 1 libgcc_eh, 52 libuv/OpenSSL (20 unnamed, 32 whose
+names the proxy also defines); x86, of 2,139: 1,993, 38 and 108 (23
+libstdc++, 11 libc, 1 libgcc, 73 libuv/OpenSSL). At ten instructions or more
+the musl axis has 1,439 PicHashes on x64 and 1,700 on x86; it shares 5 and
+73 with GCC/glibc, 0 and 8 with MinGW and 0 and 0 with MSVC; and 878 (x64) and
+139 (x86) with the musl XMRig image (2,326 and 2,645), the same shared
+src/base the other axes show, much reduced on x86 because 32-bit PIC code
+carries image-specific displacements.
+
 Evidence for the target is the issue's own: naming only (the TRIBACK script
 builds xmrig-proxy from source on the victim host with whatever gcc it has),
 so the Linux x64 axis is the one the evidence supports and the rest is
@@ -40,6 +65,7 @@ coverage.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
+from . import _musl_dep_symbols
 from . import _stack_deps as deps
 
 
@@ -63,6 +89,19 @@ _NOTES = (
 
 _LICENSE = ("GPL-3.0-or-later (SPDX identifier in src/version.h); vendored "
             "trees carry their own: llhttp MIT, fmt MIT, rapidjson MIT")
+
+
+MUSL_EXCLUDE = _musl_dep_symbols.EXCLUDE
+
+_NOTES_MUSL = (
+    "Static musl ELF built with xmrig-proxy's -DBUILD_STATIC=ON: stock "
+    "configuration (TLS, HTTP API, environment variables), libuv 1.52.1 and "
+    "OpenSSL 3.5.8 built from pinned sources as static archives. CMake "
+    "Release (-O3 -DNDEBUG); no -s, no -march, no -maes. musl libc, libgcc, "
+    "libgcc_eh, libstdc++ and libatomic code is removed by the musl glue "
+    "baseline (removed_runtime_functions). " + deps.MUSL_EXCLUDE_TEXT + " "
+    + deps.MUSL_PIN_TEXT
+)
 
 
 def _proxy(linux):
@@ -109,7 +148,35 @@ def _proxy(linux):
     )
 
 
+def _musl():
+    return Recipe(
+        family="xmrig-proxy",
+        version="6.26.0",
+        upstream="https://github.com/xmrig/xmrig-proxy",
+        license=_LICENSE,
+        source=Source(git_url="https://github.com/xmrig/xmrig-proxy.git",
+                      git_ref=_TAG),
+        extra_sources=dict(deps.EXTRA_SOURCES),
+        build=(deps.musl_openssl() + deps.musl_libuv() + [
+            BuildStep("cmake -S . -B build-{arch} -DCMAKE_C_COMPILER={cc} "
+                      "-DCMAKE_CXX_COMPILER={cxx} -DBUILD_STATIC=ON "
+                      "-DCMAKE_BUILD_TYPE=Release " + deps.musl_dep_options(),
+                      env={"CFLAGS": "", "CXXFLAGS": ""}),
+            BuildStep("cmake --build build-{arch} -j$(nproc)"),
+        ]),
+        artifacts=[Artifact(path="build-{arch}/xmrig-proxy",
+                            component="xmrig-proxy")],
+        toolchains=["musl_x86", "musl_x64"],
+        exclude_functions=list(MUSL_EXCLUDE),
+        build_flags="-O3 -DNDEBUG (CMake Release), no -s; -DBUILD_STATIC=ON "
+                    "(-static, static-pie by the toolchain's default), "
+                    "libuv.a and OpenSSL libcrypto.a/libssl.a",
+        notes=_NOTES_MUSL,
+    )
+
+
 RECIPES = {
     "xmrig-proxy_6.26.0": _proxy(False),
     "xmrig-proxy_6.26.0_linux": _proxy(True),
+    "xmrig-proxy_6.26.0_musl": _musl(),
 }
