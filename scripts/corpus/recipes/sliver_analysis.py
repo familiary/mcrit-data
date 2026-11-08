@@ -4,7 +4,11 @@ https://github.com/r0ny123/mcrit-data/issues/37
 
 The inspected newer pin requires Go 1.27.3. This older release declares Go
 1.18; its vendored gVisor excludes Go 1.21 and newer. Go 1.20.14 is pinned
-and checked, within the corpus's existing Go runtime coverage.
+and checked, within the corpus's existing Go runtime coverage. The newer
+4c2e8d4 revision is covered separately by sliver_current_analysis.py; its
+docstring records the complete cross-revision overlap matrix. The newer
+4c2e8d4 revision is covered separately by sliver_current_analysis.py; its
+docstring records the complete cross-revision overlap matrix.
 
 Only an analysis copy is changed: the cgo entry import is removed, the
 original main is renamed, and first-party package initializers are renamed
