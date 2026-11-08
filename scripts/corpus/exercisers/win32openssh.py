@@ -196,9 +196,12 @@ def vcpkg(arch):
 
 
 def msbuild(arch, targets):
+    # The whole solution, as upstream builds it: `/t:<project>` on this
+    # solution reaches every project as a target of that name and stops at
+    # config.vcxproj (MSB4057), so `targets` is only logged.
+    say("wanted programs:", " ".join(targets))
     sln = os.path.join(OPENSSH, "Win32-OpenSSH.sln")
     cmd = [shutil.which("msbuild") or "msbuild", sln,
-           "/t:" + ";".join(targets),
            "/p:Configuration=Release", "/p:Platform=" + arch,
            "/p:PlatformToolset=v143", "/p:WindowsTargetPlatformVersion=10.0",
            "/p:WholeProgramOptimization=false", "/p:LinkIncremental=false",
