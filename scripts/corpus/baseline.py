@@ -885,6 +885,49 @@ int main(int argc, char **argv)
 """
 
 
+# musl, linked statically. The two usage probes are the Linux ones unchanged:
+# what a C and a C++ program that touches a broad runtime surface links in. They
+# are kept because they are the method the other baselines use, and they
+# measure the one thing a whole-archive link cannot - the header templates
+# the probe's own translation unit instantiates (21 on glibc x64).
+#
+# The whole-archive probes below are the point of this block. A static link
+# pulls archive members in on demand, so a usage probe finds only the members
+# the probe happened to call, and the next miner calls getaddrinfo, pthread
+# or the wide-character locale machinery that the probe did not. Linking an
+# archive with --whole-archive instead puts every member in the executable,
+# and its functions are then by construction every function that archive can
+# contribute to an image - the name and the PicHash each has in any program
+# that pulls it in, because an archive member is compiled once and its bytes
+# are the same wherever it lands (the PicHash does not read addresses). One
+# archive per executable, because libgcc.a and libgcc_eh.a on x86, and
+# libstdc++.a and libsupc++.a on both, define the same symbols and cannot be
+# whole-archived together. The sizes of the symbol tables are in the README.
+_PROBE_MUSL_WHOLE_C = """\
+int main(void)
+{
+    return 0;
+}
+"""
+
+_PROBE_MUSL_WHOLE_CXX = """\
+int main()
+{
+    return 0;
+}
+"""
+
+# One entry per archive: (compiler kind, label, link flags).
+_MUSL_WHOLE_ARCHIVES = (
+    ("cc", "libc", "-lc"),
+    ("cc", "libgcc", "-lgcc"),
+    ("cc", "libgcc_eh", "-lgcc_eh"),
+    ("cc", "libatomic", "-latomic"),
+    ("cxx", "libstdc++", "-lstdc++"),
+    ("cxx", "libsupc++", "-lsupc++"),
+)
+
+
 # MSVC only, and only because two families here need ATL. A DLL that merely
 # instantiates ATL's module object drags in CAtlBaseModule, CAtlWinModule,
 # CComCriticalSection and the CSimpleArray instantiations behind them - around
@@ -2881,6 +2924,39 @@ def _msvc_probes(toolchain):
 # in by crt_glue and read by probe_failures below. A dict rather than a return
 # value because crt_glue is lru_cached: the second caller gets the memoised
 # glue set and would otherwise see no failures at all.
+def _elf_alias_names(path):
+    """Every name an ELF image's symbol table gives each function address.
+
+    SMDA keeps one name per address, and which one it keeps is whichever the
+    symbol table lists last. musl spells dozens of libc functions twice
+    (``fgets`` and ``fgets_unlocked``, and the same across the stdio and
+    locale families), and the table's order follows the link, not the
+    archive: the same function is ``fgets_unlocked`` in a probe that links
+    every member and ``fgets`` in a program that pulls one. A glue filter that
+    matches on the one name SMDA happened to keep would then miss the same
+    bytes under the other. The baseline therefore records the function under
+    every alias, and is_glue still needs the PicHash to match as well.
+    """
+    import lief
+
+    from smda.common.labelprovider.ElfSymbolProvider import ElfSymbolProvider
+
+    lief.logging.disable()
+    binary = lief.parse(path)
+    aliases = {}
+    if binary is None:
+        return aliases
+    for table in (binary.symtab_symbols, binary.dynamic_symbols):
+        for symbol in table:
+            if (symbol is None or not symbol.is_function or not symbol.value
+                    or not ElfSymbolProvider._isDefinedSymbol(symbol)):
+                continue
+            name = ElfSymbolProvider._formatSymbolName(symbol)
+            if name:
+                aliases.setdefault(symbol.value, set()).add(name)
+    return aliases
+
+
 _PROBE_FAILURES = {}
 
 
@@ -2912,7 +2988,24 @@ def crt_glue(toolchain_id):
     from .smdaify import disassemble
 
     toolchain = get_toolchain(toolchain_id)
-    if toolchain.kind == "linux":
+    if toolchain.kind == "musl":
+        # Static executables only; see _PROBE_MUSL_WHOLE_C. -lm is on the C
+        # usage probe for the reason it is on the glibc one (it takes the
+        # address of sin, cos and twenty more), although musl's libm.a is an
+        # empty archive and the functions come out of libc.a.
+        probes = [
+            (toolchain.cc, "probe_musl.c", _PROBE_LINUX_C_EXE, ["-lm"]),
+            (toolchain.cxx, "probe_musl.cpp", _PROBE_LINUX_CXX_EXE, []),
+        ]
+        for compiler, label, flag in _MUSL_WHOLE_ARCHIVES:
+            plusplus = compiler == "cxx"
+            probes.append((
+                toolchain.cxx if plusplus else toolchain.cc,
+                "probe_musl_whole_%s.%s" % (label.replace("+", "p"),
+                                           "cpp" if plusplus else "c"),
+                _PROBE_MUSL_WHOLE_CXX if plusplus else _PROBE_MUSL_WHOLE_C,
+                ["-Wl,--whole-archive", flag, "-Wl,--no-whole-archive"]))
+    elif toolchain.kind == "linux":
         # A separate list rather than the four below plus extras: every one
         # of those four is #include <windows.h> with a __declspec entry point
         # and MSVCRT-only calls, so under this toolchain all four would fail
@@ -3041,9 +3134,14 @@ def crt_glue(toolchain_id):
                 _PROBE_FAILURES.setdefault(toolchain_id, []).append(filename)
                 continue
             probe = disassemble(target, pdb_path=toolchain.probe_pdb(target))
+            # musl only; see _elf_alias_names. The other baselines are
+            # measured constants this change is not allowed to move.
+            aliases = _elf_alias_names(target) if toolchain.kind == "musl" else {}
             for function in probe.getFunctions():
                 if not function.function_name:
                     continue
+                for name in aliases.get(function.offset, ()):
+                    glue.setdefault(name, set()).add(function.pic_hash)
                 glue.setdefault(function.function_name, set()).add(function.pic_hash)
     # The probe's own function is the one thing here that is not runtime code.
     #
