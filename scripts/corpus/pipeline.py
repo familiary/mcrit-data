@@ -1,6 +1,7 @@
 """Drive a recipe end to end: fetch, build, disassemble, export, package."""
 
 import datetime
+import json
 import logging
 import os
 import shutil
@@ -124,6 +125,7 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
             continue
 
         for artifact, binary_path, pdb_path in produced:
+            duplicates = []
             try:
                 report, removed = smdaify(
                     binary_path,
@@ -140,6 +142,8 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                     bitness=artifact.bitness,
                     base_addr=artifact.base_addr,
                     pdb_path=pdb_path,
+                    dedupe=recipe.dedupe_functions,
+                    duplicates=duplicates,
                 )
                 arch = "x86" if report.bitness == 32 else "x64"
                 slug = recipe.slug(toolchain_id, artifact, arch)
@@ -199,6 +203,12 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
             }
             if removed:
                 entry["removed_runtime_functions"] = sorted(removed)
+            if recipe.dedupe_functions:
+                entry["deduplicated_functions"] = len(duplicates)
+            if artifact.inputs:
+                with open(os.path.join(source_root, artifact.inputs),
+                          encoding="utf-8") as handle:
+                    entry["inputs"] = json.load(handle)
             if dependency_provenance:
                 entry["dependencies"] = dependency_provenance
             if recipe.notes:

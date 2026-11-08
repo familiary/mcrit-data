@@ -32,6 +32,13 @@ on:
         description: Recipes to build (space separated, or "all-msvc")
         required: false
         default: all-msvc
+      recipes_2025:
+        description: >-
+          Recipes to build on the windows-2025 image (VS 2026, toolset 14.51)
+          as well, space separated; empty skips that image. The MSVC_TOOLSETS
+          14.51 recipes only exist there.
+        required: false
+        default: ''
   # push rather than pull_request: a pull_request path filter is evaluated
   # against everything the PR changes, not against the push, so once one of
   # these files is in the branch every later commit re-triggers the job and
@@ -66,6 +73,8 @@ on:
       - scripts/corpus/baseline.py
       - scripts/corpus/smdaify.py
       - scripts/corpus/recipe.py
+      # The MSVC_TOOLSETS recipes link the toolsets' libraries with this helper.
+      - scripts/corpus/crawl_vclibs.py
       # config.py is in this list for the same reason rather than as a
       # catch-all: MIN_NAMED_SAMPLE_INSTRUCTIONS decides which functions the
       # symbol-coverage gate counts, and MIN_USEFUL_FUNCTIONS and
@@ -89,11 +98,17 @@ concurrency:
 
 jobs:
   build:
-    runs-on: windows-2022
+    runs-on: ${{ matrix.image }}
+    # The default is six hours; the MSVC_TOOLSETS shards disassemble images of
+    # several tens of megabytes each, so say so rather than inherit it.
+    timeout-minutes: 350
     strategy:
       # One architecture failing should not hide the other's result.
       fail-fast: false
       matrix:
+        # windows-2022 always runs (the image this workflow was written for);
+        # windows-2025 only when a dispatch names recipes for it.
+        image: ${{ fromJSON(github.event.inputs.recipes_2025 != '' && '["windows-2022","windows-2025"]' || '["windows-2022"]') }}
         arch: [x86, x64]
     steps:
       - uses: actions/checkout@v4
@@ -114,6 +129,27 @@ jobs:
 
       - name: Show detected toolchains
         run: python scripts/build_corpus.py list
+
+      # What every installed MSVC toolset carries, library by library with
+      # SHA-256, member counts and the shard each one is assigned to or the
+      # reason it is left out. Informational, and the only place the images'
+      # toolsets are compared byte for byte (14.44 is meant to be identical
+      # on windows-2022 and windows-2025). Only for dispatches that build
+      # MSVC_TOOLSETS recipes.
+      - name: Inventory the MSVC toolsets (informational, never fatal)
+        if: ${{ contains(github.event.inputs.recipes, 'MSVC_TOOLSETS') || contains(github.event.inputs.recipes_2025, 'MSVC_TOOLSETS') }}
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          python scripts/corpus/crawl_vclibs.py --arch ${{ matrix.arch }} --out inventory --inventory
+
+      - name: Upload the toolset inventory
+        if: ${{ !cancelled() && (contains(github.event.inputs.recipes, 'MSVC_TOOLSETS') || contains(github.event.inputs.recipes_2025, 'MSVC_TOOLSETS')) }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: toolset-inventory-${{ matrix.image }}-${{ matrix.arch }}
+          path: inventory/*.json
+          if-no-files-found: ignore
 
       # Informational only, and deliberately the one step here that looks at
       # what the image has installed rather than at what a recipe declares.
@@ -170,6 +206,9 @@ jobs:
         shell: pwsh
         run: |
           $requested = "${{ github.event.inputs.recipes }}"
+          if ("${{ matrix.image }}" -eq "windows-2025") {
+            $requested = "${{ github.event.inputs.recipes_2025 }}"
+          }
           if (-not $requested -or $requested -eq "all-msvc") {
             # Asked of the recipe registry rather than listed here, and asked
             # about what the recipes DECLARE rather than what this runner
@@ -181,8 +220,10 @@ jobs:
             if ($LASTEXITCODE -ne 0) {
               throw "could not enumerate the msvc_${{ matrix.arch }} recipes"
             }
+            # The 14.51 toolset exists only on windows-2025, so an enumerated
+            # run leaves those recipes out rather than fail them on 2022.
             $recipes = @($names | ForEach-Object { $_.Trim() } |
-                         Where-Object { $_ })
+                         Where-Object { $_ -and $_ -notmatch '^MSVC_TOOLSETS_14\.51_' })
           } else {
             $recipes = @($requested.Split(" ") | Where-Object { $_ })
           }
@@ -352,7 +393,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: reference-data-${{ matrix.arch }}
+          name: reference-data-${{ matrix.image }}-${{ matrix.arch }}
           path: ${{ steps.scope.outputs.upload-paths }}
           if-no-files-found: error
 
@@ -386,8 +427,10 @@ jobs:
         if: ${{ !cancelled() && steps.build.conclusion != 'skipped' }}
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-${{ matrix.arch }}
-          path: build/*.log
+          name: build-logs-${{ matrix.image }}-${{ matrix.arch }}
+          path: |
+            build/*.log
+            build/diag/*.txt
           if-no-files-found: ignore
 
       # The verdict, deliberately the last step so the summary lands on the
@@ -423,7 +466,7 @@ jobs:
           }
           if ($uploaded) {
             Write-Host ("::notice::what did build was still uploaded, as " +
-                        "reference-data-${{ matrix.arch }}: $uploaded. " +
+                        "reference-data-${{ matrix.image }}-${{ matrix.arch }}: $uploaded. " +
                         "import_ci_artifacts.py refuses any run that did not " +
                         "conclude success, so import it by downloading the " +
                         "artifact from this run and passing --zip.")
