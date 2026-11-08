@@ -150,6 +150,28 @@ def _drop_crt_glue(report, toolchain_id):
     return removed
 
 
+def _dedupe_functions(report):
+    """Collapse functions sharing PicHash and symbol name; return the names.
+
+    Keeps the lowest-addressed copy. A whole static library routinely carries
+    the same helper compiled into several objects, and one reference sample
+    needs it once.
+    """
+    seen = set()
+    dropped = []
+    for offset, function in sorted(report.xcfg.items()):
+        key = (function.pic_hash, function.function_name)
+        if key in seen:
+            dropped.append(function.function_name)
+            del report.xcfg[offset]
+        else:
+            seen.add(key)
+    report._sorted_functions = None
+    if dropped:
+        _recompute_statistics(report)
+    return dropped
+
+
 def assert_symbols_survived(report, binary_path, min_named_ratio):
     """Refuse a report whose build stripped its symbols.
 
@@ -305,11 +327,14 @@ def _is_direct_target(instruction):
 def smdaify(binary_path, family, version, component, is_library=True,
             toolchain_id=None, drop_crt_glue=True, filename=None,
             min_named_ratio=0.5, is_blob=False, bitness=None,
-            base_addr=0x400000, pdb_path="", min_functions=None):
+            base_addr=0x400000, pdb_path="", min_functions=None,
+            dedupe=False, duplicates=None):
     """Disassemble ``binary_path`` and label it the way the corpus expects.
 
     ``min_functions`` is the recipe's replacement for
     ``config.MIN_USEFUL_FUNCTIONS``; None means that constant applies.
+    ``dedupe`` collapses functions with equal PicHash and name; the names
+    collapsed are appended to the ``duplicates`` list when one is given.
     """
     if is_blob:
         if bitness not in (32, 64):
@@ -336,6 +361,10 @@ def smdaify(binary_path, family, version, component, is_library=True,
     removed = []
     if drop_crt_glue and toolchain_id:
         removed = _drop_crt_glue(report, toolchain_id)
+    if dedupe:
+        dropped = _dedupe_functions(report)
+        if duplicates is not None:
+            duplicates.extend(dropped)
 
     if is_blob:
         recovered = report.statistics.num_instructions if report.statistics else 0
