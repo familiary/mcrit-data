@@ -138,6 +138,16 @@ def _resolve(index, family, slug, entry):
         narrowed = [(name, recipe) for name, recipe in candidates
                     if wanted in {canonical_alias(t)
                                   for t in recipe.toolchains}]
+        if len(narrowed) > 1:
+            # Recipes that share family, version and toolchain and differ in
+            # what they build (MSVC_TOOLSETS: one recipe per library shard of
+            # a toolset) are told apart by the component the record carries.
+            component = entry.get("component")
+            by_component = [(name, recipe) for name, recipe in narrowed
+                            if component in {art.component
+                                            for art in recipe.artifacts}]
+            if len(by_component) == 1:
+                narrowed = by_component
         if len(narrowed) == 1:
             candidates = narrowed
         else:

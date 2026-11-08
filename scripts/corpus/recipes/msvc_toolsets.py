@@ -76,10 +76,16 @@ def _shard(toolset, shard):
         # The objects carry COFF public symbols, not full PDBs: static
         # functions of the CRT and MFC have no name to recover.
         min_named_ratio=0.15,
-        build_flags="MSVC toolset %s, shard %s (%s) linked whole: link /DLL "
-                    "/NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED "
+        build_flags="MSVC toolset %s, shard %s (%s): the COFF object members "
+                    "of the shard's libraries unpacked and linked with link "
+                    "/DLL /NOENTRY /NODEFAULTLIB /FORCE:UNRESOLVED "
                     "/FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF "
                     "/OPT:NOICF /Brepro" % (toolset, shard, description),
+        notes="Derived from the Visual Studio installation on the runner "
+              "image; inputs.libraries lists the SHA-256 of every library "
+              "that went in and inputs.excluded every library of the "
+              "directory that did not, with the reason. Only function "
+              "hashes and SMDA reports are recorded, not the libraries.",
     )
 
 
