@@ -43,7 +43,7 @@ RECIPES = {
         build_flags="/MD /O2 /Oi /DNDEBUG /Zi (build type Corpus, without "
                     "xmrig-proxy's /MT and /GL); /DEBUG /Brepro "
                     "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
-        notes="llhttp, rapidjson and C++ standard library functions that other families "
+        notes="llhttp, ed25519 (load_3, load_4) helpers, rapidjson and C++ standard library functions that other families "
               "also carry, and __scrt_common_main_seh, are removed by exact name "
               "(exclude_functions, excluded_function_count; see _stack_vendored.py); the "
               "images were re-derived from the committed archives, not rebuilt. libuv and "

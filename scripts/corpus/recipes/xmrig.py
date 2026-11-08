@@ -94,12 +94,12 @@ header that is read is the same file.
 
 Axes. MinGW x86 and x64, Linux ELF x86 and x64, MSVC x86 and x64 and static
 musl x86 and x64: eight, and measured to differ. At ten instructions or more, x64 shares 0 PicHashes
-between any two of GCC (2215), MinGW (2095) and MSVC (4140); x86 shares 57
+between any two of GCC (2215), MinGW (2094) and MSVC (4139); x86 shares 57
 between GCC and MinGW and none with MSVC. Counts (kept functions, and
 those removed as compiler runtime): Linux x64 3735 and 9, x86 3847 and 6;
-MinGW x64 3647 and 174, x86 4032 and 186; MSVC x64 14,256 and 2,307, x86
-14,477 and 2,179; a further 48 and 40 (Linux), 60 and 40 (MinGW) and 121 and
-116 (MSVC) are removed by exact name, see "Vendored code removed by name"
+MinGW x64 3646 and 174, x86 4032 and 186; MSVC x64 14,254 and 2,307, x86
+14,475 and 2,179; a further 48 and 40 (Linux), 61 and 40 (MinGW) and 123 and
+118 (MSVC) are removed by exact name, see "Vendored code removed by name"
 below. The MSVC figure is four times the GCC one because MSVC
 instantiates the standard library's templates into the image (5,996 `std::`
 functions on x64) and keeps every unreferenced COMDAT under /OPT:NOREF; it is
@@ -159,8 +159,8 @@ unattributed, 95 (19 libstdc++, 11 libc, 1 libgcc, 64 libuv/OpenSSL of which
 miner's name and are the measured limit of this axis.
 
 The axis against the others, ten instructions or more: musl x64 has 2,310
-PicHashes and shares 31 with GCC/glibc (2,215), none with MinGW (2,095) and 1
-with MSVC (4,140) - so the earlier "0 between any two toolchains" holds for
+PicHashes and shares 31 with GCC/glibc (2,215), none with MinGW (2,094) and 1
+with MSVC (4,139) - so the earlier "0 between any two toolchains" holds for
 GCC, MinGW and MSVC and not for the second GCC; x86 has 2,633 and shares 113,
 30 and 0 with GCC, MinGW and MSVC. Against the dependency families, for the
 code the exclusion removes (measured before it): of the musl x64 image's 8,430
@@ -178,19 +178,26 @@ and only where every function of that name in the recipe's images is shown to
 be the library's (_stack_vendored.py states the tests: PicHash against
 data/llhttp, data/argon2 and data/BLAKE2, a weaker same-name opcode similarity
 of at least 80% counted separately, and for rapidjson and the standard library
-the declaring namespace). 479 functions leave the eight images: 255 llhttp
+the declaring namespace). 484 functions leave the eight images: 255 llhttp
 (212 PicHash-confirmed, 43 by opcode similarity), 18 Argon2/Blake2b
-helpers (PicHash-confirmed), 113 rapidjson, 92 standard library and 1
+helpers and 5 ed25519 helpers (slide on MinGW x64, load_3 and load_4 on MSVC;
+PicHash-confirmed against data/OpenSSL), 113 rapidjson, 92 standard library and 1
 `__scrt_common_main_seh`. Kept / removed as runtime / excluded by name, per
-image: Linux x64 3,735 / 9 / 48, x86 3,847 / 6 / 40; MinGW x64 3,647 / 174 / 60,
-x86 4,032 / 186 / 40; MSVC x64 14,256 / 2,307 / 121, x86 14,477 / 2,179 / 116;
+image: Linux x64 3,735 / 9 / 48, x86 3,847 / 6 / 40; MinGW x64 3,646 / 174 / 61,
+x86 4,032 / 186 / 40; MSVC x64 14,254 / 2,307 / 123, x86 14,475 / 2,179 / 118;
 the musl pair is above. `validate --deep` with the llhttp, argon2 and BLAKE2
-branches' data present: 266 leakage findings before, 14 after, 13 of which still
-name XMRig. Left in on purpose, with the reasons in _stack_vendored.py: the
-ge_p1p1_*, slide and load_3/load_4 helpers of the ed25519 code the miner
-bundles (equal to OpenSSL's by PicHash in places, but 26 of its 61 names are not
-OpenSSL's), rotr64, the llhttp identifiers whose other-architecture function
-is not 80% similar, and the three MinGW CRT helpers.
+branches' data present: 266 leakage findings before the first exclusion
+commit, 14 after it, 10 after the ed25519 helpers; 9 of the 10 name
+XMRig. Left in on purpose, with the reasons in _stack_vendored.py: ge_p1p1_to_p2
+and ge_p1p1_to_p3 and slide on MSVC, where one architecture's function is
+PicHash-equal to OpenSSL's and the other's is not (the miner bundles a
+complete ed25519 set, 26 of whose 61 names are not OpenSSL's), the same
+helpers on Linux, musl and decorated x86 MinGW, rotr64, the llhttp
+identifiers whose other-architecture function is not 80% similar, and the
+three MinGW CRT helpers. The literal PicHash rule against data/OpenSSL
+(read with the unmerged claude/corpus-openssl-add data overlaid; the matches
+are in 1.1.1w) removed slide on MinGW x64 and load_3 and load_4 on MSVC, the 5
+functions counted above.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

@@ -26,12 +26,12 @@ the x86 leg passes -DWITH_ASM=OFF, which is also what cpu.cmake does for any
 branches, the same sources the Linux and MinGW x86 artefacts use.
 
 Built on windows-2022: 14,377 functions on x64 and 14,593 on x86 after 2,307
-and 2,179 compiler-runtime functions were removed. 121 and 116 more, the
-llhttp, Argon2/Blake2b, rapidjson, standard library and __scrt_common_main_seh
-functions that `validate --deep` reported and that are shown to be those
+and 2,179 compiler-runtime functions were removed. 123 and 118 more, the
+llhttp, Argon2/Blake2b, ed25519 (load_3, load_4), rapidjson, standard library
+and __scrt_common_main_seh functions that `validate --deep` reported and that are shown to be those
 libraries' (_stack_vendored.py), were then removed by exact name from the
 committed archives without a rebuild (Recipe.exclude_functions;
-excluded_function_count), which leaves 14,256 and 14,477. About 6,000 of the
+excluded_function_count), which leaves 14,254 and 14,475. About 6,000 of the
 kept ones are `std::` instantiations; MSVC emits the standard library's templates into the
 image and /OPT:NOREF keeps every unreferenced COMDAT, so the count is four
 times the GCC one and describes an MSVC-built miner, not an inflation.
@@ -86,7 +86,7 @@ RECIPES = {
         build_flags="/MD /O2 /Oi /DNDEBUG /Zi (build type Corpus, without "
                     "XMRig's /MT and /GL); /DEBUG /Brepro /INCREMENTAL:NO "
                     "/OPT:NOREF /OPT:NOICF at link",
-        notes="llhttp, Argon2/Blake2b helpers, rapidjson and C++ standard library "
+        notes="llhttp, Argon2/Blake2b and ed25519 (load_3, load_4) helpers, rapidjson and C++ standard library "
               "functions that other families also carry, and __scrt_common_main_seh, are "
               "removed by exact name (exclude_functions, excluded_function_count; see "
               "_stack_vendored.py); the images were re-derived from the committed "

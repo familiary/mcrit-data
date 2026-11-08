@@ -18,7 +18,8 @@ FAMILIES = ("XMRig", "xmr-stak", "xmrig-proxy")
 
 # Identifiers that were measured and deliberately not excluded; see the
 # docstring of _stack_vendored.py for why each stays.
-KEPT_ED25519 = ("ge_p1p1_to_p2", "ge_p1p1_to_p3", "slide", "load_3", "load_4")
+KEPT_ED25519 = ("ge_p1p1_to_p2", "ge_p1p1_to_p3", "_slide", "_load_3", "_load_4",
+                "_ge_p1p1_to_p2", "_ge_p1p1_to_p3")
 KEPT_MINGW_CRT = ("_feclearexcept", "_fesetround", "___mingw_has_sse")
 KEPT_ARGON2 = ("rotr64",)
 
@@ -120,6 +121,21 @@ class TableHygieneTest(unittest.TestCase):
             self.assertNotRegex(name, r"xmrig|xmrstak|randomx|Xmr|rapidjson",
                                 (recipe, name))
 
+    def test_ed25519_is_the_three_helpers_that_pass_the_literal_pichash_rule(self):
+        # PicHash-equal to a same-named function of data/OpenSSL in every
+        # function of the name in the recipe's images, or not listed. Only
+        # these three names, only in the recipes below; the other 26 names of
+        # the bundled ed25519 set that OpenSSL lacks are never listed.
+        expected = {"XMRig_6.25.0": ("slide",),
+                    "xmrig-proxy_6.26.0": ("slide",),
+                    "XMRig_6.25.0_msvc": ("load_3", "load_4"),
+                    "xmrig-proxy_6.26.0_msvc": ("load_3", "load_4")}
+        found = {}
+        for recipe, table in vendored.NAMES.items():
+            if table.get("ed25519"):
+                found[recipe] = tuple(table["ed25519"])
+        self.assertEqual(found, expected)
+
     def test_argon2_names_are_the_measured_helpers(self):
         measured = {"xor_block", "copy_block", "blake2b_init0",
                     "blake2b_increment_counter", "b64_char_to_byte",
@@ -143,7 +159,7 @@ class TableHygieneTest(unittest.TestCase):
             for name in ("xmrig::App::exec()", "randomx_calculate_hash",
                          "argon2_hash", "fill_segment_64", "sph_echo512",
                          "keccak_finish", "cn_hash_ctx", "main", "memcpy",
-                         "ge_p1p1_to_p3", "_ge_p1p1_to_p3", "slide", "rotr64",
+                         "ge_p1p1_to_p3", "_ge_p1p1_to_p3", "_slide", "rotr64", "fe_mul", "sc_reduce32",
                          "_feclearexcept", "llhttp_execute_extra",
                          "rapidjson::Document::Parse()",
                          "std::vector<int, std::allocator<int> >::push_back(int const&)",

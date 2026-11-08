@@ -10,8 +10,8 @@ epee, fmt, getopt, llhttp and rapidjson, compiled in with no module identity,
 filed here. llhttp is 9.3.0, identical to XMRig's apart from an extra api.h.
 
 The cost of that shared base, measured and not avoided: at ten instructions
-or more, 773 of this artefact's 1286 PicHashes on Linux x64 (716 of 1187 on
-MinGW x64, 2005 of 2670 on MSVC x64) are also in data/XMRig. `validate --deep`
+or more, 773 of this artefact's 1286 PicHashes on Linux x64 (715 of 1186 on
+MinGW x64, 2004 of 2669 on MSVC x64) are also in data/XMRig. `validate --deep`
 reports a PicHash only when three or more families carry it, so a pair of
 families sharing hundreds is not flagged, and nothing in the build removes
 src/base from either side. The findings it gave were rapidjson (shared
@@ -30,8 +30,8 @@ pinned sources and linked as shared libraries. No -march and no -maes: the
 proxy does no AES.
 
 Counts (kept, removed as runtime): Linux x64 2499 and 8, x86 2506 and 6;
-MinGW x64 2101 and 170, x86 2632 and 180; MSVC x64 9,945 and 2,148, x86
-10,620 and 2,094. Six axes; PicHashes shared between two axes of the same
+MinGW x64 2100 and 170, x86 2632 and 180; MSVC x64 9,943 and 2,148, x86
+10,618 and 2,094. Six axes; PicHashes shared between two axes of the same
 architecture at ten instructions or more: none on x64, 19 (GCC/MinGW) and 1
 (MinGW/MSVC) on x86.
 
@@ -71,13 +71,14 @@ Vendored code removed by name. Recipe.exclude_functions on all eight images
 removes, by exact name, the functions of llhttp, rapidjson and the C++
 standard library that other corpus families carry too, where every function of
 that name in the recipe's images is shown to be the library's (the tests,
-tiers and the identifiers left in are in _stack_vendored.py and xmrig.py). 449
+tiers and the identifiers left in are in _stack_vendored.py and xmrig.py). 454
 functions leave the eight images: 257 llhttp (213 PicHash-confirmed against
-data/llhttp, 44 by opcode similarity of at least 80%, counted separately), 113
-rapidjson, 78 standard library and 1 `__scrt_common_main_seh`. Kept / removed
+data/llhttp, 44 by opcode similarity of at least 80%, counted separately), 5
+ed25519 helpers (slide on MinGW x64, load_3 and load_4 on MSVC;
+PicHash-confirmed against data/OpenSSL), 113 rapidjson, 78 standard library and 1 `__scrt_common_main_seh`. Kept / removed
 as runtime / excluded by name, per image: Linux x64 2,499 / 8 / 47, x86 2,506 /
-6 / 37; MinGW x64 2,101 / 170 / 56, x86 2,632 / 180 / 39; MSVC x64 9,945 /
-2,148 / 113, x86 10,620 / 2,094 / 108; the musl pair is above. The images were
+6 / 37; MinGW x64 2,100 / 170 / 57, x86 2,632 / 180 / 39; MSVC x64 9,943 /
+2,148 / 115, x86 10,618 / 2,094 / 110; the musl pair is above. The images were
 re-derived from their committed archives, not rebuilt.
 """
 

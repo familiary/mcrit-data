@@ -32,8 +32,16 @@ The evidence comes in three kinds, counted separately:
      same-named function (leading underscores ignored, as validate does) in
      the library's own family: llhttp -> data/llhttp 9.3.0 (MinGW and MSVC,
      x86 and x64; XMRig and the proxy vendor 9.3.0), the Argon2 helpers ->
-     data/argon2 20190702, the Blake2b helpers -> data/BLAKE2. Stricter than
-     the zlib helper's first test, which accepts any name.
+     data/argon2 20190702, the Blake2b helpers -> data/BLAKE2, three ed25519
+     helpers (below) -> data/OpenSSL. Stricter than the zlib helper's first
+     test, which accepts any name. The OpenSSL evidence was read with the
+     whole of data/OpenSSL of the unmerged branch claude/corpus-openssl-add
+     overlaid (OpenSSL 0.9.6 to 3.5.8, GCC, MinGW and MSVC, x86 and x64; not
+     committed here). The matching functions are in OpenSSL 1.1.1w, 3.0.15 and
+     3.5.8 (MinGW x64, MSVC x64 and x86); this branch itself carries 1.1.1w
+     for all three and 3.0.15 and 3.5.8 for MinGW only, so the MSVC 3.0.15 and
+     3.5.8 matches rest on the unmerged data. Every identifier below passes on
+     1.1.1w alone, and no other version or toolchain adds one.
   W  Weaker. No PicHash match, but a same-named function of the same
      architecture in that family whose mnemonic sequence (frame-pointer set-up,
      leave and nop/int3 padding dropped; difflib ratio) is at least 80%
@@ -60,33 +68,42 @@ The evidence comes in three kinds, counted separately:
      MSVC `scalar deleting destructor' hides the namespace from it and these
      are reported as leakage; fixing that classifier is a separate change.)
 
-What is removed: 1,091 functions from the 21 images, 173 identifiers.
+What is removed: 1,101 functions from the 21 images, 176 identifiers.
 
   llhttp           92 identifiers, 512 functions: 425 P, 87 W
   Argon2/Blake2b    7 identifiers,  18 functions:  18 P
+  ed25519 helpers   3 identifiers,  10 functions:  10 P  (slide, load_3, load_4)
   rapidjson        42 identifiers, 333 functions:      N
   C++ standard     31 identifiers, 225 functions:      N
   MSVC CRT          1 identifier,    3 functions:      N  (__scrt_common_main_seh, x64)
 
-By family: XMRig 479 (MinGW 60 + 40, Linux 48 + 40, MSVC 121 + 116, musl 31 +
+By family: XMRig 484 (MinGW 61 + 40, Linux 48 + 40, MSVC 123 + 118, musl 31 +
 23, x64 + x86), xmr-stak 163 (Linux 20, MinGW 7 + 5, MSVC 68 + 63), xmrig-proxy
-449 (MinGW 56 + 39, Linux 47 + 37, MSVC 113 + 108, musl 29 + 20). The counts
+454 (MinGW 57 + 39, Linux 47 + 37, MSVC 115 + 110, musl 29 + 20). The counts
 are data/<family>/provenance.json's excluded_function_count (for the musl
 images the libuv/OpenSSL ones plus these).
 
 Measured and deliberately left in:
 
-  * ge_p1p1_to_p2, ge_p1p1_to_p3, slide, load_3, load_4 (7 PicHashes, the
-    OpenSSL findings). Equal to data/OpenSSL 1.1.1w's by PicHash in the MSVC
-    images, and for slide on MinGW x64, but they are not OpenSSL's code in
-    these images. XMRig and xmrig-proxy compile a complete ed25519 implementation: 61
-    ge_*, fe_*, sc_*, load_* and slide names in the MSVC images, of which 26
-    do not exist in OpenSSL at all (ge_fromfe_frombytes_vartime, sc_reduce32,
-    ge_mul8, ge_double_scalarmult_precomp_vartime2 ...). Two programs derived
-    from the same ref10 code compile a few of the same small helpers to the
-    same bytes; neither is the other's library. Removing the five names would
-    cut holes in the miner's own set (and the musl images hold OpenSSL's own
-    copies under the same names beside the miner's; see xmrig.py).
+  * The ed25519 helpers (ge_p1p1_to_p2, ge_p1p1_to_p3, slide, load_3, load_4).
+    XMRig and xmrig-proxy compile a complete ed25519 implementation: 61 ge_*,
+    fe_*, sc_*, load_* and slide names in the MSVC images, of which 26 do not
+    exist in OpenSSL at all (ge_fromfe_frombytes_vartime, sc_reduce32, ge_mul8,
+    ge_double_scalarmult_precomp_vartime2 ...), so the code is the miners' own
+    set, derived from the same ref10 source as OpenSSL's curve25519 and
+    compiling a few small helpers to the same bytes. It was first kept for that
+    reason; the literal PicHash rule was then applied to these five names and
+    only these (the 26 names OpenSSL lacks are never listed): an identifier is
+    excluded in a recipe exactly where every function of that exact name in the
+    recipe's images has a PicHash equal to a same-named OpenSSL function.
+    That holds for slide in the MinGW recipes (x64 only; the x86 name is
+    `_slide`, a different exact name whose function matches nothing), and for
+    load_3 and load_4 in the two MSVC recipes (both architectures). It does not
+    hold for ge_p1p1_to_p2 and ge_p1p1_to_p3 in the MSVC recipes (x86 matches,
+    the x64 function does not), nor for slide there (x64 matches, x86 does
+    not), nor for any of the five in the Linux and musl recipes, nor for the
+    decorated x86 MinGW names; those stay, with the findings they hold. The
+    musl images also hold OpenSSL's own copies under the same names.
   * rotr64 and blake2b_increment_counter. Both are Blake2b helpers, P against
     data/BLAKE2. blake2b_increment_counter is excluded where all its
     functions are P (MSVC), but RandomX, BLAKE2 and argon2 carry the same
@@ -207,6 +224,11 @@ _LLHTTP_1 = (
 _ARGON2_1 = (
     'copy_block',
     'xor_block',
+)
+
+# ed25519: XMRig_6.25.0, xmrig-proxy_6.26.0
+_ED25519_1 = (
+    'slide',
 )
 
 # rapidjson: XMRig_6.25.0, xmr-stak_2.10.8_mingw, xmrig-proxy_6.26.0
@@ -334,6 +356,12 @@ _ARGON2_2 = (
     'copy_block',
     'decode_decimal',
     'xor_block',
+)
+
+# ed25519: XMRig_6.25.0_msvc, xmrig-proxy_6.26.0_msvc
+_ED25519_2 = (
+    'load_3',
+    'load_4',
 )
 
 # rapidjson: XMRig_6.25.0_msvc, xmr-stak_2.10.8_msvc, xmr-stak_2.10.8_msvc_x86, xmrig-proxy_6.26.0_msvc
@@ -490,6 +518,7 @@ NAMES = {
     'XMRig_6.25.0': {
         'llhttp': _LLHTTP_1,
         'argon2': _ARGON2_1,
+        'ed25519': _ED25519_1,
         'rapidjson': _RAPIDJSON_1,
         'stdlib': _STDLIB_1,
     },
@@ -501,6 +530,7 @@ NAMES = {
     'XMRig_6.25.0_msvc': {
         'llhttp': _LLHTTP_3,
         'argon2': _ARGON2_2,
+        'ed25519': _ED25519_2,
         'rapidjson': _RAPIDJSON_3,
         'stdlib': _STDLIB_3,
         'crt': _CRT_1,
@@ -529,6 +559,7 @@ NAMES = {
     },
     'xmrig-proxy_6.26.0': {
         'llhttp': _LLHTTP_1,
+        'ed25519': _ED25519_1,
         'rapidjson': _RAPIDJSON_1,
         'stdlib': _STDLIB_1,
     },
@@ -539,6 +570,7 @@ NAMES = {
     },
     'xmrig-proxy_6.26.0_msvc': {
         'llhttp': _LLHTTP_3,
+        'ed25519': _ED25519_2,
         'rapidjson': _RAPIDJSON_3,
         'stdlib': _STDLIB_3,
         'crt': _CRT_1,
@@ -551,7 +583,7 @@ NAMES = {
 }
 
 
-CATEGORIES = ("llhttp", "argon2", "rapidjson", "stdlib", "crt")
+CATEGORIES = ("llhttp", "argon2", "ed25519", "rapidjson", "stdlib", "crt")
 
 
 def exact_names(names):
