@@ -71,8 +71,13 @@ def _donut(version, git_ref):
             # implying otherwise - 242 functions of which the glue filter
             # removes 137, and no -O on upstream's line, so what remains is
             # unoptimised.
+            # No is_library=False here, though it is a program rather than a
+            # library and that is what the name suggests. The flag is MCRIT's
+            # reference-vs-malware marker, not a statement about linkage, and
+            # everything in this corpus is reference data - validate refuses an
+            # artefact that clears it. tsh and tshd were refused for exactly
+            # this once already.
             Artifact(path="donut.exe", component="donut.exe",
-                     is_library=False,
                      build_flags="no -O (Makefile.mingw's donut.exe line, "
                                  "as upstream wrote it)"),
         ],

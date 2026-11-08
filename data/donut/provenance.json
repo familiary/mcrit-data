@@ -151,7 +151,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "b59b387a37935b4071f3e58cb8c86512596c54ef24e2211d88a1e27bb82202ca",
+    "sha256": "aa86c11d7579f2ac01a92075d5ce03d3aa2b275e8370483875bb229dbbfa1d25",
     "smda": "data/donut/x64/smda/donut_1.1_mingw13_x64_donut.exe.7z",
     "smda_version": "5.0.2",
     "source": {
