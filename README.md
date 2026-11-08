@@ -1053,12 +1053,12 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 
 ### EDRSandblast<a id='edrsandblast'></a>
 
-The reusable core and static API from the 2024-08-30 pin, including its vendored SysWhispers2 code. The MSVC x64 image links both complete archives; the CLI and LSASS example are excluded. All code is linked and disassembled only.
+The reusable core and static API from the 2024-08-30 pin, including its vendored SysWhispers2 code. The MSVC x64 image links both complete archives; the CLI and LSASS example are excluded. All code is linked and disassembled only. The x86 image is NOT byte-identical to a build of unmodified upstream: upstream ships its nine direct-syscall stubs only as `SW2_Syscalls_stubs.x64.asm` and excludes them from Release|Win32, so the recipe generates nine placeholder stub functions (`NtGetNextProcess`, `NtQueryInformationProcess`, `NtClose`, `NtAllocateVirtualMemory`, `NtOpenProcess`, `NtQueryVirtualMemory`, `NtReadVirtualMemory`, `NtCreateFile`, `NtWriteFile`; each returns STATUS_NOT_IMPLEMENTED) that carry no upstream code. They are counted among the 374 kept x86 functions (365 + 9 generated); no upstream source file is changed. x86 is 374 kept + 78 removed = 452, x64 is 375 + 92 = 467, and the two share no PicHash at the 10-instruction floor.
 
 <!-- generated: EDRSandblast -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
-| EDRSandblast | 2024-08-30 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/EDRSandblast/x64/mcrit/EDRSandblast_2024-08-30_msvc143_x64_EDRSandblast.dll.mcrit) | [x64 PE](data/EDRSandblast/x64/smda/EDRSandblast_2024-08-30_msvc143_x64_EDRSandblast.dll.7z) |
+| EDRSandblast | 2024-08-30 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/EDRSandblast/x86/mcrit/EDRSandblast_2024-08-30_msvc143_x86_EDRSandblast.dll.mcrit) / [x64 PE](data/EDRSandblast/x64/mcrit/EDRSandblast_2024-08-30_msvc143_x64_EDRSandblast.dll.mcrit) | [x86 PE](data/EDRSandblast/x86/smda/EDRSandblast_2024-08-30_msvc143_x86_EDRSandblast.dll.7z) / [x64 PE](data/EDRSandblast/x64/smda/EDRSandblast_2024-08-30_msvc143_x64_EDRSandblast.dll.7z) |
 <!-- /generated -->
 
 ### EDRSilencer<a id='edrsilencer'></a>
