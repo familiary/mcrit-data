@@ -27,7 +27,29 @@ _CRAWL = ("python {repo}/scripts/corpus/crawl_ucrt.py --sdk %s --arch {arch} "
           "--out . libucrt libucrtd")
 
 
-def _ucrt(sdk, notes=""):
+# Measured on the committed reports (PicHash of functions with 10+
+# instructions, Jaccard overlap between neighbouring SDKs, in the order
+# 10240-17763, 17763-19041, 19041-22621, 22621-26100):
+#   x86 libucrt  0.28 0.36 0.39 0.43     x86 libucrtd 0.44 0.67 0.40 0.60
+#   x64 libucrt  0.18 0.60 0.28 0.37     x64 libucrtd 0.30 0.69 0.34 0.48
+# Every SDK adds at least 467 PicHashes that no older SDK has (x64 libucrtd
+# 19041 is the minimum), so none is a near-duplicate and all five are kept.
+# Same-named functions, 19041 against 22621 x64 libucrt: 5692 in common, 3405
+# with the same PicHash.
+_NOTES = ("Static UCRT from the Windows SDK, not from Visual Studio, and a "
+          "different kind of content from data/MSVC. Linked whole into one "
+          "image per library (lib /LIST member count and the library digest "
+          "are under 'inputs'); symbols UCRT expects from vcruntime stay "
+          "unresolved, so calls to them target address 0. Functions with "
+          "equal PicHash and name are collapsed ('deduplicated_functions'). "
+          "No compiler runtime baseline is removed: this is the runtime. "
+          "PicHash overlap between neighbouring SDKs is 0.18-0.69 (Jaccard, "
+          "functions of 10+ instructions); every SDK adds at least 467 "
+          "PicHashes absent from all older ones, so all five are kept. "
+          "Only function hashes and SMDA reports are committed.")
+
+
+def _ucrt(sdk, notes=_NOTES):
     return Recipe(
         family="MSVC_UCRT",
         version=sdk,
