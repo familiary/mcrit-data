@@ -1,0 +1,122 @@
+{
+  "HavocDemon_0.7-c84f775-analysis_mingw13_x64_demon-analysis": {
+    "architecture": "x64",
+    "build_flags": "GCC -Os -g -fno-asynchronous-unwind-tables -masm=intel -fno-ident -fpack-struct=8 -falign-functions=1 -ffunction-sections -fdata-sections -falign-jumps=1 -falign-labels=1 -fPIC -DTRANSPORT_HTTP -DCONFIG_BYTES={}; NASM win32/win64; -shared -nostdlib; --entry,0 --noinhibit-exec --no-gc-sections --no-insert-timestamp --no-seh --enable-stdcall-fixup",
+    "built_artifact": "payloads/Demon/corpus-demon.dll",
+    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-posix",
+    "component": "demon-analysis",
+    "family": "HavocDemon",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "GPL-3.0",
+    "mcrit": "data/HavocDemon/x64/mcrit/HavocDemon_0.7-c84f775-analysis_mingw13_x64_demon-analysis.mcrit",
+    "notes": "Unchanged Demon.c, core, crypt, inject and architecture-matching NASM sources. CONFIG_BYTES is an empty array, not a valid configuration. No listener, server, profile, generator, entry wrapper or shellcode assembly step. PE entry RVA is asserted zero. Unresolved references remain unbound; this is an inert analysis container, not an upstream release binary. The empty config and unresolved references limit matching fidelity. No compiled program is executed. Symbols and all functions are retained with -g and --no-gc-sections. NASM 2.16.01 tested.",
+    "num_functions": 343,
+    "sha256": "8962e64d2592cd646340d0831f76acb454b46794ff9dbf24da17c280d977470a",
+    "smda": "data/HavocDemon/x64/smda/HavocDemon_0.7-c84f775-analysis_mingw13_x64_demon-analysis.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "c84f7755a8b1c0f737576bdd3a0e982a296012f1",
+      "git_ref": "c84f7755a8b1c0f737576bdd3a0e982a296012f1",
+      "git_url": "https://github.com/HavocFramework/Havoc.git",
+      "submodules": [
+        "6eab7a2b187b10b2494e39c1961750bfd1bda500 client/external/json (6eab7a2)",
+        "ac55e60488032b9acde8940a5de099541c4515da client/external/spdlog (ac55e60)",
+        "c32a20e1ee690d6e6bf6f37e6d603402d49b15f0 client/external/toml (c32a20e)"
+      ]
+    },
+    "toolchain": "mingw13_x64",
+    "upstream": "https://github.com/HavocFramework/Havoc",
+    "version": "0.7-c84f775-analysis"
+  },
+  "HavocDemon_0.7-c84f775-analysis_mingw13_x86_demon-analysis": {
+    "architecture": "x86",
+    "build_flags": "GCC -Os -g -fno-asynchronous-unwind-tables -masm=intel -fno-ident -fpack-struct=8 -falign-functions=1 -ffunction-sections -fdata-sections -falign-jumps=1 -falign-labels=1 -fPIC -DTRANSPORT_HTTP -DCONFIG_BYTES={}; NASM win32/win64; -shared -nostdlib; --entry,0 --noinhibit-exec --no-gc-sections --no-insert-timestamp --no-seh --enable-stdcall-fixup",
+    "built_artifact": "payloads/Demon/corpus-demon.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-posix",
+    "component": "demon-analysis",
+    "family": "HavocDemon",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "GPL-3.0",
+    "mcrit": "data/HavocDemon/x86/mcrit/HavocDemon_0.7-c84f775-analysis_mingw13_x86_demon-analysis.mcrit",
+    "notes": "Unchanged Demon.c, core, crypt, inject and architecture-matching NASM sources. CONFIG_BYTES is an empty array, not a valid configuration. No listener, server, profile, generator, entry wrapper or shellcode assembly step. PE entry RVA is asserted zero. Unresolved references remain unbound; this is an inert analysis container, not an upstream release binary. The empty config and unresolved references limit matching fidelity. No compiled program is executed. Symbols and all functions are retained with -g and --no-gc-sections. NASM 2.16.01 tested.",
+    "num_functions": 338,
+    "sha256": "5c648d2b6019eb538df4a6b11f18f1c6407e62a909a644fe5203cfac162ae89e",
+    "smda": "data/HavocDemon/x86/smda/HavocDemon_0.7-c84f775-analysis_mingw13_x86_demon-analysis.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "c84f7755a8b1c0f737576bdd3a0e982a296012f1",
+      "git_ref": "c84f7755a8b1c0f737576bdd3a0e982a296012f1",
+      "git_url": "https://github.com/HavocFramework/Havoc.git",
+      "submodules": [
+        "6eab7a2b187b10b2494e39c1961750bfd1bda500 client/external/json (6eab7a2)",
+        "ac55e60488032b9acde8940a5de099541c4515da client/external/spdlog (ac55e60)",
+        "c32a20e1ee690d6e6bf6f37e6d603402d49b15f0 client/external/toml (c32a20e)"
+      ]
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/HavocFramework/Havoc",
+    "version": "0.7-c84f775-analysis"
+  },
+  "HavocDemon_0.7-c84f775-smb-analysis_mingw13_x64_demon-smb-analysis": {
+    "architecture": "x64",
+    "build_flags": "GCC -Os -g -fno-asynchronous-unwind-tables -masm=intel -fno-ident -fpack-struct=8 -falign-functions=1 -ffunction-sections -fdata-sections -falign-jumps=1 -falign-labels=1 -fPIC -DTRANSPORT_SMB -DCONFIG_BYTES={}; NASM win32/win64; -shared -nostdlib; --entry,0 --noinhibit-exec --no-gc-sections --no-insert-timestamp --no-seh --enable-stdcall-fixup",
+    "built_artifact": "payloads/Demon/corpus-demon.dll",
+    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-posix",
+    "component": "demon-smb-analysis",
+    "family": "HavocDemon",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "GPL-3.0",
+    "mcrit": "data/HavocDemon/x64/mcrit/HavocDemon_0.7-c84f775-smb-analysis_mingw13_x64_demon-smb-analysis.mcrit",
+    "notes": "SMB transport selected. Unchanged Demon.c, core, crypt, inject and architecture-matching NASM sources. CONFIG_BYTES is an empty array, not a valid configuration. No listener, server, profile, generator, entry wrapper or shellcode assembly step. PE entry RVA is asserted zero. Unresolved references remain unbound; this is an inert analysis container, not an upstream release binary. The empty config and unresolved references limit matching fidelity. No compiled program is executed. Symbols and all functions are retained with -g and --no-gc-sections. NASM 2.16.01 tested.",
+    "num_functions": 339,
+    "sha256": "03aa56e2e3aaf3404dc56cc8efc602dbd2017700432c513e41ec9bb34b997b36",
+    "smda": "data/HavocDemon/x64/smda/HavocDemon_0.7-c84f775-smb-analysis_mingw13_x64_demon-smb-analysis.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "c84f7755a8b1c0f737576bdd3a0e982a296012f1",
+      "git_ref": "c84f7755a8b1c0f737576bdd3a0e982a296012f1",
+      "git_url": "https://github.com/HavocFramework/Havoc.git",
+      "submodules": [
+        "6eab7a2b187b10b2494e39c1961750bfd1bda500 client/external/json (6eab7a2)",
+        "ac55e60488032b9acde8940a5de099541c4515da client/external/spdlog (ac55e60)",
+        "c32a20e1ee690d6e6bf6f37e6d603402d49b15f0 client/external/toml (c32a20e)"
+      ]
+    },
+    "toolchain": "mingw13_x64",
+    "upstream": "https://github.com/HavocFramework/Havoc",
+    "version": "0.7-c84f775-smb-analysis"
+  },
+  "HavocDemon_0.7-c84f775-smb-analysis_mingw13_x86_demon-smb-analysis": {
+    "architecture": "x86",
+    "build_flags": "GCC -Os -g -fno-asynchronous-unwind-tables -masm=intel -fno-ident -fpack-struct=8 -falign-functions=1 -ffunction-sections -fdata-sections -falign-jumps=1 -falign-labels=1 -fPIC -DTRANSPORT_SMB -DCONFIG_BYTES={}; NASM win32/win64; -shared -nostdlib; --entry,0 --noinhibit-exec --no-gc-sections --no-insert-timestamp --no-seh --enable-stdcall-fixup",
+    "built_artifact": "payloads/Demon/corpus-demon.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-posix",
+    "component": "demon-smb-analysis",
+    "family": "HavocDemon",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "GPL-3.0",
+    "mcrit": "data/HavocDemon/x86/mcrit/HavocDemon_0.7-c84f775-smb-analysis_mingw13_x86_demon-smb-analysis.mcrit",
+    "notes": "SMB transport selected. Unchanged Demon.c, core, crypt, inject and architecture-matching NASM sources. CONFIG_BYTES is an empty array, not a valid configuration. No listener, server, profile, generator, entry wrapper or shellcode assembly step. PE entry RVA is asserted zero. Unresolved references remain unbound; this is an inert analysis container, not an upstream release binary. The empty config and unresolved references limit matching fidelity. No compiled program is executed. Symbols and all functions are retained with -g and --no-gc-sections. NASM 2.16.01 tested.",
+    "num_functions": 334,
+    "sha256": "48ae6b9baba25de52564c1d28c66a594e4173509979f25c5ec584ec4dffec75c",
+    "smda": "data/HavocDemon/x86/smda/HavocDemon_0.7-c84f775-smb-analysis_mingw13_x86_demon-smb-analysis.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "c84f7755a8b1c0f737576bdd3a0e982a296012f1",
+      "git_ref": "c84f7755a8b1c0f737576bdd3a0e982a296012f1",
+      "git_url": "https://github.com/HavocFramework/Havoc.git",
+      "submodules": [
+        "6eab7a2b187b10b2494e39c1961750bfd1bda500 client/external/json (6eab7a2)",
+        "ac55e60488032b9acde8940a5de099541c4515da client/external/spdlog (ac55e60)",
+        "c32a20e1ee690d6e6bf6f37e6d603402d49b15f0 client/external/toml (c32a20e)"
+      ]
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/HavocFramework/Havoc",
+    "version": "0.7-c84f775-smb-analysis"
+  }
+}

@@ -1050,6 +1050,7 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 | Gh0st | 2008-f434b0d-buffer | MinGW-w64 GCC 13 | [x86 PE](data/Gh0st/x86/mcrit/Gh0st_2008-f434b0d-buffer_mingw13_x86_buffer.mcrit) / [x64 PE](data/Gh0st/x64/mcrit/Gh0st_2008-f434b0d-buffer_mingw13_x64_buffer.mcrit) | [x86 PE](data/Gh0st/x86/smda/Gh0st_2008-f434b0d-buffer_mingw13_x86_buffer.7z) / [x64 PE](data/Gh0st/x64/smda/Gh0st_2008-f434b0d-buffer_mingw13_x64_buffer.7z) |
 | Gh0st | 2008-f434b0d-buffer | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Gh0st/x64/mcrit/Gh0st_2008-f434b0d-buffer_msvc143_x64_buffer.mcrit) | [x64 PE](data/Gh0st/x64/smda/Gh0st_2008-f434b0d-buffer_msvc143_x64_buffer.7z) |
 | Gh0st | 2008-f434b0d-managers | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Gh0st/x86/mcrit/Gh0st_2008-f434b0d-managers_msvc143_x86_manager-modules.mcrit) | [x86 PE](data/Gh0st/x86/smda/Gh0st_2008-f434b0d-managers_msvc143_x86_manager-modules.7z) |
+| Gh0st | 2008-f434b0d-legacy-analysis | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Gh0st/x86/mcrit/Gh0st_2008-f434b0d-legacy-analysis_msvc143_x86_legacy-manager-modules.mcrit) | [x86 PE](data/Gh0st/x86/smda/Gh0st_2008-f434b0d-legacy-analysis_msvc143_x86_legacy-manager-modules.7z) |
 <!-- /generated -->
 
 
@@ -1059,6 +1060,7 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | TinyNuke | 2017-c1e04c3-modules | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TinyNuke/x86/mcrit/TinyNuke_2017-c1e04c3-modules_msvc143_x86_hvnc-socks-modules.mcrit) / [x64 PE](data/TinyNuke/x64/mcrit/TinyNuke_2017-c1e04c3-modules_msvc143_x64_hvnc-socks-modules.mcrit) | [x86 PE](data/TinyNuke/x86/smda/TinyNuke_2017-c1e04c3-modules_msvc143_x86_hvnc-socks-modules.7z) / [x64 PE](data/TinyNuke/x64/smda/TinyNuke_2017-c1e04c3-modules_msvc143_x64_hvnc-socks-modules.7z) |
+| TinyNuke | 2017-c1e04c3-modules-analysis | MinGW-w64 GCC 13 | [x86 PE](data/TinyNuke/x86/mcrit/TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x86_hvnc-socks-modules.mcrit) / [x64 PE](data/TinyNuke/x64/mcrit/TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x64_hvnc-socks-modules.mcrit) | [x86 PE](data/TinyNuke/x86/smda/TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x86_hvnc-socks-modules.7z) / [x64 PE](data/TinyNuke/x64/smda/TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x64_hvnc-socks-modules.7z) |
 <!-- /generated -->
 
 
@@ -1079,4 +1081,14 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 |----------|---------|----------|-------|------|
 | mimikatz | 2.2.0-45c42c7-strings | MinGW-w64 GCC 13 | [x86 PE](data/mimikatz/x86/mcrit/mimikatz_2.2.0-45c42c7-strings_mingw13_x86_string-output.mcrit) / [x64 PE](data/mimikatz/x64/mcrit/mimikatz_2.2.0-45c42c7-strings_mingw13_x64_string-output.mcrit) | [x86 PE](data/mimikatz/x86/smda/mimikatz_2.2.0-45c42c7-strings_mingw13_x86_string-output.7z) / [x64 PE](data/mimikatz/x64/smda/mimikatz_2.2.0-45c42c7-strings_mingw13_x64_string-output.7z) |
 | mimikatz | 2.2.0-45c42c7-modules | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/mimikatz/x86/mcrit/mimikatz_2.2.0-45c42c7-modules_msvc143_x86_kuhl-kull-modules.mcrit) / [x64 PE](data/mimikatz/x64/mcrit/mimikatz_2.2.0-45c42c7-modules_msvc143_x64_kuhl-kull-modules.mcrit) | [x86 PE](data/mimikatz/x86/smda/mimikatz_2.2.0-45c42c7-modules_msvc143_x86_kuhl-kull-modules.7z) / [x64 PE](data/mimikatz/x64/smda/mimikatz_2.2.0-45c42c7-modules_msvc143_x64_kuhl-kull-modules.7z) |
+<!-- /generated -->
+
+
+### HavocDemon
+
+<!-- generated: HavocDemon -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| HavocDemon | 0.7-c84f775-analysis | MinGW-w64 GCC 13 | [x86 PE](data/HavocDemon/x86/mcrit/HavocDemon_0.7-c84f775-analysis_mingw13_x86_demon-analysis.mcrit) / [x64 PE](data/HavocDemon/x64/mcrit/HavocDemon_0.7-c84f775-analysis_mingw13_x64_demon-analysis.mcrit) | [x86 PE](data/HavocDemon/x86/smda/HavocDemon_0.7-c84f775-analysis_mingw13_x86_demon-analysis.7z) / [x64 PE](data/HavocDemon/x64/smda/HavocDemon_0.7-c84f775-analysis_mingw13_x64_demon-analysis.7z) |
+| HavocDemon | 0.7-c84f775-smb-analysis | MinGW-w64 GCC 13 | [x86 PE](data/HavocDemon/x86/mcrit/HavocDemon_0.7-c84f775-smb-analysis_mingw13_x86_demon-smb-analysis.mcrit) / [x64 PE](data/HavocDemon/x64/mcrit/HavocDemon_0.7-c84f775-smb-analysis_mingw13_x64_demon-smb-analysis.mcrit) | [x86 PE](data/HavocDemon/x86/smda/HavocDemon_0.7-c84f775-smb-analysis_mingw13_x86_demon-smb-analysis.7z) / [x64 PE](data/HavocDemon/x64/smda/HavocDemon_0.7-c84f775-smb-analysis_mingw13_x64_demon-smb-analysis.7z) |
 <!-- /generated -->

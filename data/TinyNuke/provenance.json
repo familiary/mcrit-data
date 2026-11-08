@@ -1,4 +1,54 @@
 {
+  "TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x64_hvnc-socks-modules": {
+    "architecture": "x64",
+    "build_flags": "-shared -nostdlib -O2 -g -fms-extensions -fpermissive; SDK LSA_UNICODE_STRING with original Unicode aliases; include spelling/separator adapters; two POD inner scopes for legacy goto compatibility; --entry,0 --noinhibit-exec --no-gc-sections --no-insert-timestamp",
+    "built_artifact": "corpus-analysis/corpus-tinynuke.dll",
+    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-posix",
+    "component": "hvnc-socks-modules",
+    "family": "TinyNuke",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "No licence file in the selected mirror",
+    "mcrit": "data/TinyNuke/x64/mcrit/TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x64_hvnc-socks-modules.mcrit",
+    "notes": "Only HiddenDesktop.cpp and Socks.cpp in an analysis copy. Include separators and SDK header case are adapted; the duplicate LSA_UNICODE_STRING definition uses the SDK type with unchanged field layout and Unicode aliases. Two inner POD-only scopes preserve initialization order and let gotos reach the existing cleanup labels without crossing declarations. No source algorithm or initialization is repaired. No dispatcher, banking body or API initializer. PE entry RVA is zero; unresolved API pointers remain unbound. This non-operational container is never executed. Upstream files are preserved.",
+    "num_functions": 13,
+    "sha256": "8b0313f99f04826ea277f4fa2fac7d9a415e2502a5311d8019426f0f4bde548c",
+    "smda": "data/TinyNuke/x64/smda/TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x64_hvnc-socks-modules.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "c1e04c36d3aa2dbd70fcb17063809798b00b1fcf",
+      "git_ref": "c1e04c36d3aa2dbd70fcb17063809798b00b1fcf",
+      "git_url": "https://github.com/rossja/TinyNuke.git"
+    },
+    "toolchain": "mingw13_x64",
+    "upstream": "https://github.com/rossja/TinyNuke",
+    "version": "2017-c1e04c3-modules-analysis"
+  },
+  "TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x86_hvnc-socks-modules": {
+    "architecture": "x86",
+    "build_flags": "-shared -nostdlib -O2 -g -fms-extensions -fpermissive; SDK LSA_UNICODE_STRING with original Unicode aliases; include spelling/separator adapters; two POD inner scopes for legacy goto compatibility; --entry,0 --noinhibit-exec --no-gc-sections --no-insert-timestamp",
+    "built_artifact": "corpus-analysis/corpus-tinynuke.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-posix",
+    "component": "hvnc-socks-modules",
+    "family": "TinyNuke",
+    "generated": "2026-11-08",
+    "is_blob": false,
+    "license": "No licence file in the selected mirror",
+    "mcrit": "data/TinyNuke/x86/mcrit/TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x86_hvnc-socks-modules.mcrit",
+    "notes": "Only HiddenDesktop.cpp and Socks.cpp in an analysis copy. Include separators and SDK header case are adapted; the duplicate LSA_UNICODE_STRING definition uses the SDK type with unchanged field layout and Unicode aliases. Two inner POD-only scopes preserve initialization order and let gotos reach the existing cleanup labels without crossing declarations. No source algorithm or initialization is repaired. No dispatcher, banking body or API initializer. PE entry RVA is zero; unresolved API pointers remain unbound. This non-operational container is never executed. Upstream files are preserved.",
+    "num_functions": 13,
+    "sha256": "7a208d93cd2f0b8a95d2e453bd9269361cef7fda551188a8e9c82ada9911fc81",
+    "smda": "data/TinyNuke/x86/smda/TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x86_hvnc-socks-modules.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "c1e04c36d3aa2dbd70fcb17063809798b00b1fcf",
+      "git_ref": "c1e04c36d3aa2dbd70fcb17063809798b00b1fcf",
+      "git_url": "https://github.com/rossja/TinyNuke.git"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/rossja/TinyNuke",
+    "version": "2017-c1e04c3-modules-analysis"
+  },
   "TinyNuke_2017-c1e04c3-modules_msvc143_x64_hvnc-socks-modules": {
     "architecture": "x64",
     "build_flags": "/nologo /c /MD /O2 /Zi /GL- /W3 /D_CRT_SECURE_NO_WARNINGS; /DLL /NOENTRY /FORCE:UNRESOLVED /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF",
