@@ -315,6 +315,41 @@ class SlugTest(unittest.TestCase):
         own = Artifact(path="x.dll", component="x.dll")
         self.assertTrue(recipe.slug("mingw13_x64", own).startswith("Host_1.0_"))
 
+    def test_producer_overrides_the_running_toolchain(self):
+        """A harvested prebuilt is named for what compiled it, not for us."""
+        from corpus.recipe import Artifact, Recipe, Source
+
+        recipe = Recipe(family="Host", version="1.0", source=Source(),
+                        build=[], artifacts=[], toolchains=["linux_x64"])
+        # Extracted on this Linux host, but built by VS2019 wherever upstream
+        # publishes it. Naming it gcc13 would misdescribe the artefact.
+        harvested = Artifact(path="x.dll", component="x.dll",
+                             producer="msvc142")
+        self.assertEqual(recipe.slug("linux_x64", harvested),
+                         "Host_1.0_msvc142_x64_x.dll")
+
+    def test_producer_overrides_the_blob_default(self):
+        """is_blob's hardcoded msvc is a default, not a verdict."""
+        from corpus.recipe import Artifact, Recipe, Source
+
+        recipe = Recipe(family="Host", version="1.0", source=Source(),
+                        build=[], artifacts=[], toolchains=["mingw13_x64"])
+        blob = Artifact(path="s.bin", component="s", is_blob=True, bitness=64)
+        self.assertIn("_msvc_", recipe.slug("mingw13_x64", blob))
+        gcc_blob = Artifact(path="s.bin", component="s", is_blob=True,
+                            bitness=64, producer="mingw13")
+        self.assertIn("_mingw13_", recipe.slug("mingw13_x64", gcc_blob))
+
+    def test_absent_producer_changes_nothing(self):
+        """The default path stays exactly what it was."""
+        from corpus.recipe import Artifact, Recipe, Source
+
+        recipe = Recipe(family="Host", version="1.0", source=Source(),
+                        build=[], artifacts=[], toolchains=["mingw13_x64"])
+        own = Artifact(path="x.dll", component="x.dll")
+        self.assertEqual(recipe.slug("mingw13_x64", own),
+                         "Host_1.0_mingw13_x64_x.dll")
+
     def test_hostile_characters_still_raise(self):
         from corpus.recipe import Artifact, Recipe, Source
 
@@ -2034,6 +2069,210 @@ class ElfReadmeRowTest(unittest.TestCase):
             readme._compiler_label(
                 self._entry("mingw13_x64", "x86_64-w64-mingw32-gcc (GCC) 13.2.0")),
             "MinGW-w64 GCC 13.2.0")
+
+
+
+class ProducerLabelTest(unittest.TestCase):
+    """The Compiler column for an artefact this pipeline did not compile.
+
+    The column is the only place a reader is told whether a row is upstream's
+    own build or a reproduction of it, which decides what a match against it
+    means. It used to come off the toolchain that ran, so a harvested MSVC
+    artefact was labelled with the Linux host that unpacked it.
+    """
+
+    def _entry(self, stem, toolchain, compiler="", is_blob=False):
+        return {"toolchain": toolchain, "compiler": compiler, "version": "1.0",
+                "component": "c", "architecture": "x64", "is_blob": is_blob,
+                "mcrit": "data/F/x64/mcrit/%s.mcrit" % stem,
+                "smda": "data/F/x64/smda/%s.7z" % stem}
+
+    def test_a_harvested_prebuilt_names_the_compiler_that_built_it(self):
+        from corpus import readme
+
+        # Decrypted on this Linux host under the mingw toolchain, built by
+        # Rapid7 with v142. The toolchain must not reach the column.
+        label = readme._compiler_label(self._entry(
+            "Meterpreter_2.0.258_msvc142_x64_metsrv", "mingw13_x64",
+            "x86_64-w64-mingw32-gcc (GCC) 13.2.0"))
+        self.assertEqual(label,
+                         "MSVC v142 (Visual Studio 2019), as distributed upstream")
+
+    def test_a_blob_can_say_it_is_not_msvc(self):
+        from corpus import readme
+
+        label = readme._compiler_label(self._entry(
+            "AdaptixC2_2026-03-04_mingw_x64_stub_x64", "", is_blob=True))
+        self.assertEqual(label, "MinGW-w64 GCC (as committed upstream)")
+
+    def test_a_blob_with_no_producer_field_keeps_the_old_default(self):
+        from corpus import readme
+
+        label = readme._compiler_label(self._entry(
+            "sRDI_2018-05-27_msvc_x64_ShellcodeRDI_x64", "", is_blob=True))
+        self.assertEqual(label, "MSVC (as committed upstream)")
+
+    def test_an_artefact_compiled_here_is_unchanged(self):
+        """The regression guard: producer == toolchain, so nothing happens."""
+        from corpus import readme
+
+        label = readme._compiler_label(self._entry(
+            "libzlib_1.3.1_mingw13_x64_zlib1.dll", "mingw13_x64",
+            "x86_64-w64-mingw32-gcc (GCC) 13.2.0"))
+        self.assertEqual(label, "MinGW-w64 GCC 13.2.0")
+
+    def test_an_unreadable_stem_falls_through_rather_than_claiming_unknown(self):
+        """A filename the producer parser cannot read must not win.
+
+        This is not hypothetical: the first version of this code returned
+        "unknown (as distributed upstream)" for any entry whose stem did not
+        parse, which is every synthetic entry in these tests and would be any
+        hand-placed file in data/.
+        """
+        from corpus import readme
+
+        entry = self._entry("f", "gcc13_x64",
+                            "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0")
+        self.assertEqual(readme._producer_of(entry), "")
+        self.assertEqual(readme._compiler_label(entry), "GCC 13 (Linux, glibc)")
+
+    def test_an_unrecognised_toolset_number_is_not_given_a_year(self):
+        from corpus import readme
+
+        self.assertEqual(readme._producer_label("msvc199", False),
+                         "MSVC v199, as distributed upstream")
+
+
+class DecryptMsfTest(unittest.TestCase):
+    """The key-table parser and container reader in corpus.decrypt_msf.
+
+    Worth testing because the gem's crypto.rb is the *only* place the key
+    exists - the helper deliberately carries none of its own - so a parser
+    that silently read the wrong entry would decrypt to garbage, and the only
+    symptom would be "plaintext does not start with MZ" with no hint why.
+    """
+
+    # The shape of lib/metasploit-payloads/crypto.rb, trimmed to what the
+    # parser reads: two ciphers, nested ivs/keys hashes whose own "1 => {"
+    # must not be mistaken for a third cipher, and `.b` suffixes on values.
+    TABLE = '''
+module MetasploitPayloads
+  module Crypto
+    CIPHERS = {
+      1 => {
+        name: 'chacha20'.b,
+        version: { iv: 1, key: 1 },
+        ivs:  { 1 => { value: "%s".b } },
+        keys: { 1 => { value: "%s".b } }
+      },
+      2 => {
+        name: 'aes-256-cbc'.b,
+        version: { iv: 1, key: 1 },
+        ivs:  { 1 => { value: "%s".b } },
+        keys: { 1 => { value: "%s".b } }
+      }
+    }.freeze
+  end
+end
+'''
+
+    CHACHA_IV = bytes(range(0x10))
+    CHACHA_KEY = bytes(range(0x20, 0x40))
+    AES_IV = bytes(range(0x40, 0x50))
+    AES_KEY = bytes(range(0x60, 0x80))
+
+    @staticmethod
+    def _escape(raw):
+        return "".join("\\x%02x" % byte for byte in raw)
+
+    def _crypto_rb(self):
+        handle = tempfile.NamedTemporaryFile("w", suffix=".rb", delete=False)
+        self.addCleanup(os.unlink, handle.name)
+        handle.write(self.TABLE % (self._escape(self.CHACHA_IV),
+                                   self._escape(self.CHACHA_KEY),
+                                   self._escape(self.AES_IV),
+                                   self._escape(self.AES_KEY)))
+        handle.close()
+        return handle.name
+
+    def test_the_key_table_parses_to_both_ciphers(self):
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        # Exactly two entries: the nested `1 => {` of each ivs/keys hash is
+        # inside a consumed span and must not appear as a cipher of its own.
+        self.assertEqual(sorted(ciphers), [1, 2])
+        self.assertEqual(ciphers[1]["name"], "chacha20")
+        self.assertEqual(ciphers[2]["name"], "aes-256-cbc")
+        self.assertEqual(ciphers[2]["keys"][1], self.AES_KEY)
+        self.assertEqual(ciphers[2]["ivs"][1], self.AES_IV)
+        # The two ciphers' material must not be crossed over.
+        self.assertEqual(ciphers[1]["keys"][1], self.CHACHA_KEY)
+
+    def test_a_round_trip_through_the_real_container_shape(self):
+        from cryptography.hazmat.primitives.ciphers import (
+            Cipher, algorithms, modes)
+
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        plaintext = b"MZ" + b"\x90" * 61
+        pad = 16 - len(plaintext) % 16
+        encryptor = Cipher(algorithms.AES(self.AES_KEY),
+                           modes.CBC(self.AES_IV)).encryptor()
+        body = encryptor.update(plaintext + bytes([pad]) * pad)
+        body += encryptor.finalize()
+        # 'msf' then cipher 2, IV 1, key 1, per ENCRYPTED_PAYLOAD_HEADER.
+        container = b"msf" + bytes([2, 1, 1]) + body
+        self.assertEqual(decrypt_msf.decrypt(container, ciphers), plaintext)
+
+    def test_a_file_with_no_msf_header_is_passed_through(self):
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        already_plain = b"MZ\x90\x00\x03"
+        self.assertEqual(decrypt_msf.decrypt(already_plain, ciphers),
+                         already_plain)
+
+    def test_the_wrong_key_is_reported_and_not_returned(self):
+        from cryptography.hazmat.primitives.ciphers import (
+            Cipher, algorithms, modes)
+
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        encryptor = Cipher(algorithms.AES(bytes(32)),
+                           modes.CBC(bytes(16))).encryptor()
+        body = encryptor.update(b"MZ" + b"\x00" * 30) + encryptor.finalize()
+        with self.assertRaises(decrypt_msf.DecryptError) as caught:
+            decrypt_msf.decrypt(b"msf" + bytes([2, 1, 1]) + body, ciphers)
+        # The padding check is what catches it, which is the only signal a
+        # block cipher gives for a wrong key.
+        self.assertIn("padding", str(caught.exception))
+
+    def test_an_unknown_cipher_version_names_itself(self):
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        with self.assertRaises(decrypt_msf.DecryptError) as caught:
+            decrypt_msf.decrypt(b"msf" + bytes([9, 1, 1]) + bytes(16), ciphers)
+        self.assertIn("version 9", str(caught.exception))
+
+    def test_chacha20_is_refused_rather_than_guessed_at(self):
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        with self.assertRaises(decrypt_msf.DecryptError) as caught:
+            decrypt_msf.decrypt(b"msf" + bytes([1, 1, 1]) + bytes(16), ciphers)
+        self.assertIn("chacha20", str(caught.exception))
+
+    def test_a_truncated_ciphertext_is_refused(self):
+        from corpus import decrypt_msf
+
+        ciphers = decrypt_msf.parse_ciphers(self._crypto_rb())
+        with self.assertRaises(decrypt_msf.DecryptError) as caught:
+            decrypt_msf.decrypt(b"msf" + bytes([2, 1, 1]) + bytes(17), ciphers)
+        self.assertIn("16-byte block", str(caught.exception))
 
 
 if __name__ == "__main__":
