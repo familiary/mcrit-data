@@ -4,7 +4,9 @@ https://github.com/r0ny123/mcrit-data/issues/19
 
 No upstream builder, listener, profile or generator is run. CONFIG_BYTES
 is a zero-length array, not a serialized configuration. The EXE, service,
-DLL-entry and shellcode wrappers are omitted. The PE has entry RVA zero.
+DLL-entry and shellcode wrappers are omitted from these core images;
+the separate entry-wrapper recipe covers their qualifying source bodies.
+The PE has entry RVA zero.
 Unresolved references are retained as unbound addresses, not implemented.
 This file describes a non-operational reference image, not a Demon payload.
 
