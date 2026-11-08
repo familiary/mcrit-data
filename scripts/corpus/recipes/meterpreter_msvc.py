@@ -143,7 +143,34 @@ RECIPES = {
                      component="metsrv.dll",
                      pdb="c/meterpreter/out-{arch}/metsrv.{arch}.pdb"),
         ],
-        toolchains=["msvc_x86", "msvc_x64"],
+        # x64 only. Both legs built green and both are good data - 618 of
+        # 618 functions named on x64, 630 of 630 on x86 - but the x86 one adds
+        # a leakage finding to `validate --deep` and the x64 one adds none:
+        #
+        #   _putShortMSB (20 ins) under 3 families: MSVC, Meterpreter, libzlib
+        #
+        # That is zlib, out of metsrv's vendored amalgamated 1.0.4P, which #96
+        # decided to keep. It only collides now because this build is MSVC: the
+        # MinGW metsrv's copy hashes differently, and so does this build's own
+        # x64 copy (pichash 9753904980302011575, 12 instructions), which is
+        # shared with nothing - every other family carrying the 20-instruction
+        # hash is x86 too (libzlib_1.2.13/1.3.1_msvc143_x86 and data/MSVC's
+        # 2019_Pro_x86). So the architecture is the whole of the difference.
+        #
+        # By the deep check's own definition this is a true positive rather
+        # than a false alarm: a statically linked dependency appearing under
+        # the host project's name is exactly what it looks for. Shipping it
+        # would move the corpus from 26 problems to 27, and a gate is not
+        # worth having if the answer to it is to raise the number.
+        #
+        # Unlike the two artefacts withdrawn before it, this one is fixable:
+        # `putShortMSB` is *named* on all three sides, so a round that teaches
+        # the corpus a family may legitimately vendor a library can drop it and
+        # restore this leg. (The harvested family's x86 findings are unnamed
+        # and can never be reached that way.) That is a shared-pipeline change
+        # and its own PR, so the x86 leg is held rather than lost, and the
+        # not-built table records the hash to pick it up by.
+        toolchains=["msvc_x64"],
         requires=["cmake"],
         build_flags="/MD /O2 /Ob2 (CMake MSVC Release) /Zi, plus upstream's "
                     "own /W3 /WX and /O1 downgrade from "
