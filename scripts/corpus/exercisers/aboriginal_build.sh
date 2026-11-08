@@ -33,4 +33,25 @@ gcc --version | head -1
 # helper programs for images) is skipped, as is C++ and the stage tarball.
 export NO_HOST_TOOLS=1 NO_CPLUSPLUS=1 NO_STAGE_TARBALLS=1
 export HOME=/tmp
+
+# Firmware Linux 0.9.6 only. uClibc 0.9.30.1 builds a host tool,
+# extra/scripts/unifdef.c, that defines its own getline(); glibc 2.19 of the
+# host image declares the POSIX getline() and the compile stops with
+# "conflicting types for 'getline'" (seen in CI). Without touching the uClibc
+# source, a host-gcc wrapper renames that one identifier for that one file
+# (-Dgetline=unifdef_getline); every other host compile passes through.
+if [ "$STAGE" = cross-compiler ]; then
+  mkdir -p /opt/hostfix
+  cat > /opt/hostfix/gcc <<'WRAP'
+#!/bin/sh
+for a in "$@"; do
+  case "$a" in
+    *unifdef.c) set -- "$@" -Dgetline=unifdef_getline; break ;;
+  esac
+done
+exec /usr/bin/gcc "$@"
+WRAP
+  chmod +x /opt/hostfix/gcc
+  export PATH="/opt/hostfix:$PATH"
+fi
 ./"$STAGE".sh "$ARCH"

@@ -36,12 +36,21 @@ SHA1 each distribution's download.sh records:
 Honest deviations from "just run build.sh", all in this recipe or the
 helper script and none touching the distribution or component sources:
   * The toolchain stage runs inside a Docker container of the end-of-life
-    host image named in HOST_IMAGE (ubuntu:14.04, GCC 4.8), because GCC
+    host image named in HOST_IMAGE (ubuntu:14.04, GCC 4.8, pinned by the
+    digest the CI log recorded), because GCC
     4.1.2 / 4.2.1 do not build with a current host compiler. The container's
     apt packages (build-essential, bzip2, patch, bison, flex, texinfo, m4,
     gawk, file) are installed unpinned at build time and the image tag is not
     digest-pinned in the recipe; the digest actually used is printed by the
     docker pull in the build log.
+  * Firmware Linux 0.9.6 only: a host-gcc wrapper in the container renames
+    getline for the single compile of uClibc's host tool extra/scripts/
+    unifdef.c (-Dgetline=unifdef_getline), because that file's own getline()
+    conflicts with the host glibc's POSIX getline(); no source is edited.
+  * The distribution tarball is a pinned extra source, extracted by a build
+    step, because the corpus extractor refuses its absolute-symlink
+    etc/mtab; the recipe's main source is the zlib staging directory used by
+    the sibling libc_harvest.py recipes and none of it is built or linked.
   * Only the cross-compiler stage is run, with NO_HOST_TOOLS=1 (skip the
     host-tools stage: busybox/toybox/distcc/e2fsprogs/squashfs helper
     programs for root-filesystem images), NO_CPLUSPLUS=1 (Aboriginal only;
@@ -70,7 +79,7 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 # The end-of-life host the distributions were written against. Overridable
 # through the environment only to try another host image in CI; a build that
 # used an override is not the recorded build.
-HOST_IMAGE = "ubuntu:14.04"
+HOST_IMAGE = "ubuntu:14.04@sha256:64483f3496c1373bfd55348e88694d1c4d0c9b660dee6bfef5e12f43b9933b30"
 
 _MIRROR = "http://landley.net/aboriginal/mirror/"
 
@@ -127,7 +136,7 @@ RECIPES = {}
 for (_tag, _family, _version, _libc, _dist, _stage, _outdir, _components,
      _producer, _license) in _DISTRIBUTIONS:
     for _arch, _cpu in (("x86", "i686"), ("x64", "x86_64")):
-        _tree = "build/%s-%s" % (_outdir, _cpu)
+        _tree = "dist/build/%s-%s" % (_outdir, _cpu)
         _copy = " ".join("{%s}" % key for key in sorted(_components))
         if _libc == "uclibc":
             _link = ("{cc} {archflag} -nostdlib -no-pie -Wl,-e,0 "
@@ -140,16 +149,18 @@ for (_tag, _family, _version, _libc, _dist, _stage, _outdir, _components,
             _how = "-u every global text symbol except __tlsdesc_*"
         RECIPES[_tag + "_" + _arch] = Recipe(
             family=_family, version=_version,
-            source=_dist,
-            extra_sources=dict(_components),
+            source=Source(url="https://zlib.net/fossils/zlib-1.3.1.tar.gz",
+                          sha256="9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23"),
+            extra_sources=dict(_components, c_dist=_dist),
             upstream="https://landley.net/aboriginal/; " +
                      ("https://uclibc.org/" if _libc == "uclibc" else "https://musl.libc.org/"),
             license=_license,
             build=[
-                BuildStep("mkdir -p packages"),
-                BuildStep("cp " + _copy + " packages/"),
+                BuildStep("mkdir -p dist/packages"),
+                BuildStep("tar -xf {c_dist} -C dist --strip-components=1"),
+                BuildStep("cp " + _copy + " dist/packages/"),
                 BuildStep('docker run --rm -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" '
-                          '-v "$PWD":/w '
+                          '-v "$PWD/dist":/w '
                           '-v {repo}/scripts/corpus/exercisers/aboriginal_build.sh:/aboriginal_build.sh:ro '
                           '"${ABORIGINAL_HOST_IMAGE:-' + HOST_IMAGE + '}" '
                           "bash /aboriginal_build.sh " + _stage + " " + _cpu),
