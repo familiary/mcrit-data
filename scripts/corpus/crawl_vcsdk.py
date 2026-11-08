@@ -228,6 +228,48 @@ def compiler_summary(paths):
             for (machine, front, back), count in sorted(counts.items())]
 
 
+# Libraries that are mostly import-library members (short import records, no
+# object code behind them). link /WHOLEARCHIVE refuses those with LNK1127
+# "library is corrupt", so their real object members are written out and
+# linked as objects, and the import records - which carry no code - are
+# counted and left out.
+SPLIT_LIBS = ("msvcrt", "msvcrtd", "msvcprt", "msvcprtd", "oldnames")
+
+
+def split_archive(lib_path, dest_dir):
+    """Write the object members of an ar archive; return (paths, imports).
+
+    A member that opens with the null-and-0xFFFF signature and has a short
+    import header version (< 2) is an import record; anything else is an
+    object (an ANON_OBJECT_HEADER_BIGOBJ has version 2 and is kept).
+    """
+    os.makedirs(dest_dir, exist_ok=True)
+    with open(lib_path, "rb") as handle:
+        data = handle.read()
+    if data[:8] != b"!<arch>\n":
+        raise SystemExit("%s is not an ar archive" % lib_path)
+    offset, index, imports = 8, 0, 0
+    paths = []
+    base = os.path.splitext(os.path.basename(lib_path))[0]
+    while offset + 60 <= len(data):
+        header = data[offset:offset + 60]
+        name = header[:16].decode("latin1").strip()
+        size = int(header[48:58])
+        body = data[offset + 60:offset + 60 + size]
+        offset += 60 + size + (size & 1)
+        if name in ("/", "//"):
+            continue
+        if body[:4] == b"\x00\x00\xff\xff" and struct.unpack_from("<H", body, 4)[0] < 2:
+            imports += 1
+            continue
+        index += 1
+        path = os.path.join(dest_dir, "%s_%05d.obj" % (base, index))
+        with open(path, "wb") as out:
+            out.write(body)
+        paths.append(path)
+    return paths, imports
+
+
 def list_members(lib_path):
     code, output = run(["lib", "/NOLOGO", "/LIST", lib_path])
     if code != 0:
@@ -254,7 +296,12 @@ def link_image(name, libs, objs, out_dir, source_record, files_note):
     command = ["link", "/NOLOGO", "/DLL", "/NOENTRY", "/NODEFAULTLIB",
                "/MACHINE:X64"]
     command += ["/WHOLEARCHIVE:" + path for path in libs] + list(libs)
-    command += list(objs) + list(IMPORT_LIBS)
+    if objs:
+        rsp = os.path.join(out_dir, name + ".objs.rsp")
+        with open(rsp, "w", encoding="utf-8") as handle:
+            handle.write("\n".join('"%s"' % path for path in objs) + "\n")
+        command.append("@" + rsp)
+    command += list(IMPORT_LIBS)
     command += ["/OUT:" + dll, "/PDB:" + pdb, "/DEBUG", "/INCREMENTAL:NO",
                 "/OPT:NOREF", "/OPT:NOICF", "/Brepro",
                 "/FORCE:UNRESOLVED", "/FORCE:MULTIPLE",
@@ -274,7 +321,7 @@ def link_image(name, libs, objs, out_dir, source_record, files_note):
     info.update({
         "inputs": files_note,
         "library_members": members,
-        "start_up_objects": len(objs),
+        "linked_objects": len(objs),
         "compiler_records": compiler_summary(list(libs) + list(objs)),
         "import_libraries": list(IMPORT_LIBS),
         "linker": linker_banner(),
@@ -313,28 +360,38 @@ def pe_version_info(path):
 def cmd_libs(args, files, source_record, out_dir):
     libs = {n: p for n, (_, p) in files.items() if n.endswith(".lib")}
     objs = sorted(p for n, (_, p) in files.items() if n.endswith(".obj"))
-    wanted = []
     for spec in args.names:
-        wanted.append([part for part in spec.split("+") if part])
-    for group in wanted:
-        paths = []
+        group = [part for part in spec.split("+") if part]
+        paths, group_objs, split_info = [], [], []
         for stem in group:
             if stem == "objs":
+                group_objs += objs
                 continue
             if stem + ".lib" not in libs:
                 raise SystemExit("%s.lib is not in the CAB; libraries present: "
                                  "%s" % (stem, ", ".join(sorted(libs))))
-            paths.append(libs[stem + ".lib"])
-        name = "+".join(group).replace("+", "_")
-        group_objs = objs if "objs" in group else []
+            if stem in SPLIT_LIBS:
+                parts, imports = split_archive(
+                    libs[stem + ".lib"], os.path.join(out_dir, "split_" + stem))
+                group_objs += parts
+                split_info.append({"library": stem + ".lib",
+                                   "object_members_linked": len(parts),
+                                   "import_records_left_out": imports})
+            else:
+                paths.append(libs[stem + ".lib"])
+        name = spec.replace("+", "_")
         note = {"libraries": [{"file": s + ".lib",
                                "cab_member": files[s + ".lib"][0],
                                "sha256": sha256_file(libs[s + ".lib"]),
-                               "bytes": os.path.getsize(libs[s + ".lib"])}
+                               "bytes": os.path.getsize(libs[s + ".lib"]),
+                               "linked_as": "objects" if s in SPLIT_LIBS
+                               else "whole archive"}
                               for s in group if s != "objs"]}
-        if group_objs:
-            note["objects"] = [{"file": os.path.basename(p), "sha256": sha256_file(p)}
-                               for p in group_objs]
+        if split_info:
+            note["split_libraries"] = split_info
+        if "objs" in group:
+            note["start_up_objects"] = [{"file": os.path.basename(p),
+                                         "sha256": sha256_file(p)} for p in objs]
         link_image(name, paths, group_objs, out_dir, source_record, note)
 
 
