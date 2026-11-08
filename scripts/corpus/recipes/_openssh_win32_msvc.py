@@ -1,5 +1,20 @@
 """Win32-OpenSSH (Microsoft's Windows fork of OpenSSH), built with MSVC.
 
+STATUS: NOT BUILT, and not registered. The module name starts with an
+underscore, which the recipe registry skips, so no workflow builds it. Three
+runs on the windows-2022 runner (scratch/win32ossh-msvc, run ids
+42510326809, 42510894765, 42511463886; the dispatch budget) each stopped at
+the next compile error of the /MD build; the last run's only error, on x64
+and on x86, was
+  process.h(48,26): error C2375: 'w32_system': redefinition; different
+  linkage [...\\libssh.vcxproj]
+The helper now also empties _DCRTIMP (the macro process.h declares system()
+with), which is the expected fix and was NOT run. To try it: rename this file
+to openssh_win32_msvc.py and dispatch OpenSSH_Win32_10.4.0.0_msvc. After a
+green build, add Recipe.exclude_functions for the statically linked zlib 1.3.2
+(`report` in the helper prints the zlib and OpenSSH object function names the
+table is derived from).
+
 Backlog issue #46 asked for OpenSSH as the base of the SSHDoor and Ebury
 trojans; the corpus README recorded Win32-OpenSSH as "its own recipe if one
 turns up", because the fork is a different code base from OpenSSH portable
@@ -27,7 +42,9 @@ two overlay ports (libressl, libfido2) and custom triplets
 $(SolutionDir)\\vcpkg_installed\\$(VcpkgTriplet)\\$(VcpkgTriplet)\\{include,lib,
 bin}. OpenSSH-build.ps1 is the documented entry point (it needs an
 interactive, elevated PowerShell with vcpkg integrated); this recipe drives
-the same Win32-OpenSSH.sln with msbuild on the runner's vcpkg instead.
+the same Win32-OpenSSH.sln, whole (msbuild /t:<project> on it fails with
+MSB4057 'The target "ssh" does not exist in the project' at config.vcxproj), on
+the runner's vcpkg instead.
 
 Linkage, from vcpkg_triplets and the projects. LibreSSL is a DLL
 (VCPKG_LIBRARY_LINKAGE dynamic for the libressl port): the executables import
@@ -69,7 +86,18 @@ none in the tree:
      to vcpkg tag 2026.10.16 (9eec002df1cd109f8f104cd966a763daf9751489), the
      first tag measured whose database has every version the overrides name.
      libressl and libfido2 are the overlay ports of the tree, unmodified.
-  5. Aliases: paths.targets links zs.lib and keygen.vcxproj libcrypto.lib;
+  5. Preprocessor: _ACRTIMP= and _DCRTIMP= (empty) for every compile. The
+     fork's win32compat\\inc headers rename CRT functions with macros
+     (#define system w32_system) and declare the replacements plainly; under
+     /MD the SDK declares the same functions __declspec(dllimport), and cl
+     stops with C2375 for w32_rename (corecrt_io.h) and w32_system
+     (process.h). Emptying the macros makes the SDK declarations plain, so CRT
+     calls go through import-library thunks. The vcpkg include and library
+     directories are added by the props file (vcpkg's msbuild integration,
+     which would add them, is off): without them
+     `includes.h(173,10): error C1083: Cannot open include file:
+     'openssl/opensslv.h'` in openbsd_compat.vcxproj.
+  6. Aliases: paths.targets links zs.lib and keygen.vcxproj libcrypto.lib;
      the helper copies whatever vcpkg installed under those names
      (zlib.lib, crypto.lib) if they are absent (logged as ALIAS).
 
