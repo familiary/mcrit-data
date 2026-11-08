@@ -111,6 +111,7 @@ Exclusion, by exact name, of what is not OpenSSH: see _win32openssh_zlib.py.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
+from ._win32openssh_zlib import zlib_functions
 
 _COMMIT = "274893f8d1fe86c4d128b514c3af4bc10cdc0c99"
 
@@ -163,5 +164,6 @@ def _recipe(version, commit, exclude=()):
 
 
 RECIPES = {
-    "OpenSSH_Win32_10.4.0.0_msvc": _recipe("Win32_10.4.0.0", _COMMIT),
+    "OpenSSH_Win32_10.4.0.0_msvc": _recipe("Win32_10.4.0.0", _COMMIT,
+                                           [zlib_functions()]),
 }
