@@ -53,11 +53,13 @@ linked .so to measure or to remove.
 """
 
 import functools
+import json
 import logging
 import os
 import subprocess
 import tempfile
 
+from . import config
 from .toolchain import get_toolchain
 
 
@@ -3097,3 +3099,139 @@ def is_glue(function, toolchain_id):
     if not function.function_name:
         return False
     return function.pic_hash in glue.get(function.function_name, ())
+
+
+# ---------------------------------------------------------------------------
+# Vendored libraries
+#
+# crt_glue above answers "is this function the compiler's?". This answers the
+# neighbouring question "is this function another project's?", which the deep
+# cross-family check keeps finding and which no probe can reach: a probe is
+# built from a source this repository controls, and an amalgamated dependency
+# copied into somebody's tree is not.
+#
+# The case it was written for: metsrv carries an amalgamated zlib 1.0.4P - a
+# 1996 PPP fork - and compiling it with MSVC makes three of its functions
+# byte-identical in shape to data/libzlib's MSVC build, so `putShortMSB`,
+# `deflateInit_` and `inflateInit_` turned up under MSVC, Meterpreter and
+# libzlib at once. That is a true finding: a statically linked dependency
+# wearing the host project's name is exactly what the check looks for.
+#
+# The measurement comes out of the corpus rather than a probe, for the reason
+# the rest of this module builds probes: it has to be measured, not listed. A
+# hand-kept list of "zlib's functions" is the kind that acquires a gap, and
+# the pair that matters is (symbol, PicHash) under a specific compiler - which
+# is precisely what data/libzlib's committed reports already are. So a recipe
+# names the corpus family it vendors and the filter is read from that family's
+# exports, pinned in git like everything else here.
+# ---------------------------------------------------------------------------
+
+_VENDORED_CACHE = {}
+
+
+class VendoredFamilyMissing(Exception):
+    """A recipe named a family that has no committed exports to measure."""
+
+
+def _normalise_symbol(name):
+    """Strip the leading underscores the 32-bit cdecl ABI adds.
+
+    The same rule validate._same_symbol uses, and for the same reason - and
+    this filter is the one place it is load-bearing rather than tidy:
+    data/MSVC's copy of the colliding function is `_putShortMSB` while
+    libzlib's and metsrv's are `putShortMSB`.
+    """
+    return name.lstrip("_")
+
+
+def vendored_functions(families):
+    """Map (normalised symbol, PicHash) -> instructions for vendored families.
+
+    Read from each family's committed ``.mcrit`` exports. Only functions of
+    at least ``config.MIN_CROSS_FAMILY_INSTRUCTIONS`` instructions are
+    included, and that floor is the whole difference between this filter
+    working and it quietly deleting other people's code.
+
+    Without it the filter is sourced from everything in the vendored family's
+    reports, which is not only that library: data/libzlib's exports contain
+    `time`, `wcstombs`, `zcfree` and `zlibVersion` at one to three
+    instructions each, because an import thunk is a function too. Dropping
+    those from a host project as "vendored zlib" would be wrong twice over -
+    they are not zlib's code, and they are not even bodies. The floor is the
+    census's own, so what this removes is exactly the class of function that
+    could be mistaken across families, and nothing smaller.
+    """
+    from . import validate
+
+    families = tuple(sorted(set(families or ())))
+    if not families:
+        return {}
+    if families in _VENDORED_CACHE:
+        return _VENDORED_CACHE[families]
+
+    floor = config.MIN_CROSS_FAMILY_INSTRUCTIONS
+    pairs = {}
+    for family in families:
+        root = os.path.join(config.DATA_DIR, family)
+        if not os.path.isdir(root):
+            raise VendoredFamilyMissing(
+                "recipe declares it vendors %r, but data/%s does not exist"
+                % (family, family))
+        exports = list(validate._iter_data_files(".mcrit", root))
+        if not exports:
+            # An empty filter silently removes nothing, which is the trap
+            # probe_failures exists to catch for the probes: the build goes
+            # green and the artefact is filtered against nothing at all.
+            raise VendoredFamilyMissing(
+                "recipe declares it vendors %r, but data/%s has no .mcrit "
+                "exports to measure a filter from" % (family, family))
+        for path in exports:
+            for name, pichash, instructions in _export_functions(path):
+                if instructions >= floor:
+                    pairs[(_normalise_symbol(name), pichash)] = instructions
+    LOGGER.info("vendored filter from %s: %d (symbol, PicHash) pair(s) at >= "
+                "%d instructions", ", ".join(families), len(pairs), floor)
+    _VENDORED_CACHE[families] = pairs
+    return pairs
+
+
+def _export_functions(path):
+    """Yield (symbol, PicHash, instructions) for the named functions in one export."""
+    with open(path, encoding="utf-8") as handle:
+        try:
+            export = json.load(handle)
+        except ValueError:
+            return
+    compressed = export.get("content", {}).get("is_compressed")
+    for blob in export.get("function_entries", {}).values():
+        if compressed:
+            from mcrit.libs.utility import decompress_decode
+
+            entries = json.loads(decompress_decode(blob))
+        else:
+            entries = blob
+        for entry in entries.values():
+            name = entry.get("function_name")
+            pichash = entry.get("pichash")
+            if name and pichash:
+                yield name, pichash, entry.get("num_instructions") or 0
+
+
+def is_vendored(function, families):
+    """Whether this function is a declared vendored library's rather than ours.
+
+    Both the symbol and the PicHash have to match, exactly as ``is_glue``
+    requires, so a project that happens to define a function of the same name
+    keeps it - and so does one whose copy of the real thing has diverged. That
+    is what keeps metsrv's 1996 PPP fork: `deflateOutputPending` and
+    `inflateIncomp` are not in modern zlib at all, and of its 55 zlib-named
+    functions only the three that are shape-identical to data/libzlib's MSVC
+    build are removed.
+    """
+    if not function.function_name:
+        return False
+    pairs = vendored_functions(families)
+    if not pairs:
+        return False
+    return (_normalise_symbol(function.function_name),
+            function.pic_hash) in pairs

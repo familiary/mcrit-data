@@ -125,7 +125,7 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
 
         for artifact, binary_path, pdb_path in produced:
             try:
-                report, removed = smdaify(
+                report, removed, removed_vendored = smdaify(
                     binary_path,
                     family=artifact.family or recipe.family,
                     version=recipe.version,
@@ -140,6 +140,7 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                     bitness=artifact.bitness,
                     base_addr=artifact.base_addr,
                     pdb_path=pdb_path,
+                    vendors=recipe.vendors,
                 )
                 arch = "x86" if report.bitness == 32 else "x64"
                 slug = recipe.slug(toolchain_id, artifact, arch)
@@ -199,6 +200,13 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
             }
             if removed:
                 entry["removed_runtime_functions"] = sorted(removed)
+            # Recorded separately from the runtime list rather than merged
+            # into it, because they are removed for a different reason and a
+            # reader needs to tell them apart: a runtime function belongs to
+            # the compiler, a vendored one to another project in this corpus.
+            if removed_vendored:
+                entry["removed_vendored_functions"] = sorted(removed_vendored)
+                entry["vendors"] = sorted(recipe.vendors)
             if dependency_provenance:
                 entry["dependencies"] = dependency_provenance
             if recipe.notes:
