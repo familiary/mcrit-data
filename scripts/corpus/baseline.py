@@ -3755,12 +3755,44 @@ def _kernel_props(flavour, arch="x64"):
     compile_extra = ""
     link_extra = ""
     if arch == "x86":
-        # The x86 recipes build with /SAFESEH:NO (the project's own assembly
-        # objects carry no safe-exception-handler table), and the probes are
-        # linked the same way so that the images are comparable.
-        link_extra = ("<ImageHasSafeExceptionHandlers>false"
-                      "</ImageHasSafeExceptionHandlers>")
-    if flavour == "wdm_nogs":
+        # The WDK msbuild toolset (WindowsKernelModeDriver10.0) rejects Win32
+        # in 10.0.22621 as well as in 10.0.26100: "'Win32' is not a valid
+        # architecture for Kernel mode drivers or UMDF drivers". So the x86
+        # probes are ordinary v143 projects that the props turn into a driver
+        # the way the x86 DiskCryptorDrv recipe does: the 22621 km headers and
+        # libraries, /kernel /Gz, /DRIVER, /NODEFAULTLIB, /SAFESEH:NO.
+        nogs = flavour == "wdm_nogs"
+        compile_extra = (
+            "<AdditionalIncludeDirectories>"
+            "$(WindowsSdkDir)Include\\$(WindowsTargetPlatformVersion)\\km;"
+            "$(WindowsSdkDir)Include\\$(WindowsTargetPlatformVersion)\\km\\crt;"
+            "$(WindowsSdkDir)Include\\$(WindowsTargetPlatformVersion)\\shared"
+            "</AdditionalIncludeDirectories>"
+            "<PreprocessorDefinitions>_X86_;WIN32;_WIN32;_KERNEL_MODE;"
+            "NTDDI_VERSION=0x0A000000;_WIN32_WINNT=0x0A00;WINVER=0x0A00;"
+            "%(PreprocessorDefinitions)</PreprocessorDefinitions>"
+            "<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>"
+            "<CallingConvention>StdCall</CallingConvention>"
+            "<Optimization>MaxSpeed</Optimization>"
+            "<BufferSecurityCheck>" + ("false" if nogs else "true")
+            + "</BufferSecurityCheck>"
+            "<AdditionalOptions>/kernel /GL- %(AdditionalOptions)"
+            "</AdditionalOptions>")
+        link_extra = (
+            "<ImageHasSafeExceptionHandlers>false"
+            "</ImageHasSafeExceptionHandlers>"
+            "<SubSystem>Native</SubSystem><Driver>WDM</Driver>"
+            "<IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>"
+            "<EntryPointSymbol>"
+            + ("DriverEntry" if nogs else "GsDriverEntry@8")
+            + "</EntryPointSymbol>"
+            "<AdditionalLibraryDirectories>$(WindowsSdkDir)Lib\\"
+            "$(WindowsTargetPlatformVersion)\\km\\x86"
+            "</AdditionalLibraryDirectories>"
+            "<AdditionalDependencies>ntoskrnl.lib;hal.lib;"
+            + ("" if nogs else "BufferOverflowFastFailK.lib;")
+            + "libcntpr.lib</AdditionalDependencies>")
+    elif flavour == "wdm_nogs":
         compile_extra = ("<BufferSecurityCheck>false</BufferSecurityCheck>"
                          "<Optimization>MaxSpeed</Optimization>")
     return (
@@ -3786,6 +3818,21 @@ def _kernel_props(flavour, arch="x64"):
 
 def _kernel_project(tags, platform="x64"):
     items = "".join('<ClCompile Include="src\\%s.c" />' % tag for tag in tags)
+    if platform == "Win32":
+        # See _kernel_props: the WDK toolset refuses Win32, so a plain v143
+        # application project that the props turn into a driver.
+        configuration = ('<UseDebugLibraries>false</UseDebugLibraries>'
+                         '<PlatformToolset>v143</PlatformToolset>'
+                         '<ConfigurationType>Application</ConfigurationType>')
+        target_ext = '<TargetExt>.sys</TargetExt><GenerateManifest>false</GenerateManifest>'
+    else:
+        target_ext = ''
+        configuration = ('<TargetVersion>Windows10</TargetVersion>'
+                         '<UseDebugLibraries>false</UseDebugLibraries>'
+                         '<PlatformToolset>WindowsKernelModeDriver10.0'
+                         '</PlatformToolset>'
+                         '<ConfigurationType>Driver</ConfigurationType>'
+                         '<DriverType>WDM</DriverType>')
     return (
         '<?xml version="1.0" encoding="utf-8"?>\n'
         '<Project DefaultTargets="Build" ToolsVersion="Current" '
@@ -3804,13 +3851,11 @@ def _kernel_project(tags, platform="x64"):
         '</PropertyGroup>\n'
         '<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />\n'
         '<PropertyGroup Label="Configuration">'
-        '<TargetVersion>Windows10</TargetVersion>'
-        '<UseDebugLibraries>false</UseDebugLibraries>'
-        '<PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>'
-        '<ConfigurationType>Driver</ConfigurationType>'
-        '<DriverType>WDM</DriverType></PropertyGroup>\n'
+        + configuration +
+        '</PropertyGroup>\n'
         '<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.props" />\n'
-        '<PropertyGroup><TargetName>probe</TargetName></PropertyGroup>\n'
+        '<PropertyGroup><TargetName>probe</TargetName>' + target_ext
+        + '</PropertyGroup>\n'
         '<ItemGroup>' + items + '</ItemGroup>\n'
         '<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />\n'
         '</Project>\n')
