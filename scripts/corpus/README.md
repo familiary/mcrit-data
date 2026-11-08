@@ -337,6 +337,39 @@ So: the *binaries* are reproducible and their recorded digests are stable,
 which is what provenance rests on. The files around them are not
 byte-stable, and a regeneration of unchanged data still shows up as a diff.
 
+### Two SMDA versions, and why that is safe
+
+The corpus does not hold one disassembler version. Provenance records
+`smda_version` per artefact, and across the tree it is **300 artefacts at
+4.8.0 and 32 at 5.0.2** - the 32 being `AdaptixC2`, `donut`, `gperftools`
+and the harvested `Meterpreter` gem rows, all of which are built on a Linux
+host rather than the Windows runner. `data/Meterpreter` therefore holds
+both: 25 gem artefacts at 5.0.2 beside the 2 MSVC source-build artefacts at
+4.8.0, which CI produced after installing `scripts/requirements.txt`.
+
+That split would matter if the two versions disassembled differently,
+because every cross-family claim this tooling makes - the census, the glue
+baseline, MCRIT matching itself - compares PicHashes computed by whichever
+version happened to run. So it was measured rather than assumed, by
+re-disassembling the committed input bytes under 4.8.0 and diffing against
+the committed 5.0.2 reports:
+
+| component | functions | offsets differing | PicHashes differing |
+| --- | --- | --- | --- |
+| `dump_sam` | 26 | 0 | 0 |
+| `metsrv` | 1029 | 0 | 0 |
+| `ext_server_stdapi` | 1127 | 0 | 0 |
+
+Identical function boundaries and identical `pic_hash` on all **2,182**
+functions, so the two sets are comparable and no artefact needs rebuilding
+for this reason.
+
+`scripts/requirements.txt` is deliberately **not** bumped to 5.0.2: the pin
+is what CI installs, 300 of the 332 artefacts were produced under it, and
+the measurement above says there is nothing to gain by moving it. What the
+pin's comment may not claim is that it describes every artefact here, which
+is why it now points at this section instead.
+
 ## The MSVC half
 
 31 families and 96 artefacts are built by
