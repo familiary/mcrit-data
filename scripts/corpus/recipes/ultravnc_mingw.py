@@ -156,16 +156,9 @@ an import library for the one function used with dlltool from a two-line .def
 (`CryptUIDlgViewCertificateW@8`, --kill-at), so the exe imports cryptui.dll
 as MSVC's does. No Windows binary is involved, only the import record.
 
-Not built from this CMake tree, with the exact errors (all identical at the
+Not built from this CMake tree (winvnc is now built, see patches 14-20), with the exact errors (all identical at the
 three pinned commits; the cmake directory does not change between 1.8.2.9 and
 1.8.3.2):
-  * winvnc (the server): `#add_subdirectory(winvnc)` is commented out
-    upstream. Enabling it needs libudtcloud, whose sources are gone
-    (`CMake Error at libudtcloud/CMakeLists.txt:23 (target_sources): Cannot
-    find source file: .../UdtCloudlib/proxy/Cloudthread.cpp`), and
-    cmake\\winvnc\\CMakeLists.txt needs vcpkg's `unofficial-sodium` package
-    (`Could not find a package configuration file provided by
-    "unofficial-sodium"`).
   * uvnc_settings: `fatal error: natupnp.h: No such file or directory`
     (upnp.h:28). mingw-w64 has no natupnp.h; a stand-in would have to declare
     the IUPnPNAT, IStaticPortMappingCollection and IStaticPortMapping COM
@@ -176,6 +169,95 @@ three pinned commits; the cmake directory does not change between 1.8.2.9 and
     yielded only 3 functions, which is too little to be useful reference data
     (this recipe requires 8)`); it is reported as excluded by the floor, not
     forced in. The x64 DLL has 10 functions and is kept.
+winvnc.exe (patches 14-20; ultravnc_mingw_winvnc_patch.py, run after the one
+above; each pattern must match the stated number of times, and all of them
+match at the three pinned commits). Upstream comments winvnc out of its CMake
+tree and the CMake project is stale against winvnc.vcxproj, which MSVC builds.
+The image is NOT byte-identical to a build of unmodified upstream, and it is
+not the MSVC build either: the changes below were measured to be what
+compiles and links with MinGW-w64 GCC 13, not what upstream's maintainers
+build.
+
+14. cmake\\CMakeLists.txt: `#add_subdirectory(winvnc)` becomes
+    `add_subdirectory(winvnc)`.
+15. cmake\\winvnc\\CMakeLists.txt, the dropped cloud code: `    libudtcloud`
+    and `    CloudDialog.cpp` are deleted. Reason: libudtcloud's sources
+    (UdtCloudlib/proxy/Cloudthread.cpp, proxy.cpp, ringbuffer.cpp) and the
+    udt4 library it links are not in the UltraVNC repository or a submodule
+    (`CMake Error at libudtcloud/CMakeLists.txt:23 (target_sources): Cannot
+    find source file: .../UdtCloudlib/proxy/Cloudthread.cpp`; the sibling
+    repository is not reachable from the build host: git ls-remote needs a
+    login, https returns 403, raw.githubusercontent.com 404). The code is
+    compiled out upstream as well: CloudDialog.cpp wraps everything in
+    `#ifdef _CLOUD`, no project defines _CLOUD, and winvnc.vcxproj neither
+    lists CloudDialog.cpp nor links UdtCloudlib, so the MSVC winvnc.exe has
+    no cloud code either. No stand-in for UdtCloudlib was written.
+16. cmake\\winvnc\\CMakeLists.txt, source list brought in line with
+    winvnc.vcxproj: `    inifile.cpp` and `    initipp.cpp` are deleted (the
+    files are not in winvnc\\winvnc; `Cannot find source file:
+    .../winvnc/winvnc/inifile.cpp`), and ../../common/inifile.cpp,
+    ../loadmemory/MemoryModule.c, ../loadmemory/loadDllFromMemory.cpp,
+    DlgChangePassword.cpp, RulesListView.cpp, ScSelect.cpp and
+    SchannelTLS.cpp (the vcxproj's other ClCompile items; the three
+    table*template.cpp items are #included by translate.cpp) are added;
+    `    libzip32` and `    libzipunzip` are deleted from the link list
+    (as patch 1; `cannot find -llibzip32`).
+17. cmake\\winvnc\\CMakeLists.txt, appended:
+        target_compile_definitions(winvnc PRIVATE _CRT_SECURE_NO_WARNINGS SODIUM_STATIC)
+        target_compile_options(winvnc PRIVATE -fpermissive -std=gnu++17
+            "SHELL:-include ${UVNC_COMPAT}" "SHELL:-include ${UVNC_WINVNC_COMPAT}"
+            "SHELL:-include ${UVNC_SEH}")
+        target_link_directories(winvnc PRIVATE ${UVNC_DEPS_LIB})
+        target_link_libraries(winvnc PRIVATE ${UVNC_DEPS_LIB}/libminizip-ng.a
+            winmm d3d11 dxgi bcrypt ncrypt crypt32 secur32)
+    (the vcxproj's Release definitions, C++17 and libraries; -fpermissive for
+    vnclog.h:54 `extra qualification 'VNCLog::' on member 'Print'`; the
+    SEH header is the one of patch 11). ultravnc_mingw_winvnc_compat.h adds
+    the MSVC array overload `wcsncat_s(wchar_t (&)[N], const wchar_t*, size_t)`
+    (vncmenu.cpp:445: `too few arguments to function 'errno_t wcsncat_s'`).
+    The force-included header of the viewer is reused.
+18. Source edits: (a) the macro `VNCLOG(s)` is `(__FUNCTION__ " : " s)` in
+    stdhdrs.h, benchmark.cpp and DSMPlugin.cpp; GCC's __FUNCTION__ is a
+    variable, not a literal (`expected ')' before string constant`, ~400
+    sites), so it becomes `(s)`: the log strings lose their function-name
+    prefix. (b) Dtwinver.cpp: the integer suffix `ui64` becomes `ULL` (four
+    places; `unable to find numeric literal operator 'operator""ui64'`).
+    (c) vncclient.cpp: the `__try { bUnzipOk = m_pZipUnZip->UnZipDirectory(
+    szPathW, szFileNameW); } __except(EXCEPTION_EXECUTE_HANDLER) { bUnzipOk
+    = false; }` becomes the bare call, so a hardware exception inside the
+    unzip is no longer swallowed (`expected 'catch' before '__except'`).
+    (d) SchannelTLS.cpp: `#include <algorithm>` and `using std::min;` after
+    `#include "vnclog.h"` (`'min' was not declared in this scope`).
+19. Case folding, as patch 8/9 (links next to the real file, no file edited;
+    forwarding headers in casefold-inc): quoted includes in winvnc\\winvnc,
+    winvnc\\loadmemory, DSMPlugin, common and rfb (vncEncoder.h, vncServer.h,
+    and in DSMPlugin\\MSRC4Plugin and TestPlugin REGISTRY.h / stdafx.h, which
+    are not compiled) and the system headers CommCtrl.h, VersionHelpers.h,
+    WinSock2.h, Windows.h and WtsApi32.h that mingw-w64 has in lower case
+    (`fatal error: WtsApi32.h: No such file or directory`).
+20. unofficial-sodium. cmake\\winvnc\\CMakeLists.txt does find_package(
+    unofficial-sodium CONFIG REQUIRED) (`Could not find a package
+    configuration file provided by "unofficial-sodium"`), vcpkg's package.
+    The recipe copies ultravnc_mingw_sodium_config.cmake into the dependency
+    prefix as share/unofficial-sodium/unofficial-sodiumConfig.cmake: it
+    declares the imported static target unofficial-sodium::sodium on the
+    libsodium.a and include directory that this recipe built (SODIUM_STATIC),
+    nothing more. noVNC: winvnc.rc embeds 55 noVNC .js files from
+    3rdparty\\noVNC, whose submodule pin (b493d9bb) is not served and stays
+    uninitialised (Source.submodules is False); noVNC commit 7c36fabe
+    (the pin of 1.8.2.9, as in ultravnc_msvc.py) is fetched as an extra
+    source and copied there. The resource section therefore carries that
+    noVNC's scripts, not those of b493d9bb; code is unaffected.
+The binary imports libgcc_s_seh-1.dll and libstdc++-6.dll, as upstream's
+cmake installs them next to the programs.
+
+Data (winvnc.exe; kept + removed + excluded = total, from provenance.json; the
+74 excluded are zlib functions removed by name as for the viewer):
+  x64  1.8.2.9  5019 + 204 + 74 = 5297   x86  1.8.2.9  5328 + 210 + 74 = 5612
+  x64  1.8.3.0  5018 + 204 + 74 = 5296   x86  1.8.3.0  5330 + 210 + 74 = 5614
+  x64  1.8.3.1  5019 + 204 + 74 = 5297   x86  1.8.3.1  5331 + 210 + 74 = 5615
+Every version now has 35 images: the 33 above plus winvnc.exe x86 and x64.
+
 Built by patches 8-13 (the earlier list of failures, now resolved): ldapauth,
 ldapauth9x, ldapauthnt4 (patch 8, 9), uvnckeyboardhelper (8, 9, 12), authSSP
 (8, 9, 11), MSLogonACL (11), repeater (12, 13 on x86), logmessages (10) and,
@@ -364,6 +446,19 @@ _CPATH = ("{source_root}/deps-{arch}/prefix/include:"
 
 _PATCH = BuildStep("python3 -I {repo}/scripts/corpus/exercisers/ultravnc_mingw_patch.py .")
 
+# Patches 14-20: winvnc.exe. noVNC's files (winvnc.rc embeds 55 of them) are
+# copied to 3rdparty/noVNC, the sodium find-config shim into the dependency
+# prefix, then the CMake/source patches are applied.
+_WINVNC = [
+    BuildStep("python3 -c \"import shutil,sys;shutil.copytree(sys.argv[1],"
+              "'3rdparty/noVNC',dirs_exist_ok=True,"
+              "ignore=shutil.ignore_patterns('.git'))\" {novnc}"),
+    BuildStep("mkdir -p deps-{arch}/prefix/share/unofficial-sodium && "
+              "cp {repo}/scripts/corpus/exercisers/ultravnc_mingw_sodium_config.cmake "
+              "deps-{arch}/prefix/share/unofficial-sodium/unofficial-sodiumConfig.cmake"),
+    BuildStep("python3 -I {repo}/scripts/corpus/exercisers/ultravnc_mingw_winvnc_patch.py ."),
+]
+
 _CONFIGURE = BuildStep(
     "cmake -S cmake -B bld-{arch} -DCMAKE_SYSTEM_NAME=Windows "
     "-DCMAKE_SYSTEM_PROCESSOR={platform} -DCMAKE_C_COMPILER={cc} "
@@ -373,6 +468,7 @@ _CONFIGURE = BuildStep(
     "-DCMAKE_PREFIX_PATH=$PWD/deps-{arch}/prefix -DCMAKE_BUILD_TYPE=Release "
     "-DUVNC_COMPAT={repo}/scripts/corpus/exercisers/ultravnc_mingw_compat.h "
     "-DUVNC_SEH={repo}/scripts/corpus/exercisers/ultravnc_mingw_seh.h "
+    "-DUVNC_WINVNC_COMPAT={repo}/scripts/corpus/exercisers/ultravnc_mingw_winvnc_compat.h "
     "$(if [ {bitness} = 32 ]; then echo -DUVNC_REPEATER_X86={repo}/scripts/corpus/exercisers/ultravnc_mingw_repeater_x86.h; fi) "
     "-DUVNC_DEPS_LIB=$PWD/deps-{arch}/prefix/lib",
     env=dict(_ENV, CPATH=_CPATH))
@@ -402,6 +498,7 @@ _COMPONENTS = [
     ("repeater/repeater.exe", "repeater.exe"),
     ("workgrpdomnt4/workgrpdomnt4.dll", "workgrpdomnt4.dll"),
     ("logmessages/logmessages.dll", "logmessages.dll"),
+    ("winvnc/winvnc.exe", "winvnc.exe"),
 ]
 
 _EXTRA = {
@@ -415,6 +512,11 @@ _EXTRA = {
     "sodium": Source(
         url="https://download.libsodium.org/libsodium/releases/libsodium-1.0.20.tar.gz",
         sha256="ebb65ef6ca439333c2bb41a0c1990587288da07f6c7fd07cb3a18cc18d30ce19"),
+    # noVNC's pin in the UltraVNC repo (b493d9bb) is not served any more, the
+    # submodule stays uninitialised; the commit ultravnc_msvc.py uses (the pin
+    # of 1.8.2.9) supplies the files winvnc.rc embeds.
+    "novnc": Source(git_url="https://github.com/novnc/noVNC.git",
+                    git_ref="7c36fabe599e053c5a81e98e091ac636f6c1e174"),
 }
 
 _FLAGS = ("-O3 -DNDEBUG (CMake Release, MinGW branch of cmake/CMakeLists.txt); "
@@ -429,7 +531,10 @@ _FLAGS = ("-O3 -DNDEBUG (CMake Release, MinGW branch of cmake/CMakeLists.txt); "
           "MessageID->MessageId in messages.mc, try/finally macros "
           "force-included into authSSP/MSLogonACL/workgrpdomnt4, goto "
           "declarations split in repeater and uvnckeyboardhelper, _ltoa_s "
-          "shim for 32-bit repeater")
+          "shim for 32-bit repeater; winvnc: CMake target enabled, "
+          "libudtcloud/CloudDialog.cpp dropped, source list per vcxproj, "
+          "VNCLOG function-name prefix dropped, ui64->ULL, __try/__except "
+          "removed, unofficial-sodium find-config for the built libsodium")
 
 
 def _ultravnc(version, commit, patch_note):
@@ -441,7 +546,7 @@ def _ultravnc(version, commit, patch_note):
         source=Source(git_url="https://github.com/ultravnc/UltraVNC.git",
                       git_ref=commit, submodules=False),
         extra_sources=dict(_EXTRA),
-        build=_DEPS + [_PATCH, _CONFIGURE, _BUILD],
+        build=_DEPS + [_PATCH] + _WINVNC + [_CONFIGURE, _BUILD],
         artifacts=[Artifact(path="bld-{arch}/%s" % path, component=component)
                    for path, component in _COMPONENTS],
         toolchains=["mingw_x86", "mingw_x64"],
@@ -464,8 +569,13 @@ def _ultravnc(version, commit, patch_note):
               "rely on the case-fold, forwarding-header, try/finally and "
               "goto patches 8-13 of the docstring; logmessages.dll x86 has 3 "
               "functions and is below the floor, so it has no image. "
-              "winvnc.exe is not built: upstream's CMake does not offer it; "
-              "uvnc_settings fails on the missing natupnp.h."
+              "winvnc.exe additionally relies on patches 14-20 of the docstring "
+              "(CMake target enabled and its source list corrected, "
+              "libudtcloud and CloudDialog.cpp dropped as upstream's MSVC "
+              "build does, VNCLOG/ui64/__except edits, forwarding headers, "
+              "a find-config for the built libsodium, noVNC files from "
+              "7c36fabe for the .rc); uvnc_settings fails on the missing "
+              "natupnp.h."
               % (commit[:8], patch_note),
     )
 
