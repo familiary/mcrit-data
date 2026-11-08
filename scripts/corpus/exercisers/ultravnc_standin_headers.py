@@ -1,14 +1,16 @@
-"""Writes the stand-in vncviewer\\ViewerBounds.h of the UltraVNC 1.8.3.2 recipe.
+"""Writes the two stand-in headers of the UltraVNC 1.8.3.2 viewer build.
 
-Usage: ultravnc_viewerbounds.py <path of the header to write>
+Usage: ultravnc_standin_headers.py <vncviewer directory of the build tree>
 (run by scripts/corpus/recipes/ultravnc_msvc.py inside the build tree; the
-header is NOT part of upstream and is never committed into a source tree).
+headers are NOT part of upstream and are never committed into a source tree).
 
 Upstream commit 6c44cfc ("harden code against buffer overruns") added
-`#include "ViewerBounds.h"` to ClientConnection.cpp, ClientConnectionCursor.cpp,
-ClientConnectionUltra2.cpp and FileTransfer.cpp and never committed the header.
-Everything below is inferred from the 24 call sites in those four files and from
-the code that 6c44cfc removed in their place; the recipe docstring has the table.
+`#include "ViewerBounds.h"` (ClientConnection.cpp, ClientConnectionCursor.cpp,
+ClientConnectionUltra2.cpp, FileTransfer.cpp) and `#include "ViewerJpegSource.h"`
+(ClientConnectionTight.cpp, ClientConnectionUltra2.cpp) and never committed
+either header. Both are reconstructions, inferred from the 24 + 6 call sites
+and from the code that 6c44cfc removed in their place; the recipe docstring
+says which parts are reconstruction.
 """
 import sys
 
@@ -141,7 +143,89 @@ inline void clipAxis(int &position, int &length, int limit, int &offset) {
 } // namespace ViewerBounds
 """
 
+
+JPEG_HEADER = r"""// ViewerJpegSource.h - STAND-IN written by the mcrit-data recipe for UltraVNC 1.8.3.2.
+//
+// Upstream commit 6c44cfc added #include "ViewerJpegSource.h" to
+// ClientConnectionTight.cpp and ClientConnectionUltra2.cpp and never committed
+// the header. This file is not upstream's. The three functions are what the
+// callers' libjpeg source-manager callbacks (JpegInitSource,
+// JpegFillInputBuffer, JpegSkipInputData) forward to, and their bodies are the
+// bodies of those callbacks before 6c44cfc. Needs jpeglib.h (and TRUE) included
+// first, as both callers do.
+//
+// What 6c44cfc changed is where the state lives: the callers' file-scope
+// jpegError / jpegBufferPtr / jpegBufferLen became locals, and the callers set
+// cinfo.client_data = &jpegError (a bool). The error flag is therefore reached
+// through client_data. The locals jpegBufferPtr / jpegBufferLen are not
+// reachable from a callback, so (RECONSTRUCTION) the start and length of the
+// buffer are read from cinfo->src in initSource, which libjpeg calls from
+// jpeg_read_header after the callers have set next_input_byte and
+// bytes_in_buffer, and kept per thread.
+#pragma once
+
+#include <cstddef>
+
+namespace ViewerJpeg {
+
+namespace detail {
+
+struct Window {
+    const JOCTET *start;
+    size_t length;
+};
+
+inline Window &window() {
+    static thread_local Window w = {NULL, 0};
+    return w;
+}
+
+inline void setFailed(j_decompress_ptr cinfo) {
+    if (cinfo->client_data != NULL)
+        *static_cast<bool *>(cinfo->client_data) = true;
+}
+
+inline void rewind(j_decompress_ptr cinfo) {
+    cinfo->src->bytes_in_buffer = window().length;
+    cinfo->src->next_input_byte = window().start;
+}
+
+} // namespace detail
+
+// was: jpegError = false;
+inline void initSource(j_decompress_ptr cinfo) {
+    if (cinfo->client_data != NULL)
+        *static_cast<bool *>(cinfo->client_data) = false;
+    detail::window().start = cinfo->src->next_input_byte;
+    detail::window().length = cinfo->src->bytes_in_buffer;
+}
+
+// was: jpegError = true; bytes_in_buffer = jpegBufferLen;
+//      next_input_byte = jpegBufferPtr; return TRUE;
+inline boolean fillInputBuffer(j_decompress_ptr cinfo) {
+    detail::setFailed(cinfo);
+    detail::rewind(cinfo);
+    return TRUE;
+}
+
+// was: the body of the callback, verbatim in behaviour.
+inline void skipInputData(j_decompress_ptr cinfo, long num_bytes) {
+    if (num_bytes < 0 || (size_t)num_bytes > cinfo->src->bytes_in_buffer) {
+        detail::setFailed(cinfo);
+        detail::rewind(cinfo);
+    } else {
+        cinfo->src->next_input_byte += (size_t)num_bytes;
+        cinfo->src->bytes_in_buffer -= (size_t)num_bytes;
+    }
+}
+
+} // namespace ViewerJpeg
+"""
+
 if __name__ == "__main__":
-    with open(sys.argv[1], "w", newline="\n") as handle:
-        handle.write(HEADER)
-    print("wrote", sys.argv[1], len(HEADER), "bytes")
+    import os
+    for name, text in (("ViewerBounds.h", HEADER), ("ViewerJpegSource.h", JPEG_HEADER)):
+        path = os.path.join(sys.argv[1], name)
+        with open(path, "w", newline="\n") as handle:
+            handle.write(text)
+        print("wrote", path, len(text), "bytes")
