@@ -45,12 +45,19 @@ OPENSSH = os.path.join("contrib", "win32", "openssh")
 # directories are what vcpkg's msbuild integration adds to every project
 # when it is on; it is off here, and openbsd_compat.vcxproj has no include
 # path of its own for openssl/opensslv.h.
+# /wd4703: with /GL off the compiler back end runs per file and reports
+# C4703 "potentially uninitialized local pointer variable" (130 errors on
+# x64 and x86 in run 42512218144: auth2-hostbased.c, misc.c, sftp-client.c,
+# ...), which /sdl (SDLCheck true in every project) promotes to errors;
+# under upstream's /GL the check never runs. The warning is disabled, /sdl
+# stays.
 PROPS = """<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemDefinitionGroup>
     <ClCompile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalOptions>/wd4703 %%(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>_ACRTIMP=;_DCRTIMP=;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>%(vcpkg)s\\include;%%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>

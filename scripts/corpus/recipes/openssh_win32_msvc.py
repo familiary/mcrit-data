@@ -1,20 +1,5 @@
 """Win32-OpenSSH (Microsoft's Windows fork of OpenSSH), built with MSVC.
 
-STATUS: NOT BUILT, and not registered. The module name starts with an
-underscore, which the recipe registry skips, so no workflow builds it. Three
-runs on the windows-2022 runner (scratch/win32ossh-msvc, run ids
-42510326809, 42510894765, 42511463886; the dispatch budget) each stopped at
-the next compile error of the /MD build; the last run's only error, on x64
-and on x86, was
-  process.h(48,26): error C2375: 'w32_system': redefinition; different
-  linkage [...\\libssh.vcxproj]
-The helper now also empties _DCRTIMP (the macro process.h declares system()
-with), which is the expected fix and was NOT run. To try it: rename this file
-to openssh_win32_msvc.py and dispatch OpenSSH_Win32_10.4.0.0_msvc. After a
-green build, add Recipe.exclude_functions for the statically linked zlib 1.3.2
-(`report` in the helper prints the zlib and OpenSSH object function names the
-table is derived from).
-
 Backlog issue #46 asked for OpenSSH as the base of the SSHDoor and Ebury
 trojans; the corpus README recorded Win32-OpenSSH as "its own recipe if one
 turns up", because the fork is a different code base from OpenSSH portable
@@ -84,7 +69,7 @@ none in the tree:
      fails the same way). The recipe therefore writes a copy of the manifest
      with the same dependencies and the same overrides and the baseline moved
      to vcpkg tag 2026.10.16 (9eec002df1cd109f8f104cd966a763daf9751489), the
-     first tag measured whose database has every version the overrides name.
+     tag measured whose database has every version the overrides name (the only candidate tried).
      libressl and libfido2 are the overlay ports of the tree, unmodified.
   5. Preprocessor: _ACRTIMP= and _DCRTIMP= (empty) for every compile. The
      fork's win32compat\\inc headers rename CRT functions with macros
@@ -97,9 +82,16 @@ none in the tree:
      which would add them, is off): without them
      `includes.h(173,10): error C1083: Cannot open include file:
      'openssl/opensslv.h'` in openbsd_compat.vcxproj.
-  6. Aliases: paths.targets links zs.lib and keygen.vcxproj libcrypto.lib;
-     the helper copies whatever vcpkg installed under those names
-     (zlib.lib, crypto.lib) if they are absent (logged as ALIAS).
+  6. /wd4703 on every compile. Without /GL the compiler back end runs per
+     file and reports C4703 "potentially uninitialized local pointer
+     variable" (130 error lines over the two architectures, in auth2-hostbased.c, misc.c,
+     sftp-client.c ...), which /sdl (SDLCheck true in every project) promotes
+     to errors; under upstream's /GL the check never runs. The warning is
+     disabled; /sdl stays.
+  7. Aliases (not needed in the end): paths.targets links zs.lib and
+     keygen.vcxproj libcrypto.lib; the helper would copy zlib.lib / crypto.lib
+     to those names if absent, and logged no ALIAS: the ports install
+     zs.lib and libcrypto.lib themselves.
 
 Which programs. ssh, sshd, sshd-session, sshd-auth, scp and sftp (the six of
 the OpenSSH 10 portable set, as in openssh.py), and the two programs that
@@ -107,10 +99,54 @@ exist only in the fork: ssh-agent (a Windows service in the fork) and
 ssh-shellhost (the console host sshd starts for a session). ssh-keygen,
 ssh-add, ssh-keyscan, sftp-server and the helpers are not built.
 
-Exclusion, by exact name, of what is not OpenSSH: see _win32openssh_zlib.py.
+Pinning, disclosed. The OpenSSH source is pinned by commit. The vcpkg
+dependencies are pinned by the manifest's version overrides (zlib 1.3.2,
+libressl 4.3.3, libfido2 1.17.0, libcbor 0.14.0), the baseline commit above
+and the SHA512 of each port's source archive, which vcpkg verifies; the
+archives are not pinned by sha256 in this recipe, because the GitHub archive
+URLs (zlib, libfido2, libcbor) answer 403 from the machine this was written
+on, so no sha256 could be computed. The only sha256 known is LibreSSL
+4.3.3's tarball (ff97c432457f349e6ba3d416ab903bc7468f1436f0f32efe5fff808de292c7b8,
+github.com/libressl/portable release asset, matching the overlay port's
+SHA512 e18aa701...). The vcpkg tool on the runner is whatever the windows-2022
+image carries (2026-10-29 at the build).
+
+Built (run 42514138261 on scratch/win32ossh-msvc, MSVC 19.44; kept + removed
+as runtime + excluded by name = image total, from provenance.json, x64 / x86):
+  ssh           2,337 + 216 +  98 = 2,651 / 2,396 + 220 +  98 = 2,714
+  sshd          1,909 + 216 +   0 = 2,125 / 1,953 + 218 +   0 = 2,171
+  sshd-session  2,556 + 217 +  98 = 2,871 / 2,611 + 222 +  98 = 2,931
+  sshd-auth     2,502 + 217 +  98 = 2,817 / 2,553 + 222 +  98 = 2,873
+  scp           1,056 + 212 +   0 = 1,268 / 1,086 + 212 +   0 = 1,298
+  sftp          1,053 + 212 +   0 = 1,265 / 1,081 + 213 +   0 = 1,294
+  ssh-agent     1,562 + 210 +   0 = 1,772 / 1,605 + 211 +   0 = 1,816
+  ssh-shellhost    86 + 170 +   0 =   256 /    94 + 157 +   0 =   251
+sshd does not link zlib (its compression is in sshd-session and sshd-auth).
+Of the kept functions, distinct PicHashes of 10 or more instructions per
+image, x64: ssh 1,644, sshd 1,278, sshd-session 1,825, sshd-auth 1,774, scp
+682, sftp 677, ssh-agent 1,008, ssh-shellhost 38 (2,410 distinct over the
+eight); x86 2,383 over the eight. ssh and sshd-session share 1,460 of them
+on x64, ssh and sftp 549 (x86: 1,583 and 592). Overlap with the OpenSSH
+portable images in data/OpenSSH (ELF, 11,248 distinct on x64, 33,874 on x86):
+0 on both architectures, so this is new reference data, not a copy of the
+portable releases. Libcrux (ML-KEM / ML-DSA) is part of the fork's tree and
+stays: it is OpenSSH's own code.
+
+Exclusion, by exact name, of what is not OpenSSH: see _win32openssh_zlib.py
+(98 zlib 1.3.2 names, tiers P/W/N: 53/33/12 on x64, 14/59/25 on x86, all in
+ssh, sshd-session and sshd-auth). LibreSSL, the C runtime and the Windows
+libraries are imported, so nothing of them is in the images.
+
+What survives that is not the fork's: the glue baseline removes the CRT and
+SDK code it can name (157 to 222 functions per image); small named survivors
+of 3 to 9 instructions include SDK inlines (ReadNoFence, McGenEventRegister,
+__castguard_check_failure_os_handled_wrapper, __scrt_wide_argv_policy::
+configure_argv on x86). snprintf and vsnprintf, the stdio inlines that
+zlib.lib and the fork's objects both define, are not in the exclusion table.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
+from ._win32openssh_zlib import zlib_functions
 
 _COMMIT = "274893f8d1fe86c4d128b514c3af4bc10cdc0c99"
 
@@ -163,5 +199,6 @@ def _recipe(version, commit, exclude=()):
 
 
 RECIPES = {
-    "OpenSSH_Win32_10.4.0.0_msvc": _recipe("Win32_10.4.0.0", _COMMIT),
+    "OpenSSH_Win32_10.4.0.0_msvc": _recipe("Win32_10.4.0.0", _COMMIT,
+                                           [zlib_functions()]),
 }
