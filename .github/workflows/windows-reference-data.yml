@@ -64,6 +64,8 @@ on:
       # did not rebuild the MSVC families would leave them describing a
       # pipeline this branch no longer has.
       - scripts/corpus/baseline.py
+      # The MSVC_UCRT recipes link the SDK's static UCRT with this helper.
+      - scripts/corpus/crawl_ucrt.py
       - scripts/corpus/smdaify.py
       - scripts/corpus/recipe.py
       # config.py is in this list for the same reason rather than as a
