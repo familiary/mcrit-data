@@ -147,14 +147,24 @@ Thanks to Check Point Research for processing VS 2015, 2017, 2019, and 2022.
 | VS 6    Express | 8168    | [x86](data/MSVC/x86/mcrit/VC6_Express_x86.mcrit)      | [x86](data/MSVC/x86/smda/VC6_Express_x86.7z)     |
 | VS 2003 Express | 3077    | [x86](data/MSVC/x86/mcrit/2003_Express_x86.mcrit)      | [x86](data/MSVC/x86/smda/2003_Express_x86.7z)     |
 | VS 2005 Express | 50727   | [x86](data/MSVC/x86/mcrit/2005_Express_x86.mcrit)      | [x86](data/MSVC/x86/smda/2005_Express_x86.7z)     |
-| VS 2008 Express | -----   | [x86](data/MSVC/x86/mcrit/2005_Express_x86.mcrit)      | [x86](data/MSVC/x86/smda/2005_Express_x86.7z)     |
+| VS 2008 Express | -----   | [x86](data/MSVC/x86/mcrit/2008_express_x86.mcrit)      | [x86](data/MSVC/x86/smda/2008_express_x86.7z)     |
 | VS 2010 Express | 30319   | [x86](data/MSVC/x86/mcrit/2010_Express_x86.mcrit)      | [x86](data/MSVC/x86/smda/2010_Express_x86.7z)     |
-| VS 2012 Express | -----   | [x86](data/MSVC/x86/mcrit/2012_Express_x86.mcrit) / [x64](data/MSVC/x64/mcrit/2012_Express_x64.mcrit)     | [x86](data/MSVC/x86/smda/2012_Express_x86.7z) / [x64](data/MSVC/x64/mcrit/2012_Express_x64.mcrit)    |
-| VS 2013 Express | -----   | [x86](data/MSVC/x86/mcrit/2013_Express_x86.mcrit) / [x64](data/MSVC/x64/mcrit/2013_Express_x64.mcrit)     | [x86](data/MSVC/x86/smda/2013_Express_x86.7z) / [x64](data/MSVC/x64/mcrit/2013_Express_x64.mcrit)    |
-| VS 2015 Pro     | -----   | [x86](data/MSVC/x86/mcrit/2015_Pro_x86.mcrit) / [x64](data/MSVC/x64/mcrit/2015_Pro_x64.mcrit)     | [x86](data/MSVC/x86/smda/2015_Pro_x86.7z) / [x64](data/MSVC/x64/mcrit/2015_Pro_x64.mcrit)    |
-| VS 2017 Pro     | -----   | [x86](data/MSVC/x86/mcrit/2017_Pro_x86.mcrit) / [x86-MFC](data/MSVC/x86/mcrit/2017_Pro_mfc_x86.mcrit) / [x64](data/MSVC/x64/mcrit/2017_Pro_x64.mcrit) / [x64-MFC](data/MSVC/x64/mcrit/2017_Pro_mfc_x64.mcrit)    | [x86](data/MSVC/x86/smda/2017_Pro_x86.7z) / [x86-MFC](data/MSVC/x86/smda/2017_Pro_mfc_x86.7z) / [x64](data/MSVC/x64/mcrit/2017_Pro_x64.mcrit) / [x64-MFC](data/MSVC/x64/mcrit/2017_Pro_mfc_x64.mcrit)   |
-| VS 2019 Pro     | -----   | [x86](data/MSVC/x86/mcrit/2019_Pro_x86.mcrit) / [x86-MFC](data/MSVC/x86/mcrit/2019_Pro_mfc_x86.mcrit) / [x64](data/MSVC/x64/mcrit/2019_Pro_x64.mcrit) / [x64-MFC](data/MSVC/x64/mcrit/2019_Pro_mfc_x64.mcrit)    | [x86](data/MSVC/x86/smda/2019_Pro_x86.7z) / [x86-MFC](data/MSVC/x86/smda/2019_Pro_mfc_x86.7z) / [x64](data/MSVC/x64/mcrit/2019_Pro_x64.mcrit) / [x64-MFC](data/MSVC/x64/mcrit/2019_Pro_mfc_x64.mcrit)   |
-| VS 2022 Pro     | -----   | x86 / [x86-MFC](data/MSVC/x86/mcrit/2022_Pro_mfc_x86.mcrit) / [x64](data/MSVC/x64/mcrit/2022_Pro_x64.mcrit) / [x64-MFC](data/MSVC/x64/mcrit/2022_Pro_mfc_x64.mcrit)    | [x86](data/MSVC/x86/smda/2022_Pro_x86.7z) / [x86-MFC](data/MSVC/x86/smda/2022_Pro_mfc_x86.7z) / [x64](data/MSVC/x64/mcrit/2022_Pro_x64.mcrit) / [x64-MFC](data/MSVC/x64/mcrit/2022_Pro_mfc_x64.mcrit)   |
+| VS 2012 Express | -----   | [x86](data/MSVC/x86/mcrit/2012_Express_x86.mcrit) / [x64](data/MSVC/x64/mcrit/2012_Express_x64.mcrit)     | [x86](data/MSVC/x86/smda/2012_Express_x86.7z) / [x64](data/MSVC/x64/smda/2012_Express_x64.7z)    |
+| VS 2013 Express | -----   | [x86](data/MSVC/x86/mcrit/2013_Express_x86.mcrit) / [x64](data/MSVC/x64/mcrit/2013_Express_x64.mcrit)     | [x86](data/MSVC/x86/smda/2013_Express_x86.7z) / [x64](data/MSVC/x64/smda/2013_Express_x64.7z)    |
+| VS 2015 Pro     | -----   | [x86](data/MSVC/x86/mcrit/2015_Pro_x86.mcrit) / [x64](data/MSVC/x64/mcrit/2015_Pro_x64.mcrit)     | [x86](data/MSVC/x86/smda/2015_Pro_x86.7z) / [x64](data/MSVC/x64/smda/2015_Pro_x64.7z)    |
+| VS 2017 Pro     | -----   | [x86](data/MSVC/x86/mcrit/2017_Pro_x86.mcrit) / [x86-MFC](data/MSVC/x86/mcrit/2017_Pro_mfc_x86.mcrit) / [x64](data/MSVC/x64/mcrit/2017_Pro_x64.mcrit) / [x64-MFC](data/MSVC/x64/mcrit/2017_Pro_mfc_x64.mcrit)    | [x86](data/MSVC/x86/smda/2017_Pro_x86.7z) / [x86-MFC](data/MSVC/x86/smda/2017_Pro_mfc_x86.7z) / [x64](data/MSVC/x64/smda/2017_Pro_x64.7z) / [x64-MFC](data/MSVC/x64/smda/2017_Pro_mfc_x64.7z)   |
+| VS 2019 Pro     | -----   | [x86](data/MSVC/x86/mcrit/2019_Pro_x86.mcrit) / [x86-MFC](data/MSVC/x86/mcrit/2019_Pro_mfc_x86.mcrit) / [x64](data/MSVC/x64/mcrit/2019_Pro_x64.mcrit) / [x64-MFC](data/MSVC/x64/mcrit/2019_Pro_mfc_x64.mcrit)    | [x86](data/MSVC/x86/smda/2019_Pro_x86.7z) / [x86-MFC](data/MSVC/x86/smda/2019_Pro_mfc_x86.7z) / [x64](data/MSVC/x64/smda/2019_Pro_x64.7z) / [x64-MFC](data/MSVC/x64/smda/2019_Pro_mfc_x64.7z)   |
+| VS 2022 Pro     | -----   | x86[^1] / [x86-MFC](data/MSVC/x86/mcrit/2022_Pro_mfc_x86.mcrit) / [x64](data/MSVC/x64/mcrit/2022_Pro_x64.mcrit) / [x64-MFC](data/MSVC/x64/mcrit/2022_Pro_mfc_x64.mcrit)    | [x86](data/MSVC/x86/smda/2022_Pro_x86.7z) / [x86-MFC](data/MSVC/x86/smda/2022_Pro_mfc_x86.7z) / [x64](data/MSVC/x64/smda/2022_Pro_x64.7z) / [x64-MFC](data/MSVC/x64/smda/2022_Pro_mfc_x64.7z)   |
+
+[^1]: The MCRIT export for 2022 x86 (non-MFC) exceeds GitHub's 100 MB per-file limit and was left out (commit 8151d81). The SMDA report is provided; the MCRIT export can be regenerated by importing the SMDA report.
+
+**Notes** (measured from the SMDA reports in `data/MSVC/*/smda`):
+
+* The "Version" column is filled only where it is known; the `version` field inside the reports is just a label (e.g. `2019-MFC`), not a compiler or toolset version, so the remaining entries are left as `-----`.
+* The 2022 MFC reports (x86 and x64) are identical in function count, `binary_size`, `binweight` and in the multiset of function names to the 2019 MFC reports (91,423 functions for x86, 48,846 for x64), so they appear to be the same content.
+* The 2022 non-MFC reports already contain many ATL/MFC-like function names (matching `ATL|Afx|CWnd|MFC|CString`: 50,711 of 153,528 for x86, 24,769 of 88,416 for x64).
+* The static UCRT (`libucrt.lib`, Windows Kits) is not part of these crawls: no function names containing `__acrt_` or `__stdio_common` occur in any of the reports.
+* There are no x64 builds for VS 2005, 2008 and 2010, no ARM/ARM64 builds, and no spectre/onecore/store variants (only `x86` and `x64` directories exist and none of the report file names indicates such a variant).
 
 ### MinGW<a id='mingw'></a>
 
