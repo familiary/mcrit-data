@@ -170,6 +170,44 @@ def _drop_vendored(report, vendors):
     return removed
 
 
+def _drop_excluded_pichashes(report, excluded):
+    """Remove individually audited PicHashes, for a report with no symbols.
+
+    Unlike _drop_crt_glue and _drop_vendored this matches on the PicHash
+    alone, because the reports it exists for carry no symbols for those
+    passes to match. That makes it the weakest of the three rules, so it is
+    the narrowest: the hashes are written out one at a time in the recipe,
+    each with the reference symbol it was audited against, and only *unnamed*
+    functions are dropped. See Recipe.exclude_pichashes for why the automatic
+    form of this rule was measured and rejected.
+
+    Returns [(pichash, reason), ...] for what went.
+    """
+    removed = []
+    for offset, function in list(report.xcfg.items()):
+        # getPicHashAsLong() is the integer form the .mcrit exports and the
+        # census report in, so a recipe's hashes are the ones a reader copies
+        # out of a validate --deep line.
+        pichash = function.getPicHashAsLong() if function.pic_hash else None
+        if pichash is None or pichash not in excluded:
+            continue
+        if function.function_name:
+            # A named body is governed by the symbol-based passes; dropping it
+            # on a hash alone is exactly the misattribution this guards.
+            LOGGER.info("kept %s at 0x%x: PicHash %s is excluded but the "
+                        "function carries a symbol",
+                        function.function_name, offset, pichash)
+            continue
+        removed.append((pichash, excluded[pichash]))
+        del report.xcfg[offset]
+    report._sorted_functions = None
+    if removed:
+        _recompute_statistics(report)
+        LOGGER.info("dropped %d audited PicHash(es): %s", len(removed),
+                    ", ".join(sorted(reason for _, reason in removed)))
+    return removed
+
+
 def assert_symbols_survived(report, binary_path, min_named_ratio):
     """Refuse a report whose build stripped its symbols.
 
@@ -326,7 +364,7 @@ def smdaify(binary_path, family, version, component, is_library=True,
             toolchain_id=None, drop_crt_glue=True, filename=None,
             min_named_ratio=0.5, is_blob=False, bitness=None,
             base_addr=0x400000, pdb_path="", min_functions=None,
-            vendors=()):
+            vendors=(), exclude_pichashes=None):
     """Disassemble ``binary_path`` and label it the way the corpus expects.
 
     ``min_functions`` is the recipe's replacement for
@@ -363,6 +401,10 @@ def smdaify(binary_path, family, version, component, is_library=True,
     # After the runtime pass, so a function that is both is counted once and
     # attributed to the compiler, which is the stronger claim.
     removed_vendored = _drop_vendored(report, vendors) if vendors else []
+    # Last, and only on what the two symbol-based passes left behind, so a
+    # function they could reach is attributed by the stronger rule.
+    removed_excluded = (_drop_excluded_pichashes(report, exclude_pichashes)
+                        if exclude_pichashes else [])
 
     if is_blob:
         recovered = report.statistics.num_instructions if report.statistics else 0
@@ -391,4 +433,4 @@ def smdaify(binary_path, family, version, component, is_library=True,
     if is_blob:
         # Records how the report was produced, matching the aPLib entries.
         report.is_buffer = True
-    return report, removed, removed_vendored
+    return report, removed, removed_vendored, removed_excluded

@@ -125,7 +125,7 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
 
         for artifact, binary_path, pdb_path in produced:
             try:
-                report, removed, removed_vendored = smdaify(
+                report, removed, removed_vendored, removed_excluded = smdaify(
                     binary_path,
                     family=artifact.family or recipe.family,
                     version=recipe.version,
@@ -141,6 +141,7 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                     base_addr=artifact.base_addr,
                     pdb_path=pdb_path,
                     vendors=recipe.vendors,
+                    exclude_pichashes=recipe.exclude_pichashes,
                 )
                 arch = "x86" if report.bitness == 32 else "x64"
                 slug = recipe.slug(toolchain_id, artifact, arch)
@@ -214,6 +215,23 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
             # because its copy of putShortMSB has a different PicHash.
             if recipe.vendors:
                 entry["vendors"] = sorted(recipe.vendors)
+            # The audit trail for the weakest of the three passes, and the
+            # reason it is safe: each hash is written with the reference
+            # symbol a person checked it against, so a reader can see what
+            # was removed and why without rebuilding anything. Recorded as
+            # strings because a PicHash exceeds what JSON numbers carry
+            # losslessly everywhere.
+            if removed_excluded:
+                entry["removed_excluded_pichashes"] = {
+                    str(pichash): reason
+                    for pichash, reason in sorted(removed_excluded)}
+            # As with vendors: recorded whenever the recipe declares any, so
+            # "the pass ran and matched nothing" stays distinguishable from
+            # "no pass was applied". The x64 leg is that case.
+            if recipe.exclude_pichashes:
+                entry["exclude_pichashes"] = {
+                    str(pichash): reason for pichash, reason
+                    in sorted(recipe.exclude_pichashes.items())}
             if dependency_provenance:
                 entry["dependencies"] = dependency_provenance
             if recipe.notes:

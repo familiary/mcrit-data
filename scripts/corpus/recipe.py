@@ -150,6 +150,38 @@ class Recipe:
     # one-line wrappers in the vendored family's own reports cannot take a
     # host project's code with them. See corpus.baseline.vendored_functions.
     vendors: List[str] = field(default_factory=list)
+    # Individually audited PicHashes to drop, each mapped to the reference
+    # symbol it is: {pichash: "data/MSVC:__twoToTOS"}.
+    #
+    # The last resort of the three removal passes, for an artefact that has no
+    # symbols at all. drop_crt_glue and vendors both match a symbol *and* a
+    # PicHash, which is what stops them deleting a project's own function that
+    # merely resembles a library's - so neither can act on a report recovered
+    # from a binary with no PDB, where every body is unnamed. The harvested
+    # Meterpreter gem is that case: 2 recovered symbols across 28,892
+    # functions.
+    #
+    # Why this is not the automatic version of that rule, which was measured
+    # and rejected: "drop any unnamed function whose PicHash a reference
+    # family names" removes 207 functions corpus-wide, but one PicHash there
+    # maps to ~28 MSVC symbols at once - every trivial exception-class copy
+    # constructor shares a body - so the hash identifies a shape and not a
+    # function, and the same shapes match 7-Zip and libtomcrypt too. See the
+    # long comment in recipes/meterpreter_prebuilt.py.
+    #
+    # An entry here is admissible only when that ambiguity is absent and a
+    # person has checked it: the census must report the hash under a *single*
+    # symbol ("appears under N families as the same symbol X"), and X must be
+    # recognisably compiler runtime or a named vendored library. The mapping's
+    # value records which, is written into provenance, and is the audit trail.
+    # This is the hand-written sibling of validate.py's commit 0108024, not a
+    # rule the pipeline infers.
+    #
+    # Only *unnamed* functions are dropped. A hash that matches a function
+    # carrying a symbol is left alone and logged, because there the
+    # symbol-based passes apply and a hash override could silently delete
+    # named project code.
+    exclude_pichashes: Dict[int, str] = field(default_factory=dict)
     # Minimum share of functions that must carry a recovered symbol before the
     # build is accepted. Lower it only for projects that genuinely cannot keep
     # symbols; 0 disables the check.
