@@ -80,6 +80,65 @@ does not occur the stated number of times):
     become `"stat/chat.bmp"` and `"stat/FT.bmp"` (windres on Linux:
     `can't open bitmap file 'stat\\chat.bmp': No such file or directory`).
 
+Further patches for the addon projects of the same CMake tree (scripts/corpus/
+exercisers/ultravnc_mingw_patch.py again; each was measured to apply at all
+three pinned commits). None of them touches the viewer or the seven tools:
+
+ 8. Case-folded include names. The sources were written on Windows and the
+    git tree holds ldapAuth.h, ldapAuth9x.h, ldapAuthnt4.h, Resource.h,
+    dsmplugin.h and winvnc/winvnc/Localization.h while they include
+    `ldapauth.h`, `ldapauth9x.h`, `ldapauthnt4.h`, `resource.h`, `DSMPlugin.h`
+    and `../../../winvnc/winvnc/localization.h`. For every quoted include in
+    addon/ms-logon, uvnckeyboardhelper and uvnc_settings that does not resolve
+    but resolves ignoring case, the patch script creates a symbolic link with
+    the spelled name next to the real file (six links; no file is edited).
+    `fatal error: ldapauth.h: No such file or directory` and the
+    `resource.h` / `localization.h` errors go away.
+ 9. Stand-in forwarding headers, generated into <source root>/casefold-inc
+    (put on CPATH): `Dsgetdc.h` containing `#include <dsgetdc.h>` and
+    `SDKDDKVer.h` containing `#include <sdkddkver.h>` (the sources include
+    `<Dsgetdc.h>` and, through targetver.h, `<SDKDDKVer.h>`; mingw-w64 ships
+    both in lower case: `fatal error: Dsgetdc.h: No such file or directory`,
+    `fatal error: SDKDDKVer.h: No such file or directory`).
+10. addon/eventMessageLogger/messages.mc: `MessageID=` becomes `MessageId=`
+    (three places). windmc's keywords are case-sensitive; `In messages.mc at
+    line 13: parser: syntax error.` was this keyword, not the file structure.
+11. try/finally. authSSP (authSSP.cpp, GenClientServerContext.cpp,
+    vncAccessControl.cpp), MSLogonACL (vncExportACL.cpp, vncImportACL.cpp) and
+    workgrpdomnt4 use `__try { ... __leave; ... } __finally { cleanup }` with
+    no `__except`. exercisers/ultravnc_mingw_seh.h, force-included into those
+    three targets only (target_compile_options appended to their CMakeLists),
+    defines `__try` as `do`, `__leave` as `break` and `__finally` as
+    `while (0);`, so the block becomes `do { ... break; ... } while (0);
+    { cleanup }`, which runs the cleanup on the normal path and after
+    `__leave`. The ten protected blocks (authSSP.cpp 2,
+    GenClientServerContext.cpp 1, vncAccessControl.cpp 2, vncExportACL.cpp 1,
+    vncImportACL.cpp 2, workgrpdomnt4.cpp 2) contain no `return`, no
+    loop or switch around a `__leave` and no goto, so `break` always leaves
+    the do-while; only a hardware exception inside a block, which these
+    blocks do not handle either, would behave differently. This is a macro
+    form of the scope-guard rewrite of patch 4, chosen because it is the same
+    text change at every site.
+12. goto over initialisations (as patch 6; GCC rejects these even under
+    -fpermissive, so no flag is used): repeater\\socket_functions.cpp, the
+    four declarations `DWORD start=0; DWORD stop=0; int measure_counter=0;
+    long temp_bytes=0;` become declaration plus assignment (`error: jump to
+    label 'error'` ... `crosses initialization of 'DWORD start'`);
+    uvnckeyboardhelper.cpp, `DWORD dwEvent = WaitForMultipleObjects(...)` and
+    `int counter=0;` likewise.
+13. repeater, 32-bit only: the i686 import library for msvcrt.dll has no
+    `_ltoa_s` (`undefined reference to `_imp___ltoa_s'`); repeater.cpp:61
+    calls `_ltoa_s(value, buf, 10)`. exercisers/ultravnc_mingw_repeater_x86.h,
+    force-included into repeater when UVNC_REPEATER_X86 is set (x86 only),
+    includes <stdlib.h> and defines `_ltoa_s(v, b, r)` as `(_ltoa(v, b, r), 0)`.
+    The x64 image calls msvcrt's own `_ltoa_s`.
+
+The addon images built from these patches (and the compiler warning that
+remains in MSLogonACL: `vncImportACL.cpp:27:35: warning: deleting 'PSID' {aka
+'void*'} is undefined [-Wdelete-incomplete]`, three places, which is upstream's
+code and is compiled as written) are NOT byte-identical to a build of
+unmodified upstream.
+
 Force-included header (scripts/corpus/exercisers/ultravnc_mingw_compat.h, C++
 only, -include): <cstring> (AboutBox.cpp uses std::strstr without including
 it), the uvnc_lvalue helper of patch 5, and the `_strdate_s(char (&)[N])` /
@@ -107,24 +166,24 @@ three pinned commits; the cmake directory does not change between 1.8.2.9 and
     cmake\\winvnc\\CMakeLists.txt needs vcpkg's `unofficial-sodium` package
     (`Could not find a package configuration file provided by
     "unofficial-sodium"`).
-  * authSSP, MSLogonACL: SEH (`error: '__try' was not declared in this
-    scope`, `'__finally' was not declared in this scope`) in
-    authSSP.cpp, vncAccessControl.cpp, GenClientServerContext.cpp,
-    vncExportACL.cpp, vncImportACL.cpp; authSSP also `fatal error:
-    ../../../winvnc/winvnc/localization.h: No such file or directory`.
-  * ldapauth, ldapauth9x, ldapauthnt4: `fatal error: ldapauth.h: No such
-    file or directory` (and ldapauth9x.h, ldapauthnt4.h).
-  * repeater: `socket_functions.cpp:523:1: error: jump to label 'error'`
-    (crosses initialization) and the ANSI/UNICODE errors do not apply (it is
-    an ANSI program); only the goto fails.
-  * uvnc_settings: `fatal error: natupnp.h: No such file or directory`.
-  * uvnckeyboardhelper: `fatal error: SDKDDKVer.h: No such file or
-    directory` and `resource.h: No such file or directory` (the .rc).
-  * workgrpdomnt4, logmessages: logmessages: `In messages.mc at line 13:
-    parser: syntax error.`; workgrpdomnt4 depends on it.
+  * uvnc_settings: `fatal error: natupnp.h: No such file or directory`
+    (upnp.h:28). mingw-w64 has no natupnp.h; a stand-in would have to declare
+    the IUPnPNAT, IStaticPortMappingCollection and IStaticPortMapping COM
+    interfaces from memory, and a wrong vtable layout would be a wrong image,
+    so none was written.
+  * logmessages x86 (all three versions): built, but the DLL has 3 functions
+    after the MinGW glue is removed, below the floor of 8 (`logmessages.dll
+    yielded only 3 functions, which is too little to be useful reference data
+    (this recipe requires 8)`); it is reported as excluded by the floor, not
+    forced in. The x64 DLL has 10 functions and is kept.
+Built by patches 8-13 (the earlier list of failures, now resolved): ldapauth,
+ldapauth9x, ldapauthnt4 (patch 8, 9), uvnckeyboardhelper (8, 9, 12), authSSP
+(8, 9, 11), MSLogonACL (11), repeater (12, 13 on x86), logmessages (10) and,
+because logmessages was its stated blocker, workgrpdomnt4 (11).
 
-Data. UltraVNC 1.8.3.1 (92bb19b9) has images (16: eight components, x86 and
-x64); 1.8.2.9 and 1.8.3.0 are described after this table. Counts, kept +
+Data. UltraVNC 1.8.3.1 (92bb19b9) has 33 images: the first 16 (eight
+components, x86 and x64) are in the table below, the other 17 (addon projects)
+follow the 1.8.2.9 / 1.8.3.0 text; 1.8.2.9 and 1.8.3.0 are described after this table. Counts, kept +
 removed + excluded = total, read from data/UltraVNC/provenance.json (kept =
 num_functions, removed = removed_runtime_functions, excluded =
 excluded_function_count, the zlib functions removed by name, see below):
@@ -171,6 +230,30 @@ excluded = total per image, from data/UltraVNC/provenance.json (the 1.8.2.9 and
 
   Totals over the 16 images: 8778 kept + 1665 removed + 148 excluded = 10591 at
   both versions. 1.8.3.1 (above): 8776 + 1665 + 148 = 10589.
+
+Addon images (patches 8-13). Each of the three versions has 17 more images
+besides the 16 above (33 per version; the per-image numbers are identical at
+1.8.2.9, 1.8.3.0 and 1.8.3.1, because these projects did not change). kept +
+removed + excluded = total, excluded 0 (they contain no zlib), from
+data/UltraVNC/provenance.json:
+
+  x86  ldapauth.dll         16 + 111 + 0 = 127   x64  ldapauth.dll         36 + 106 + 0 = 142
+  x86  ldapauth9x.dll       16 + 111 + 0 = 127   x64  ldapauth9x.dll       35 + 106 + 0 = 141
+  x86  ldapauthnt4.dll      16 + 111 + 0 = 127   x64  ldapauthnt4.dll      36 + 106 + 0 = 142
+  x86  uvnckeyboardhelper   33 +  62 + 0 =  95   x64  uvnckeyboardhelper   65 +  64 + 0 = 129
+  x86  authSSP.dll          66 + 120 + 0 = 186   x64  authSSP.dll         126 + 116 + 0 = 242
+  x86  MSLogonACL.exe       76 + 150 + 0 = 226   x64  MSLogonACL.exe      109 + 144 + 0 = 253
+  x86  repeater.exe        174 + 154 + 0 = 328   x64  repeater.exe        289 + 147 + 0 = 436
+  x86  workgrpdomnt4.dll    15 + 133 + 0 = 148   x64  workgrpdomnt4.dll    42 + 128 + 0 = 170
+  x86  logmessages.dll      3 functions: below the floor, no image           x64  logmessages.dll      10 +  50 + 0 =  60
+
+  Per version: 1160 kept + 1919 removed + 0 excluded = 3079 over the 17 new
+  images. All 33 images of a version: 1.8.3.1 9936 + 3584 + 148 = 13668;
+  1.8.2.9 and 1.8.3.0 9938 + 3584 + 148 = 13670. Most of what the small DLLs
+  contain is the MinGW C runtime (removed by the baseline) and the functions
+  of their own few source files, so the kept counts are small; the
+  workgrpdomnt4 and ldapauth families of DLLs are near copies of each other
+  within a version.
 
 zlib (PR #69; Recipe.exclude_functions comes from PR #94, so #69 depends on
 #94). The viewer links zlib 1.3.1 statically, and its functions are PicHash-
@@ -275,6 +358,10 @@ _DEPS = [
               "-l deps-{arch}/prefix/lib/libcryptui.a -k -m i386; fi"),
 ]
 
+# The dependency prefix, then the recipe-generated forwarding headers.
+_CPATH = ("{source_root}/deps-{arch}/prefix/include:"
+          "{source_root}/casefold-inc")
+
 _PATCH = BuildStep("python3 -I {repo}/scripts/corpus/exercisers/ultravnc_mingw_patch.py .")
 
 _CONFIGURE = BuildStep(
@@ -285,13 +372,15 @@ _CONFIGURE = BuildStep(
     "-DCMAKE_FIND_ROOT_PATH=\"/usr/{host};$PWD/deps-{arch}/prefix\" "
     "-DCMAKE_PREFIX_PATH=$PWD/deps-{arch}/prefix -DCMAKE_BUILD_TYPE=Release "
     "-DUVNC_COMPAT={repo}/scripts/corpus/exercisers/ultravnc_mingw_compat.h "
+    "-DUVNC_SEH={repo}/scripts/corpus/exercisers/ultravnc_mingw_seh.h "
+    "$(if [ {bitness} = 32 ]; then echo -DUVNC_REPEATER_X86={repo}/scripts/corpus/exercisers/ultravnc_mingw_repeater_x86.h; fi) "
     "-DUVNC_DEPS_LIB=$PWD/deps-{arch}/prefix/lib",
-    env=dict(_ENV, CPATH="{source_root}/deps-{arch}/prefix/include"))
+    env=dict(_ENV, CPATH=_CPATH))
 
 # `-k`: the CMake tree builds a dozen projects and several of them cannot
 # build (see the docstring); the artefacts below are checked by the pipeline.
 _BUILD = BuildStep("cmake --build bld-{arch} -j$(nproc) -- -k",
-                   env=dict(_ENV, CPATH="{source_root}/deps-{arch}/prefix/include"),
+                   env=dict(_ENV, CPATH=_CPATH),
                    allow_failure=True)
 
 _COMPONENTS = [
@@ -303,6 +392,16 @@ _COMPONENTS = [
     ("authadmin/authadmin.dll", "authadmin.dll"),
     ("logging/logging.dll", "logging.dll"),
     ("vnchooks/vnchooks.dll", "vnchooks.dll"),
+    # Added by the case-fold / try-finally / goto patches (docstring 8-12).
+    ("ldapauth/ldapauth.dll", "ldapauth.dll"),
+    ("ldapauth9x/ldapauth9x.dll", "ldapauth9x.dll"),
+    ("ldapauthnt4/ldapauthnt4.dll", "ldapauthnt4.dll"),
+    ("uvnckeyboardhelper/uvnckeyboardhelper.exe", "uvnckeyboardhelper.exe"),
+    ("authSSP/authSSP.dll", "authSSP.dll"),
+    ("MSLogonACL/MSLogonACL.exe", "MSLogonACL.exe"),
+    ("repeater/repeater.exe", "repeater.exe"),
+    ("workgrpdomnt4/workgrpdomnt4.dll", "workgrpdomnt4.dll"),
+    ("logmessages/logmessages.dll", "logmessages.dll"),
 ]
 
 _EXTRA = {
@@ -323,7 +422,14 @@ _FLAGS = ("-O3 -DNDEBUG (CMake Release, MinGW branch of cmake/CMakeLists.txt); "
           "recipe (see the recipe docstring): Info-ZIP projects removed, "
           "CredentialManager.cpp added, vncviewer built as UNICODE with "
           "-fpermissive -municode and a force-included compat header, "
-          "__try/__finally and goto-over-initialisation rewritten, .rc paths")
+          "__try/__finally and goto-over-initialisation rewritten, .rc paths; "
+          "addon projects (ldapauth*, authSSP, MSLogonACL, repeater, "
+          "uvnckeyboardhelper, logmessages, workgrpdomnt4): case-folded "
+          "include links, <Dsgetdc.h>/<SDKDDKVer.h> forwarding headers, "
+          "MessageID->MessageId in messages.mc, try/finally macros "
+          "force-included into authSSP/MSLogonACL/workgrpdomnt4, goto "
+          "declarations split in repeater and uvnckeyboardhelper, _ltoa_s "
+          "shim for 32-bit repeater")
 
 
 def _ultravnc(version, commit, patch_note):
@@ -353,7 +459,13 @@ def _ultravnc(version, commit, patch_note):
               "(exclude_functions: 74 exact zlib identifiers, see the recipe "
               "docstring). The MinGW C runtime glue is removed by the "
               "baseline. "
-              "winvnc.exe is not built: upstream's CMake does not offer it."
+              "Addon images (ldapauth*, authSSP, MSLogonACL, repeater, "
+              "uvnckeyboardhelper, logmessages, workgrpdomnt4) additionally "
+              "rely on the case-fold, forwarding-header, try/finally and "
+              "goto patches 8-13 of the docstring; logmessages.dll x86 has 3 "
+              "functions and is below the floor, so it has no image. "
+              "winvnc.exe is not built: upstream's CMake does not offer it; "
+              "uvnc_settings fails on the missing natupnp.h."
               % (commit[:8], patch_note),
     )
 

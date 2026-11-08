@@ -13,6 +13,20 @@ import sys
 root = sys.argv[1]
 
 PATCHES = [
+    # goto over initialisations (see the FileTransfer.cpp entries below); GCC
+    # rejects these even under -fpermissive.
+    ("repeater/socket_functions.cpp",
+     "\tDWORD start=0;\n\tDWORD stop=0;\n\tint measure_counter=0;\n\tlong temp_bytes=0;\n",
+     "\tDWORD start; start=0;\n\tDWORD stop; stop=0;\n\tint measure_counter; measure_counter=0;\n"
+     "\tlong temp_bytes; temp_bytes=0;\n", 1),
+    ("uvnckeyboardhelper/uvnckeyboardhelper/uvnckeyboardhelper.cpp",
+     "DWORD dwEvent = WaitForMultipleObjects(1,Events_ini,FALSE,5000);",
+     "DWORD dwEvent; dwEvent = WaitForMultipleObjects(1,Events_ini,FALSE,5000);", 1),
+    ("uvnckeyboardhelper/uvnckeyboardhelper/uvnckeyboardhelper.cpp",
+     "int counter=0;", "int counter; counter=0;", 1),
+    # windmc keywords are case-sensitive: `MessageId`, not `MessageID`
+    # (`In messages.mc at line 13: parser: syntax error.`).
+    ("addon/eventMessageLogger/messages.mc", "MessageID=", "MessageId=", 3),
     # cmake/ still lists the Info-ZIP libraries that the tree no longer has
     # (zipunzip_src/ was removed when MiniZipNG.cpp replaced them).
     ("cmake/CMakeLists.txt", "add_subdirectory(libzip32)\n", "", 1),
@@ -81,3 +95,76 @@ target_link_directories(${PROJECT_NAME} PRIVATE ${UVNC_DEPS_LIB})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${UVNC_DEPS_LIB}/libminizip-ng.a ${UVNC_DEPS_LIB}/libsodium.a bcrypt crypt32)
 """)
 print("appended cmake/vncviewer/CMakeLists.txt")
+
+# Case-folded include names. The sources were written on Windows and include
+# `ldapauth.h`, `resource.h`, `DSMPlugin.h`, `../../../winvnc/winvnc/localization.h`
+# while the files in git are ldapAuth.h, Resource.h, dsmplugin.h and
+# Localization.h; a case-sensitive file system cannot open them. For every
+# quoted include that does not resolve but resolves ignoring case, a symbolic
+# link with the spelled name is created next to the real file (no file is
+# edited).
+import os
+import re
+
+CASE_DIRS = ["addon/ms-logon", "uvnckeyboardhelper", "uvnc_settings"]
+
+
+def _resolve_ci(start, name):
+    cur = start
+    for part in name.split("/"):
+        if part == "..":
+            cur = os.path.dirname(cur)
+        elif part != ".":
+            if not os.path.isdir(cur):
+                return None
+            hit = [e for e in os.listdir(cur) if e.lower() == part.lower()]
+            if not hit:
+                return None
+            cur = os.path.join(cur, hit[0])
+    return cur
+
+
+links = []
+for d in CASE_DIRS:
+    for dp, _, fs in os.walk(os.path.join(root, d)):
+        for f in sorted(fs):
+            if not f.lower().endswith((".cpp", ".c", ".h", ".rc")):
+                continue
+            for line in open(os.path.join(dp, f), encoding="latin-1"):
+                m = re.match(r'\s*#\s*include\s*"([^"]+)"', line)
+                if not m:
+                    continue
+                name = m.group(1).replace("\\", "/")
+                want = os.path.normpath(os.path.join(dp, name))
+                if os.path.lexists(want):
+                    continue
+                real = _resolve_ci(dp, name)
+                if real and os.path.exists(real) and real != want:
+                    os.symlink(os.path.relpath(real, os.path.dirname(want)), want)
+                    links.append(os.path.relpath(want, root))
+for l in sorted(set(links)):
+    print("case-fold link", l)
+
+# Stand-in forwarding headers for system headers the sources include with
+# another case than mingw-w64 spells them (<Dsgetdc.h> -> dsgetdc.h,
+# <SDKDDKVer.h> -> sdkddkver.h). The directory is put on CPATH by the recipe.
+os.makedirs("%s/casefold-inc" % root, exist_ok=True)
+for name, real in [("Dsgetdc.h", "dsgetdc.h"), ("SDKDDKVer.h", "sdkddkver.h")]:
+    with open("%s/casefold-inc/%s" % (root, name), "w") as f:
+        f.write("#include <%s>\n" % real)
+    print("stand-in header", name)
+
+# Per-target additions, appended so that upstream's own lines stay as they are.
+# UVNC_SEH is the force-included try/finally header (ultravnc_mingw_seh.h).
+SEH = 'target_compile_options(${PROJECT_NAME} PRIVATE "SHELL:-include ${UVNC_SEH}")\n'
+for rel, text in [
+    ("authSSP", SEH),
+    ("MSLogonACL", SEH),
+    ("workgrpdomnt4", SEH),
+    # 32-bit only: i686 msvcrt.dll has no _ltoa_s (undefined reference to
+    # `_imp___ltoa_s`); UVNC_REPEATER_X86 is set by the recipe on x86 only.
+    ("repeater", 'if(UVNC_REPEATER_X86)\n  target_compile_options(${PROJECT_NAME} PRIVATE "SHELL:-include ${UVNC_REPEATER_X86}")\nendif()\n'),
+]:
+    with open("%s/cmake/%s/CMakeLists.txt" % (root, rel), "a") as f:
+        f.write("\n" + text)
+    print("appended cmake/%s/CMakeLists.txt" % rel)
