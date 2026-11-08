@@ -33,18 +33,31 @@ VCPKG_BASELINE = "9eec002df1cd109f8f104cd966a763daf9751489"
 
 OPENSSH = os.path.join("contrib", "win32", "openssh")
 
+# _ACRTIMP= : the fork's win32compat\\inc headers rename CRT functions with
+# macros (#define system w32_system) and declare the replacement plainly; the
+# SDK's own declaration of the same function carries __declspec(dllimport)
+# under /MD (_ACRTIMP), and cl stops with C2375 "redefinition; different
+# linkage" for w32_system and w32_rename. Emptying _ACRTIMP makes the SDK
+# declarations plain, so calls to the CRT go through the import library's
+# thunks instead of straight through the IAT. The vcpkg include and library
+# directories are what vcpkg's msbuild integration adds to every project
+# when it is on; it is off here, and openbsd_compat.vcxproj has no include
+# path of its own for openssl/opensslv.h.
 PROPS = """<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemDefinitionGroup>
     <ClCompile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PreprocessorDefinitions>_ACRTIMP=;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%(vcpkg)s\\include;%%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Lib>
       <LinkTimeCodeGeneration>false</LinkTimeCodeGeneration>
     </Lib>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>%(vcpkg)s\\lib;%(vcpkg)s\\bin;%%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>false</OptimizeReferences>
@@ -115,7 +128,7 @@ def run(cmd, env=None, quiet=False):
 
 def prep(arch):
     with open("msvcprops.props", "w") as handle:
-        handle.write(PROPS)
+        handle.write(PROPS % {"vcpkg": os.path.abspath(installed(arch))})
     os.makedirs(os.path.join("corpus-vcpkg", "triplets"), exist_ok=True)
     with open(os.path.join(OPENSSH, "vcpkg.json")) as handle:
         manifest = json.load(handle)
@@ -223,7 +236,13 @@ def msbuild(arch, targets):
     say("ERRORS (%d distinct):" % len(seen))
     say("\n".join(seen[:60]))
     if code != 0:
-        sys.exit("msbuild failed (%d)" % code)
+        # The solution also holds the unit-test projects, which this recipe
+        # does not need; a failure there must not hide programs that built.
+        missing = [n for n in EXES if not glob.glob(
+            os.path.join("bin", "**", n + ".exe"), recursive=True)]
+        if missing:
+            sys.exit("msbuild failed (%d); not built: %s" % (code, " ".join(missing)))
+        say("PARTIAL: msbuild exited %d but every wanted program exists" % code)
 
 
 def locate(arch):
