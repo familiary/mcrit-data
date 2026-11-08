@@ -201,6 +201,39 @@ RECIPES = {
         # false-attribution the gate exists to catch, so the gate is right
         # and the leg stays out.
         #
+        # A third route was measured and is also closed, and it is the
+        # interesting one because it looks obviously right. corpus.baseline
+        # needs a symbol only because it matches a *probe*; data/MSVC already
+        # *names* these bodies, so a filter that dropped an unnamed function
+        # whose PicHash a non-generated reference family names would seem to
+        # be the same act with MSVC's symbol standing in for the probe's. Its
+        # blast radius is even reassuringly small: 207 functions corpus-wide
+        # at the MIN_CROSS_FAMILY_INSTRUCTIONS floor, 204 of them in these 21
+        # symbol-less x64 artefacts.
+        #
+        # It does not work, because the mapping is one PicHash to *many*
+        # reference names. A single hash here matches about 28 MSVC symbols
+        # at once - ??0bad_alloc@std@@, ??0bad_typeid@std@@,
+        # ??0out_of_range@std@@ and a dozen Concurrency:: types - because
+        # every one of them is an exception-class copy constructor with the
+        # same trivial body. The hash identifies a *shape*, not a function.
+        # The tell is that the same shapes also matched 7-Zip and
+        # libtomcrypt, two unrelated projects: a signal that fires on three
+        # unrelated codebases is not identifying a runtime.
+        #
+        # So the filter could not tell MSVC's bad_alloc copy constructor from
+        # any other trivial copy constructor, Meterpreter's own included, and
+        # would delete possibly-project code on an ambiguous match. Some of
+        # the 204 are certainly CRT - fegetenv, sprintf_s, __CxxFrameHandler4
+        # and UnwindNestedFrames are in there - but "some of these are CRT"
+        # is not a rule. This is what the symbol half of is_glue's condition
+        # is *for*: it disambiguates a generic shape, and dropping it is not
+        # a relaxation but a loss of the only thing that made the match mean
+        # anything. Correspondingly, the 204 must not be read as 204
+        # misattributed functions: sharing a many-to-one hash is not evidence
+        # of misattribution, and nothing here says the committed x64 data is
+        # wrong.
+        #
         # Otherwise a toolchain selects nothing here but which machine runs
         # the decryption - the command is python3 either way, as sRDI's
         # extraction is - and the architecture in the stem comes from the PE
