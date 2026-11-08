@@ -757,6 +757,7 @@ Generated with `scripts/build_corpus.py`; see `data/donut/provenance.json` for s
 <!-- generated: donut -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| donut | 1.1 | MinGW-w64 GCC 13 | [x64 PE](data/donut/x64/mcrit/donut_1.1_mingw13_x64_donut.exe.mcrit) | [x64 PE](data/donut/x64/smda/donut_1.1_mingw13_x64_donut.exe.7z) |
 | donut | 1.1 | MSVC (as committed upstream) | [x86 code](data/donut/x86/mcrit/donut_1.1_msvc_x86_loader_x86.mcrit) / [x64 code](data/donut/x64/mcrit/donut_1.1_msvc_x64_loader_x64.mcrit) | [x86 code](data/donut/x86/smda/donut_1.1_msvc_x86_loader_x86.7z) / [x64 code](data/donut/x64/smda/donut_1.1_msvc_x64_loader_x64.7z) |
 <!-- /generated -->
 
@@ -804,7 +805,8 @@ Implementations of the WOW64 transition: reaching 64-bit code, and the 64-bit nt
 
 ### wow64pp<a id='wow64pp'></a>
 
-A header-only Heaven's Gate implementation whose gate is a `constexpr` byte array copied into RWX memory rather than assembly, which is what lets it build with GCC as well as MSVC. Nothing of it exists in a binary until a translation unit uses it, so the reference data comes from an exerciser that instantiates the public surface and the `detail::` layer behind it, including both `call_function` arities - the four-argument-or-fewer and the more-than-four paths are different code. Every function in the header is `inline`, so the exerciser takes each one's address as well as calling it.  
+A header-only Heaven's Gate implementation whose gate is a `constexpr` byte array copied into RWX memory rather than assembly, which is what lets it build with GCC as well as MSVC. Nothing of it exists in a binary until a translation unit uses it, so the reference data comes from an exerciser that instantiates the public surface and the `detail::` layer behind it, including both `call_function` arities - the four-argument-or-fewer and the more-than-four paths are different code. Every function in the header is `inline`, so the exerciser takes each one's address as well as calling it.    
+**The generator is here too, and it is the weaker row of the two - read it as such.** `donut.exe` is built from upstream's own `donut.exe` line in `Makefile.mingw`, taken on its own: the `donut` target it belongs to also rebuilds the loader with `-DBYPASS_AMSI_B -DBYPASS_WLDP_A -DBYPASS_ETW_B` and regenerates the committed headers, which would select evasion behaviour at compile time and overwrite the very blobs above. 242 functions of which the glue filter removes 137, leaving **105**, and upstream's line carries no `-O`, so what remains is unoptimised. It also runs on the operator's machine rather than the target, so unlike the loaders it is not what turns up in a sample. It statically links `lib/aplib64.lib` and the recipe declares `vendors=["aPLib"]`, which removes nothing: `data/aPLib` holds the assembly depackers and packer out of `aplib.lib` and `aplib.a`, which share no PicHash with that C compressor, and the filter needs a symbol *and* a PicHash. So `aP_pack`, `aP_max_packed_size` and `aP_workmem_size` do sit under the donut name, and nothing mechanical can move them.
 
 Generated with `scripts/build_corpus.py`; see `data/wow64pp/provenance.json` for source digests, compiler and flags.
 
