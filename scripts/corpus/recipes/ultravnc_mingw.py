@@ -122,8 +122,8 @@ three pinned commits; the cmake directory does not change between 1.8.2.9 and
   * workgrpdomnt4, logmessages: logmessages: `In messages.mc at line 13:
     parser: syntax error.`; workgrpdomnt4 depends on it.
 
-Data. Only UltraVNC 1.8.3.1 (92bb19b9) has been through the full pipeline and
-has images (16: eight components, x86 and x64). Counts, kept + removed = total,
+Data. UltraVNC 1.8.3.1 (92bb19b9) has images (16: eight components, x86 and
+x64); 1.8.2.9 and 1.8.3.0 are described after this table. Counts, kept + removed = total,
 read from data/UltraVNC/provenance.json (kept = num_functions, removed =
 removed_runtime_functions):
 
@@ -154,12 +154,18 @@ server; nothing beyond the viewer adds more than 2. A different compiler
 and standard library mostly changes the hashes, so this is a different axis
 rather than a duplicate.
 
-UltraVNC_1.8.2.9_mingw and UltraVNC_1.8.3.0_mingw are registered but have NO
-data. The viewer was compiled and linked by hand with the same patches at both
-commits (x64 at 1.8.2.9, 1.8.3.0 and 1.8.3.1; x86 at 1.8.3.1 only), but the
-full pipeline run for 1.8.2.9 and 1.8.3.0 was interrupted by lack of disk on
-the build host, so nothing was imported. That is not a build failure. (The x86 half of the 1.8.2.9 run finished before
-the interruption and was discarded; 1.8.3.0 had not started.)
+UltraVNC 1.8.2.9 (97a077cc) and 1.8.3.0 (36c2389f) were built through the same
+pipeline with the same patches (patch 5 applies at both; every pattern matched
+the stated number of times) and have the same 16 images each. kept + removed =
+total per image, from data/UltraVNC/provenance.json (the 1.8.2.9 and 1.8.3.0
+numbers equal the 1.8.3.1 ones except for the viewer):
+
+  version  x86 vncviewer.exe  x64 vncviewer.exe  seven tools (x86 / x64)
+  1.8.2.9  4337 + 189 = 4526  4115 + 182 = 4297  as 1.8.3.1 above
+  1.8.3.0  4337 + 189 = 4526  4115 + 182 = 4297  as 1.8.3.1 above
+
+  Totals over the 16 images: 8926 kept + 1665 removed = 10591 at both
+  versions. 1.8.3.1 (above): 8924 + 1665 = 10589.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
