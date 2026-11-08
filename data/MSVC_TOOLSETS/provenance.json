@@ -10265,6 +10265,115 @@
     "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
     "version": "14.51"
   },
+  "MSVC_TOOLSETS_14.51_msvc143_x64_mfc_dll_debug": {
+    "architecture": "x64",
+    "build_flags": "MSVC toolset 14.51, shard mfc_dll_debug (MFC for use as a DLL, debug) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "mfc_dll_debug.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+    "component": "mfc_dll_debug",
+    "deduplicated_functions": 1051,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x64",
+      "directory": "VC/Tools/MSVC/14.51.36231/ATLMFC/lib/x64",
+      "excluded": [
+        {
+          "bytes": 72930,
+          "file": "MFCM140Ud.lib",
+          "reason": "rejected by the linker: .\\mfc_dll_debug.trial.dll : fatal error LNK1120: 7478 unresolved externals"
+        },
+        {
+          "bytes": 70262,
+          "file": "MFCM140d.lib",
+          "reason": "rejected by the linker: .\\mfc_dll_debug.trial.dll : fatal error LNK1120: 7474 unresolved externals"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "DllCanUnloadNow",
+        "DllGetClassObject",
+        "DllMain",
+        "InternalDllMain",
+        "RawDllMain",
+        "_AfxDllModulHelper",
+        "_RawDllMainProxy",
+        "__NULL_IMPORT_DESCRIPTOR",
+        "__afxForceEXCLUDE",
+        "__afxForceSTDAFX",
+        "__afxForceUSRDLL",
+        "_pActualRawDllMain",
+        "_pRawDllMain"
+      ],
+      "ignored_duplicate_definitions": 13,
+      "image_bytes": 125952,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 10377148,
+          "code_members": 3617,
+          "file": "mfc140ud.lib",
+          "members": 20276,
+          "sha256": "c1e93552f69012b3dddf2ee817fa9a1ca51564630db38c40d02c718e336f6b6d"
+        },
+        {
+          "bytes": 7002172,
+          "code_members": 623,
+          "file": "mfc140d.lib",
+          "members": 17152,
+          "sha256": "c2984994c0829fbc376b320a208d6c69f9060325c6c5480c74f108d89eab894a"
+        },
+        {
+          "bytes": 4673744,
+          "code_members": 19,
+          "file": "mfcs140d.lib",
+          "members": 19,
+          "sha256": "8e7c552a970f45d8d53d31fd84a8a387f0b763485d434b86975031c0da2bc32a"
+        },
+        {
+          "bytes": 4657798,
+          "code_members": 45,
+          "file": "mfcs140ud.lib",
+          "members": 45,
+          "sha256": "231be9daa868fb2d12fcde94f5ac089de4ac7eb92a3a6512d6a6de405bf0f47f"
+        },
+        {
+          "bytes": 1218196,
+          "code_members": 4,
+          "file": "afxnmcdd.lib",
+          "members": 4,
+          "sha256": "ac8327d754b203ad4c001cbdc2d31378dd29491ac7c9b95905308a859e95a921"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "object_members": 4308,
+      "shard": "mfc_dll_debug",
+      "shard_description": "MFC for use as a DLL, debug",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 77
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x64/mcrit/MSVC_TOOLSETS_14.51_msvc143_x64_mfc_dll_debug.mcrit",
+    "num_functions": 350,
+    "sha256": "1e4dcf1f94585e820458eda143b5ffe25a1b53d3f4aaad8caa4ffdf178fcda43",
+    "smda": "data/MSVC_TOOLSETS/x64/smda/MSVC_TOOLSETS_14.51_msvc143_x64_mfc_dll_debug.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
+  },
   "MSVC_TOOLSETS_14.51_msvc143_x64_mfc_unicode": {
     "architecture": "x64",
     "build_flags": "MSVC toolset 14.51, shard mfc_unicode (MFC static, Unicode (uafxcw), release) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
