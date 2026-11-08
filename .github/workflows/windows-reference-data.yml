@@ -66,6 +66,8 @@ on:
       - scripts/corpus/baseline.py
       # The MSVC_UCRT recipes link the SDK's static UCRT with this helper.
       - scripts/corpus/crawl_ucrt.py
+      # The MSVC_VC10 recipe unpacks the Windows SDK 7.1 x64 runtime with this helper.
+      - scripts/corpus/crawl_vcsdk.py
       - scripts/corpus/smdaify.py
       - scripts/corpus/recipe.py
       # config.py is in this list for the same reason rather than as a
