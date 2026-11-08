@@ -168,6 +168,39 @@ RECIPES = {
         # would be lowering a gate to admit data. So the x86 leg is recorded
         # in README's not-built table with these numbers and left out.
         #
+        # Re-measured after the RUNTIME_REFERENCE collision class landed, on
+        # the theory that three of the four would reclassify: they are named
+        # only by MSVC, and validate.is_generated_family is False for the
+        # IDA-derived data/MSVC, which is exactly that class's condition. The
+        # theory was wrong and the leg still costs four findings - the census
+        # goes 26 -> 30 problems with all 21 x86 components built (15,835
+        # functions). Two separate reasons, both worth recording because each
+        # closes a route someone will otherwise try:
+        #
+        #   * `(unknown)` in those three rows is data/MSVC itself. Its
+        #     2015_Pro_x86 and VC6_Express_x86 exports carry no `family`
+        #     field - validate NOTEs this already - so one MSVC export
+        #     resolves to `MSVC` and another to `(unknown)`, and
+        #     is_generated_family("(unknown)") is True by design, for a tree
+        #     checked out from somewhere other than data/. So the class does
+        #     not fire. Making it fire by filling that field in would drop
+        #     those collisions from three families to two, under
+        #     find_cross_family_functions' threshold=3, and they would leave
+        #     the census by disappearing rather than by being classified -
+        #     hiding a true finding instead of explaining it, while the CRT
+        #     bodies stay filed under Meterpreter.
+        #   * _putShortMSB is a genuine three-family finding (MSVC,
+        #     Meterpreter, libzlib) that no metadata change touches, and
+        #     `vendors` cannot reach it either: that filter needs a symbol,
+        #     and these reports have none.
+        #
+        # The harm is concrete rather than bookkeeping. __twoToTOS is in 20
+        # of the 21 x86 artefacts, so admitting the leg files 32-bit MSVC CRT
+        # bodies under Meterpreter across nearly all of it, and any sample
+        # carrying that CRT would match this family. That is the
+        # false-attribution the gate exists to catch, so the gate is right
+        # and the leg stays out.
+        #
         # Otherwise a toolchain selects nothing here but which machine runs
         # the decryption - the command is python3 either way, as sRDI's
         # extraction is - and the architecture in the stem comes from the PE
