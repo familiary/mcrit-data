@@ -823,5 +823,280 @@
     "toolchain": "msvc143_x64",
     "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
     "version": "14.51"
+  },
+  "MSVC_TOOLSETS_14.51_msvc143_x86_atl": {
+    "architecture": "x86",
+    "build_flags": "MSVC toolset 14.51, shard atl (ATL static libraries, release) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "atl.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x86",
+    "component": "atl",
+    "deduplicated_functions": 0,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x86",
+      "directory": "VC/Tools/MSVC/14.51.36231/ATLMFC/lib/x86",
+      "excluded": [],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 44032,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 1154182,
+          "code_members": 5,
+          "file": "atls.lib",
+          "members": 5,
+          "sha256": "0e0dec0bdee42d0aaaae2fa2110fc8d25da31c5670ce2a43d73940855d6c1747"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "shard": "atl",
+      "shard_description": "ATL static libraries, release",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 10
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x86/mcrit/MSVC_TOOLSETS_14.51_msvc143_x86_atl.mcrit",
+    "num_functions": 1101,
+    "sha256": "82b906e4fd1fe433d77c48494d86d5800414dcb9cc4005808894540a1162ae62",
+    "smda": "data/MSVC_TOOLSETS/x86/smda/MSVC_TOOLSETS_14.51_msvc143_x86_atl.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x86",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
+  },
+  "MSVC_TOOLSETS_14.51_msvc143_x86_mfc_ansi": {
+    "architecture": "x86",
+    "build_flags": "MSVC toolset 14.51, shard mfc_ansi (MFC static, ANSI (nafxcw), release) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "mfc_ansi.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x86",
+    "component": "mfc_ansi",
+    "deduplicated_functions": 9027,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x86",
+      "directory": "VC/Tools/MSVC/14.51.36231/ATLMFC/lib/x86",
+      "excluded": [],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 3418624,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 76573518,
+          "code_members": 743,
+          "file": "nafxcw.lib",
+          "members": 743,
+          "sha256": "f4856e4766f805f51e2f1294a5aff6ba4f0bbb8f38c08bec04e5695563dba354"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "shard": "mfc_ansi",
+      "shard_description": "MFC static, ANSI (nafxcw), release",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 474
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x86/mcrit/MSVC_TOOLSETS_14.51_msvc143_x86_mfc_ansi.mcrit",
+    "num_functions": 22887,
+    "sha256": "d9877dac199b4f462cb64256c63dc033f8f7114810d5736d8ab967bee9cfa716",
+    "smda": "data/MSVC_TOOLSETS/x86/smda/MSVC_TOOLSETS_14.51_msvc143_x86_mfc_ansi.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x86",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
+  },
+  "MSVC_TOOLSETS_14.51_msvc143_x86_mfc_ansi_debug": {
+    "architecture": "x86",
+    "build_flags": "MSVC toolset 14.51, shard mfc_ansi_debug (MFC static, ANSI (nafxcwd)) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "mfc_ansi_debug.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x86",
+    "component": "mfc_ansi_debug",
+    "deduplicated_functions": 9329,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x86",
+      "directory": "VC/Tools/MSVC/14.51.36231/ATLMFC/lib/x86",
+      "excluded": [],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 7530496,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 81958192,
+          "code_members": 767,
+          "file": "nafxcwd.lib",
+          "members": 767,
+          "sha256": "9850d82a21e14274fa8d15116aebecc1fe346afeadc968db5036b1a372fc2433"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "shard": "mfc_ansi_debug",
+      "shard_description": "MFC static, ANSI (nafxcwd)",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 499
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x86/mcrit/MSVC_TOOLSETS_14.51_msvc143_x86_mfc_ansi_debug.mcrit",
+    "num_functions": 26874,
+    "sha256": "4ed0836583d892e63d29f6f9797160d72545a6823a4459a930c1ac3d115b8247",
+    "smda": "data/MSVC_TOOLSETS/x86/smda/MSVC_TOOLSETS_14.51_msvc143_x86_mfc_ansi_debug.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x86",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
+  },
+  "MSVC_TOOLSETS_14.51_msvc143_x86_mfc_unicode": {
+    "architecture": "x86",
+    "build_flags": "MSVC toolset 14.51, shard mfc_unicode (MFC static, Unicode (uafxcw), release) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "mfc_unicode.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x86",
+    "component": "mfc_unicode",
+    "deduplicated_functions": 8997,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x86",
+      "directory": "VC/Tools/MSVC/14.51.36231/ATLMFC/lib/x86",
+      "excluded": [],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 3443712,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 78421666,
+          "code_members": 2595,
+          "file": "uafxcw.lib",
+          "members": 2595,
+          "sha256": "85c84dcb163146bcb05e7211fe48c5e2b7fccee324af43be3f32a199af009e1e"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "shard": "mfc_unicode",
+      "shard_description": "MFC static, Unicode (uafxcw), release",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 465
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x86/mcrit/MSVC_TOOLSETS_14.51_msvc143_x86_mfc_unicode.mcrit",
+    "num_functions": 22986,
+    "sha256": "ad4d6182a5ab1827ba8bbdccd98dde93463ebb4791688b0104deed47ff2b42ec",
+    "smda": "data/MSVC_TOOLSETS/x86/smda/MSVC_TOOLSETS_14.51_msvc143_x86_mfc_unicode.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x86",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
+  },
+  "MSVC_TOOLSETS_14.51_msvc143_x86_mfc_unicode_debug": {
+    "architecture": "x86",
+    "build_flags": "MSVC toolset 14.51, shard mfc_unicode_debug (MFC static, Unicode (uafxcwd)) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "mfc_unicode_debug.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x86",
+    "component": "mfc_unicode_debug",
+    "deduplicated_functions": 9307,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x86",
+      "directory": "VC/Tools/MSVC/14.51.36231/ATLMFC/lib/x86",
+      "excluded": [],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 7601664,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 82592474,
+          "code_members": 2795,
+          "file": "uafxcwd.lib",
+          "members": 2795,
+          "sha256": "26cc63f91fc26d8142a18c5e2403398590ac9460929d21ba72bedb6b05d20c7e"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "shard": "mfc_unicode_debug",
+      "shard_description": "MFC static, Unicode (uafxcwd)",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 491
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x86/mcrit/MSVC_TOOLSETS_14.51_msvc143_x86_mfc_unicode_debug.mcrit",
+    "num_functions": 27015,
+    "sha256": "c6015e3fd582b0b48fd920917e288368d0705c805d2a4b0416e46335cae19c1e",
+    "smda": "data/MSVC_TOOLSETS/x86/smda/MSVC_TOOLSETS_14.51_msvc143_x86_mfc_unicode_debug.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x86",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
   }
 }
