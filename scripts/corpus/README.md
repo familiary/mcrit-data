@@ -122,17 +122,229 @@ ten-instruction floor the census counts at. A refilter round corrects
 misattribution; it is not a collision fix, and the two numbers move for
 different reasons.
 
-**What remains is one finding.** `__scrt_common_main_seh`, the MSVC CRT's
-x64 entry-point wrapper, at 99 instructions in Lua, MemoryModule and bzip2.
-It is unambiguously Microsoft's code and the baseline ought to catch it; it
-does catch every one of its neighbours - `__scrt_initialize_crt`,
-`__scrt_acquire_startup_lock`, `__scrt_fastfail` and eleven more are removed
-from 98 artefacts each. What is known: it is x64 only, absent from every x86
-EXE; it has two bodies in this corpus, 99 instructions in those three and 98
-in q3vm, which builds with whole-program optimisation; and the EXE probe
-emits neither, though it links and runs like every other. The cause needs
-MSVC in front of it, so it is recorded here rather than guessed at, and
-`validate --deep` fails on it as it should.
+**The sixth round, and `__scrt_common_main_seh`.** That finding is the one
+the paragraph above left open, and what it needed was MSVC in front of it
+rather than more reasoning. The probe had the name all along: `probe_md_exe.c`
+emits `__scrt_common_main_seh` at 95 instructions, PicHash
+`470324384558745095`, which is none of the three bodies in the corpus - so the
+filter, which matches on symbol *and* PicHash, correctly kept the artefacts'
+copies. Only the body disagreed.
+
+The cause is the link line. Every MSVC recipe here passes `/INCREMENTAL:NO`
+and no probe did, because `link /DEBUG` implies `/INCREMENTAL` - so every
+probe image in `baseline.py` was incrementally linked while no artefact is,
+and an incrementally linked image reaches each function through a table of
+five-byte jump thunks. The same translation unit relinked
+`/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF` emits
+`11855707620856894801` at 99 instructions, which is exactly the leaking body,
+while the incremental registration beside it still emits 95. That is proof by
+elimination rather than a story: one source, two link lines, two hashes.
+`__scrt_common_main_seh` is the only function in the startup chain carrying an
+`__except`, so it is the only one whose recovered extent follows the layout
+rather than the bytes, which is why its fourteen neighbours matched and it did
+not. On x86 the two links agree - `14520804967954049952`, 112 instructions -
+and no x86 artefact carries the name, consistent with the funclet being an
+x64 shape.
+
+The same round measures the half of `<stdio.h>` that writes to a stream it was
+not handed. `printf`, `vprintf` and `vfprintf` are `_CRT_STDIO_INLINE`
+definitions under `/MD`, so a body is compiled into every object that calls
+one, and no MSVC probe had ever called one: `_PROBE_MSVCRT_PRINTF` covers the
+buffer-filling half and `_PROBE_DLL` calls `fprintf`, which is where the
+`_vfprintf_l` chain below them came from. The new probe emits each of the six
+bodies the committed reports carry, hash for hash - `printf` at
+`121597203084696572` (25 instructions) on x64 and `14739679411554417350`
+(17) on x86, `vfprintf` at `18319647447110778407` (19) and
+`15763949986211485148` (10), `vprintf` at `3515039425838154103` (21) and
+`7807335352819369265` (13).
+
+Four probe registrations, taking the MSVC run to 52 probe compilations on x64
+and 53 on x86 - the count `crt_glue` now reports, which includes the four
+sources it shares with the MinGW side: the stdio source as a DLL and as an
+EXE, a plain console `main` that
+prints linked the recipes' way, and `probe_md_exe.c`'s source relinked the
+same way so the broad EXE surface is measured non-incrementally as well. The
+MinGW and Linux baselines do not move - 3133 symbols on x86 and 2944 on x64,
+the same name-to-PicHash map before and after, measured both ways. With the
+round in, the MSVC baselines measure 10,946 symbols and 12,672 PicHashes on
+x64 and 10,649 and 12,975 on x86. `crt_glue` now says that in one `INFO`
+line per toolchain, because the failure this file is most afraid of is a
+baseline that quietly got smaller and nothing in a fifty-thousand-line log
+said so.
+
+The sixteen artefacts of Lua, LuaJIT, MemoryModule, bzip2 and q3vm were
+rebuilt on the runner to measure what it costs them. 14 of the 16 change and
+38 functions leave, 13,498 kept becoming 13,460: `printf` from 8 artefacts -
+all four LuaJIT, both MemoryModule and both q3vm x64 - `vprintf` and
+`vfprintf` from the four LuaJIT, `__scrt_common_main_seh` from Lua 5.1.5 x64,
+Lua 5.4.8 x64, MemoryModule x64 and bzip2 x64, and `fflush` and `fputs` from
+ten and eight of them as thunks. Over those five families plus Hidden,
+CallObfuscator, libtiff and mbedTLS, `validate --deep` goes from 12
+cross-family hashes with one leakage finding - `__scrt_common_main_seh` across
+Hidden, Lua, MemoryModule and bzip2 - to 9 with none.
+
+The whole MSVC side was then rebuilt, 54 recipes per architecture and 114
+artefacts, and that run is the measurement to quote. 38 of the 114 change and
+**78 functions** leave them, 199,384 kept becoming 199,306, across 15
+families: `printf` 15 bodies in LuaJIT, MemoryModule, libxml2, mbedTLS,
+protobuf and q3vm; `vfprintf` 10 in LuaJIT, libtiff and libxml2; `vprintf` 4
+in LuaJIT; `__scrt_common_main_seh` 5 in Hidden, Lua, MemoryModule and bzip2 -
+which is every family the failing hash spanned, so the finding goes rather
+than shrinks; and `fflush` and `fputs` 45 thunks between them across eleven
+families. One more name changed and this round does not explain it:
+`std::basic_stringbuf<char,...>::pbackfail` in protobuf 31.1 x86, one body.
+No probe added here can emit it - all four are C - so the honest reading is a
+difference in protobuf's own rebuild rather than in the baseline, and it is
+recorded rather than claimed.
+
+The two artefacts that do not change in the five families above are q3vm x86,
+and they are the honest edge of this round: q3vm builds with whole-program optimisation, its `printf` bodies are 23
+and 20 instructions where every other x86 artefact's is 17, and a probe built
+at `/O2` emits none of them. Those two bodies are single-family and were never
+leakage. The same is true of the 98-instruction `__scrt_common_main_seh` in
+q3vm x64 and the 109-instruction one in CallObfuscator, which is `wmain`'s
+startup object.
+
+Two things this round does not do, stated because the numbers above would
+otherwise be read as more than they are. It does not correct the committed
+MSVC artefacts, and the measurement above is a measurement rather than an
+import: `refilter` can only re-apply a baseline this host can measure, and
+`msvc143_x86`/`msvc143_x64` do not exist on a Linux checkout, so it skips
+every MSVC family there - `refilter --dry-run` says so per toolchain - and the
+correction has to come from a rebuild of all 54 MSVC recipes per architecture
+on the runner, which is what a push touching `baseline.py` triggers. Nothing
+in `refilter` itself is MSVC-hostile; what it lacks is a host.
+
+And it leaves the rest of the surface LuaJIT instantiates: its images carry
+the whole UCRT inline set, where `printf_s`,
+`wprintf`, `wprintf_s`, `_printf_p` and `_wprintf_p` share `printf`'s body and
+`vfprintf_s`, `vfwprintf_s`, `vfscanf`, `vfwscanf`, `_vfprintf_p` and
+`_vfwprintf_p` share `vfprintf`'s, so both hashes stay in the cross-family
+census under LuaJIT's name. That is forty-odd names, half of them wide, and a
+measurement of its own.
+
+**The seventh round: the wide and secure stdio wrappers.** That measurement is
+this one. `validate --deep` on the whole corpus still failed on PicHash
+`10336305819058912646`, 28 instructions, named `swprintf_s` and shared by
+BlackBone, EDRSandblast and al-khaser, and the #78 families carry a wider tail
+of the same kind - `wprintf`, `_vfprintf_l`/`_vfwprintf_l`, `fwprintf`,
+`_vswprintf_s_l`, `vwprintf` - none of which a probe emitted with the body the
+artefacts have.
+
+`swprintf_s` was not a missing name. `_PROBE_MSVCRT_WIDE` has called it since
+the third round and, measured on the runner, emits one at 28 instructions on
+x64 too - PicHash `13530071051526633694`. Same name, same length, another
+hash: exactly what the symbol-and-PicHash filter is for, and it kept the
+artefacts' copies correctly. What differs is the flags. The same wrapper,
+taken by address and built `/sdl`, emits `10336305819058912646` and nothing
+else does; BlackBone's x64 configuration is documented as `/sdl`. The rest of
+the tail came apart the same way, one flag at a time, and each was found by
+building the wrappers under every candidate flag set and comparing against the
+committed reports rather than by reading recipes:
+
+* `/sdl` on x64 (and `/sdl` with `/Oy-` on x86, for al-khaser's `/O2`
+  `swprintf_s` and `fwprintf`).
+* `/Oy-` on x86 only: keeping the frame pointer adds `push ebp`, `mov ebp,
+  esp` and `pop ebp` to a wrapper, which is exactly the difference between the
+  20-instruction `printf`/`wprintf` in DiskCryptor and al-khaser
+  (`12296465484064796685`, `0xaaa5d2355288b00d`) and the 17 every default build
+  emits. BlackBone's x86 `fprintf` (14 against 11) is the same effect.
+* `/Od`, because al-khaser is built twice: its `/Od` image carries
+  `printf`/`wprintf` (22 instructions on x86, 25 on x64 with `/sdl`),
+  `_vfprintf_l`/`_vfwprintf_l`, `fwprintf`, `swprintf_s`, `_vsnwprintf`,
+  `_vsnwprintf_l`, `_vswprintf_s_l`, `localtime_s` and
+  `__local_stdio_printf_options` un-inlined.
+* `/Gs0` and `/O1` (x64), and C++ under `/std:c++20` (x64): tried against the
+  survivors nothing above reproduced, and they were OpenSSL's `sprintf`,
+  `fprintf` and `_vsnprintf` family, libzlib's `snprintf`/`vsnprintf` and the
+  22-instruction `printf`/`wprintf` in protobuf and VX-API.
+
+The measurement is the CI log, not a guess. Four dispatches of the Windows
+workflow on a scratch branch, each building `cJSON_1.6.0_msvc` on both
+architectures with a temporary per-probe log of every stdio-shaped function
+and its PicHash and instruction count (runs 42276319638, 42277298368,
+42278735210, 42280017368); the last one ran the registrations in this commit,
+and nothing is registered that it did not emit a body for that an artefact
+carries. The log is not committed.
+
+What the probes now emit, hash for hash, among the names the task started
+from (instructions in brackets):
+
+| name | arch | PicHash | carried by |
+| --- | --- | --- | --- |
+| `swprintf_s` | x64 | `10336305819058912646` (28) | BlackBone, EDRSandblast, al-khaser `/O2` |
+| `wprintf` | x64 | `121597203084696572` (25) | EDRSandblast, DiskCryptor, WinPmem, al-khaser `/O2`, LuaJIT |
+| `printf`, `wprintf` | x86 | `12296465484064796685` (20) | DiskCryptor, al-khaser `/O2` |
+| `wprintf`, `vwprintf` | x86 | `14739679411554417350` (17), `7807335352819369265` (13) | WinPmem |
+| `vwprintf` | x64 | `3515039425838154103` (21) | WinPmem |
+| `swprintf_s`, `fwprintf` | x86 | `6949881716872909772` (19), `5147500236835420388` (15) | al-khaser `/O2` |
+| `wscanf` | x64, x86 | `5430873308725790042` (25), `15708648133356572057` (20) | DiskCryptor |
+| `_snwprintf` | x86 | `16701398180549986368` (20) | DiskCryptor |
+| `fprintf` | x86 | `8972144503159668082` (14) | BlackBone |
+| `printf`, `wprintf` | x64, x86 `/Od` | `9388650845780074387` (25), `807282956642728980` (22) | al-khaser |
+| `_vfprintf_l`, `_vfwprintf_l` | x64, x86 `/Od` | `11988831538536686101` (15), `8707119721426719415` (19) | al-khaser |
+| `swprintf_s` | x64, x86 `/Od` | `3201430126001659171` (25), `333673324085173386` (22) | al-khaser |
+
+`printf` at `121597203084696572` was already removed by the sixth round; it is
+the same body as `wprintf`'s and only the name was missing. 354 distinct
+(architecture, name, PicHash) bodies in the committed reports are now
+reproduced. Added registrations: 28 on x64 and 33 on x86, taking
+`crt_glue`'s probe count to 80 and 86; every one is `/MD`, linked the way the
+recipes link, a DLL except one EXE (the two print groups, whose bodies are the
+DLL's hash for hash). The groups are the UCRT's whole inline `printf` and
+`scanf` families - narrow, wide, `_s`, `_p`, `_l` and `v*` - because LuaJIT
+instantiates all of them and its names are the bulk of the effect.
+
+What it costs the artefacts, counted from the committed reports against the
+measured bodies rather than from a rebuild: **705 functions across 15
+families**, of which LuaJIT is 619 (about 155 UCRT wrappers in each of its four
+images, thunks included) and the families this round was opened for are
+BlackBone 2, EDRSandblast 2, al-khaser 27 (both images, both architectures),
+DiskCryptor 9 and WinPmem 4. The count is of name-and-PicHash matches that the
+sixth-round baseline did not already make; `is_glue` does the removal. The
+MinGW and Linux baselines do not move: the name-to-PicHash map is
+byte-identical before and after for both MinGW toolchains (3133 symbols on x86
+and 2944 on x64), measured with the same dump as the sixth round.
+
+What is not reproduced, and so is not registered:
+
+* BlackBone x86 `swprintf_s` (`15224987278223994096`, 14) and
+  `_vswprintf_s_l` (`13343053050147212994`, 19). The artefact passes
+  arguments to `_vswprintf_s_l` in `ecx` and `edx`, which looks like a
+  link-time-code-generation calling convention (`/GL`, `/LTCG`). Probes built `/Ox /Ob2 /Ot /GS- /GL`,
+  with and without `/Oy-` and `/LTCG /OPT:REF /OPT:ICF`, emit the same
+  functions with stack arguments and 15/14 or 18/17 instructions.
+* WinPmem `asprintf` and `aswprintf` (63 to 66 instructions, both
+  architectures): the UCRT has no such functions, so these are the project's
+  own, not glue.
+* OpenSSL x64 `_snwprintf`, `_vsnwprintf`, `_vsnwprintf_l`, `sscanf` and
+  `_vsscanf_l`: `/Gs0` reproduces the narrow `sprintf`/`fprintf` family and
+  was not tried on the wide and scan groups; this is one more measurement,
+  not an obstacle.
+* libzlib x86 `_snprintf` and `_vsnprintf`, q3vm v1.3.1 x86 `printf` and
+  `fprintf` - q3vm builds `/GL` - and wowGrail x86 `printf` (33): no
+  flavour tried reproduces them; the 2026-03-06 q3vm x86 pair did leave in the
+  rebuild, which is what put that image below the function floor. LuaJIT x86 `_vwscanf_s_l` (8 instructions) is
+  a fragment of a wrapper rather than the wrapper.
+* The startup bodies, which are not stdio: DiskCryptor's x86
+  `__scrt_common_main_seh$+0x124` (`0xb6f9895ed1a726a6`) and the
+  `__scrt_common_main_seh` of dcinst x64/x86 (92 and 110 instructions) and
+  al-khaser x64 (109). They belong with the entry-point round.
+* The kernel-mode glue (`memcpy`, `memset`, `__security_init_cookie`, ...) is
+  a separate gap and untouched.
+
+What the seventh round did to the corpus, measured by an all-msvc wave on
+this branch (run 42333283878, with the sixth round's data as the baseline to
+compare against): 20 of the 114 MSVC images change and 653 functions move
+from kept to removed, with no kept count rising anywhere. LuaJIT accounts for
+619 of them (the count includes one-instruction thunks), then OpenSSL 9,
+Lua 6, cJSON 4, libzlib 4, NTTITONHeavensGate 3, and BlackBone, VX-API and q3vm
+2 each, protobuf and wowGrail 1. The 2026-03-06 q3vm x86 image is the one that
+matters beyond the numbers: its `printf` and `fprintf` leave it and it keeps
+six functions of its own, below the default floor of eight, so that recipe
+sets `min_functions` to the six it has. v1.3.1 x86 is unchanged. The #78
+families (EDRSandblast, al-khaser, DiskCryptor, WinPmem, EDRSilencer) were
+rebuilt on their own branches against this baseline and are imported there.
 
 The deep check fails on one kind of collision only - the kind every round
 above was found by, one symbol name repeated across every family sharing the
@@ -179,7 +391,7 @@ minutes: it extracts every `.7z` and decompresses every `.mcrit`.
 Today the corpus has **571** cross-family PicHashes at the ten-instruction
 floor, split **349** standard-library instantiations, **164** whose names
 differ between the families sharing them, **57** carrying no symbol in any
-family, and the **one** leakage finding described above. The totals grew
+family, and the **one** leakage finding the sixth round answers. The totals grew
 with the corpus - they were 58 when it was MinGW-only, and 546 before the
 lib2smda#1 wishlist families arrived - so they are a measure of how much
 C++ it now contains rather than of anything getting worse.
@@ -194,8 +406,13 @@ counted here. A refilter round is a misattribution fix, not a collision
 fix, and the two are measured separately on purpose. What did move since
 this paragraph was last written is three hashes, all of them in the
 differing-names bucket. The leakage count did not: it is the same single
-`__scrt_common_main_seh` across Lua, MemoryModule and bzip2, unchanged
-through the last imports and through 510 functions leaving 67 artefacts.
+`__scrt_common_main_seh`, unchanged through the last imports and through 510
+functions leaving 67 artefacts - though the family list it spans has since
+grown to Hidden, Lua, MemoryModule and bzip2, and the whole-corpus run the
+sixth round was measured against reports it across five. Both numbers are
+before that round; it empties the bucket only once the MSVC families are
+rebuilt with the new baseline, which is a Windows job and not a `refilter`
+one.
 
 That last step is the useful control. It added six MSVC families and eight
 ELF artefacts, among them five separate implementations of the same WOW64
