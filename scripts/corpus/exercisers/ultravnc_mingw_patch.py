@@ -163,6 +163,13 @@ for rel, text in [
     ("workgrpdomnt4", SEH),
     # 32-bit only: i686 msvcrt.dll has no _ltoa_s (undefined reference to
     # `_imp___ltoa_s`); UVNC_REPEATER_X86 is set by the recipe on x86 only.
+    # uvnc_settings: the _com_util conversion functions (UVNC_COMSUPP, the
+    # recipe-generated extract of ReactOS's comsupp.cpp) and iphlpapi, which
+    # upnp.cpp asks for with `#pragma comment(lib, "iphlpapi")`, ignored by GCC
+    # (`undefined reference to `GetAdaptersInfo'`). upstream's own
+    # target_link_libraries uses the plain signature, so this one does too.
+    ("uvnc_settings", "target_sources(${PROJECT_NAME} PRIVATE ${UVNC_COMSUPP})\n"
+     "target_link_libraries(${PROJECT_NAME} iphlpapi)\n"),
     ("repeater", 'if(UVNC_REPEATER_X86)\n  target_compile_options(${PROJECT_NAME} PRIVATE "SHELL:-include ${UVNC_REPEATER_X86}")\nendif()\n'),
 ]:
     with open("%s/cmake/%s/CMakeLists.txt" % (root, rel), "a") as f:

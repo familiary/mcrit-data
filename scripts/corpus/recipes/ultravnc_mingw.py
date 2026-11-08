@@ -136,8 +136,10 @@ three pinned commits). None of them touches the viewer or the seven tools:
 The addon images built from these patches (and the compiler warning that
 remains in MSLogonACL: `vncImportACL.cpp:27:35: warning: deleting 'PSID' {aka
 'void*'} is undefined [-Wdelete-incomplete]`, three places, which is upstream's
-code and is compiled as written) are NOT byte-identical to a build of
-unmodified upstream.
+code and is compiled as written) and the uvnc_settings images, which contain
+the Wine-IDL-derived natupnp.h interfaces and the ReactOS conversion functions
+(the latter removed by name), are NOT byte-identical to a build of unmodified
+upstream.
 
 Force-included header (scripts/corpus/exercisers/ultravnc_mingw_compat.h, C++
 only, -include): <cstring> (AboutBox.cpp uses std::strstr without including
@@ -156,14 +158,10 @@ an import library for the one function used with dlltool from a two-line .def
 (`CryptUIDlgViewCertificateW@8`, --kill-at), so the exe imports cryptui.dll
 as MSVC's does. No Windows binary is involved, only the import record.
 
-Not built from this CMake tree (winvnc is now built, see patches 14-20), with the exact errors (all identical at the
+Not built from this CMake tree (winvnc is now built, see patches 14-20, and
+uvnc_settings, see patches 21-23), with the exact errors (all identical at the
 three pinned commits; the cmake directory does not change between 1.8.2.9 and
 1.8.3.2):
-  * uvnc_settings: `fatal error: natupnp.h: No such file or directory`
-    (upnp.h:28). mingw-w64 has no natupnp.h; a stand-in would have to declare
-    the IUPnPNAT, IStaticPortMappingCollection and IStaticPortMapping COM
-    interfaces from memory, and a wrong vtable layout would be a wrong image,
-    so none was written.
   * logmessages x86 (all three versions): built, but the DLL has 3 functions
     after the MinGW glue is removed, below the floor of 8 (`logmessages.dll
     yielded only 3 functions, which is too little to be useful reference data
@@ -258,6 +256,99 @@ Data (winvnc.exe; kept + removed + excluded = total, from provenance.json; the
   x64  1.8.3.1  5019 + 204 + 74 = 5297   x86  1.8.3.1  5331 + 210 + 74 = 5615
 Every version now has 35 images: the 33 above plus winvnc.exe x86 and x64.
 
+uvnc_settings (patches 21-23; recipe-generated files only, no upstream file is
+edited, and only uvnc_settings is affected):
+
+21. natupnp.h, which upnp.h:28 includes (`fatal error: natupnp.h: No such file
+    or directory`). Neither the installed mingw-w64 11.0.1 nor mingw-w64's
+    git tree has natupnp.h or natupnp.idl (checked: master ae5227f6 of
+    https://github.com/mingw-w64/mingw-w64, the same HEAD as
+    git.code.sf.net/p/mingw-w64/mingw-w64, 2026-11-07, and the v11.0.1
+    release tarball). The header is GENERATED at build time, never typed: a
+    stand-in derived from Wine's IDL, not Microsoft's SDK header.
+      IDL: Wine include/natupnp.idl at tag wine-11.0 (commit
+        db11d0fe6a169c457e23d007e20404643d067aa8, LGPL-2.1-or-later),
+        https://gitlab.winehq.org/wine/wine/-/raw/db11d0fe6a169c457e23d007e20404643d067aa8/include/natupnp.idl,
+        sha256 87b255eb8a7286b3e3005016ab7d405695c79652501d958aca5118868f0a101a,
+        git blob 83b48a3dc6051283a1e90de2dfe15eb81239dab9 (the same blob as
+        Wine master 78e52205 and as ReactOS sdk/include/psdk/natupnp.idl).
+      Compiler: widl 8.5 ("Wine IDL Compiler version 8.5"), mingw-w64's copy,
+        built by the recipe with the host gcc from mingw-w64-tools/widl of the
+        mingw-w64 v11.0.1 release tarball (the release of the installed
+        toolchain's headers), https://downloads.sourceforge.net/project/
+        mingw-w64/mingw-w64/mingw-w64-release/mingw-w64-v11.0.1.tar.bz2,
+        sha256 3f66bce069ee8bed7439a1a13da7cb91a5e67ea6170f21317ac7f5794625ee10.
+        The IDL imports oaidl.idl and ocidl.idl; those and their imports come
+        from the same tarball's mingw-w64-headers/include, the C headers they
+        import (basetsd.h, guiddef.h) from the installed toolchain.
+      Command: `widl -h -o natupnp.h -I <tarball idl dir> -I /usr/<host>/include
+        natupnp.idl`, into <source root>/widl-inc, which is put on CPATH. The
+        generated header's sha256 is printed in the build log
+        (289c5ddd24089daf8c2d3a87f190aa11145dc2b7bea7708a56b243f58b099425).
+    What upnp.cpp uses is all in the IDL: the coclass UPnPNAT
+    (__uuidof(UPnPNAT), CLSID ae1e00aa-3fd5-403c-8a27-2bbdc30cd0e1),
+    IUPnPNAT (b171c812-cc76-485a-94d8-b6b3a2794e99; get_StaticPortMapping-
+    Collection), IStaticPortMappingCollection (cd1f3e77-66d6-4664-82c7-
+    36dbb641d0f1; get_Item, Add, Remove) and IStaticPortMapping (6f10711f-
+    729b-41e5-93b8-f21d0f818df1; get_ExternalIPAddress). The GUIDs and the
+    method order (the vtable layout) are the IDL's and were compared only with
+    the IDL, not with Microsoft's header, which is not available here; the
+    bytes of the CLSID and of the IUPnPNAT IID were found in a 1.8.3.1 x64
+    test build of uvnc_settings.exe (not re-checked in the six committed
+    builds, whose binaries are not kept). widl's output
+    carries __CRT_UUID_DECL, which is what makes __uuidof() work with GCC.
+22. _com_util::ConvertStringToBSTR and _com_util::ConvertBSTRToString. upnp.cpp
+    uses _bstr_t, whose conversions call them; mingw-w64's comutil.h declares
+    them and no mingw-w64 library defines them (MSVC links comsuppw.lib; the
+    link fails with `undefined reference to `_com_util::ConvertStringToBSTR
+    (char const*)'` and `... ConvertBSTRToString(wchar_t*)'`). Neither mingw-w64
+    master nor Wine has an implementation; ReactOS does: sdk/lib/comsupp/
+    comsupp.cpp at tag 0.4.15-release (commit
+    22fb3bb2c1d8196cf501edbb49b3814739f7b016, BSD-2-Clause),
+    https://raw.githubusercontent.com/reactos/reactos/22fb3bb2c1d8196cf501edbb49b3814739f7b016/sdk/lib/comsupp/comsupp.cpp,
+    sha256 08d1d368e2fd5235aaa555f3534921b1c777473e26b23829214f37239046f5a8.
+    The recipe writes <source root>/comsupp-gen/comsupp_util.cpp: the file's
+    licence header (lines 1-7), `#include <windows.h>` and `#include
+    <comdef.h>`, then the file's `namespace _com_util { ... }` block verbatim
+    to the end of the file. The file's own prologue (`#define _INC_WINDOWS`
+    and <windef.h>/<winbase.h>) is written for ReactOS's headers and does not
+    compile with mingw-w64's (`'LPMSG' has not been declared`); its comdef.h
+    part (_com_raise_error, _set_com_error_handler, _com_issue_error) is not
+    taken because mingw-w64's comdef.h defines those inline, and vtMissing is
+    not taken because nothing uses it. The file is added to uvnc_settings'
+    sources (target_sources appended to cmake/uvnc_settings/CMakeLists.txt) and
+    compiled with that target's flags. The two functions are ReactOS's code,
+    not UltraVNC's, and are removed by name (exclude_functions; see "Data").
+23. iphlpapi. upnp.cpp, network.cpp and service.cpp ask for it with `#pragma
+    comment(lib, "iphlpapi")`, which GCC ignores (`undefined reference to
+    `GetAdaptersInfo'`); `target_link_libraries(uvnc_settings iphlpapi)` is
+    appended. The other pragma-named libraries (shlwapi, ws2_32) are not
+    needed: nothing from them is referenced. The `#pragma comment(linker,
+    "/manifestdependency:...")` lines of stdafx.h are ignored as well, so the
+    MinGW image does not ask for Common Controls 6 in its manifest; that
+    changes no code.
+
+Data (uvnc_settings.exe; kept + removed + excluded = total, from
+provenance.json; identical at 1.8.2.9, 1.8.3.0 and 1.8.3.1; the 2 excluded are
+the ReactOS _com_util functions of patch 22, removed by name, and the zlib
+pattern removes nothing, the program has no zlib):
+  x86  176 + 135 + 2 = 313   x64  259 + 126 + 2 = 387
+Both are far above the floor of 8 functions. The three versions' images are
+the same code: 95 (x86) and 86 (x64) distinct PicHashes of 10+ instructions,
+all shared between 1.8.2.9, 1.8.3.0 and 1.8.3.1; of them, 23 / 20 are also in
+the other 35 MinGW images of 1.8.3.1 and 0 in any MSVC UltraVNC image (there
+is no MSVC uvnc_settings). Every version now has 37 images:
+the 35 above plus uvnc_settings.exe x86 and x64. Per version, all 37 MinGW
+images: 1.8.2.9 20720 kept + 4259 removed + 300 excluded = 25279; 1.8.3.0 and
+1.8.3.1 20721 + 4259 + 300 = 25280 each; 111 images, 62162 + 12777 + 900 =
+75839 over the three versions. The other 35 images of each version were
+rebuilt with these patches applied and gave the committed kept, removed and
+excluded counts exactly (their binaries differ, as any MinGW rebuild here
+does), so the committed images were kept and only their notes and
+build_flags changed.
+
+Built by patches 21-23 (earlier failure: `fatal error: natupnp.h: No such
+file or directory`, upnp.h:28): uvnc_settings.
 Built by patches 8-13 (the earlier list of failures, now resolved): ldapauth,
 ldapauth9x, ldapauthnt4 (patch 8, 9), uvnckeyboardhelper (8, 9, 12), authSSP
 (8, 9, 11), MSLogonACL (11), repeater (12, 13 on x86), logmessages (10) and,
@@ -383,6 +474,12 @@ _ZLIB_FUNCTIONS = (
     'zlibCompileFlags', 'zlibVersion',
 )
 
+# The two ReactOS comsupp functions compiled into uvnc_settings (docstring,
+# patch 22), by their exact demangled names; `@4` is the x86 stdcall
+# decoration, the last group a GCC clone suffix.
+_COMSUPP_FUNCTIONS = (r"^_com_util::Convert(?:StringToBSTR\(char const\*\)|"
+                      r"BSTRToString\(wchar_t\*\))(?:@4)?(?: \(\.\w+\.\d+\))?$")
+
 _ENV = {"CFLAGS": "", "CXXFLAGS": ""}
 
 # The cmake options every dependency shares. {cxx} and friends come from the
@@ -440,9 +537,44 @@ _DEPS = [
               "-l deps-{arch}/prefix/lib/libcryptui.a -k -m i386; fi"),
 ]
 
-# The dependency prefix, then the recipe-generated forwarding headers.
+# natupnp.h for uvnc_settings (see the docstring): widl 8.5 is built from the
+# pinned mingw-w64 v11.0.1 release tarball (the release of the installed
+# toolchain's headers), the header is generated from Wine's natupnp.idl (pinned
+# by commit and sha256) into widl-inc. The IDL's imports (oaidl.idl, ocidl.idl
+# and theirs) come from the same tarball's mingw-w64-headers, the C headers they
+# import (basetsd.h, guiddef.h) from the installed toolchain.
+_WIDL = BuildStep(
+    "S=$PWD && rm -rf widl-{arch} widl-inc && mkdir -p widl-{arch}/src widl-{arch}/b widl-inc && "
+    "tar xjf {mingww64} -C widl-{arch}/src --strip-components=1 --wildcards "
+    "'mingw-w64-v11.0.1/mingw-w64-tools/widl' "
+    "'mingw-w64-v11.0.1/mingw-w64-headers/include/*.idl' && "
+    "cd widl-{arch}/b && $S/widl-{arch}/src/mingw-w64-tools/widl/configure "
+    "--target={host} CC=gcc CFLAGS=-O2 && make -j$(nproc) && "
+    "cd $S/widl-inc && cp {natupnp_idl} natupnp.idl && "
+    "$S/widl-{arch}/b/widl -h -o natupnp.h "
+    "-I $S/widl-{arch}/src/mingw-w64-headers/include -I /usr/{host}/include natupnp.idl && "
+    "sha256sum natupnp.idl natupnp.h && rm -rf $S/widl-{arch}",
+    env={"CC": "gcc", "CFLAGS": "-O2", "CXX": "g++", "CPPFLAGS": "", "LDFLAGS": ""})
+
+# _com_util::ConvertStringToBSTR / ConvertBSTRToString for uvnc_settings (see
+# the docstring): mingw-w64 declares them in comutil.h and has no library that
+# defines them (MSVC's comsuppw.lib does). The _com_util namespace of ReactOS's
+# comsupp.cpp (pinned by commit and sha256), verbatim, after the file's licence
+# header and `#include <windows.h>` / `#include <comdef.h>` (the file's own
+# prologue is written for ReactOS's headers); the grep stops the step if the
+# namespace line is not there exactly once.
+_COMSUPP = BuildStep(
+    "rm -rf comsupp-gen && mkdir comsupp-gen && "
+    "test \"$(grep -c '^namespace _com_util$' {comsupp_cpp})\" = 1 && "
+    "{ sed -n '1,7p' {comsupp_cpp}; "
+    "printf '#include <windows.h>\\n#include <comdef.h>\\n'; "
+    "sed -n '/^namespace _com_util$/,$p' {comsupp_cpp}; } > comsupp-gen/comsupp_util.cpp && "
+    "sha256sum comsupp-gen/comsupp_util.cpp")
+
+# The dependency prefix, the recipe-generated forwarding headers, then the
+# widl-generated natupnp.h.
 _CPATH = ("{source_root}/deps-{arch}/prefix/include:"
-          "{source_root}/casefold-inc")
+          "{source_root}/casefold-inc:{source_root}/widl-inc")
 
 _PATCH = BuildStep("python3 -I {repo}/scripts/corpus/exercisers/ultravnc_mingw_patch.py .")
 
@@ -470,6 +602,7 @@ _CONFIGURE = BuildStep(
     "-DUVNC_SEH={repo}/scripts/corpus/exercisers/ultravnc_mingw_seh.h "
     "-DUVNC_WINVNC_COMPAT={repo}/scripts/corpus/exercisers/ultravnc_mingw_winvnc_compat.h "
     "$(if [ {bitness} = 32 ]; then echo -DUVNC_REPEATER_X86={repo}/scripts/corpus/exercisers/ultravnc_mingw_repeater_x86.h; fi) "
+    "-DUVNC_COMSUPP=$PWD/comsupp-gen/comsupp_util.cpp "
     "-DUVNC_DEPS_LIB=$PWD/deps-{arch}/prefix/lib",
     env=dict(_ENV, CPATH=_CPATH))
 
@@ -499,6 +632,8 @@ _COMPONENTS = [
     ("workgrpdomnt4/workgrpdomnt4.dll", "workgrpdomnt4.dll"),
     ("logmessages/logmessages.dll", "logmessages.dll"),
     ("winvnc/winvnc.exe", "winvnc.exe"),
+    # Added by the natupnp.h / comsupp / iphlpapi changes (docstring 21-23).
+    ("uvnc_settings/uvnc_settings.exe", "uvnc_settings.exe"),
 ]
 
 _EXTRA = {
@@ -517,6 +652,21 @@ _EXTRA = {
     # of 1.8.2.9) supplies the files winvnc.rc embeds.
     "novnc": Source(git_url="https://github.com/novnc/noVNC.git",
                     git_ref="7c36fabe599e053c5a81e98e091ac636f6c1e174"),
+    # widl (the IDL compiler) and the system IDL files, for natupnp.h only.
+    "mingww64": Source(
+        url="https://downloads.sourceforge.net/project/mingw-w64/mingw-w64/"
+            "mingw-w64-release/mingw-w64-v11.0.1.tar.bz2",
+        sha256="3f66bce069ee8bed7439a1a13da7cb91a5e67ea6170f21317ac7f5794625ee10"),
+    # Wine's include/natupnp.idl at wine-11.0 (LGPL-2.1-or-later).
+    "natupnp_idl": Source(
+        url="https://gitlab.winehq.org/wine/wine/-/raw/"
+            "db11d0fe6a169c457e23d007e20404643d067aa8/include/natupnp.idl",
+        sha256="87b255eb8a7286b3e3005016ab7d405695c79652501d958aca5118868f0a101a"),
+    # ReactOS's sdk/lib/comsupp/comsupp.cpp at 0.4.15-release (BSD-2-Clause).
+    "comsupp_cpp": Source(
+        url="https://raw.githubusercontent.com/reactos/reactos/"
+            "22fb3bb2c1d8196cf501edbb49b3814739f7b016/sdk/lib/comsupp/comsupp.cpp",
+        sha256="08d1d368e2fd5235aaa555f3534921b1c777473e26b23829214f37239046f5a8"),
 }
 
 _FLAGS = ("-O3 -DNDEBUG (CMake Release, MinGW branch of cmake/CMakeLists.txt); "
@@ -534,7 +684,13 @@ _FLAGS = ("-O3 -DNDEBUG (CMake Release, MinGW branch of cmake/CMakeLists.txt); "
           "shim for 32-bit repeater; winvnc: CMake target enabled, "
           "libudtcloud/CloudDialog.cpp dropped, source list per vcxproj, "
           "VNCLOG function-name prefix dropped, ui64->ULL, __try/__except "
-          "removed, unofficial-sodium find-config for the built libsodium")
+          "removed, unofficial-sodium find-config for the built libsodium"
+          "; uvnc_settings: natupnp.h generated by "
+          "widl 8.5 (mingw-w64 v11.0.1) from Wine's natupnp.idl (wine-11.0, "
+          "db11d0fe, sha256 87b255eb...0a101a), a stand-in, not Microsoft's "
+          "SDK header; _com_util::ConvertStringToBSTR/ConvertBSTRToString "
+          "compiled from ReactOS comsupp.cpp (0.4.15-release, 22fb3bb2, "
+          "sha256 08d1d368...46f5a8) and excluded by name; iphlpapi linked")
 
 
 def _ultravnc(version, commit, patch_note):
@@ -546,13 +702,13 @@ def _ultravnc(version, commit, patch_note):
         source=Source(git_url="https://github.com/ultravnc/UltraVNC.git",
                       git_ref=commit, submodules=False),
         extra_sources=dict(_EXTRA),
-        build=_DEPS + [_PATCH] + _WINVNC + [_CONFIGURE, _BUILD],
+        build=_DEPS + [_PATCH] + _WINVNC + [_WIDL, _COMSUPP, _CONFIGURE, _BUILD],
         artifacts=[Artifact(path="bld-{arch}/%s" % path, component=component)
                    for path, component in _COMPONENTS],
         toolchains=["mingw_x86", "mingw_x64"],
         requires=["cmake", "make", "python3"],
         build_flags=_FLAGS,
-        exclude_functions=[zlib_functions(_ZLIB_FUNCTIONS)],
+        exclude_functions=[zlib_functions(_ZLIB_FUNCTIONS), _COMSUPP_FUNCTIONS],
         notes="NOT byte-identical to a build of unmodified upstream: "
               "recipe-applied build-tree patches, see the recipe docstring. "
               "Commit %s; the 3rdparty/noVNC submodule is left uninitialised "
@@ -574,8 +730,18 @@ def _ultravnc(version, commit, patch_note):
               "libudtcloud and CloudDialog.cpp dropped as upstream's MSVC "
               "build does, VNCLOG/ui64/__except edits, forwarding headers, "
               "a find-config for the built libsodium, noVNC files from "
-              "7c36fabe for the .rc); uvnc_settings fails on the missing "
-              "natupnp.h."
+              "7c36fabe for the .rc). "
+              "uvnc_settings additionally relies on patches 21-23: natupnp.h "
+              "is a stand-in generated by widl 8.5 (built from the mingw-w64 "
+              "v11.0.1 tarball, sha256 3f66bce0...25ee10) from Wine's "
+              "include/natupnp.idl at wine-11.0 (commit db11d0fe6a16, sha256 "
+              "87b255eb8a72...0a101a), derived from Wine's IDL, not "
+              "Microsoft's SDK header; _com_util::ConvertStringToBSTR and "
+              "ConvertBSTRToString are ReactOS's (sdk/lib/comsupp/comsupp.cpp "
+              "at 0.4.15-release, commit 22fb3bb2c1d8, sha256 "
+              "08d1d368e2fd...46f5a8), compiled in and removed by name "
+              "(exclude_functions); iphlpapi is linked (a #pragma comment "
+              "GCC ignores)."
               % (commit[:8], patch_note),
     )
 

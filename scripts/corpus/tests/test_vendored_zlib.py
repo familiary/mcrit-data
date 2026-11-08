@@ -28,8 +28,24 @@ class RecipePatternsTest(unittest.TestCase):
                  if recipe.family in ("UltraVNC", "TightVNC")}
         self.assertEqual(len(found), 11)
         for name, recipe in found.items():
-            self.assertEqual(len(recipe.exclude_functions), 1, name)
-            re.compile(recipe.exclude_functions[0])
+            # The UltraVNC MinGW recipes carry a second pattern, for the two
+            # ReactOS comsupp functions compiled into uvnc_settings.
+            expected = 2 if recipe.family == "UltraVNC" and name.endswith("_mingw") else 1
+            self.assertEqual(len(recipe.exclude_functions), expected, name)
+            for pattern in recipe.exclude_functions:
+                re.compile(pattern)
+
+    def test_the_comsupp_pattern_names_only_the_two_conversion_functions(self):
+        pattern = re.compile(
+            recipes.get("UltraVNC_1.8.3.1_mingw").exclude_functions[1])
+        for name in ("_com_util::ConvertStringToBSTR(char const*)",
+                     "_com_util::ConvertBSTRToString(wchar_t*)@4",
+                     "_com_util::ConvertBSTRToString(wchar_t*) (.part.0)"):
+            self.assertTrue(pattern.search(name), name)
+        for name in ("UPnP::OpenPorts(bool)", "_com_raise_error(long, IErrorInfo*)",
+                     "_bstr_t::Data_t::Data_t(char const*)", "deflate",
+                     "x_com_util::ConvertStringToBSTR(char const*)"):
+            self.assertIsNone(pattern.search(name), name)
 
     def test_a_pattern_spares_the_programs_own_and_other_libraries_code(self):
         pattern = re.compile(
