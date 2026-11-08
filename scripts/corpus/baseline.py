@@ -651,6 +651,159 @@ __declspec(dllexport) void probe_cxx_runtime(const char *text)
 """
 
 
+# The C++ exception-handling surface, appended to _PROBE_CXX so both the DLL
+# and the EXE variant carry it.
+#
+# Why it is needed, and why it is shaped the way it is. The module comment
+# above says a probe has to *use* the runtime rather than merely link against
+# it; the EH entry points are the sharpest case of that, and the reason is not
+# the linker but the disassembler. `nm` on the plain C++ probe shows
+# `T __cxa_init_primary_exception` sitting in the image - the body is linked -
+# but nothing calls it, so SMDA recovers no function there and the baseline
+# never learns the name. is_glue needs a name and a PicHash, so the body went
+# on being attributed to whichever project linked it.
+#
+# Measured: 7-Zip's committed mingw13 x64 artefacts carry
+# `__cxa_init_primary_exception` at PicHash 5951751902645931248, which is also
+# what every data/MinGW release from GCC 8.2 to 12.2 carries, and what this
+# probe now captures. Before this block the x64 baseline had no entry for the
+# name at all.
+#
+# The calls are guarded by a volatile zero, which matters twice: the probe is
+# compiled and disassembled and never run, so calling a raw ABI entry point
+# with a null type_info costs nothing, and the guard is what stops the
+# optimiser folding the calls away. The declarations are deliberately the ABI
+# spellings rather than anything from a header - `__cxa_allocate_exception`
+# takes std::size_t, which is `unsigned int` on i686 and `unsigned long long`
+# on x86_64, and getting that wrong is a compile error on one architecture
+# only (it was, on the first attempt).
+#
+# The std:: side above the declarations is there for the bodies that *are*
+# reachable from ordinary C++: exception_ptr, nested exceptions, rethrow,
+# dynamic_cast, bad_alloc and stoi. Between them they add
+# `std::__exception_ptr::exception_ptr::__cxa_exception_type() const` on both
+# architectures and `___cxa_bad_cast` on i686.
+_PROBE_CXX += """
+#include <exception>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <typeinfo>
+#include <vector>
+
+struct ProbeEhError : std::runtime_error {
+    explicit ProbeEhError(const std::string &what) : std::runtime_error(what) {}
+    ~ProbeEhError() override;
+};
+ProbeEhError::~ProbeEhError() = default;
+
+struct ProbeEhBase { virtual ~ProbeEhBase(); };
+ProbeEhBase::~ProbeEhBase() = default;
+struct ProbeEhDerived : ProbeEhBase { ~ProbeEhDerived() override; };
+ProbeEhDerived::~ProbeEhDerived() = default;
+
+extern volatile int probe_eh_zero;
+
+__declspec(dllexport) void probe_eh_runtime(const char *text)
+{
+    std::string value(text ? text : "");
+    // exception_ptr: this is what pulls __cxa_init_primary_exception and
+    // __cxa_allocate_dependent_exception in as *called* bodies. They are
+    // linked without it, but nothing reaches them, so SMDA never recovers a
+    // function there and the baseline never learns the name.
+    std::exception_ptr captured = std::make_exception_ptr(ProbeEhError(value));
+    try {
+        std::rethrow_exception(captured);
+    } catch (const ProbeEhError &error) {
+        std::cerr << error.what() << std::endl;
+    }
+    try {
+        try {
+            throw ProbeEhError(value);
+        } catch (...) {
+            captured = std::current_exception();
+            std::throw_with_nested(std::logic_error(value));
+        }
+    } catch (const std::exception &outer) {
+        try {
+            std::rethrow_if_nested(outer);
+        } catch (const std::exception &inner) {
+            std::cerr << outer.what() << inner.what() << std::endl;
+        }
+    }
+    // __cxa_rethrow / _Unwind_Resume_or_Rethrow
+    try {
+        try {
+            throw ProbeEhError(value);
+        } catch (const ProbeEhError &) {
+            throw;
+        }
+    } catch (const std::exception &error) {
+        std::cerr << error.what() << std::endl;
+    }
+    // __cxa_bad_cast, __cxa_bad_typeid, typeid on a null reference
+    ProbeEhDerived derived;
+    ProbeEhBase *base = probe_eh_zero ? nullptr : &derived;
+    try {
+        ProbeEhDerived &back = dynamic_cast<ProbeEhDerived &>(*base);
+        std::cerr << typeid(back).name() << std::endl;
+    } catch (const std::bad_cast &error) {
+        std::cerr << error.what() << std::endl;
+    }
+    // bad_alloc and the array-new-length path
+    try {
+        std::vector<std::string> huge;
+        huge.reserve(static_cast<size_t>(-1) / 2);
+    } catch (const std::bad_alloc &error) {
+        std::cerr << error.what() << std::endl;
+    }
+    // stoi: invalid_argument and out_of_range out of libstdc++ rather than
+    // from this translation unit.
+    try {
+        std::cerr << std::stoi(value) << std::endl;
+    } catch (const std::exception &error) {
+        std::cerr << error.what() << std::endl;
+    }
+    // uncaught_exceptions / terminate handler reference
+    std::cerr << std::uncaught_exceptions() << std::endl;
+    if (probe_eh_zero) {
+        std::set_terminate(std::get_terminate());
+    }
+}
+
+// Reached-by-call declarations for the libstdc++ EH entry points that are
+// linked into any C++ image but that nothing in a probe happens to call, so
+// SMDA never recovers a function there and the baseline never learns the
+// name. The calls are guarded by a volatile zero: the probe is compiled and
+// disassembled, never run, and the guard is what keeps the compiler from
+// folding the call away.
+extern "C" {
+void *__cxa_allocate_exception(std::size_t);
+void *__cxa_init_primary_exception(void *, void *, void (*)(void *));
+void *__cxa_allocate_dependent_exception(void);
+void __cxa_free_dependent_exception(void *);
+void *__cxa_current_exception_type(void);
+void __cxa_call_unexpected(void *);
+void __cxa_bad_typeid(void);
+}
+
+__declspec(dllexport) void probe_eh_reached(void *p)
+{
+    if (probe_eh_zero) {
+        void *raw = __cxa_allocate_exception(1);
+        __cxa_init_primary_exception(raw, p, nullptr);
+        void *dep = __cxa_allocate_dependent_exception();
+        __cxa_free_dependent_exception(dep);
+        __cxa_current_exception_type();
+        __cxa_call_unexpected(p);
+        __cxa_bad_typeid();
+    }
+}
+
+volatile int probe_eh_zero = 0;
+"""
+
+
 # C++ EXE probe: libstdc++ plus the EXE startup path together.
 _PROBE_CXX_EXE = _PROBE_CXX + """
 int main(int argc, char **argv) { probe_cxx_runtime(argv[0]); return argc - argc; }
@@ -3083,6 +3236,7 @@ def crt_glue(toolchain_id):
     # that defines them is only ever compiled by the native gcc.
     for name in [name for name in glue
                  if name.startswith(("probe_atl_", "_probe_atl_",
+                                     "probe_eh_", "_probe_eh_",
                                      "probe_stdio_", "_probe_stdio_",
                                      "probe_libc_", "_probe_libc_",
                                      "probe_msvcrt_", "_probe_msvcrt_",
@@ -3091,6 +3245,19 @@ def crt_glue(toolchain_id):
                                      "ProbeInterface", "ProbeImplementation",
                                      "ProbeArray", "ProbeEh"))]:
         glue.pop(name, None)
+    # And by containment, for the one shape a prefix cannot catch: a library
+    # template instantiated on a probe's own type carries the library's name
+    # first and the probe's inside it, e.g.
+    # `void std::__exception_ptr::__dest_thunk<ProbeEhError>(void*)`. That is
+    # a name no real artefact can have, so leaving it in the baseline is dead
+    # weight rather than a hazard - but a baseline entry that can never match
+    # anything is exactly the kind of thing that later reads as a mistake.
+    for name in [name for name in glue
+                 if "Probe" in name and "probe" not in name.split("Probe")[0]]:
+        if any(marker in name for marker in ("ProbeEh", "ProbeArray",
+                                             "ProbeInterface",
+                                             "ProbeImplementation")):
+            glue.pop(name, None)
     return glue
 
 
