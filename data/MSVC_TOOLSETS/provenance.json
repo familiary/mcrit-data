@@ -7844,6 +7844,2208 @@
     "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
     "version": "14.51"
   },
+  "MSVC_TOOLSETS_14.51_msvc143_x64_crt_md": {
+    "architecture": "x64",
+    "build_flags": "MSVC toolset 14.51, shard crt_md (C/C++ runtime, /MD release: the parts of msvcrt, msvcprt, vcruntime, vcomp, vccorlib, comsupp ... that contain code) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "crt_md.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+    "component": "crt_md",
+    "deduplicated_functions": 436,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x64",
+      "directory": "VC/Tools/MSVC/14.51.36231/lib/x64",
+      "excluded": [
+        {
+          "bytes": 385056,
+          "file": "clang_rt.asan_dbg_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 193968,
+          "file": "clang_rt.asan_dbg_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 357510,
+          "file": "clang_rt.asan_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 140560,
+          "file": "clang_rt.asan_dynamic_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 191316,
+          "file": "clang_rt.asan_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 253350,
+          "file": "clang_rt.asan_static_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1061774,
+          "file": "clang_rt.builtins-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22310728,
+          "file": "clang_rt.fuzzer_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 25077322,
+          "file": "clang_rt.fuzzer_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24755640,
+          "file": "clang_rt.fuzzer_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27522090,
+          "file": "clang_rt.fuzzer_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22165124,
+          "file": "clang_rt.fuzzer_no_main_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24930258,
+          "file": "clang_rt.fuzzer_no_main_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24610040,
+          "file": "clang_rt.fuzzer_no_main_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27375028,
+          "file": "clang_rt.fuzzer_no_main_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1173084,
+          "file": "clang_rt.profile-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 5793674,
+          "file": "clang_rt.stats-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 31980,
+          "file": "clang_rt.stats_client-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 7340596,
+          "file": "clang_rt.ubsan_standalone-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 164668,
+          "file": "clang_rt.ubsan_standalone_cxx-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 2811060,
+          "file": "msvcmrt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2765864,
+          "file": "msvcmrt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2897282,
+          "file": "msvcmrtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2851176,
+          "file": "msvcmrtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57413830,
+          "file": "msvcurt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57526478,
+          "file": "msvcurt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58469244,
+          "file": "msvcurtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58582688,
+          "file": "msvcurtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 15806,
+          "file": "pbinmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15816,
+          "file": "pcommode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 20641,
+          "file": "pinvalidcontinue.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 73437,
+          "file": "plegacy_stdio_float_rounding.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15557,
+          "file": "pnewmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17422,
+          "file": "pnoarg.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17270,
+          "file": "pnoenv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 80333,
+          "file": "pnothrownew.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "psetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15607,
+          "file": "pthreadlocale.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "pwsetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 853332,
+          "file": "ptrustm.lib",
+          "reason": "rejected by the linker: .\\crt_md.trial.dll : fatal error LNK1120: 699 unresolved externals"
+        },
+        {
+          "bytes": 659218,
+          "file": "ptrustu.lib",
+          "reason": "rejected by the linker: 00000_managdeh.obj : fatal error LNK1313: pure module detected; cannot link with ijw/native modules"
+        },
+        {
+          "bytes": 49142,
+          "file": "iso_stdio_wide_specifiers.lib",
+          "reason": "rejected by the linker: .\\crt_md.trial.dll : fatal error LNK1319: 1 mismatches detected"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "_Sancov8bitUsed",
+        "_SancovBoolFlagUsed",
+        "_SancovPcGuardUsed",
+        "_SancovPcTableUsed",
+        "__NULL_IMPORT_DESCRIPTOR",
+        "__abi___threading_model_initializer",
+        "__default_vcasan_override_dumptype",
+        "__default_vcasan_save_dumps",
+        "__you_must_link_with_VCAsan_lib"
+      ],
+      "ignored_duplicate_definitions": 9,
+      "image_bytes": 3368960,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 23328406,
+          "code_members": 256,
+          "file": "libvcmath-md.lib",
+          "members": 256,
+          "sha256": "d17904865e59ea8f9686586bc9e17ac44026b62a75fee3688a65e61a2231c980"
+        },
+        {
+          "bytes": 23247968,
+          "code_members": 256,
+          "file": "libvcmath-mt.lib",
+          "members": 256,
+          "sha256": "eb193d3e579ac320809722e56a567546c63fe8783848cdccf930c8c6e2b45ab6"
+        },
+        {
+          "bytes": 8228734,
+          "code_members": 1334,
+          "file": "msvcrt.lib",
+          "members": 1334,
+          "sha256": "d3f725923c6dd639bb5e5c52f3122c6fe084471f7ab0ef5f27d054f56b4d8a7e"
+        },
+        {
+          "bytes": 5571166,
+          "code_members": 33,
+          "file": "msvcprt.lib",
+          "members": 1635,
+          "sha256": "6ac60dce9dda8b39f082cdbaeada4601342e1b257e87bb2e20228f6fcf441277"
+        },
+        {
+          "bytes": 1898824,
+          "code_members": 40,
+          "file": "vccorlib.lib",
+          "members": 296,
+          "sha256": "1bd9025fb3531eb0578e169835a611385dcd37f35ed2a7b0f6cf5b8736973398"
+        },
+        {
+          "bytes": 498566,
+          "code_members": 7,
+          "file": "comsuppw.lib",
+          "members": 7,
+          "sha256": "2b2f46046aa34575d00e073c7f02371082c1cd9bae27e270357c5aede44d21a1"
+        },
+        {
+          "bytes": 498502,
+          "code_members": 7,
+          "file": "comsupp.lib",
+          "members": 7,
+          "sha256": "17c02c13dbb63145288d4923c9007fba9b36e8791c9a6e0b4c15440c873606f2"
+        },
+        {
+          "bytes": 387608,
+          "code_members": 10,
+          "file": "aligned_new.lib",
+          "members": 10,
+          "sha256": "94519d247e8957684de8d633a006592068a700affe1b5f04185957a8389f6f62"
+        },
+        {
+          "bytes": 287794,
+          "code_members": 11,
+          "file": "vcruntime.lib",
+          "members": 113,
+          "sha256": "d772e963458246dd6dd5a7969c0f08e461ccb8b64cb54e9a67317cafffc22ec9"
+        },
+        {
+          "bytes": 277088,
+          "code_members": 1,
+          "file": "vcasan.lib",
+          "members": 1,
+          "sha256": "962ee0517bd4d02078b644573bc1934ff69470931f5eafa26fdae1d7dc0926c1"
+        },
+        {
+          "bytes": 275354,
+          "code_members": 1,
+          "file": "libvcasan.lib",
+          "members": 1,
+          "sha256": "18bf5e0d945d339252ca11d31753dc118ef35a8fbe461fbc11302f48ff2f60e7"
+        },
+        {
+          "bytes": 198382,
+          "code_members": 3,
+          "file": "libomp.lib",
+          "members": 789,
+          "sha256": "d5057c56a3560bf1ee0ac71d5be528bce3c1d7c843bcb7ce8fae4d45eba4fddb"
+        },
+        {
+          "bytes": 119614,
+          "code_members": 3,
+          "file": "concrt.lib",
+          "members": 294,
+          "sha256": "fd07725a7b954d5fdcbb675e6fcc37b1b7fc517bf95403d0197bf943e4ca3576"
+        },
+        {
+          "bytes": 107902,
+          "code_members": 1,
+          "file": "exe_initialize_mta.lib",
+          "members": 1,
+          "sha256": "5d260ce15413514ab62ab159d8d371f641ce002f0e41fe16fa86e8d196c3c800"
+        },
+        {
+          "bytes": 42484,
+          "code_members": 7,
+          "file": "pgort.lib",
+          "members": 14,
+          "sha256": "186470af5eca8c91637ef21c8732d1e974c1ee71fd6bcc86bd206554d07e9ea0"
+        },
+        {
+          "bytes": 29090,
+          "code_members": 4,
+          "file": "libsancov.lib",
+          "members": 4,
+          "sha256": "b272d74e2396acaa9abfd197313b57857649074cc580df5c6c8676f47818eb09"
+        },
+        {
+          "bytes": 29062,
+          "code_members": 4,
+          "file": "sancov.lib",
+          "members": 4,
+          "sha256": "1d832ad120690ff516fe900350d8caec5a86f22843634d877101091a8b6fe9e7"
+        },
+        {
+          "bytes": 28384,
+          "code_members": 4,
+          "file": "vcomp.lib",
+          "members": 117,
+          "sha256": "124d5c95d773ba4545cdd1798ad79b4ea562445192662f283afa25530e2f55c2"
+        },
+        {
+          "bytes": 4026,
+          "code_members": 1,
+          "file": "pgobootrun.lib",
+          "members": 1,
+          "sha256": "49cdf90e848a62d26a1bb3cfbda767590f629f07d24acc132d9e8543bc8d137a"
+        },
+        {
+          "bytes": 2628,
+          "code_members": 1,
+          "file": "stl_asan.lib",
+          "members": 1,
+          "sha256": "1ee5f090ef34761f4620f1df4f7d1e305483ec5c824eb05817d882a62e67d817"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "object_members": 1984,
+      "shard": "crt_md",
+      "shard_description": "C/C++ runtime, /MD release: the parts of msvcrt, msvcprt, vcruntime, vcomp, vccorlib, comsupp ... that contain code",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 699
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x64/mcrit/MSVC_TOOLSETS_14.51_msvc143_x64_crt_md.mcrit",
+    "num_functions": 4355,
+    "sha256": "5e6a2cc2a30d4881e4ec30d7eb2386a591df94dcae60c6c80f852f5b64135f5b",
+    "smda": "data/MSVC_TOOLSETS/x64/smda/MSVC_TOOLSETS_14.51_msvc143_x64_crt_md.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
+  },
+  "MSVC_TOOLSETS_14.51_msvc143_x64_crt_md_debug": {
+    "architecture": "x64",
+    "build_flags": "MSVC toolset 14.51, shard crt_md_debug (C/C++ runtime, /MDd: the d variants of crt_md) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "crt_md_debug.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+    "component": "crt_md_debug",
+    "deduplicated_functions": 73,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x64",
+      "directory": "VC/Tools/MSVC/14.51.36231/lib/x64",
+      "excluded": [
+        {
+          "bytes": 385056,
+          "file": "clang_rt.asan_dbg_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 193968,
+          "file": "clang_rt.asan_dbg_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 357510,
+          "file": "clang_rt.asan_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 140560,
+          "file": "clang_rt.asan_dynamic_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 191316,
+          "file": "clang_rt.asan_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 253350,
+          "file": "clang_rt.asan_static_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1061774,
+          "file": "clang_rt.builtins-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22310728,
+          "file": "clang_rt.fuzzer_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 25077322,
+          "file": "clang_rt.fuzzer_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24755640,
+          "file": "clang_rt.fuzzer_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27522090,
+          "file": "clang_rt.fuzzer_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22165124,
+          "file": "clang_rt.fuzzer_no_main_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24930258,
+          "file": "clang_rt.fuzzer_no_main_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24610040,
+          "file": "clang_rt.fuzzer_no_main_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27375028,
+          "file": "clang_rt.fuzzer_no_main_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1173084,
+          "file": "clang_rt.profile-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 5793674,
+          "file": "clang_rt.stats-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 31980,
+          "file": "clang_rt.stats_client-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 7340596,
+          "file": "clang_rt.ubsan_standalone-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 164668,
+          "file": "clang_rt.ubsan_standalone_cxx-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 2811060,
+          "file": "msvcmrt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2765864,
+          "file": "msvcmrt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2897282,
+          "file": "msvcmrtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2851176,
+          "file": "msvcmrtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57413830,
+          "file": "msvcurt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57526478,
+          "file": "msvcurt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58469244,
+          "file": "msvcurtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58582688,
+          "file": "msvcurtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 15806,
+          "file": "pbinmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15816,
+          "file": "pcommode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 20641,
+          "file": "pinvalidcontinue.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 73437,
+          "file": "plegacy_stdio_float_rounding.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15557,
+          "file": "pnewmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17422,
+          "file": "pnoarg.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17270,
+          "file": "pnoenv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 80333,
+          "file": "pnothrownew.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "psetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15607,
+          "file": "pthreadlocale.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "pwsetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 870102,
+          "file": "ptrustmd.lib",
+          "reason": "rejected by the linker: .\\crt_md_debug.trial.dll : fatal error LNK1120: 707 unresolved externals"
+        },
+        {
+          "bytes": 677648,
+          "file": "ptrustud.lib",
+          "reason": "rejected by the linker: 00000_managdeh.obj : fatal error LNK1313: pure module detected; cannot link with ijw/native modules"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "_Sancov8bitUsed",
+        "_SancovBoolFlagUsed",
+        "_SancovPcGuardUsed",
+        "_SancovPcTableUsed",
+        "__NULL_IMPORT_DESCRIPTOR",
+        "__abi___threading_model_initializer",
+        "__default_vcasan_override_dumptype",
+        "__default_vcasan_save_dumps",
+        "__you_must_link_with_VCAsan_lib"
+      ],
+      "ignored_duplicate_definitions": 9,
+      "image_bytes": 3063808,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 8281678,
+          "code_members": 1334,
+          "file": "msvcrtd.lib",
+          "members": 1334,
+          "sha256": "d863daadda44ca79a47ca95a171c4d9237a640cf64523b3a633f8b782a5d60be"
+        },
+        {
+          "bytes": 5410972,
+          "code_members": 33,
+          "file": "msvcprtd.lib",
+          "members": 1643,
+          "sha256": "654067335898f63dfc66acf5684d1c62482151cda3e56a23529941f3e5fe4a95"
+        },
+        {
+          "bytes": 1925918,
+          "code_members": 40,
+          "file": "vccorlibd.lib",
+          "members": 296,
+          "sha256": "000c7c92ddd1974cd65f80d141dda36d51f0135c49fd718bfbf1a9c9a358be29"
+        },
+        {
+          "bytes": 521460,
+          "code_members": 7,
+          "file": "comsuppwd.lib",
+          "members": 7,
+          "sha256": "4ffcf5d4c298ce533d2ea9da2c9905469e201f50768056d0798e6c025fd9fb08"
+        },
+        {
+          "bytes": 521396,
+          "code_members": 7,
+          "file": "comsuppd.lib",
+          "members": 7,
+          "sha256": "d18336b8ee6c4ebdefc597cbc1e3286f9f7d475c3835a3591041f0a351a11406"
+        },
+        {
+          "bytes": 287158,
+          "code_members": 11,
+          "file": "vcruntimed.lib",
+          "members": 113,
+          "sha256": "95ed209799da57e3c62a79ed0d2f07c18bcbd4977a5bdfa90088dced89026a00"
+        },
+        {
+          "bytes": 281884,
+          "code_members": 1,
+          "file": "vcasand.lib",
+          "members": 1,
+          "sha256": "808ea52b948bf9240074e8d09eaa36bc441a8f52df669d8c691ada64bb4f8534"
+        },
+        {
+          "bytes": 280130,
+          "code_members": 1,
+          "file": "libvcasand.lib",
+          "members": 1,
+          "sha256": "a374d43cc6bdb675031ec6b8cef39ba83da813190291c4fde7be824f50b953af"
+        },
+        {
+          "bytes": 199430,
+          "code_members": 3,
+          "file": "libompd.lib",
+          "members": 790,
+          "sha256": "8593fa5de5010808eac5b18dcd960f0d7a2fdfb18a73779a55f43e068d4e899a"
+        },
+        {
+          "bytes": 119944,
+          "code_members": 3,
+          "file": "concrtd.lib",
+          "members": 294,
+          "sha256": "5fef7b0775939205f90940aef759a927c38733b1aef92053b37ad192a3067658"
+        },
+        {
+          "bytes": 29094,
+          "code_members": 4,
+          "file": "libsancovd.lib",
+          "members": 4,
+          "sha256": "688bdb845394e5cf78da4411b41bfcc77150a0bea51fc6e09d0d9efc1efd36fb"
+        },
+        {
+          "bytes": 29070,
+          "code_members": 4,
+          "file": "sancovd.lib",
+          "members": 4,
+          "sha256": "ea9174d53c0693166b7db5cb4ab7f545fccaae44a3655796588b88a67d32cafa"
+        },
+        {
+          "bytes": 28512,
+          "code_members": 4,
+          "file": "vcompd.lib",
+          "members": 117,
+          "sha256": "8f85f429e992a0d138eabf5392f12c546b2f0b8f8bef98fd36a5795899b6a60a"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "object_members": 1452,
+      "shard": "crt_md_debug",
+      "shard_description": "C/C++ runtime, /MDd: the d variants of crt_md",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 702
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x64/mcrit/MSVC_TOOLSETS_14.51_msvc143_x64_crt_md_debug.mcrit",
+    "num_functions": 3851,
+    "sha256": "9d78c410259a1ad1fed15625865b0953ab7e95d4c19c66541753cf411b2c1b10",
+    "smda": "data/MSVC_TOOLSETS/x64/smda/MSVC_TOOLSETS_14.51_msvc143_x64_crt_md_debug.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
+  },
+  "MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt": {
+    "architecture": "x64",
+    "build_flags": "MSVC toolset 14.51, shard crt_mt (C/C++ runtime, /MT release: libcmt, libvcruntime, libcpmt, libconcrt, oldnames, legacy_stdio_*, delayimp and the startup objects) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "crt_mt.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+    "component": "crt_mt",
+    "deduplicated_functions": 1984,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x64",
+      "directory": "VC/Tools/MSVC/14.51.36231/lib/x64",
+      "excluded": [
+        {
+          "bytes": 385056,
+          "file": "clang_rt.asan_dbg_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 193968,
+          "file": "clang_rt.asan_dbg_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 357510,
+          "file": "clang_rt.asan_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 140560,
+          "file": "clang_rt.asan_dynamic_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 191316,
+          "file": "clang_rt.asan_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 253350,
+          "file": "clang_rt.asan_static_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1061774,
+          "file": "clang_rt.builtins-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22310728,
+          "file": "clang_rt.fuzzer_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 25077322,
+          "file": "clang_rt.fuzzer_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24755640,
+          "file": "clang_rt.fuzzer_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27522090,
+          "file": "clang_rt.fuzzer_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22165124,
+          "file": "clang_rt.fuzzer_no_main_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24930258,
+          "file": "clang_rt.fuzzer_no_main_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24610040,
+          "file": "clang_rt.fuzzer_no_main_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27375028,
+          "file": "clang_rt.fuzzer_no_main_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1173084,
+          "file": "clang_rt.profile-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 5793674,
+          "file": "clang_rt.stats-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 31980,
+          "file": "clang_rt.stats_client-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 7340596,
+          "file": "clang_rt.ubsan_standalone-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 164668,
+          "file": "clang_rt.ubsan_standalone_cxx-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 2811060,
+          "file": "msvcmrt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2765864,
+          "file": "msvcmrt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2897282,
+          "file": "msvcmrtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2851176,
+          "file": "msvcmrtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57413830,
+          "file": "msvcurt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57526478,
+          "file": "msvcurt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58469244,
+          "file": "msvcurtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58582688,
+          "file": "msvcurtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 15806,
+          "file": "pbinmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15816,
+          "file": "pcommode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 20641,
+          "file": "pinvalidcontinue.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 73437,
+          "file": "plegacy_stdio_float_rounding.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15557,
+          "file": "pnewmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17422,
+          "file": "pnoarg.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17270,
+          "file": "pnoenv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 80333,
+          "file": "pnothrownew.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "psetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15607,
+          "file": "pthreadlocale.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "pwsetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "__chkstk",
+        "__telemetry_main_invoke_trigger",
+        "__telemetry_main_return_trigger",
+        "__vcrt_initialize_telemetry_provider",
+        "__vcrt_uninitialize_telemetry_provider",
+        "_alloca_probe",
+        "_get_startup_argv_mode",
+        "_get_startup_commit_mode",
+        "_get_startup_file_mode",
+        "_get_startup_new_mode",
+        "_get_startup_thread_locale_mode",
+        "_initialize_denormal_control",
+        "_initialize_invalid_parameter_handler",
+        "_should_initialize_environment"
+      ],
+      "ignored_duplicate_definitions": 14,
+      "image_bytes": 4151808,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 2676,
+          "file": "binmode.obj",
+          "sha256": "eb44693cd4ef66ac6f1ad4f85eb2e765859437e9f467c5c119a280655bdeddd3"
+        },
+        {
+          "bytes": 2168,
+          "file": "chkstk.obj",
+          "sha256": "26cac1aa6a28ed28255e5aa8f0a1c3977b8a85b8fd349f54e19acbf7fc9eeef4"
+        },
+        {
+          "bytes": 2686,
+          "file": "commode.obj",
+          "sha256": "a0af573fd6fe16308508060d41dad9dfcf6e344ee34dfd4d413b0985ede01b82"
+        },
+        {
+          "bytes": 138422,
+          "code_members": 4,
+          "file": "delayimp.lib",
+          "members": 4,
+          "sha256": "ce6671047abb001e1545c09df57ff966065944f96c634c0309d3a49d9e40553e"
+        },
+        {
+          "bytes": 5286,
+          "file": "invalidcontinue.obj",
+          "sha256": "64b0ffd9eeeb2d03946823dd5dd64a557ad1d61e8b5d263b01c214139f187f06"
+        },
+        {
+          "bytes": 479162,
+          "code_members": 2,
+          "file": "legacy_stdio_definitions.lib",
+          "members": 2,
+          "sha256": "c8588eeec69b915dfd0a30369d51d2164b537f9437c84ab2d33647df7e664861"
+        },
+        {
+          "bytes": 38654,
+          "file": "legacy_stdio_float_rounding.obj",
+          "sha256": "db1145e2d78abf8ee3370ed19e4307769bcf3985a4a2ec56d6dfb16ad00ad7af"
+        },
+        {
+          "bytes": 40314,
+          "code_members": 1,
+          "file": "legacy_stdio_wide_specifiers.lib",
+          "members": 1,
+          "sha256": "4d20e64ac44bb68c768e7f498905604f8cc844bd126652e1eedd373b22c36edb"
+        },
+        {
+          "bytes": 6610744,
+          "code_members": 1190,
+          "file": "libcmt.lib",
+          "members": 1190,
+          "sha256": "d4cc4c224455825dec1669f9ad6a9872a4f5b37ed1daae1fd0b9044d7650d908"
+        },
+        {
+          "bytes": 8140152,
+          "code_members": 49,
+          "file": "libconcrt.lib",
+          "members": 49,
+          "sha256": "5663040e4415d3cbff67ad8af26b0e68c57ffd769db118ab32ecd509ec12291e"
+        },
+        {
+          "bytes": 24294796,
+          "code_members": 107,
+          "file": "libcpmt.lib",
+          "members": 107,
+          "sha256": "96f3a2e1113ae8884f459e679a38a35cab542013229a9e6106f58382a6fb47c8"
+        },
+        {
+          "bytes": 2364572,
+          "code_members": 60,
+          "file": "libvcruntime.lib",
+          "members": 60,
+          "sha256": "f0a898588ecb26fe4c7530b2495a6fe5e768856309a33391702a3cbcb72b0589"
+        },
+        {
+          "bytes": 2859,
+          "file": "loosefpmath.obj",
+          "sha256": "315b9fc226fdbdce00d7a57b0dfbe0b1874ff0c56a9f376941ec94eae8402809"
+        },
+        {
+          "bytes": 2427,
+          "file": "newmode.obj",
+          "sha256": "1b87c0a79f0961a44455a43e9baaf2f1154f31e7066c21fe0d9f209fdf0840dd"
+        },
+        {
+          "bytes": 3863,
+          "file": "noarg.obj",
+          "sha256": "a07932b3945cff8aa4cd3a38654661c390a81de3d0db335336bed7497d5a6157"
+        },
+        {
+          "bytes": 3545,
+          "file": "noenv.obj",
+          "sha256": "1b96816c85a04c097ddb71e36a9280b3117d33a3a27d5f173afc1d4135946f86"
+        },
+        {
+          "bytes": 32985,
+          "file": "notelemetry.obj",
+          "sha256": "27d3889f56c06b1b97d10562964517d9943fb445ce98da5720c482795065390d"
+        },
+        {
+          "bytes": 43725,
+          "file": "nothrownew.obj",
+          "sha256": "b8839b9928cfffb209a6e8f595d7219f5dede1d076582c69c30319a64e9ae4cc"
+        },
+        {
+          "bytes": 157422,
+          "code_members": 228,
+          "file": "oldnames.lib",
+          "members": 228,
+          "sha256": "67653ba64d59a33964a811d950c9d424f7afacba8e613af60138f64fe10c2679"
+        },
+        {
+          "bytes": 2868,
+          "file": "setargv.obj",
+          "sha256": "94fe88fbb0a69efa65a93e24c64a7727e5b9ebe83a99d46e8556bf61fc5dd00d"
+        },
+        {
+          "bytes": 2469,
+          "file": "threadlocale.obj",
+          "sha256": "02b90b196d5fcb428ec1f556b32995fc7a89bb6c2d8e4d0c9de830b945d10029"
+        },
+        {
+          "bytes": 2868,
+          "file": "wsetargv.obj",
+          "sha256": "df75be724a168ac990a9f4c66021f2a68828f355bb3902b577dbcc58f76624b5"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "object_members": 1655,
+      "shard": "crt_mt",
+      "shard_description": "C/C++ runtime, /MT release: libcmt, libvcruntime, libcpmt, libconcrt, oldnames, legacy_stdio_*, delayimp and the startup objects",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 841
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x64/mcrit/MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt.mcrit",
+    "num_functions": 10479,
+    "sha256": "a9ffc2adae9842b486907ff16ca1d12adf0660d101c1e29fe973311c64e13f05",
+    "smda": "data/MSVC_TOOLSETS/x64/smda/MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
+  },
+  "MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt_debug": {
+    "architecture": "x64",
+    "build_flags": "MSVC toolset 14.51, shard crt_mt_debug (C/C++ runtime, /MTd: libcmtd, libvcruntimed, libcpmtd, libconcrtd) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "crt_mt_debug.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+    "component": "crt_mt_debug",
+    "deduplicated_functions": 1986,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x64",
+      "directory": "VC/Tools/MSVC/14.51.36231/lib/x64",
+      "excluded": [
+        {
+          "bytes": 385056,
+          "file": "clang_rt.asan_dbg_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 193968,
+          "file": "clang_rt.asan_dbg_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 357510,
+          "file": "clang_rt.asan_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 140560,
+          "file": "clang_rt.asan_dynamic_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 191316,
+          "file": "clang_rt.asan_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 253350,
+          "file": "clang_rt.asan_static_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1061774,
+          "file": "clang_rt.builtins-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22310728,
+          "file": "clang_rt.fuzzer_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 25077322,
+          "file": "clang_rt.fuzzer_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24755640,
+          "file": "clang_rt.fuzzer_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27522090,
+          "file": "clang_rt.fuzzer_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22165124,
+          "file": "clang_rt.fuzzer_no_main_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24930258,
+          "file": "clang_rt.fuzzer_no_main_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24610040,
+          "file": "clang_rt.fuzzer_no_main_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27375028,
+          "file": "clang_rt.fuzzer_no_main_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1173084,
+          "file": "clang_rt.profile-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 5793674,
+          "file": "clang_rt.stats-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 31980,
+          "file": "clang_rt.stats_client-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 7340596,
+          "file": "clang_rt.ubsan_standalone-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 164668,
+          "file": "clang_rt.ubsan_standalone_cxx-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 2811060,
+          "file": "msvcmrt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2765864,
+          "file": "msvcmrt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2897282,
+          "file": "msvcmrtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2851176,
+          "file": "msvcmrtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57413830,
+          "file": "msvcurt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57526478,
+          "file": "msvcurt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58469244,
+          "file": "msvcurtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58582688,
+          "file": "msvcurtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 15806,
+          "file": "pbinmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15816,
+          "file": "pcommode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 20641,
+          "file": "pinvalidcontinue.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 73437,
+          "file": "plegacy_stdio_float_rounding.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15557,
+          "file": "pnewmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17422,
+          "file": "pnoarg.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17270,
+          "file": "pnoenv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 80333,
+          "file": "pnothrownew.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "psetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15607,
+          "file": "pthreadlocale.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "pwsetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 4732928,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 6605196,
+          "code_members": 1190,
+          "file": "libcmtd.lib",
+          "members": 1190,
+          "sha256": "c67c2772dc73a4c5546e128ceb8f86128ddee8eed4ad72038128474c05644b0e"
+        },
+        {
+          "bytes": 8039328,
+          "code_members": 49,
+          "file": "libconcrtd.lib",
+          "members": 49,
+          "sha256": "d7ae97c64ffb0ce362f72da1e30d15c4daccc3cfe3f8e7759197691599d12d88"
+        },
+        {
+          "bytes": 22552736,
+          "code_members": 107,
+          "file": "libcpmtd.lib",
+          "members": 107,
+          "sha256": "f3896f6fa4d5059c8ee93f94dd13ab2353e242143b9a787b9192301c25d64bbc"
+        },
+        {
+          "bytes": 2060746,
+          "code_members": 60,
+          "file": "libvcruntimed.lib",
+          "members": 60,
+          "sha256": "b9437b1eef9ae7e5f94c9b925f13f7bbffd708a616513a0fe62de0f52a5d5fc3"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "object_members": 1406,
+      "shard": "crt_mt_debug",
+      "shard_description": "C/C++ runtime, /MTd: libcmtd, libvcruntimed, libcpmtd, libconcrtd",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 414
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x64/mcrit/MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt_debug.mcrit",
+    "num_functions": 10020,
+    "sha256": "f06f95f69c0a9faa2f2ac2f89deb7587cb4fe68fd654c79b09b01fe641d768c7",
+    "smda": "data/MSVC_TOOLSETS/x64/smda/MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt_debug.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
+  },
+  "MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt_debug_idl0": {
+    "architecture": "x64",
+    "build_flags": "MSVC toolset 14.51, shard crt_mt_debug_idl0 (C++ runtime, /MTd with _ITERATOR_DEBUG_LEVEL=0: libcpmtd0, libconcrtd0) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "crt_mt_debug_idl0.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+    "component": "crt_mt_debug_idl0",
+    "deduplicated_functions": 1903,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x64",
+      "directory": "VC/Tools/MSVC/14.51.36231/lib/x64",
+      "excluded": [
+        {
+          "bytes": 385056,
+          "file": "clang_rt.asan_dbg_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 193968,
+          "file": "clang_rt.asan_dbg_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 357510,
+          "file": "clang_rt.asan_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 140560,
+          "file": "clang_rt.asan_dynamic_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 191316,
+          "file": "clang_rt.asan_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 253350,
+          "file": "clang_rt.asan_static_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1061774,
+          "file": "clang_rt.builtins-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22310728,
+          "file": "clang_rt.fuzzer_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 25077322,
+          "file": "clang_rt.fuzzer_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24755640,
+          "file": "clang_rt.fuzzer_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27522090,
+          "file": "clang_rt.fuzzer_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22165124,
+          "file": "clang_rt.fuzzer_no_main_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24930258,
+          "file": "clang_rt.fuzzer_no_main_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24610040,
+          "file": "clang_rt.fuzzer_no_main_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27375028,
+          "file": "clang_rt.fuzzer_no_main_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1173084,
+          "file": "clang_rt.profile-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 5793674,
+          "file": "clang_rt.stats-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 31980,
+          "file": "clang_rt.stats_client-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 7340596,
+          "file": "clang_rt.ubsan_standalone-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 164668,
+          "file": "clang_rt.ubsan_standalone_cxx-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 2811060,
+          "file": "msvcmrt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2765864,
+          "file": "msvcmrt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2897282,
+          "file": "msvcmrtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2851176,
+          "file": "msvcmrtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57413830,
+          "file": "msvcurt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57526478,
+          "file": "msvcurt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58469244,
+          "file": "msvcurtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58582688,
+          "file": "msvcurtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 15806,
+          "file": "pbinmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15816,
+          "file": "pcommode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 20641,
+          "file": "pinvalidcontinue.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 73437,
+          "file": "plegacy_stdio_float_rounding.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15557,
+          "file": "pnewmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17422,
+          "file": "pnoarg.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17270,
+          "file": "pnoenv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 80333,
+          "file": "pnothrownew.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "psetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15607,
+          "file": "pthreadlocale.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "pwsetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 2254848,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 8039428,
+          "code_members": 49,
+          "file": "libconcrtd0.lib",
+          "members": 49,
+          "sha256": "1677684e21b9a378f7b890b12d1c275f81f097fbe116dbd805b162b8f5b47778"
+        },
+        {
+          "bytes": 21670896,
+          "code_members": 107,
+          "file": "libcpmtd0.lib",
+          "members": 107,
+          "sha256": "65191118d71068bf1bd551a9b71aa0fde6970fed0dcd044219ba7d75871179b8"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "object_members": 156,
+      "shard": "crt_mt_debug_idl0",
+      "shard_description": "C++ runtime, /MTd with _ITERATOR_DEBUG_LEVEL=0: libcpmtd0, libconcrtd0",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 152
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x64/mcrit/MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt_debug_idl0.mcrit",
+    "num_functions": 7934,
+    "sha256": "698a729c7931522e90aec61ee0b1f2e88ddb5a26e0f44476c1d90b3d0ee91944",
+    "smda": "data/MSVC_TOOLSETS/x64/smda/MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt_debug_idl0.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
+  },
+  "MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt_debug_idl1": {
+    "architecture": "x64",
+    "build_flags": "MSVC toolset 14.51, shard crt_mt_debug_idl1 (C++ runtime, /MTd with _ITERATOR_DEBUG_LEVEL=1: libcpmtd1, libconcrtd1) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "crt_mt_debug_idl1.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+    "component": "crt_mt_debug_idl1",
+    "deduplicated_functions": 1910,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x64",
+      "directory": "VC/Tools/MSVC/14.51.36231/lib/x64",
+      "excluded": [
+        {
+          "bytes": 385056,
+          "file": "clang_rt.asan_dbg_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 193968,
+          "file": "clang_rt.asan_dbg_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 357510,
+          "file": "clang_rt.asan_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 140560,
+          "file": "clang_rt.asan_dynamic_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 191316,
+          "file": "clang_rt.asan_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 253350,
+          "file": "clang_rt.asan_static_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1061774,
+          "file": "clang_rt.builtins-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22310728,
+          "file": "clang_rt.fuzzer_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 25077322,
+          "file": "clang_rt.fuzzer_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24755640,
+          "file": "clang_rt.fuzzer_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27522090,
+          "file": "clang_rt.fuzzer_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22165124,
+          "file": "clang_rt.fuzzer_no_main_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24930258,
+          "file": "clang_rt.fuzzer_no_main_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24610040,
+          "file": "clang_rt.fuzzer_no_main_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27375028,
+          "file": "clang_rt.fuzzer_no_main_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1173084,
+          "file": "clang_rt.profile-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 5793674,
+          "file": "clang_rt.stats-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 31980,
+          "file": "clang_rt.stats_client-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 7340596,
+          "file": "clang_rt.ubsan_standalone-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 164668,
+          "file": "clang_rt.ubsan_standalone_cxx-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 2811060,
+          "file": "msvcmrt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2765864,
+          "file": "msvcmrt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2897282,
+          "file": "msvcmrtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2851176,
+          "file": "msvcmrtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57413830,
+          "file": "msvcurt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57526478,
+          "file": "msvcurt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58469244,
+          "file": "msvcurtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58582688,
+          "file": "msvcurtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 15806,
+          "file": "pbinmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15816,
+          "file": "pcommode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 20641,
+          "file": "pinvalidcontinue.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 73437,
+          "file": "plegacy_stdio_float_rounding.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15557,
+          "file": "pnewmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17422,
+          "file": "pnoarg.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17270,
+          "file": "pnoenv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 80333,
+          "file": "pnothrownew.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "psetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15607,
+          "file": "pthreadlocale.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "pwsetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 2269184,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 8040016,
+          "code_members": 49,
+          "file": "libconcrtd1.lib",
+          "members": 49,
+          "sha256": "7cf4f64cf062ae5efeee6cc5068ad3edbbf1d7089607b44dba46e16ec4e8887b"
+        },
+        {
+          "bytes": 22329808,
+          "code_members": 107,
+          "file": "libcpmtd1.lib",
+          "members": 107,
+          "sha256": "b6af2ca2a58ad200960fad20f54f2c231fe3f01d385e74064cb23ddd64261fb5"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "object_members": 156,
+      "shard": "crt_mt_debug_idl1",
+      "shard_description": "C++ runtime, /MTd with _ITERATOR_DEBUG_LEVEL=1: libcpmtd1, libconcrtd1",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 152
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x64/mcrit/MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt_debug_idl1.mcrit",
+    "num_functions": 7993,
+    "sha256": "e100cfd8d6b56e9048b7aaa83f775d7beb917690a594336fbf43511f03000c9b",
+    "smda": "data/MSVC_TOOLSETS/x64/smda/MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt_debug_idl1.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
+  },
+  "MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt_idl1": {
+    "architecture": "x64",
+    "build_flags": "MSVC toolset 14.51, shard crt_mt_idl1 (C++ runtime, /MT release with _ITERATOR_DEBUG_LEVEL=1: libcpmt1, libconcrt1) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "crt_mt_idl1.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+    "component": "crt_mt_idl1",
+    "deduplicated_functions": 1970,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x64",
+      "directory": "VC/Tools/MSVC/14.51.36231/lib/x64",
+      "excluded": [
+        {
+          "bytes": 385056,
+          "file": "clang_rt.asan_dbg_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 193968,
+          "file": "clang_rt.asan_dbg_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 357510,
+          "file": "clang_rt.asan_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 140560,
+          "file": "clang_rt.asan_dynamic_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 191316,
+          "file": "clang_rt.asan_nonewdelete_dynamic-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 253350,
+          "file": "clang_rt.asan_static_runtime_thunk-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1061774,
+          "file": "clang_rt.builtins-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22310728,
+          "file": "clang_rt.fuzzer_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 25077322,
+          "file": "clang_rt.fuzzer_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24755640,
+          "file": "clang_rt.fuzzer_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27522090,
+          "file": "clang_rt.fuzzer_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 22165124,
+          "file": "clang_rt.fuzzer_no_main_MD-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24930258,
+          "file": "clang_rt.fuzzer_no_main_MDd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 24610040,
+          "file": "clang_rt.fuzzer_no_main_MT-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 27375028,
+          "file": "clang_rt.fuzzer_no_main_MTd-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 1173084,
+          "file": "clang_rt.profile-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 5793674,
+          "file": "clang_rt.stats-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 31980,
+          "file": "clang_rt.stats_client-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 7340596,
+          "file": "clang_rt.ubsan_standalone-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 164668,
+          "file": "clang_rt.ubsan_standalone_cxx-x86_64.lib",
+          "reason": "clang/LLVM sanitizer or libFuzzer runtime, not part of the Microsoft runtime"
+        },
+        {
+          "bytes": 2811060,
+          "file": "msvcmrt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2765864,
+          "file": "msvcmrt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2897282,
+          "file": "msvcmrtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 2851176,
+          "file": "msvcmrtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57413830,
+          "file": "msvcurt.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 57526478,
+          "file": "msvcurt_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58469244,
+          "file": "msvcurtd.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 58582688,
+          "file": "msvcurtd_netcore.lib",
+          "reason": "managed (/clr) runtime: MSIL, not native code"
+        },
+        {
+          "bytes": 15806,
+          "file": "pbinmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15816,
+          "file": "pcommode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 20641,
+          "file": "pinvalidcontinue.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 73437,
+          "file": "plegacy_stdio_float_rounding.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15557,
+          "file": "pnewmode.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17422,
+          "file": "pnoarg.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 17270,
+          "file": "pnoenv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 80333,
+          "file": "pnothrownew.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "psetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 15607,
+          "file": "pthreadlocale.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        },
+        {
+          "bytes": 16169,
+          "file": "pwsetargv.obj",
+          "reason": "/clr:pure startup object: MSIL, cannot link with native objects"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 1718272,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 8141266,
+          "code_members": 49,
+          "file": "libconcrt1.lib",
+          "members": 49,
+          "sha256": "0d0415b14b5c4308c0c36d8a2d397fbed79fd1b6120b4fe3632fbc9f4ef5fa4a"
+        },
+        {
+          "bytes": 25004402,
+          "code_members": 107,
+          "file": "libcpmt1.lib",
+          "members": 107,
+          "sha256": "48d7dbd6ff55dacfdb28e1212f86a4ccdc7c985ee27d8fc27baeba451f54dd5c"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "object_members": 156,
+      "shard": "crt_mt_idl1",
+      "shard_description": "C++ runtime, /MT release with _ITERATOR_DEBUG_LEVEL=1: libcpmt1, libconcrt1",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 137
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x64/mcrit/MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt_idl1.mcrit",
+    "num_functions": 8286,
+    "sha256": "ef444c78fbc520e1f5bdd467bf793a406b3ae72973f1ecfb47eb19c4a105bd47",
+    "smda": "data/MSVC_TOOLSETS/x64/smda/MSVC_TOOLSETS_14.51_msvc143_x64_crt_mt_idl1.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
+  },
   "MSVC_TOOLSETS_14.51_msvc143_x64_mfc_ansi": {
     "architecture": "x64",
     "build_flags": "MSVC toolset 14.51, shard mfc_ansi (MFC static, ANSI (nafxcw), release) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
@@ -7946,6 +10148,115 @@
     "num_functions": 29542,
     "sha256": "0876fc1034ad57f4ab7024c6f4bd052f3df94dc1e45609bdeaf6e4e9a8f5b4bd",
     "smda": "data/MSVC_TOOLSETS/x64/smda/MSVC_TOOLSETS_14.51_msvc143_x64_mfc_ansi_debug.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features",
+    "version": "14.51"
+  },
+  "MSVC_TOOLSETS_14.51_msvc143_x64_mfc_dll": {
+    "architecture": "x64",
+    "build_flags": "MSVC toolset 14.51, shard mfc_dll (MFC for use as a DLL (mfc*, mfcs*, mfcm*, afxnmcd), release) linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "mfc_dll.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+    "component": "mfc_dll",
+    "deduplicated_functions": 70,
+    "family": "MSVC_TOOLSETS",
+    "generated": "2026-11-08",
+    "inputs": {
+      "architecture": "x64",
+      "directory": "VC/Tools/MSVC/14.51.36231/ATLMFC/lib/x64",
+      "excluded": [
+        {
+          "bytes": 69970,
+          "file": "MFCM140U.lib",
+          "reason": "rejected by the linker: .\\mfc_dll.trial.dll : fatal error LNK1120: 6705 unresolved externals"
+        },
+        {
+          "bytes": 67300,
+          "file": "MFCM140.lib",
+          "reason": "rejected by the linker: .\\mfc_dll.trial.dll : fatal error LNK1120: 6701 unresolved externals"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "DllCanUnloadNow",
+        "DllGetClassObject",
+        "DllMain",
+        "InternalDllMain",
+        "RawDllMain",
+        "_AfxDllModulHelper",
+        "_RawDllMainProxy",
+        "__NULL_IMPORT_DESCRIPTOR",
+        "__afxForceEXCLUDE",
+        "__afxForceSTDAFX",
+        "__afxForceUSRDLL",
+        "_pActualRawDllMain",
+        "_pRawDllMain"
+      ],
+      "ignored_duplicate_definitions": 13,
+      "image_bytes": 45568,
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "gdi32.lib"
+      ],
+      "libraries": [
+        {
+          "bytes": 9134168,
+          "code_members": 3245,
+          "file": "mfc140u.lib",
+          "members": 17348,
+          "sha256": "e144668c385e6f9caf0ecac9374d41ddf6bd377212934f2c2d66d423cfef01e7"
+        },
+        {
+          "bytes": 6164108,
+          "code_members": 619,
+          "file": "mfc140.lib",
+          "members": 14641,
+          "sha256": "a2d0e3fe4012dde6483ff54f3e6e5322487329f6b275b3cf82f8f7b602b1d85c"
+        },
+        {
+          "bytes": 3289754,
+          "code_members": 9,
+          "file": "mfcs140u.lib",
+          "members": 9,
+          "sha256": "ca009313be7a84ba8f6b5bb54be5618ccf9311df45488442d0c039ba2d9a7f40"
+        },
+        {
+          "bytes": 3279516,
+          "code_members": 9,
+          "file": "mfcs140.lib",
+          "members": 9,
+          "sha256": "a0630a444001ad3ffe4c1be0a543ecf5d10bc384ec4d6b4b4777802716cbd9ba"
+        },
+        {
+          "bytes": 957936,
+          "code_members": 4,
+          "file": "afxnmcd.lib",
+          "members": 4,
+          "sha256": "b415abdb43e118cafd08559fc78eec45cc5d8343d2e8cd25512487160d2b5c11"
+        }
+      ],
+      "linker": "Microsoft (R) Incremental Linker Version 14.51.36260.0",
+      "object_members": 3886,
+      "shard": "mfc_dll",
+      "shard_description": "MFC for use as a DLL (mfc*, mfcs*, mfcm*, afxnmcd), release",
+      "toolset": "14.51.36231",
+      "toolset_requested": "14.51",
+      "unresolved_symbols": 56
+    },
+    "is_blob": false,
+    "license": "Microsoft Visual Studio; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries.",
+    "mcrit": "data/MSVC_TOOLSETS/x64/mcrit/MSVC_TOOLSETS_14.51_msvc143_x64_mfc_dll.mcrit",
+    "num_functions": 254,
+    "sha256": "dee3c3e1d03c8441cd955c80104a59341cfab6b246e72a638e1e25df202c825e",
+    "smda": "data/MSVC_TOOLSETS/x64/smda/MSVC_TOOLSETS_14.51_msvc143_x64_mfc_dll.7z",
     "smda_version": "4.8.0",
     "source": {
       "local": "Visual Studio MSVC toolset 14.51 libraries on the runner image (VS 2026 toolset v145 (windows-2025))"
