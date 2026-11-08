@@ -125,6 +125,7 @@ def _q3vm_msvc(version, git_ref):
                      pdb="msvc\\bin\\{msbuild_platform}\\Release\\q3vm.pdb"),
         ],
         toolchains=["msvc_x86", "msvc_x64"],
+        min_functions=6,
         build_flags=_FLAGS,
         notes="Switch-based opcode dispatch, where the MinGW artefact of the "
               "same commit has computed-goto dispatch: vm.c selects on "
@@ -139,7 +140,12 @@ def _q3vm_msvc(version, git_ref):
               "itself. That is not a defect, but it does mean one more "
               "inlining decision by a future toolset would have this recipe "
               "refused rather than merely smaller, and the refusal would "
-              "read as a build failure. Built "
+              "read as a build failure. That is what the wide and secure "
+              "stdio glue baseline did: it also recognises q3vm's own x86 "
+              "printf and fprintf wrappers as the C runtime's, which leaves "
+              "the 2026-03-06 x86 image with six functions of its own, so "
+              "min_functions is set to that measured count. The six are "
+              "q3vm's, not a truncated build. Built "
               "against the DLL runtime, so the MSVC C runtime is imported "
               "rather than linked in and stays attributed to data/MSVC. No "
               "dependencies.",
