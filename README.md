@@ -408,13 +408,13 @@ Generated with `scripts/build_corpus.py`; see `data/kphlib/provenance.json` for 
 
 ### KProcessHacker<a id='kprocesshacker'></a>
 
-KProcessHacker is the Process Hacker 2.39 kernel driver (x64 only; WDK 10.0.26100 has no x86 kernel target). Built with the WDK; to get past the WDK header `shared\warning.h`, which turns C4703 into an error, the recipe shadows that header without its one pragma line and also initialises three flagged locals to NULL at build time, so the image is NOT byte-identical to an unmodified upstream build. It is linked and disassembled, never packaged, signed, installed or loaded. The kernel-mode runtime glue (`memcpy`, `memset`, `__security_init_cookie`, `GsDriverEntry`, ...) is removed from the image by the glue baseline; see the recipe docstring.  
+KProcessHacker is the Process Hacker 2.39 kernel driver. The x64 image is built with the WDK 10.0.26100 msbuild toolset; to get past the WDK header `shared\warning.h`, which turns C4703 into an error, the recipe shadows that header without its one pragma line and also initialises three flagged locals to NULL at build time, so the image is NOT byte-identical to an unmodified upstream build. The x86 image is built with the v143 toolset against the WDK 10.0.22621 headers and x86 kernel libraries (installed by `scripts/corpus/install_wdk_x86.py`), because neither WDK msbuild toolset accepts Win32; it needed no source or header patch, but it is also NOT byte-identical to a build of unmodified upstream, since the toolset, forced props file and force-included `kph_fi_a.h` differ from the project's own settings. Both are linked and disassembled, never packaged, signed, installed or loaded. The kernel-mode runtime glue (`memcpy`, `memset`, `__security_init_cookie`, `GsDriverEntry`, ...) is removed from the image by the glue baseline; see the recipe docstring.  
 Generated with `scripts/build_corpus.py`; see `data/KProcessHacker/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: KProcessHacker -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
-| KProcessHacker | 2.39 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/KProcessHacker/x64/mcrit/KProcessHacker_2.39_msvc143_x64_kprocesshacker.sys.mcrit) | [x64 PE](data/KProcessHacker/x64/smda/KProcessHacker_2.39_msvc143_x64_kprocesshacker.sys.7z) |
+| KProcessHacker | 2.39 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/KProcessHacker/x86/mcrit/KProcessHacker_2.39_msvc143_x86_kprocesshacker.sys.mcrit) / [x64 PE](data/KProcessHacker/x64/mcrit/KProcessHacker_2.39_msvc143_x64_kprocesshacker.sys.mcrit) | [x86 PE](data/KProcessHacker/x86/smda/KProcessHacker_2.39_msvc143_x86_kprocesshacker.sys.7z) / [x64 PE](data/KProcessHacker/x64/smda/KProcessHacker_2.39_msvc143_x64_kprocesshacker.sys.7z) |
 <!-- /generated -->
 
 ### libuv<a id='libuv'></a>
