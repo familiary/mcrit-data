@@ -47,7 +47,7 @@ class CompilerRecordTest(unittest.TestCase):
 
 class RecipeTest(unittest.TestCase):
     def test_recipe_pins_the_image_and_keeps_the_runtime(self):
-        recipe = recipes.all_recipes()["MSVC_VC10_10.0.30319"]
+        recipe = recipes.all_recipes()["MSVC_CRT_10.0.30319"]
         self.assertFalse(recipe.drop_crt_glue)
         self.assertTrue(recipe.dedupe_functions)
         self.assertEqual(recipe.toolchains, ["msvc_x64"])
@@ -57,6 +57,43 @@ class RecipeTest(unittest.TestCase):
         self.assertEqual(len(components), len(set(components)))
         self.assertIn("libcmt", components)
         self.assertIn("msvcr100", components)
+
+
+class PooledRecipeTest(unittest.TestCase):
+    def test_archive_org_recipes_pin_their_images(self):
+        from corpus.recipes import msvc_vc8, msvc_vc9
+        for module, name in ((msvc_vc9, "MSVC_CRT_9.0.21022"),
+                             (msvc_vc8, "MSVC_CRT_8.0.40310")):
+            self.assertTrue(re.fullmatch(r"[0-9a-f]{64}", module.ISO_SHA256))
+            self.assertTrue(module.ISO_URL.startswith("https://archive.org/"))
+            recipe = recipes.all_recipes()[name]
+            self.assertFalse(recipe.drop_crt_glue)
+            self.assertIn("uploader", recipe.license)
+
+    def test_pooled_key_patterns(self):
+        profile = crawl_vcsdk.PROFILES["vs2008"]
+        keys = {
+            "FL_libcmt_lib_74650_74650_x86_ln.3643236F_FC70": "libcmt.lib",
+            "msvcr90.dll.21022.08.Microsoft_VC90_CRT_x64.RTM": "msvcr90.dll",
+            "F_msvcp90d_amd64_pdb": "msvcp90d.pdb",
+        }
+        for key, expected in keys.items():
+            for pattern, ext, _check in profile["patterns"]:
+                match = pattern.match(key)
+                if match:
+                    got = "%s.%s" % (match.group("name"), ext or match.group("ext"))
+                    self.assertEqual(got, expected)
+                    break
+            else:
+                self.fail(key)
+
+    def test_machine_of_object_and_archive(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "a.obj")
+            with open(path, "wb") as handle:
+                handle.write(struct.pack("<H", 0x8664) + b"\0" * 30)
+            self.assertEqual(crawl_vcsdk.member_machines(path), {0x8664})
 
 
 def crawl_vcsdk_recipe_sha():

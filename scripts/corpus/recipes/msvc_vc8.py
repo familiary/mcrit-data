@@ -22,9 +22,11 @@ windows-server-2003-r2-march-2006-edition-english (en_platformsdk_
 windowsr2_march2006.iso, SHA-256 and size pinned in this recipe, observed by
 streaming the download; archive.org lists only an uploader-supplied SHA-1 and
 Microsoft publishes no digest for it any more). The content is verified
-instead: the CodeView compiler records of the library objects (AMD64, front end
-and back end 14.0.40310) and the version resources of the compiler binaries
-and DLLs in the same CABs are written to provenance.
+instead: the CodeView compiler records of the library objects (AMD64; front end
+and back end 14.0.40310 for most, 14.0.30806 for libcp/libcpd, 14.0.40121 and
+14.0.30701 for comsupp/comsuppd - the SDK mixes builds) are written to
+provenance. The same CABs hold cl.exe 14.00.40310.41 and link.exe
+8.00.40310.39, which were read locally while choosing the inputs.
 
 Inputs (scripts/corpus/crawl_vcsdk.py, profile ``psdk2003r2``): the
 ``PSDK-SDK_Core_BLD_AMD64-common.*.cab`` members, files of AMD64 machine type
@@ -34,6 +36,24 @@ start-up objects are linked whole (import records are left out).
 
 No compiler runtime baseline is applied: this IS the runtime. Functions
 sharing PicHash and name are collapsed (dedupe_functions).
+
+Measured (CI run 42518895409, scratch/msvc-vc10x64): image 429,840,384 bytes,
+SHA-256 above, re-verified on the runner. Functions kept (+ collapsed): libc
+1465 (+91), libcd 1521 (+90), libci 325 (+16), libcid 335 (+7), libcimt 336
+(+16), libcimtd 346 (+7), libcmt 1713 (+91), libcmtd 1790 (+90), libcp 1063
+(+318), libcpd 1063 (+380), libcpmt 1479 (+38), libcpmtd 1479 (+38),
+msvcrt+msvcprt+oldnames 46 (+4), msvcrtd+msvcprtd 46 (+4), comsupp+delayimp 59
+(+0), comsuppd 33 (+0), objs 29 (+0); total 13128 kept, 1190 collapsed.
+
+PicHash overlap (functions of 10+ instructions; 3768 distinct in the new
+data): 0 with data/MSVC 2005_Express_x86 (5553 distinct) and with 2008/2010
+x86; 62 (1.6% of the new, 0.7% of the old) with 2012_Express_x64; 49 with
+MSVC_VC9 and 99 with MSVC_VC10.
+
+Filed under the family MSVC_CRT with the other old Visual C++ x64 runtimes
+(the version distinguishes VC8, VC9 and VC10): the same C functions recur in
+all of them, and the cross-family PicHash check would otherwise report them as
+leakage between three families.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -63,7 +83,7 @@ def _stem(spec):
 
 def _vc8():
     return Recipe(
-        family="MSVC_VC8",
+        family="MSVC_CRT",
         version="8.0.40310",
         upstream="https://learn.microsoft.com/en-us/previous-versions/"
                  "windows/desktop/",
@@ -95,4 +115,4 @@ def _vc8():
     )
 
 
-RECIPES = {"MSVC_VC8_8.0.40310": _vc8()}
+RECIPES = {"MSVC_CRT_8.0.40310": _vc8()}
