@@ -1,0 +1,127 @@
+"""The five previously excluded Gh0st translation units, MSVC x86.
+
+https://github.com/r0ny123/mcrit-data/issues/64
+
+An analysis copy has four compiler-compatibility edits: two explicit
+const-casts for the old string API convention, removal of a repeated int
+specifier in a for declaration, and explicit int for a legacy implicit-int
+static. A forced modern SDK include exposes existing cursor/input types;
+winable.h forwards to windows.h. Algorithms and initialization are unchanged.
+
+Only these five units are linked, without the DLL entry point, dispatcher,
+installer, driver, socket implementation or precompiled zlib. Entry RVA is
+zero; omitted references remain unresolved. No built image is executed.
+The scratch probe reports every failed source file explicitly.
+"""
+
+import base64
+
+from ..recipe import Artifact, BuildStep, Recipe, Source
+
+
+def _python(script):
+    # Keep the reviewed script readable here; encode only for cmd.exe quoting.
+    encoded = base64.b64encode(script.encode()).decode('ascii')
+    return 'python -c "import base64; exec(base64.b64decode(\'' + encoded + '\'))"'
+
+
+_PREPARE = r"""
+from pathlib import Path
+import shutil
+out = Path('corpus-analysis')
+shutil.rmtree(out, ignore_errors=True)
+sources = [p for p in Path('.').rglob('*') if p.is_file() and
+           p.suffix.lower() in ['.h', '.hpp', '.cpp', '.c', '.inl'] and
+           '.git' not in p.parts and out.name not in p.parts]
+for p in sources:
+    target = out / p
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(p, target)
+edits = [
+    ('Server/svchost/common/FileManager.cpp',
+     b"strrchr(lpFile, '.')", b"const_cast<char *>(strrchr(lpFile, '.'))"),
+    ('Server/svchost/common/loop.h',
+     b"strrchr(lpURL, '/')", b"const_cast<char *>(strrchr(lpURL, '/'))"),
+    ('Server/svchost/common/ScreenSpy.cpp',
+     b'for (int i = 0, int\tnToJump = 0;', b'for (int i = 0,\tnToJump = 0;'),
+    ('Server/svchost/common/VideoManager.cpp',
+     b'static\tdwLastScreen = GetTickCount();', b'static int\tdwLastScreen = GetTickCount();'),
+]
+for name, before, after in edits:
+    p = out / name
+    data = p.read_bytes()
+    assert data.count(before) == 1, name
+    p.write_bytes(data.replace(before, after))
+(out / 'corpus-include').mkdir()
+(out / 'corpus-include/winable.h').write_text('#pragma once\n#include <windows.h>\n')
+(out / 'corpus_sdk.h').write_text(
+    '#pragma once\n#include <winsock2.h>\n#include <windows.h>\n')
+(out / 'corpus_obj').mkdir()
+"""
+
+_COMPILE = r"""
+from pathlib import Path
+import json
+import struct
+import subprocess
+flags = ('/nologo /c /MD /O2 /Zi /GL- /Brepro /W3 '
+         '/D_CRT_SECURE_NO_WARNINGS /D_WIN32_WINNT=0x0601 /DWINVER=0x0601 '
+         '/Zc:strictStrings- /Zc:forScope- /FIcorpus_sdk.h '
+         '/Icorpus-include /I. /IServer/svchost /Icommon').split()
+sources = ['FileManager.cpp', 'KernelManager.cpp', 'ScreenManager.cpp',
+           'ScreenSpy.cpp', 'VideoManager.cpp']
+objects = []
+failed = []
+for i, name in enumerate(sources):
+    obj = 'corpus_obj/' + str(i) + '.obj'
+    cmd = ['cl'] + flags + ['/Fo'+obj, '/Fdcorpus_compile.pdb',
+                            'Server/svchost/common/'+name]
+    print('COMPILE:', subprocess.list2cmdline(cmd), flush=True)
+    result = subprocess.run(cmd, check=False)
+    if result.returncode:
+        failed.append(name)
+    else:
+        objects.append(obj)
+print('FAILED_SOURCE_FILES:'+json.dumps(failed), flush=True)
+assert objects, 'no legacy module compiled'
+cmd = ['link', '/DLL', '/NOENTRY', '/FORCE:UNRESOLVED', '/DEBUG', '/Brepro',
+       '/INCREMENTAL:NO', '/OPT:NOREF', '/OPT:NOICF',
+       '/OUT:corpus-legacy.dll', '/PDB:corpus-legacy.pdb'] + objects
+print('LINK:', subprocess.list2cmdline(cmd), flush=True)
+subprocess.run(cmd, check=True)
+data = Path('corpus-legacy.dll').read_bytes()
+pe = struct.unpack_from('<I', data, 60)[0]
+assert data[pe:pe+4] == b'PE\0\0'
+assert struct.unpack_from('<I', data, pe+40)[0] == 0
+"""
+
+
+RECIPES = {
+    'Gh0st_legacy_modules_f434b0d_msvc': Recipe(
+        family='Gh0st', version='2008-f434b0d-legacy-analysis',
+        upstream='https://github.com/sincoder/gh0st',
+        license='No licence file in the selected mirror',
+        source=Source(git_url='https://github.com/sincoder/gh0st.git',
+                      git_ref='f434b0df9d08540c8d81d82892def50198aa8849'),
+        build=[BuildStep(_python(_PREPARE)),
+               BuildStep(_python(_COMPILE), cwd='corpus-analysis')],
+        artifacts=[Artifact(path='corpus-analysis/corpus-legacy.dll',
+                            component='legacy-manager-modules',
+                            pdb='corpus-analysis/corpus-legacy.pdb')],
+        toolchains=['msvc_x86'], requires=['cl', 'link', 'python'],
+        build_flags='/MD /O2 /Zi /GL- /Brepro; WINVER/_WIN32_WINNT=0x0601; '
+                    '/Zc:strictStrings- /Zc:forScope-; forced modern SDK header; '
+                    'four legacy compiler-compatibility edits; '
+                    '/DLL /NOENTRY /FORCE:UNRESOLVED /DEBUG /Brepro '
+                    '/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF',
+        notes='Analysis copy of the five previously failing manager units. '
+              'Two explicit const-casts preserve the old string API convention; '
+              'a repeated int in a for declaration is removed; an implicit-int '
+              'static is made explicitly int. Modern SDK types are included '
+              'before legacy version defines, and winable.h forwards to '
+              'windows.h. No algorithm, dispatcher or initialization is '
+              'repaired. No entry point, driver, installer, socket body or '
+              'precompiled zlib. References to omitted code remain unresolved. '
+              'This non-operational analysis image is never executed. '
+              'The scratch build logs list any failed translation units.'),
+}
