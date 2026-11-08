@@ -31,7 +31,9 @@ gcc --version | head -1
 # Settings the distributions document in their own `config` files. The
 # host-tools stage (busybox, toybox, distcc, e2fsprogs, squashfs build only
 # helper programs for images) is skipped, as is C++ and the stage tarball.
-export NO_HOST_TOOLS=1 NO_CPLUSPLUS=1 NO_STAGE_TARBALLS=1
+# SKIP_STRIP=1 (also a documented switch) keeps symbol tables in the target
+# binaries so the harvested libc.a stays nameable; it does not change code.
+export NO_HOST_TOOLS=1 NO_CPLUSPLUS=1 NO_STAGE_TARBALLS=1 SKIP_STRIP=1
 export HOME=/tmp
 
 # Firmware Linux 0.9.6 only. uClibc 0.9.30.1 builds a host tool,
