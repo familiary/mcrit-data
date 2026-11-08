@@ -1109,12 +1109,12 @@ Original 1.1.846.118 source preserved as an archive by the maintained fork. The 
 
 ### DiskCryptorDrv<a id='diskcryptordrv'></a>
 
-The 1.1.846.118 filter driver from the same archive as DiskCryptor, built for x64 only with WDK 10.0.26100.0. Upstream source is not patched; a generated stub suppress.h is supplied by include path. The driver image is linked and disassembled only, never signed, installed or loaded.
+The 1.1.846.118 filter driver from the same archive as DiskCryptor, built for x64 with WDK 10.0.26100.0 and for x86 with the v143 toolset against the WDK 10.0.22621.0 headers and x86 libraries (installed by scripts/corpus/install_wdk_x86.py, because 10.0.26100.0 has no x86 kernel libraries and neither WDK's msbuild toolset accepts Win32). Upstream source is not patched; a generated stub suppress.h is supplied by include path. The x86 image is NOT byte-identical to a build of unmodified upstream (different toolset and the forced kernel/link props). The driver image is linked and disassembled only, never signed, installed or loaded.
 
 <!-- generated: DiskCryptorDrv -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
-| DiskCryptorDrv | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/DiskCryptorDrv/x64/mcrit/DiskCryptorDrv_1.1.846.118_msvc143_x64_dcrypt.sys.mcrit) | [x64 PE](data/DiskCryptorDrv/x64/smda/DiskCryptorDrv_1.1.846.118_msvc143_x64_dcrypt.sys.7z) |
+| DiskCryptorDrv | 1.1.846.118 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/DiskCryptorDrv/x86/mcrit/DiskCryptorDrv_1.1.846.118_msvc143_x86_dcrypt.sys.mcrit) / [x64 PE](data/DiskCryptorDrv/x64/mcrit/DiskCryptorDrv_1.1.846.118_msvc143_x64_dcrypt.sys.mcrit) | [x86 PE](data/DiskCryptorDrv/x86/smda/DiskCryptorDrv_1.1.846.118_msvc143_x86_dcrypt.sys.7z) / [x64 PE](data/DiskCryptorDrv/x64/smda/DiskCryptorDrv_1.1.846.118_msvc143_x64_dcrypt.sys.7z) |
 <!-- /generated -->
 
 ### WinPmem<a id='winpmem'></a>
@@ -1129,10 +1129,10 @@ The original 1.6.2 client found in Rekall v1.2.0 (cfaf02d7, 2014-12-21), confirm
 
 ### WinPmemDrv<a id='winpmemdrv'></a>
 
-The seven driver translation units listed in the historical pin’s SOURCES file. The already-shipped api.h is preserved without regenerating its obfuscation key. The driver image is never signed, installed or loaded.
+The seven driver translation units listed in the historical pin’s SOURCES file, built for x64 against WDK 10.0.26100.0 and for x86 with cl/link against the WDK 10.0.22621.0 x86 libraries (entry GsDriverEntry@8; the x86 image is NOT byte-identical to a build of unmodified upstream). The already-shipped api.h is preserved without regenerating its obfuscation key. The driver image is never signed, installed or loaded.
 
 <!-- generated: WinPmemDrv -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
-| WinPmemDrv | 1.6.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/WinPmemDrv/x64/mcrit/WinPmemDrv_1.6.2_msvc143_x64_winpmem.sys.mcrit) | [x64 PE](data/WinPmemDrv/x64/smda/WinPmemDrv_1.6.2_msvc143_x64_winpmem.sys.7z) |
+| WinPmemDrv | 1.6.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/WinPmemDrv/x86/mcrit/WinPmemDrv_1.6.2_msvc143_x86_winpmem.sys.mcrit) / [x64 PE](data/WinPmemDrv/x64/mcrit/WinPmemDrv_1.6.2_msvc143_x64_winpmem.sys.mcrit) | [x86 PE](data/WinPmemDrv/x86/smda/WinPmemDrv_1.6.2_msvc143_x86_winpmem.sys.7z) / [x64 PE](data/WinPmemDrv/x64/smda/WinPmemDrv_1.6.2_msvc143_x64_winpmem.sys.7z) |
 <!-- /generated -->
