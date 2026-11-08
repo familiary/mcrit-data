@@ -26,6 +26,12 @@ class Source:
     # Directory inside the archive that holds the source, if it is not the
     # single top level directory the archive unpacks to.
     strip_prefix: Optional[str] = None
+    # Nothing is fetched: the inputs are files the toolchain's own host
+    # already carries (the Windows SDK static libraries on a windows-2022
+    # runner), and the build steps read them in place. The value is a short
+    # description recorded in provenance. The steps run in a fresh, empty
+    # directory.
+    local: Optional[str] = None
 
 
 @dataclass
@@ -77,6 +83,10 @@ class Artifact:
     # without one SMDA can only name exported functions - a VX-API DLL that
     # exports nothing came back with 1 of 4147 functions named.
     pdb: Optional[str] = None
+    # Path (relative to the source root) of a JSON object a build step wrote
+    # about the inputs it consumed - the digest of an installed library, say.
+    # It is recorded verbatim under "inputs" in provenance.
+    inputs: Optional[str] = None
 
 
 @dataclass
@@ -129,6 +139,10 @@ class Recipe:
     # how this corpus would start shipping build accidents as reference data.
     # Set it to what the project has, not to what the build produced.
     min_functions: Optional[int] = None
+    # Collapse functions that share both PicHash and symbol name into one.
+    # For a static library linked whole, where the same helper is routinely
+    # compiled into several objects; the number collapsed is recorded.
+    dedupe_functions: bool = False
     # What actually governs optimization for this build, recorded as
     # provenance: most upstream build systems set their own flags and ignore
     # the CFLAGS this tooling exports.
