@@ -1,0 +1,1845 @@
+{
+  "MSVC_VC8_8.0.40310_msvc143_x64_comsupp_delayimp": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "comsupp_delayimp.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "comsupp_delayimp",
+    "deduplicated_functions": 0,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40121",
+          "front_end": "14.0.40121",
+          "objects": 5,
+          "target": "machine 0xD1"
+        },
+        {
+          "back_end": "14.0.30701",
+          "front_end": "14.0.30701",
+          "objects": 3,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 307646,
+            "cab_member": "comsupp_lib.0A451BFC_3360_46C9_8ED4_85ABCCD2A772",
+            "file": "comsupp.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "comsupp_lib.0A451BFC_3360_46C9_8ED4_85ABCCD2A772",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "8df20c2a0749de94665894b34818bc8eabdcb6b1092a3363e855c9e291e49c32"
+          },
+          {
+            "bytes": 34848,
+            "cab_member": "delayimp_lib.D79380BC_A423_4007_9D43_FB4A894A1AFB",
+            "file": "delayimp.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "delayimp_lib.D79380BC_A423_4007_9D43_FB4A894A1AFB",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "57b70a529f2e50691844665c14a0d8575f58d683e0bda699e95997f85e1493a8"
+          }
+        ]
+      },
+      "library_members": 8,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 20
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_comsupp_delayimp.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 59,
+    "sha256": "ee7d02245c465f39ff06d0ae93e0af8ae5a3d4f0b72865eef4829f60b51e7200",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_comsupp_delayimp.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_comsuppd": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "comsuppd.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "comsuppd",
+    "deduplicated_functions": 0,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40121",
+          "front_end": "14.0.40121",
+          "objects": 5,
+          "target": "machine 0xD1"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 315140,
+            "cab_member": "comsuppd_lib.70686685_0C85_4957_8588_DA3C3F6BF540",
+            "file": "comsuppd.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "comsuppd_lib.70686685_0C85_4957_8588_DA3C3F6BF540",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "edee846bbab6b3bd6488d8a2565775d17c0702478a3045e175a687c2ed19fc33"
+          }
+        ]
+      },
+      "library_members": 5,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 19
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_comsuppd.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 33,
+    "sha256": "d6718b4b2cac42c6ea71687a077ea4bdad05c9834f0a52d15d4737f6213593ae",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_comsuppd.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_libc": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "libc.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libc",
+    "deduplicated_functions": 91,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40310",
+          "front_end": "14.0.40310",
+          "objects": 621,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "__app_type",
+        "__error_mode",
+        "_aenvptr",
+        "_aexit_rtn",
+        "_amsg_exit",
+        "_wenvptr"
+      ],
+      "ignored_duplicate_definitions": 6,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 4542172,
+            "cab_member": "libc_lib.AD0AE9F1_1E9B_4C50_82C1_506AC4F26A77",
+            "file": "libc.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "libc_lib.AD0AE9F1_1E9B_4C50_82C1_506AC4F26A77",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "3aba83f7bca99021e94ee971ae85ef0fcc752443b9b5ac6ee9d43b2436462eea"
+          }
+        ]
+      },
+      "library_members": 642,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 6
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_libc.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 1465,
+    "sha256": "634d518ba5d4604f1b331b8ef9bd05d8b516c98979403ce93129e3ab8addd422",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_libc.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_libcd": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "libcd.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcd",
+    "deduplicated_functions": 90,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40310",
+          "front_end": "14.0.40310",
+          "objects": 621,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "__app_type",
+        "__error_mode",
+        "_aenvptr",
+        "_aexit_rtn",
+        "_amsg_exit",
+        "_wenvptr"
+      ],
+      "ignored_duplicate_definitions": 6,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 4815430,
+            "cab_member": "libcd_lib.15F3EFDC_D7C1_4711_9D21_89776D3A6620",
+            "file": "libcd.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "libcd_lib.15F3EFDC_D7C1_4711_9D21_89776D3A6620",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "3dc2a8173cbe843dfe8e4a832699501e99ef86d0ffc37913ed815a712d15ecd6"
+          }
+        ]
+      },
+      "library_members": 642,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 6
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_libcd.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 1521,
+    "sha256": "cf9d9c7a0256018a0486c37647eef5df8fd5cc25cfe46c772dabc96d5d07d8da",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_libcd.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_libci": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "libci.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libci",
+    "deduplicated_functions": 16,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40310",
+          "front_end": "14.0.40310",
+          "objects": 46,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 1113756,
+            "cab_member": "libci_lib.8FFF0692_85EC_4D6B_93CC_F648C51663D0",
+            "file": "libci.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "libci_lib.8FFF0692_85EC_4D6B_93CC_F648C51663D0",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "dccfaf521cfd5e9925b1113dbc75085ed3a94984dcf7641d7fbe706b77a9f792"
+          }
+        ]
+      },
+      "library_members": 46,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 35
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_libci.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 325,
+    "sha256": "37a6e51cc3571f852c197c3d759406c777b303da5da04658776fd30f5ecd4df6",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_libci.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_libcid": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "libcid.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcid",
+    "deduplicated_functions": 7,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40310",
+          "front_end": "14.0.40310",
+          "objects": 46,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 1122186,
+            "cab_member": "libcid_lib.BC1D5ABA_F011_4155_A5CB_084C13FAEF06",
+            "file": "libcid.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "libcid_lib.BC1D5ABA_F011_4155_A5CB_084C13FAEF06",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "405fb1addfe57566cb51c862b033503f72ab2c10c60f6d37e9072e0de4c97fd5"
+          }
+        ]
+      },
+      "library_members": 46,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 36
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_libcid.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 335,
+    "sha256": "beca83f9891002e0808c9c1d561d25e5d771d2e7621fd6d39f6bb99efb9efb2c",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_libcid.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_libcimt": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "libcimt.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcimt",
+    "deduplicated_functions": 16,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40310",
+          "front_end": "14.0.40310",
+          "objects": 46,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 1423422,
+            "cab_member": "libcimt_lib.0E2C2CF0_56A2_4C62_9E58_5111C48A856A",
+            "file": "libcimt.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "libcimt_lib.0E2C2CF0_56A2_4C62_9E58_5111C48A856A",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "33871736d1e8d6479ef6eadd14998376873c14d8d60b979002b6be2c0e4ecb7b"
+          }
+        ]
+      },
+      "library_members": 46,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 35
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_libcimt.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 336,
+    "sha256": "5bc08daa61d86c5e2daa9dcd99f831eeadf2a2c7ca7918cc154b81f82eedcb4d",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_libcimt.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_libcimtd": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "libcimtd.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcimtd",
+    "deduplicated_functions": 7,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40310",
+          "front_end": "14.0.40310",
+          "objects": 46,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 1426194,
+            "cab_member": "libcimtd_lib.43E8D357_B058_40B2_B065_4119C153564F",
+            "file": "libcimtd.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "libcimtd_lib.43E8D357_B058_40B2_B065_4119C153564F",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "d7f6a943305f0acb156ce9ca8e24f4cc89f6a030ea136499ae0f4c371108a8b2"
+          }
+        ]
+      },
+      "library_members": 46,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 36
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_libcimtd.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 346,
+    "sha256": "b556d415c5ea4da540bc46f81e55f7ca9fb6630c251ba0552e33f0162bc92eba",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_libcimtd.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_libcmt": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "libcmt.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcmt",
+    "deduplicated_functions": 91,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40310",
+          "front_end": "14.0.40310",
+          "objects": 622,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "__app_type",
+        "__error_mode",
+        "_aenvptr",
+        "_aexit_rtn",
+        "_amsg_exit",
+        "_wenvptr"
+      ],
+      "ignored_duplicate_definitions": 6,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 5149238,
+            "cab_member": "libcmt_lib.A126F179_68CE_42AF_A7C8_005378762B77",
+            "file": "libcmt.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "libcmt_lib.A126F179_68CE_42AF_A7C8_005378762B77",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "88a15662d489f7561eaf3a054fc7199c910701eab6928e3c75fd82c123bcc43a"
+          }
+        ]
+      },
+      "library_members": 643,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 6
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_libcmt.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 1713,
+    "sha256": "d2eb1f8461eac665df0dbbb9d9a2d6ee9093e56a083a16f81335f6774fd1d8e4",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_libcmt.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_libcmtd": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "libcmtd.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcmtd",
+    "deduplicated_functions": 90,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40310",
+          "front_end": "14.0.40310",
+          "objects": 622,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "__app_type",
+        "__error_mode",
+        "_aenvptr",
+        "_aexit_rtn",
+        "_amsg_exit",
+        "_wenvptr"
+      ],
+      "ignored_duplicate_definitions": 6,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 5437070,
+            "cab_member": "libcmtd_lib.77A30DF1_DBFC_499B_9DAC_7C2DDCF713B3",
+            "file": "libcmtd.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "libcmtd_lib.77A30DF1_DBFC_499B_9DAC_7C2DDCF713B3",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "de7e98514466b6f372199d0e114486b7ac6273c5872e24841c2e20600d09422e"
+          }
+        ]
+      },
+      "library_members": 643,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 6
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_libcmtd.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 1790,
+    "sha256": "2f7eae52e372aff9724eb314a64cb1a40a2bcdf273faf6d7f8f169675bca2d1c",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_libcmtd.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_libcp": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "libcp.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcp",
+    "deduplicated_functions": 318,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.30806",
+          "front_end": "14.0.30806",
+          "objects": 51,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 2545824,
+            "cab_member": "libcp_lib.48A7856D_23B6_432C_9B35_DF4BF7B9F7E0",
+            "file": "libcp.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "libcp_lib.48A7856D_23B6_432C_9B35_DF4BF7B9F7E0",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "25678216636ecfd3b0fc10ee11346cbd1308e519b72e8e755a73c4b857091f62"
+          }
+        ]
+      },
+      "library_members": 51,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 57
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_libcp.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 1063,
+    "sha256": "e4f17ca66b20c45ba06f43c64340792a3c7375b60b211c747c11acb5a2c1aee9",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_libcp.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_libcpd": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "libcpd.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcpd",
+    "deduplicated_functions": 380,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.30806",
+          "front_end": "14.0.30806",
+          "objects": 51,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 2750844,
+            "cab_member": "libcpd_lib.5532151E_F8B4_456E_93BA_14A33B874FB8",
+            "file": "libcpd.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "libcpd_lib.5532151E_F8B4_456E_93BA_14A33B874FB8",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "28923edc709e60bf8616642de678b7ae87b2c00d5b432cba259f9890ae0074b6"
+          }
+        ]
+      },
+      "library_members": 51,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 65
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_libcpd.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 1063,
+    "sha256": "b50bdb991d134f8249f8330cf7bd5d041c083f4857a7165a81dd15019adf04c3",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_libcpd.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_libcpmt": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "libcpmt.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcpmt",
+    "deduplicated_functions": 38,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40310",
+          "front_end": "14.0.40310",
+          "objects": 51,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 3633598,
+            "cab_member": "libcpmt_lib.AFDC443D_2386_48A9_9C0F_D344C21C7B79",
+            "file": "libcpmt.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "libcpmt_lib.AFDC443D_2386_48A9_9C0F_D344C21C7B79",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "8217c1129d2abae10f76ced94a1d6be618bd641811812c9047bc72ace90dc8ae"
+          }
+        ]
+      },
+      "library_members": 51,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 65
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_libcpmt.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 1479,
+    "sha256": "904856fc1b3b0e48bfcbd73cbe050cf2dc710a13a1102f2ae723a15ec59f5e66",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_libcpmt.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_libcpmtd": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "libcpmtd.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "libcpmtd",
+    "deduplicated_functions": 38,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40310",
+          "front_end": "14.0.40310",
+          "objects": 51,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [],
+      "ignored_duplicate_definitions": 0,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 3628930,
+            "cab_member": "libcpmtd_lib.E58D71C7_0C77_444F_A074_75A157C06BE4",
+            "file": "libcpmtd.lib",
+            "linked_as": "whole archive",
+            "selection": {
+              "cab_member": "libcpmtd_lib.E58D71C7_0C77_444F_A074_75A157C06BE4",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "ca337b1df82a03f1c9e64d122eddc52cf84239d6edf982ccf312b0a9722693df"
+          }
+        ]
+      },
+      "library_members": 51,
+      "linked_objects": 0,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 67
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_libcpmtd.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 1479,
+    "sha256": "18d5695b74f70a1f6aa8feaaafe870960bf05f1e47c486610ecfc3756004ff59",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_libcpmtd.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_msvcrt_msvcprt_oldnames": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "msvcrt_msvcprt_oldnames.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "msvcrt_msvcprt_oldnames",
+    "deduplicated_functions": 4,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40310",
+          "front_end": "14.0.40310",
+          "objects": 32,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "__NULL_IMPORT_DESCRIPTOR"
+      ],
+      "ignored_duplicate_definitions": 1,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 290774,
+            "cab_member": "msvcrt_lib.7FC05FA8_A931_4692_AC12_EC4D424653BF",
+            "file": "msvcrt.lib",
+            "linked_as": "objects",
+            "selection": {
+              "cab_member": "msvcrt_lib.7FC05FA8_A931_4692_AC12_EC4D424653BF",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "fcaae59c2a487f847072b5e09d7d7f9e35c68aade66be3de8a64a1bf9bf9c190"
+          },
+          {
+            "bytes": 980388,
+            "cab_member": "msvcprt_lib.EFF89A91_49F1_4C51_9984_C9439EAA8B9B",
+            "file": "msvcprt.lib",
+            "linked_as": "objects",
+            "selection": {
+              "cab_member": "msvcprt_lib.EFF89A91_49F1_4C51_9984_C9439EAA8B9B",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "255eb0e022d201c71037e0fa5a1c496759740a29298346f25c149a68e0f594ef"
+          },
+          {
+            "bytes": 68412,
+            "cab_member": "oldnames_lib.684B149C_C2F1_4802_A62C_F1106D8A17F4",
+            "file": "oldnames.lib",
+            "linked_as": "objects",
+            "selection": {
+              "cab_member": "oldnames_lib.684B149C_C2F1_4802_A62C_F1106D8A17F4",
+              "candidates": 1,
+              "machine": "none (alias-only)"
+            },
+            "sha256": "565bd5f534ce64b7e428095ca223668a3ff6a403d877dae02e996b400f076773"
+          }
+        ],
+        "split_libraries": [
+          {
+            "import_records_left_out": 769,
+            "library": "msvcrt.lib",
+            "object_members_linked": 32
+          },
+          {
+            "import_records_left_out": 2172,
+            "library": "msvcprt.lib",
+            "object_members_linked": 7
+          },
+          {
+            "import_records_left_out": 0,
+            "library": "oldnames.lib",
+            "object_members_linked": 230
+          }
+        ]
+      },
+      "library_members": 0,
+      "linked_objects": 269,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 486
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_msvcrt_msvcprt_oldnames.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 46,
+    "sha256": "48f07ce408692c7064a821c6765077cc2803ad20a9e735c121ea01fe52d7f03c",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_msvcrt_msvcprt_oldnames.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_msvcrtd_msvcprtd": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "msvcrtd_msvcprtd.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "msvcrtd_msvcprtd",
+    "deduplicated_functions": 4,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40310",
+          "front_end": "14.0.40310",
+          "objects": 32,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "__NULL_IMPORT_DESCRIPTOR"
+      ],
+      "ignored_duplicate_definitions": 1,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [
+          {
+            "bytes": 297888,
+            "cab_member": "msvcrtd_lib.1859CDC0_4738_43EF_A4F8_62DA3A78335F",
+            "file": "msvcrtd.lib",
+            "linked_as": "objects",
+            "selection": {
+              "cab_member": "msvcrtd_lib.1859CDC0_4738_43EF_A4F8_62DA3A78335F",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "6784c1e82a3df6ead9cbef956743136794b3ca89418d0a297dd9bfa276b3fd75"
+          },
+          {
+            "bytes": 982506,
+            "cab_member": "msvcprtd_lib.43805923_E818_4B59_9526_AF227EF1EAF0",
+            "file": "msvcprtd.lib",
+            "linked_as": "objects",
+            "selection": {
+              "cab_member": "msvcprtd_lib.43805923_E818_4B59_9526_AF227EF1EAF0",
+              "candidates": 1,
+              "machine": "AMD64"
+            },
+            "sha256": "4c28f0f83c91916cd333df518f5db59a659d14c9644a38f8428f90acdce3d2c6"
+          }
+        ],
+        "split_libraries": [
+          {
+            "import_records_left_out": 808,
+            "library": "msvcrtd.lib",
+            "object_members_linked": 32
+          },
+          {
+            "import_records_left_out": 2172,
+            "library": "msvcprtd.lib",
+            "object_members_linked": 7
+          }
+        ]
+      },
+      "library_members": 0,
+      "linked_objects": 39,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 31
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_msvcrtd_msvcprtd.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 46,
+    "sha256": "b550cb96786dab7dd9cb239aaaa14eb8cd31a3c513dd1ae47e5376ad49b11261",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_msvcrtd_msvcprtd.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  },
+  "MSVC_VC8_8.0.40310_msvc143_x64_objs": {
+    "architecture": "x64",
+    "build_flags": "cl 14.00.40310.41 x64 objects from the Platform SDK R2; libraries linked whole: link /DLL /NOENTRY /NODEFAULTLIB /WHOLEARCHIVE /FORCE:UNRESOLVED /FORCE:MULTIPLE /DEBUG /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF /Brepro",
+    "built_artifact": "objs.dll",
+    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "component": "objs",
+    "deduplicated_functions": 0,
+    "family": "MSVC_VC8",
+    "generated": "2026-11-08",
+    "inputs": {
+      "clr_pure_objects_not_linked": [],
+      "compiler_records": [
+        {
+          "back_end": "14.0.40310",
+          "front_end": "14.0.40310",
+          "objects": 8,
+          "target": "x64 (AMD64)"
+        }
+      ],
+      "ignored_duplicate_definition_names": [
+        "_setargv",
+        "_wsetargv"
+      ],
+      "ignored_duplicate_definitions": 2,
+      "image_bytes": 429840384,
+      "image_sha256": "3d2f97178e72cabe0a972b14c4d0aae80f7ed99ec73be9970cc95f42a31bfdb6",
+      "image_url": "https://archive.org/download/platform-sdk-for-microsoft-windows-server-2003-r2-march-2006-edition-english/en_platformsdk_windowsr2_march2006.iso",
+      "import_libraries": [
+        "kernel32.lib",
+        "advapi32.lib",
+        "user32.lib",
+        "ntdll.lib"
+      ],
+      "inputs": {
+        "libraries": [],
+        "start_up_objects": [
+          {
+            "file": "binmode.obj",
+            "sha256": "0866199ac69fc644be52c4df63cea2cd99ad95e4d906d3a443ba53662119af27"
+          },
+          {
+            "file": "chkstk.obj",
+            "sha256": "a481172452d9be4d302bd5501173ad317d9054862a7c721f548fe3e1b6c24fed"
+          },
+          {
+            "file": "commode.obj",
+            "sha256": "24402ad3990465377e07ab817efe2961dabca8c9293b5935d46c1d39f3755f3a"
+          },
+          {
+            "file": "newmode.obj",
+            "sha256": "19518683ef580469143c4e2b12d3f882d3e512fd8f0379c72f32b05dbfe55b09"
+          },
+          {
+            "file": "noarg.obj",
+            "sha256": "faed7db7ff1fad50938020d9b5be50d9a12cf1a640baa82323b19f01934b6075"
+          },
+          {
+            "file": "noenv.obj",
+            "sha256": "1b316e97d83fd21b362f6e5ca186b6fc5a986315fd99bf64e66b29154f298145"
+          },
+          {
+            "file": "setargv.obj",
+            "sha256": "ec4f8f2fb733b8fe1ff6be7c06bf365e074b3d3ebd73246e80bbc835a23deaf2"
+          },
+          {
+            "file": "smalheap.obj",
+            "sha256": "971ede167c21f5bec2be886482ff1e2fc3d3c4d25c28c3694a776deafad75dd9"
+          },
+          {
+            "file": "wsetargv.obj",
+            "sha256": "b4471ddbaccce6d357129caa7ef67178c73bf7a3232d1d889fd583037a970a5c"
+          }
+        ]
+      },
+      "library_members": 0,
+      "linked_objects": 9,
+      "linker": "Microsoft (R) Incremental Linker Version 14.44.35229.0",
+      "members": [
+        {
+          "bytes": 3680146,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.0.cab",
+          "sha256": "9465750334eb6f5aca78400a7cb1b085db3425dfcbcbd394abf5c7077d9c86d1"
+        },
+        {
+          "bytes": 3893443,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.1.cab",
+          "sha256": "1f7e41d2eb308f7903c54c3731afa95da6b6178d516a1f5a2d5f084666991c9c"
+        },
+        {
+          "bytes": 4921860,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.2.cab",
+          "sha256": "78c43c89e503c930b223db08dc0c6de20d79f9760e6bce7ef364397c9e20b9a4"
+        },
+        {
+          "bytes": 3112228,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.3.cab",
+          "sha256": "fb9d3a5bc31843107ec4b7a50f349183e93af3d4131e998216e0608f0610869a"
+        },
+        {
+          "bytes": 2834680,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.4.cab",
+          "sha256": "3910575797a2fa4ed6d7a02cfe418661c600001dab707fbfc04974ebc137c26d"
+        },
+        {
+          "bytes": 4317173,
+          "name": "Setup/PSDK-SDK_Core_BLD_AMD64-common.5.cab",
+          "sha256": "fe6ef2f5c1b0792a6278429b8aa7d4231b6a3324372d4a6a09d9b65d30af6d5a"
+        }
+      ],
+      "profile": "psdk2003r2",
+      "skipped_ambiguous": {},
+      "unresolved_symbols": 3
+    },
+    "is_blob": false,
+    "license": "Microsoft Platform SDK for Windows Server 2003 R2; redistribution terms are for the maintainer to decide. Only function hashes and SMDA reports are recorded, not the libraries. The installation image is an archive.org copy whose hash is uploader-supplied, not a Microsoft digest.",
+    "mcrit": "data/MSVC_VC8/x64/mcrit/MSVC_VC8_8.0.40310_msvc143_x64_objs.mcrit",
+    "notes": "Pre-RTM VC8 generation (cl 14.00.40310.41) from the Platform SDK R2; image is an archive.org copy with an uploader-supplied hash only; content verified by compiler records (AMD64, 14.0.40310).",
+    "num_functions": 29,
+    "sha256": "5fe9e759792314b337dfc4c239b3ff4d93a29f8350fbb618a01292e79713cf3c",
+    "smda": "data/MSVC_VC8/x64/smda/MSVC_VC8_8.0.40310_msvc143_x64_objs.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "local": "Platform SDK for Windows Server 2003 R2 (March 2006) image from archive.org, downloaded by the build step and verified by SHA-256; AMD64 build CABs only"
+    },
+    "toolchain": "msvc143_x64",
+    "upstream": "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/",
+    "version": "8.0.40310"
+  }
+}
