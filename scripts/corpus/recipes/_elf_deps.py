@@ -122,3 +122,50 @@ def xcrypt_step():
         "libxcrypt-4.4.38",
         'tar xf {xcrypt_src} && cd libxcrypt-4.4.38 && '
         './configure --prefix="$P" && make -j$(nproc) && make install')
+
+
+# ---------------------------------------------------------------------------
+# Static archives for the musl axis.
+#
+# The same pinned zlib and OpenSSL as above, built as .a files with the musl
+# toolchain's own compiler (CC, AR and RANLIB come from its environment) into
+# prefixes of their own, so a glibc prefix of the same name is never reused. A
+# static musl ELF cannot load a shared library, which is why the glibc legs'
+# dynamic linking is not available: the recipes that use these archives find
+# zlib and libcrypto inside their image and remove them by name
+# (Recipe.exclude_functions), see openssh.py.
+
+def zlib_musl_step():
+    return _cached(
+        "zlib-1.3.1-musl",
+        'tar xzf {zlib_src} && cd zlib-1.3.1 && '
+        './configure --prefix="$P" --static && make -j$(nproc) && make install')
+
+
+def openssl_musl_step(version):
+    """OpenSSL ``version`` as static libcrypto.a / libssl.a, no applications.
+
+    ``no-shared`` and build_libs, so only the libraries are
+    built and installed (install_dev). Configure's own linux-x86_64 /
+    linux-x86 target; for linux-x86 it adds -m32, which the i686 musl
+    compiler accepts. The musl libc has no getcontext, so the asynchronous
+    job code is left out with ``no-async``.
+    """
+    src = "{openssl_src}"
+    target = ('$([ {bitness} = 64 ] && echo linux-x86_64 || echo linux-x86)')
+    make_libs = ('(make -j$(nproc) build_libs || make -j$(nproc) build_libs '
+                 '|| make build_libs)')
+    body = ('tar xzf %s && cd openssl-%s && ./Configure %s no-shared '
+            'no-tests no-async --prefix="$P" --libdir=lib && %s && '
+            'make install_dev' % (src, version, target, make_libs))
+    return _cached("openssl-%s-musl" % version, body)
+
+
+MUSL_PIN_TEXT = (
+    "Toolchains from musl.cc, pinned: x64 "
+    "https://musl.cc/x86_64-linux-musl-native.tgz sha256 "
+    "eb1db6f0f3c2bdbdbfb993d7ef7e2eeef82ac1259f6a6e1757c33a97dbcef3ad, x86 "
+    "https://musl.cc/i686-linux-musl-cross.tgz sha256 "
+    "93bd5504d5d0349258c43d7a668b506acbd627d31c0843a96e4b4c47b27a0180 "
+    "(GCC 11.2.1 20211120, musl 1.2.2-git-50-gb76f37fd)."
+)
