@@ -34,6 +34,31 @@ are not analysed.
 
 No compiler runtime baseline is applied: this IS the runtime. Functions
 sharing PicHash and name are collapsed (dedupe_functions).
+
+Measured (CI run 42522855728, scratch/msvc-vc10x64; the first attempt,
+42519569857, was stopped by the crawler treating an object with four different
+AMD64 builds as fatal, and its 3.5 GB download took 37 minutes on one
+connection): image 3,554,287,616 bytes, SHA-256 above, re-verified on the
+runner. Functions kept (+ collapsed): libcmt 2470 (+247), libcmtd 2604 (+261),
+libcpmt 1426 (+383), libcpmtd 1680 (+630), msvcrt+msvcprt+oldnames 135 (+13),
+msvcrtd+msvcprtd 143 (+13), comsupp+comsuppw+delayimp 66 (+7),
+comsuppd+comsuppwd+runtmchk 99 (+9), objs 36 (+1), msvcr90 1964 (+4),
+msvcp90 2582 (+436), msvcr90d 2298 (+12), msvcp90d 3280 (+459); total 18783
+kept, 2475 collapsed. Verified in the data: 1834 library objects with an
+AMD64 compiler record, front end and back end 15.0.21022; DLL file version
+9.00.21022.8 (Microsoft_VC90_CRT_x64.RTM). Files that exist in several
+different AMD64 builds on the medium (alloca16.obj, amdsecgs.obj, ...) are not
+used and are listed in provenance (skipped_ambiguous).
+
+PicHash overlap (functions of 10+ instructions; 5808 distinct in the new
+data): 0 with data/MSVC 2008_express_x86 (5886 distinct) and with
+2005/2010 x86; 483 (8.3% of the new, 5.7% of the old) with 2012_Express_x64;
+1146 with the MSVC_VC10 x64 data and 49 with MSVC_VC8.
+
+Filed under the family MSVC_CRT with the other old Visual C++ x64 runtimes
+(the version distinguishes VC8, VC9 and VC10): the same C functions recur in
+all of them, and the cross-family PicHash check would otherwise report them as
+leakage between three families.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -69,7 +94,7 @@ def _vc9():
                            pdb=name + ".pdb", inputs=name + ".inputs.json")
                   for name in DLLS]
     return Recipe(
-        family="MSVC_VC9",
+        family="MSVC_CRT",
         version="9.0.21022",
         upstream="https://learn.microsoft.com/en-us/previous-versions/"
                  "visualstudio/visual-studio-2008/",
@@ -99,4 +124,4 @@ def _vc9():
     )
 
 
-RECIPES = {"MSVC_VC9_9.0.21022": _vc9()}
+RECIPES = {"MSVC_CRT_9.0.21022": _vc9()}

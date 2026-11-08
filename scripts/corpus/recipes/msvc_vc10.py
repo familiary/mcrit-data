@@ -51,6 +51,11 @@ object members because link /WHOLEARCHIVE rejects import records (LNK1127).
 oldnames.lib and chkstk.obj are assembler/alias thunks and carry no compiler
 record. The x64 msvcr100.dll in the SDK is the CLR 4.0 build
 (OriginalFilename msvcr100_clr0400.dll, FileVersion 10.00.30319.1).
+
+Filed under the family MSVC_CRT with the other old Visual C++ x64 runtimes
+(the version distinguishes VC8, VC9 and VC10): the same C functions recur in
+all of them, and the cross-family PicHash check would otherwise report them as
+leakage between three families.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -88,7 +93,7 @@ def _vc10():
                            pdb=name + ".pdb", inputs=name + ".inputs.json")
                   for name in DLLS]
     return Recipe(
-        family="MSVC_VC10",
+        family="MSVC_CRT",
         version="10.0.30319",
         upstream="https://learn.microsoft.com/en-us/previous-versions/"
                  "visualstudio/visual-studio-2010/ms164311(v=vs.100)",
@@ -113,4 +118,4 @@ def _vc10():
     )
 
 
-RECIPES = {"MSVC_VC10_10.0.30319": _vc10()}
+RECIPES = {"MSVC_CRT_10.0.30319": _vc10()}
