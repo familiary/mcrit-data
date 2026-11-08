@@ -69,39 +69,58 @@ on scratch/softether-msvc, runs 42409611446, 42410237181, 42410784026 and
   * run 4: with comdlg32.lib (and a wider system library list) all four
     programs link on x86 and x64.
 
+Vendored code. The images are three times the size of the Linux ELF leg
+(about 6,300 functions) because the static OpenSSL 3.x, zlib and intel-aes
+objects from src/BuildFiles/Library are linked in. Per x64 vpnserver image
+(x86 is within 1%) before anything was excluded: 5,198 functions carry a
+name that also occurs in the Linux ELF leg (SoftEther's own code), 6,812 a
+name found in data/OpenSSL, 100 a name found in data/libzlib, 2,743 are
+other named (ASN1_*_it and further OpenSSL items, intel-aes, delay-load
+helpers) and 6,300 are anonymous (nearly all OpenSSL statics).
+
+Recipe.exclude_functions (PR #94) now removes the part of it that can be
+shown to be the library's, by exact function name, from the committed
+archives (re-derived, not rebuilt): 23,092 functions from the eight images,
+3,005 from each x64 image and 2,768 from each x86 image, 5,739 exact names.
+recipes/_softether_vendored.py holds the tables and states the evidence,
+counted by tier: P (PicHash equal to a same-named function of data/OpenSSL,
+data/libzlib or data/libsodium) 17,224 functions, W (same name and
+architecture, at least 80% opcode similarity, only where another function of
+the identifier is P) 5,332, N (name only, where no family carries the code:
+the 58 intel-aes exports and the 60 `ossl_*` functions of OpenSSL's legacy
+provider) 536. It also lists what stays and why. In short, kept: the anonymous
+statics (6,300 per x64 image, 6,219 per x86 image: a name pattern cannot
+reach them; the link map the helper writes could, by source object, but that
+needs an address-based exclusion and a rebuild that reproduces the committed
+binary, so none was done); about 3,950 (x64) and 4,130 (x86) OpenSSL-named
+functions and 87 zlib-named ones that have no P function in the recipe, the
+vendored libraries being a different build from every family; import thunks
+and inline helpers that merely share a PicHash with the library DLLs; the
+delay-load helpers below; and SoftEther's own code.
+
 Coverage (from data/SoftEtherVPN/provenance.json; kept = num_functions,
-removed = removed_runtime_functions; total = kept + removed):
+removed = removed_runtime_functions, excluded = excluded_function_count;
+total = kept + removed + excluded, num_functions_before_exclusion = kept +
+excluded):
 
-  x64 vpnbridge 21153+271=21424   x86 vpnbridge 21065+303=21368
-  x64 vpnclient 21150+271=21421   x86 vpnclient 21064+303=21367
-  x64 vpncmd    21148+271=21419   x86 vpncmd    21057+303=21360
-  x64 vpnserver 21153+271=21424   x86 vpnserver 21065+303=21368
+  x64 vpnbridge 18148+271+3005=21424   x86 vpnbridge 18297+303+2768=21368
+  x64 vpnclient 18145+271+3005=21421   x86 vpnclient 18296+303+2768=21367
+  x64 vpncmd    18143+271+3005=21419   x86 vpncmd    18289+303+2768=21360
+  x64 vpnserver 18148+271+3005=21424   x86 vpnserver 18297+303+2768=21368
 
-These images are three times the size of the Linux ELF leg (about 6,300
-functions) because the static OpenSSL 3.x, zlib and intel-aes objects from
-src/BuildFiles/Library are linked in. Nothing was filtered out. Per x64
-vpnserver image (x86 is within 1%): 5,198 functions carry a name that also
-occurs in the Linux ELF leg (SoftEther's own code), 6,812 carry a name found
-in data/OpenSSL, 100 a name found in data/libzlib, 2,743 are other named
-(ASN1_*_it and further OpenSSL items, intel-aes, delay-load helpers) and
-6,300 are anonymous (nearly all OpenSSL statics). So roughly 75% of each
-image is vendored code that would sit under SoftEtherVPN's name. A
-Recipe.exclude_functions mechanism is not in this branch's base; the
-pattern to exclude them is to drop every function whose object comes from
-libeay32.lib, ssleay32.lib, zlib.lib or libintelaes.lib, using the
-/MAP file the helper writes (build-<arch>/<program>.map).
-
-PicHash overlap (functions of 10+ instructions): x64 images carry 12,574
-distinct hashes (x86 about 12,646). Against data/OpenSSL (all msvc143 and
-3.x mingw artefacts) 379 x64 / 123 x86 hashes match, against data/libzlib 3
-x64 / 0 x86; the vendored OpenSSL is a different build from every OpenSSL
-family here, so hash overlap greatly under-states the duplication that the
-names show. Between the four programs of one architecture the overlap is
-nearly total: x64 server shares 12,514 with bridge, 12,527 with client and
-12,498 with cmd; x86 server shares 12,645, 12,622 and 12,584. x86 and x64
-share zero hashes. Against the Linux ELF leg only 3 x86 hashes match and none on
-x64. The x64 bridge is kept because it still differs from the server by 60
-hashes (the Linux x64 bridge was identical and was dropped).
+PicHash overlap (functions of 10+ instructions), before -> after the
+exclusion: x64 images carry 12,574 -> 11,952 distinct hashes, x86 about
+12,646 -> 12,124 (server). Against the OpenSSL images of data/OpenSSL (main
+and claude/corpus-openssl-add: 1.0.2u, 1.1.1w, 3.0.15, 3.5.8, MSVC, MinGW and
+GCC) 750 -> 281 x64 and 395 -> 170 x86 hashes match, against data/libzlib 3
+-> 2 x64 and 0 x86, against data/libsodium 2 -> 0 x64; what still matches is
+the anonymous statics and the OpenSSL-named functions left in. Between the
+four programs of one architecture the overlap stays nearly total: x64 server
+shares 11,892 with bridge, 11,905 with client and 11,876 with cmd; x86
+server shares 12,123, 12,100 and 12,079. x86 and x64 share zero hashes.
+Against the Linux ELF leg only 3 x86 hashes match and none on x64. The x64
+bridge is kept because it still differs from the server by 60 hashes (the
+Linux x64 bridge was identical and was dropped).
 
 Surviving glue: 145 (x86) / 147 (x64) delay-load thunks named
 __imp_load_<API> (one PicHash each: x86 9181926168053310126, x64
@@ -113,6 +132,7 @@ reported rather than changing it.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
+from . import _softether_vendored as _vendored
 
 
 _COMPONENTS = ("vpnserver", "vpnbridge", "vpnclient", "vpncmd")
@@ -136,11 +156,18 @@ RECIPES = {
             for name in _COMPONENTS
         ],
         toolchains=["msvc_x86", "msvc_x64"],
+        exclude_functions=_vendored.patterns(),
         build_flags="/Ox /Ob0 /Oi- /GF- /Gy- /GS- /Zp4 /W3 /MD /Z7 (from the "
                     "upstream Release .vcproj, /MT replaced by /MD); link "
                     "/DEBUG /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO",
         notes="Built by driving cl/lib/link from the unmodified Release "
               "configurations of the upstream .vcproj files; see the recipe "
-              "module docstring.",
+              "module docstring. The statically linked vendored OpenSSL, "
+              "zlib, intel-aes and libsodium-derived functions that are "
+              "shown to be the library's (PicHash, opcode similarity or "
+              "name; tiers in recipes/_softether_vendored.py) are excluded "
+              "by exact name and counted in excluded_function_count; "
+              "anonymous statics and OpenSSL-named functions without a "
+              "matching function in data/OpenSSL stay in the image.",
     ),
 }

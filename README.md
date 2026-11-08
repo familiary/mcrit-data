@@ -1043,7 +1043,7 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 
 ### SoftEther VPN<a id="softethervpn"></a>
 
-Stable 4.44-9807-rtm Linux source builds.
+Stable 4.44-9807-rtm: Linux source builds against shared OpenSSL, readline, ncurses and zlib, and Windows (MSVC) builds driven from the unmodified `.vcproj` files. The Windows programs statically link the OpenSSL, zlib and intel-aes libraries that upstream ships, which would otherwise sit under SoftEtherVPN's name; 23,092 functions across the eight Windows images (3,005 per x64 image, 2,768 per x86 image) that are shown to be those libraries' are removed by exact name (`exclude_functions`: PicHash against `data/OpenSSL`, `data/libzlib` and `data/libsodium`, opcode similarity where a PicHash function of the same name exists, and name alone only for intel-aes and OpenSSL's legacy provider, which no family carries). What could not be attributed by name stays in: about 6,300 anonymous statics per image (mostly OpenSSL), about 4,000 OpenSSL-named functions whose build matches no family, and 87 zlib-named ones; see `softether_vpn_msvc.py` and `recipes/_softether_vendored.py`.
 
 <!-- corpus:SoftEtherVPN:start -->
 | Name     | Version | Compiler | MCRIT | SMDA |
