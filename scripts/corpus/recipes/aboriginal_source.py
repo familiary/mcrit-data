@@ -68,6 +68,48 @@ helper script and none touching the distribution or component sources:
   * libgcc is not re-harvested from these rebuilds (the GCC 4.2.1 / 4.1.2
     libgcc images already exist from the original archives).
 
+CI status (GitHub Actions, scratch branch scratch/aboriginal-src, Ubuntu 24.04
+runner, GCC 14.2.0 link driver, SMDA 5.0.2, MCRIT 1.16.0; three dispatches):
+  BUILT
+    uClibc_0.9.32-aboriginal1.0.3-src_gcc14_x86_libc.elf  1357 kept + 0 removed = 1357 image functions; 1105 >=10 instructions, 1035 unique hashes (run 42470274475)
+    uClibc_0.9.32-aboriginal1.0.3-src_gcc14_x64_libc.elf  1335 kept + 0 removed = 1335 image functions; 1015 >=10 instructions, 952 unique hashes (run 42470274475)
+    uClibc_0.9.30.1-firmware0.9.6-src_gcc14_x64_libc.elf  1324 kept + 0 removed = 1324 image functions; 1017 >=10 instructions, 941 unique hashes (run 42470850364)
+  NOT BUILT (recorded, exact errors)
+    musl_1.1.12_aboriginal1.4.4_src_x64: the Aboriginal 1.4.4 stage and musl built
+      (run 42470850364), then the host link failed:
+        /usr/bin/ld: libc.a(getopt.o): undefined reference to symbol 'optopt@@GLIBC_2.2.5'
+        /usr/bin/ld: /lib/x86_64-linux-gnu/libc.so.6: error adding symbols: DSO missing from command line
+      The sibling musl recipes pass -lc for exactly this reason; the link line
+      here now does too. That corrected line has NOT been run in CI (the
+      three-dispatch limit was used), so these two recipes are unverified.
+    musl_1.1.12_aboriginal1.4.4_src_x86 and uClibc_0.9.30.1_firmware0.9.6_src_x86
+      (run 42470850364): failed before building, in the corpus fetcher:
+        sha256 mismatch for https://zlib.net/fossils/zlib-1.3.1.tar.gz: expected 9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23, got 7540b291c52141d8c77eead30a9f6548caf72a6e05643aad187ad10cf2053d8b
+      (the staging zlib download; the mismatch is refused as designed; the
+      x64 job of the same run fetched the correct file).
+  Earlier failed attempts that shaped the recipe (kept for the record):
+    run 42469751149: the corpus extractor refused the distribution tarball,
+      "'aboriginal-1.0.3/sources/root-filesystem/etc/mtab' is a link to an
+      absolute path" (now staged as a dependency); Firmware: uClibc
+      extra/scripts/unifdef.c "error: conflicting types for 'getline'".
+    run 42470274475: Aboriginal 1.4.4 binutils-397a64b3 "bfd.texinfo:326:
+      unknown command `colophon'" / "make[3]: *** [bfd.info] Error 1" (info
+      manuals, now skipped); Firmware: "-Dgetline=unifdef_getline" itself
+      conflicted ("error: conflicting types for 'unifdef_getline'"), replaced
+      by -D_POSIX_C_SOURCE=200112L for that one file.
+
+Measured overlap (unique PicHashes of functions >=10 instructions):
+  uClibc 0.9.32-aboriginal1.0.3-src vs the shipped 0.9.33.2-aboriginal1.2.0: x86 586 shared (449/508 unique); x64 923 shared (29/48 unique).
+  uClibc 0.9.32-aboriginal1.0.3-src vs shipped 0.9.30.1: x86 381 shared (654/628 unique); x64 461 shared (491/480 unique).
+  uClibc 0.9.32-aboriginal1.0.3-src vs uClibc-ng 1.0.39: x86 30 shared; x64 17 shared.
+  uClibc 0.9.30.1-firmware0.9.6-src x64 vs the shipped uClibc.org 0.9.30.1 x64:
+    938 shared, 3/3 unique: the source rebuild of the same uClibc version with
+    GCC 4.1.2 is almost identical to the archive harvested earlier, which is
+    evidence that the rebuild reproduces the historical code.
+  Every x86/x64 pairing has zero shared hashes. Named link/glue survivors: none
+  in the three built images (the only crt-like name, __cxa_finalize, is uClibc's
+  own function). 1293/1324, 1335/1335 and 1354/1357 functions carry names.
+
 The final step is the one the shipped-archive recipes in libc_harvest.py use:
 the produced libc.a is linked by the host GCC with -nostdlib -no-pie
 -Wl,-e,0 into an ELF container (uClibc whole-archive; musl with -u for every
@@ -149,8 +191,9 @@ for (_tag, _family, _version, _libc, _dist, _stage, _outdir, _components,
             _how = "--whole-archive"
         else:
             _link = ("{cc} {archflag} -nostdlib -no-pie -Wl,-e,0 " + _MUSL_SELECT +
-                     " -lgcc_s -o libc.elf")
+                     " -lgcc_s -lc -o libc.elf")
             _how = "-u every global text symbol except __tlsdesc_*"
+        _dyn = "dynamic libgcc_s" if _libc == "uclibc" else "dynamic libgcc_s and libc"
         RECIPES[_tag + "_" + _arch] = Recipe(
             family=_family, version=_version,
             source=Source(url="https://zlib.net/fossils/zlib-1.3.1.tar.gz",
@@ -180,7 +223,7 @@ for (_tag, _family, _version, _libc, _dist, _stage, _outdir, _components,
             build_flags="Built from source by the " + _stage + ".sh of " + _producer +
                         " in a " + HOST_IMAGE + " container (NO_HOST_TOOLS=1 NO_CPLUSPLUS=1 "
                         "NO_STAGE_TARBALLS=1 SKIP_STRIP=1); libc.a linked on the host with -nostdlib "
-                        "-no-pie -Wl,-e,0 " + _how + "; dynamic libgcc_s",
+                        "-no-pie -Wl,-e,0 " + _how + "; " + _dyn,
             notes="REBUILT FROM SOURCE, not the binary Landley shipped: " + _producer +
                   ". The distribution tarball and every component tarball are "
                   "pinned by sha256; the distribution's own " + _stage + ".sh "
