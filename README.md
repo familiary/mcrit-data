@@ -1044,6 +1044,8 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 
 ### Gh0st
 
+[Coverage, counts and limits](scripts/corpus/coverage/windows-implants/README.md).
+
 <!-- generated: Gh0st -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
@@ -1056,6 +1058,8 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 
 ### TinyNuke
 
+[Coverage, counts and limits](scripts/corpus/coverage/windows-implants/README.md).
+
 <!-- generated: TinyNuke -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
@@ -1065,6 +1069,8 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 
 
 ### r77
+
+[Coverage, counts and limits](scripts/corpus/coverage/windows-implants/README.md).
 
 <!-- generated: r77 -->
 | Name     | Version | Compiler | MCRIT | SMDA |
@@ -1076,6 +1082,8 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 
 ### mimikatz
 
+[Coverage, counts and limits](scripts/corpus/coverage/windows-implants/README.md).
+
 <!-- generated: mimikatz -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
@@ -1085,6 +1093,8 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 
 
 ### HavocDemon
+
+[Coverage, counts and limits](scripts/corpus/coverage/windows-implants/README.md).
 
 <!-- generated: HavocDemon -->
 | Name     | Version | Compiler | MCRIT | SMDA |
