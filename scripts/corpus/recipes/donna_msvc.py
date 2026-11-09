@@ -15,7 +15,23 @@ Tor commit 8dbbbe6, the same three defines (cl has no ``-fwrapv``), the same
 out-of-tree shim (orconfig.h, Tor's crypto entry points over donna's reference
 SHA-512 and BCryptGenRandom, memwipe), exports from
 scripts/corpus/exercisers/ed25519_tor.def, and bcrypt.lib at link. Built on
-the windows-2022 runner; its counts and overlap are recorded once imported.
+the windows-2022 runner (run 42690742301, scratch/partials-donna-tor-msvc,
+glue baseline merged), clean, no warning. Kept + removed = total and, at ten
+instructions or more, functions / distinct PicHashes: x86 106 + 130 = 236,
+92/90 (SSE2 117 + 130 = 247, 100/98); x64 107 + 134 = 241, 92/88 (SSE2 117 +
+134 = 251, 100/96). Against the floodyberry-tree Tor-style MSVC component
+(``ed25519-donna-tor``) 63 of its 76 (x86) and 60 of its 75 (x64) distinct
+PicHashes are shared; the SSE2 components share 78 of 84 and 74 of 81 with the
+floodyberry SSE2 build. Leaving out the shim (8 or 9 distinct PicHashes), 17
+to 24 per image are in none of the three floodyberry MSVC components: the Tor
+API (``ed25519_donna_seckey``, ``_seckey_expand``, ``_pubkey``, ``_keygen``,
+``_sign``, ``_blind_secret_key``, ``_blind_public_key``,
+``_pubkey_from_curve25519_pubkey``, ``_scalarmult_with_group_order``,
+``_selftest``, ``_gettweak``), ``ed25519_extsk``, ``ed25519_hram``,
+``ed25519_sign_open(_batch)_donna``, the self-test helpers ``test_adds`` and
+``test_subs`` of Tor's included test-internals.c, and on the generic builds
+``curve25519_recip``/``_pow_*``. So, as under GCC, the Tor glue adds coverage
+beyond ``ed25519-donna-tor``.
 
 A separate registry entry rather than another toolchain on the MinGW recipe,
 for the reason spelled out in sqlite3_msvc.py: one Recipe has one build list
@@ -323,7 +339,12 @@ _TOR_GLUE_MSVC_NOTES = (
     "the tree; those functions are not Tor's and never run. Exports from "
     "scripts/corpus/exercisers/ed25519_tor.def (Tor's API: "
     "ed25519_donna_seckey, _pubkey, _sign, _blind_secret_key, "
-    "_pubkey_from_curve25519_pubkey, ...). No file of the Tor tree is edited."
+    "_pubkey_from_curve25519_pubkey, ...). No file of the Tor tree is edited. "
+    "Measured at ten instructions or more: 60 to 63 distinct PicHashes "
+    "shared with the same-target ed25519-donna-tor MSVC component, 74 to 78 "
+    "between the SSE2 components, and 17 to 24 per image, the shim left out, "
+    "in none of the floodyberry MSVC components (the Tor API, ed25519_extsk, "
+    "ed25519_hram, the test-internals.c helpers)."
 )
 
 
