@@ -28,7 +28,7 @@ PR #120's MSVC_oldtoolsets recipes use) into C:\\BT\\vs15 with
 Microsoft.VisualStudio.Component.VC.Tools.x86.x64 (MSVC 14.16) and
 Microsoft.VisualStudio.Component.WinXP (the v141_xp platform toolset and the
 Windows 7.1A SDK). The job then runs inside that install's
-vcvarsall.bat -vcvars_ver=14.16, so cl is 19.16, corpus.toolchain registers
+vcvarsall.bat (default toolset 14.16.27023), so cl is 19.16, corpus.toolchain registers
 the toolchain as msvc141, the glue baseline is measured with that compiler,
 and the file names say msvc141. The recipe declares msvc141_x86/msvc141_x64,
 so a runner whose developer environment is VS 2022 skips it as
