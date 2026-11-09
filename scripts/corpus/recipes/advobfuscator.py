@@ -187,11 +187,11 @@ def _recipe(mode, flavor, toolchains):
     elif flavor == "mingw":
         flags += "; -shared; no inserted PE timestamp"
     patched = mode == "current" and flavor == "mingw"
-    pinned = flavor == "mingw"
     notes = ("Header-only string obfuscation code instantiated through a "
              "16-literal corpus harness. The harness consumes every "
              "decoded string"
-             + (", and upstream sources are unchanged. " if not patched else
+             + (". " if flavor == "msvc" else
+                ", and upstream sources are unchanged. " if not patched else
                 ". PATCHED BUILD: GCC 13 cannot deduce the class-type "
                 "template parameter of the _obf and _obf_bytes literal "
                 "operators, so the build compiles a patched copy of "
@@ -206,17 +206,29 @@ def _recipe(mode, flavor, toolchains):
                          "SOURCE_DATE_EPOCH=1700000000, so this image is "
                          "reproducible; the optimisation levels are "
                          "measured in the module docstring.",
-                "linux": "Built before __TIME__ was pinned, so this image is "
-                         "not reproducible: rebuilding it with the current "
-                         "advobfuscator_build.py pins SOURCE_DATE_EPOCH to "
-                         "1700000000.",
-                "msvc": "__TIME__ (the generator's seed) cannot be pinned "
-                        "with cl (SOURCE_DATE_EPOCH is ignored, redefining "
-                        "the macro gives warning C4117), so this image is "
-                        "not reproducible."}[flavor])
+                "linux": "__TIME__ (the generator's seed) is pinned with "
+                         "SOURCE_DATE_EPOCH=1700000000, so this image is "
+                         "reproducible; built with GCC 14, which the "
+                         "current snapshot needs.",
+                "msvc": "__TIME__ (the generator's seed) is pinned by a "
+                        "recipe-applied build-tree edit: cl ignores "
+                        "SOURCE_DATE_EPOCH and refuses to redefine the "
+                        "macro (warning C4117), so the build compiles a copy "
+                        "of %s in which the one use, 'time[] = __TIME__;', "
+                        "reads 'time[] = \"22:13:20\";' (the value the GCC "
+                        "builds get from SOURCE_DATE_EPOCH); the upstream "
+                        "checkout is not modified. PATCHED BUILD: the image "
+                        "is NOT byte-identical to a build of unmodified "
+                        "upstream." % ("include/advobfuscator/random.h"
+                                       if mode == "current" else
+                                       "Lib/MetaRandom.h")}[flavor])
     if patched:
         flags += "; patched include copy (literal operators)"
-    if pinned:
+    if flavor == "msvc":
+        flags += ("; build-tree copy of %s with __TIME__ replaced by "
+                  "\"22:13:20\"" % ("advobfuscator/random.h"
+                                    if mode == "current" else "MetaRandom.h"))
+    else:
         flags += "; SOURCE_DATE_EPOCH=1700000000 (__TIME__ 22:13:20)"
     return Recipe(
         family="ADVobfuscator",

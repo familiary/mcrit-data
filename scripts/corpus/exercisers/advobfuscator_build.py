@@ -14,11 +14,13 @@ from pathlib import Path
 # (include/advobfuscator/random.h and Lib/MetaRandom.h: hh:mm:ss, seconds
 # included), so every unpinned build differs from the last by the key schedule
 # of every obfuscated literal and by a few percent of its functions. The seed is
-# pinned through SOURCE_DATE_EPOCH, which GCC (7 and later) and cl honour for
+# pinned through SOURCE_DATE_EPOCH, which GCC (7 and later) honours for
 # __TIME__ and __DATE__: 1700000000 is 2023-11-14 22:13:20 UTC, so __TIME__ is
 # "22:13:20". A probe translation unit is compiled first and the pinned string
-# must be in the object, so a compiler that ignores the variable fails the
-# build instead of producing an image that only looks pinned.
+# must be in the object, so a GCC that ignores the variable fails the build
+# instead of producing an image that only looks pinned. cl does not honour it;
+# the MSVC builds get the same literal from a build-tree header copy instead
+# (_time_pinned_copy below).
 PINNED_EPOCH = "1700000000"
 PINNED_TIME = b"22:13:20"
 
@@ -42,51 +44,55 @@ def _probe_pins(probe_command: list[str], obj: Path, root: Path,
     return result.returncode == 0 and PINNED_TIME in obj.read_bytes()
 
 
-def _msvc_pin_flags(probe_command: list[str], obj: Path, root: Path) -> list[str]:
-    """The cl flags that pin __TIME__, found by probing, or [] if none does.
-
-    cl (MSVC 14.4 on the windows-2022 runner) was measured not to honour
-    SOURCE_DATE_EPOCH, so the alternatives are tried in turn: a command-line
-    definition and a forced-include header that redefines the macro. A
-    candidate is accepted only if the pinned string is in the probe object.
-    """
-    header = root / "build" / "pin_time.h"
-    header.write_text('#undef __TIME__\n#define __TIME__ "%s"\n'
-                      % PINNED_TIME.decode())
-    candidates = [["/D__TIME__=\"%s\"" % PINNED_TIME.decode()],
-                  ["/FI" + str(header)]]
-    for flags in candidates:
-        if _probe_pins(probe_command, obj, root, flags):
-            return flags
-    return []
+# cl ignores SOURCE_DATE_EPOCH (MSVC 19.44 on the windows-2022 runner: the
+# probe below finds no pinned string), and __TIME__ cannot be redefined there:
+# /D__TIME__=... and a forced-include #undef/#define both give "warning C4117:
+# macro name '__TIME__' is reserved, '#define' ignored" (run 42683708448). The
+# MSVC builds therefore compile a COPY of the headers (the upstream checkout is
+# not modified) in which the one use of __TIME__, the generator's seed, is
+# replaced by the literal the GCC builds get from SOURCE_DATE_EPOCH:
+#
+#   include/advobfuscator/random.h (current), Lib/MetaRandom.h (legacy)
+#   -    ... time[] = __TIME__; // __TIME__ has the following format: ...
+#   +    ... time[] = "22:13:20"; // __TIME__ has the following format: ...
+#
+# The image is therefore NOT byte-identical to a build of unmodified upstream.
+_TIME_HEADERS = {"current": ("include", "advobfuscator/random.h"),
+                 "legacy": ("Lib", "MetaRandom.h")}
 
 
-def _check_pinned(probe_command: list[str], obj: Path, root: Path,
-                  msvc: bool = False) -> list[str]:
-    """Verify that __TIME__ is pinned; return extra compiler flags if needed.
+def _time_pinned_copy(root: Path, mode: str) -> Path:
+    """Copy the header tree and replace its single __TIME__ use by the pin."""
+    tree, header = _TIME_HEADERS[mode]
+    target = root / "build" / ("%s-time-pinned" % tree)
+    if target.exists():
+        shutil.rmtree(target)
+    shutil.copytree(root / tree, target)
+    path = target / header
+    text = path.read_text()
+    old = "time[] = __TIME__;"
+    if text.count(old) != 1:
+        raise SystemExit("__TIME__ pin does not apply to %s" % header)
+    path.write_text(text.replace(old, 'time[] = "%s";' % PINNED_TIME.decode(), 1))
+    remaining = [str(p.relative_to(target)) for p in target.rglob("*")
+                 if p.is_file() and b"__TIME__" in p.read_bytes()
+                 and p != path]
+    if remaining or "= __TIME__" in path.read_text():
+        raise SystemExit("__TIME__ still used in the pinned copy: %s" % remaining)
+    print("pinned __TIME__ = %s (build-tree copy %s, %s edited)"
+          % (PINNED_TIME.decode(), target.relative_to(root), header), flush=True)
+    return target
 
-    GCC honours SOURCE_DATE_EPOCH and the build fails if it somehow does not.
-    cl does not, so for cl the flags that do pin it are searched for; if there
-    are none the build proceeds unpinned and says so, because the alternative
-    is no MSVC image at all.
-    """
+
+def _check_pinned(probe_command: list[str], obj: Path, root: Path) -> None:
+    """Verify that GCC honours SOURCE_DATE_EPOCH for __TIME__, or fail."""
     if _probe_pins(probe_command, obj, root, []):
         print("pinned __TIME__ = %s (SOURCE_DATE_EPOCH)"
               % PINNED_TIME.decode(), flush=True)
-        return []
-    if not msvc:
-        raise SystemExit("SOURCE_DATE_EPOCH=%s was not honoured for __TIME__ "
-                         "by %s; the build would not be reproducible"
-                         % (PINNED_EPOCH, probe_command[0]))
-    flags = _msvc_pin_flags(probe_command, obj, root)
-    if flags:
-        print("pinned __TIME__ = %s (cl %s)" % (PINNED_TIME.decode(),
-                                                 " ".join(flags)), flush=True)
-    else:
-        print("NOT PINNED: cl ignores SOURCE_DATE_EPOCH, /D__TIME__ and a "
-              "forced-include redefinition; __TIME__ is the build time and "
-              "this image is not reproducible", flush=True)
-    return flags
+        return
+    raise SystemExit("SOURCE_DATE_EPOCH=%s was not honoured for __TIME__ "
+                     "by %s; the build would not be reproducible"
+                     % (PINNED_EPOCH, probe_command[0]))
 
 
 def _run(command: list[str], root: Path) -> None:
@@ -161,20 +167,15 @@ def build(args: argparse.Namespace) -> Path:
                                     (args.mode, args.arch))
         linker_pdb = build_dir / ("advobfuscator-%s-%s.pdb" %
                                   (args.mode, args.arch))
-        probe_obj = build_dir / "time_probe.obj"
-        pin_flags = _check_pinned(
-            [args.cxx, "/nologo", "/TP", "/c", "/Fo" + str(probe_obj),
-             "/Fd" + str(build_dir / "time_probe.pdb")], probe_obj, root,
-            msvc=True)
+        pinned_tree = _time_pinned_copy(root, args.mode)
         optimization = ["/Od", "/Ob0"] if not legacy else ["/O2", "/Ob0"]
         command = [args.cxx, "/nologo", "/TP", "/c", standard,
                    *optimization, "/MD", "/Zi", "/GL-", "/W3",
                    "/I" + str(Path(args.repo) / "scripts/corpus/exercisers")]
         if legacy:
-            command += ["/DADV_LEGACY", "/I" + str(root / "Lib")]
+            command += ["/DADV_LEGACY", "/I" + str(pinned_tree)]
         else:
-            command.append("/I" + str(root / "include"))
-        command += pin_flags
+            command.append("/I" + str(pinned_tree))
         command += ["/Fo" + str(obj), "/Fd" + str(compiler_pdb), str(source)]
         _run(command, root)
         _run(["link", "/DLL", "/DEBUG", "/OPT:NOREF", "/OPT:NOICF",
