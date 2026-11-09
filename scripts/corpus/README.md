@@ -540,6 +540,9 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| GnuTLS (libgnutls) | #26 | not attempted. It needs, built per leg and linked, a Nettle with real GMP (not the mini-gmp one of the Nettle recipes), GMP, libtasn1, and libunistring (or `--with-included-unistring`) and p11-kit or `--without-p11-kit`; for MinGW a dependency chain of four to five packages times four legs (x86 and x64, Linux and MinGW), each a configure and make of 100 MB or more of build tree, on a host with 4.7 GB free that other builds share. Judged larger than this pass's disk budget; nothing was tried, so there is no error text |
+| GMP, MSVC | #26 | not built: GMP's configure and its m4-processed assembly (`.asm`, GNU as syntax for the x86_64 and fat paths) do not run under cl, and upstream documents MinGW and not MSVC for Windows; no MSVC attempt was made |
+| GMP 6.2.1, 6.1.2 and libgmpxx | #26 | not built (scope of this pass is 6.3.0, the latest); nothing measured |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |

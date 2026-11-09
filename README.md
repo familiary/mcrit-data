@@ -36,6 +36,7 @@ Libraries
 * [libsodium](#libsodium)
 * [libtomcrypt](#libtomcrypt)
 * [Nettle](#nettle)
+* [GMP](#gmp)
 * [libuv](#libuv)
 * [libxml2](#libxml2)
 * [lz4](#lz4)
@@ -429,6 +430,18 @@ Generated with `scripts/build_corpus.py`; see `data/Nettle/provenance.json` for 
 | Nettle | 4.0 | MinGW-w64 GCC 13 | [x86 PE](data/Nettle/x86/mcrit/Nettle_4.0_mingw13_x86_libnettle.dll.mcrit) / [x64 PE](data/Nettle/x64/mcrit/Nettle_4.0_mingw13_x64_libnettle.dll.mcrit) | [x86 PE](data/Nettle/x86/smda/Nettle_4.0_mingw13_x86_libnettle.dll.7z) / [x64 PE](data/Nettle/x64/smda/Nettle_4.0_mingw13_x64_libnettle.dll.7z) |
 | Nettle | 4.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Nettle/x86/mcrit/Nettle_4.0_msvc143_x86_libhogweed.dll.mcrit) / [x64 PE](data/Nettle/x64/mcrit/Nettle_4.0_msvc143_x64_libhogweed.dll.mcrit) | [x86 PE](data/Nettle/x86/smda/Nettle_4.0_msvc143_x86_libhogweed.dll.7z) / [x64 PE](data/Nettle/x64/smda/Nettle_4.0_msvc143_x64_libhogweed.dll.7z) |
 | Nettle | 4.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Nettle/x86/mcrit/Nettle_4.0_msvc143_x86_libnettle.dll.mcrit) / [x64 PE](data/Nettle/x64/mcrit/Nettle_4.0_msvc143_x64_libnettle.dll.mcrit) | [x86 PE](data/Nettle/x86/smda/Nettle_4.0_msvc143_x86_libnettle.dll.7z) / [x64 PE](data/Nettle/x64/smda/Nettle_4.0_msvc143_x64_libnettle.dll.7z) |
+<!-- /generated -->
+
+### GMP<a id='gmp'></a>
+
+The GNU Multiple Precision Arithmetic Library 6.3.0 (LGPL-3.0-or-later or GPL-2.0-or-later), the big-number library libhogweed (Nettle's public-key half) and GnuTLS link, as a family of its own: follow-on of the Nettle issue, whose hogweed images carry Nettle's mini-gmp instead. `libgmp` as GCC 13 Linux ELF and MinGW DLL, x86 and x64, built with `--enable-fat` (every x86 CPU variant in one image, CPUID dispatch, so the data does not depend on the builder's CPU). x64: Linux 1,321 kept + 6 removed, MinGW 964 + 157; x86: Linux 1,576 + 5, MinGW 923 + 161. PicHash overlap (10+ instructions) between Linux and MinGW is 1 on x64 and 193 of 743 (26 percent) on x86, and between Linux x86 and x64 0; with Nettle 3.10.2/4.0 libhogweed (mini-gmp) 0 to 1 percent. The MinGW DLLs are built with one edit of the generated `libtool` script in the build directory (its `--out-implib` wrote the import library over the DLL), so those images are NOT byte-identical to a build of unmodified upstream, which yields no usable DLL; the Linux images are unmodified. libgmpxx (C++), MSVC and GnuTLS are not built, see `scripts/corpus/README.md`.  
+Generated with `scripts/build_corpus.py`; see `data/GMP/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: GMP -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| GMP | 6.3.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/GMP/x86/mcrit/GMP_6.3.0_gcc13_x86_libgmp.so.mcrit) / [x64 ELF](data/GMP/x64/mcrit/GMP_6.3.0_gcc13_x64_libgmp.so.mcrit) | [x86 ELF](data/GMP/x86/smda/GMP_6.3.0_gcc13_x86_libgmp.so.7z) / [x64 ELF](data/GMP/x64/smda/GMP_6.3.0_gcc13_x64_libgmp.so.7z) |
+| GMP | 6.3.0 | MinGW-w64 GCC 13 | [x86 PE](data/GMP/x86/mcrit/GMP_6.3.0_mingw13_x86_libgmp.dll.mcrit) / [x64 PE](data/GMP/x64/mcrit/GMP_6.3.0_mingw13_x64_libgmp.dll.mcrit) | [x86 PE](data/GMP/x86/smda/GMP_6.3.0_mingw13_x86_libgmp.dll.7z) / [x64 PE](data/GMP/x64/smda/GMP_6.3.0_mingw13_x64_libgmp.dll.7z) |
 <!-- /generated -->
 
 ### libuv<a id='libuv'></a>
