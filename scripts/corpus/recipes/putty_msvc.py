@@ -28,6 +28,44 @@ cmake/setup.cmake strips /DNDEBUG from the Release flags anyway (defs.h
 CMAKE_EXE_LINKER_FLAGS_RELEASE is "/INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF
 /OPT:NOICF"; upstream adds /dynamicbase /nxcompat and, for the GUI tools,
 /manifest:no. No /GL, no /LTCG.
+
+Measured (scratch run 42674927927, windows-2022, MSVC 19.44.35229, built
+with the wide-stdio glue baseline merged on the scratch branch only),
+kept + removed by the glue baseline = image:
+
+    x64  putty 3761+206=3967   plink 3035+215=3250   pscp 2954+217=3171
+         psftp 2964+215=3179   pageant 1334+183=1517 puttygen 1481+187=1668
+    x86  putty 3778+200=3978   plink 3051+212=3263   pscp 2966+229=3195
+         psftp 2978+212=3190   pageant 1339+179=1518 puttygen 1485+199=1684
+
+Functions of 10+ instructions / distinct PicHashes, x64 | x86: putty
+2186/2001 | 2285/2073, plink 1777/1595 | 1865/1663, pscp 1815/1625 |
+1882/1681, psftp 1820/1628 | 1887/1684, pageant 915/822 | 938/844, puttygen
+1027/919 | 1057/946. Every function of 10+ instructions is named (PDB).
+
+Overlap (distinct PicHashes, 10+ instructions). Share of each tool's set
+already in putty.exe, x64 | x86: plink 94.7% | 97.9%, pscp 88.4% | 91.3%,
+psftp 88.2% | 91.2%, pageant 87.7% | 88.4%, puttygen 83.8% | 85.9%. The six
+MSVC images together against the six MinGW images: 1 shared hash of 2584
+(x64) and 1 of 2501 (x86); MSVC x86 against x64: 1. So the MSVC axis is new
+reference data, not a duplicate of the MinGW one.
+
+Glue survivors. The console tools (plink, pscp, psftp) keep no CRT name.
+The three GUI tools (putty, pageant, puttygen) keep the WinMain flavour of
+the VC startup code, which the baseline's EXE probes (console main) do not
+emit: x64 __scrt_common_main_seh (92 instructions, PicHash
+11271104747006965853), pre_c_initialization (48, 973123914783528695),
+invoke_main (12, 18071112188852371364), WinMainCRTStartup (4,
+10082331731223971200), __scrt_winmain_policy::set_app_type (2,
+13166271553064441970); x86 __scrt_common_main_seh (110,
+15412194987082466279), pre_c_initialization (53, 7114945967067284721),
+invoke_main (11, 8721064936966453011), WinMainCRTStartup (2,
+13477325577764728392), __scrt_winmain_policy::set_app_type (4,
+2389322068591341037), plus a 10-instruction __scrt_common_main_seh$+0x124
+fragment (PicHash 13184720424441161382) on x86 in pageant and puttygen.
+These are Microsoft's code; a
+WinMain probe in the baseline would remove them. Not done here (baseline.py
+is shared tooling).
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

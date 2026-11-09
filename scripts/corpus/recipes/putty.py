@@ -40,10 +40,22 @@ psftp.exe, each other tool adds, x64 / x86:
   pageant.exe   80 /  84 beyond putty.exe,  76 /  84 beyond putty+psftp
 
 putty.exe already holds nearly all of the SSH client. psftp.exe adds the SFTP
-client (sftp.c, psftp.c, psftpcommon.c) and is kept. plink, pscp and puttytel
-add under 2% each and are not built; pscp's 26 are scp.c. puttygen and
-pageant add real code but are key tools, not the SSH client, and not what the
-issue is about; they are the follow-up if one turns up abused.
+client (sftp.c, psftp.c, psftpcommon.c). The tracker issue (#65) names six
+executables, so plink, pscp, pageant and puttygen are built as well although
+they add little beyond putty and psftp; puttytel is not built. Measured on
+the images as committed (distinct PicHashes of 10+ instructions, x64 / x86),
+the share of each new tool already in putty.exe + psftp.exe: plink 98.9% /
+99.2% (12 / 10 new hashes), pscp 97.7% / 97.9% (26 / 27), pageant 86.9% /
+86.4% (76 / 86), puttygen 82.7% / 84.3% (112 / 111). Kept + removed = image:
+plink x64 1735+192=1927, x86 1708+198=1906; pscp x64 1722+197=1919, x86
+1693+202=1895; pageant x64 856+144=1000, x86 763+148=911; puttygen x64
+949+186=1135, x86 850+192=1042. Those four were built by the scoped CI run
+42678836328 (MinGW-w64 GCC 13.2.0-6ubuntu1+26.1 on ubuntu-24.04, the same
+packages as the host that built putty.exe and psftp.exe); the same run also
+rebuilt putty.exe and psftp.exe, which were NOT re-imported: x64 came out
+with the committed counts, x86 with 2 more kept functions each (putty
+2046+203, psftp 1716+200, against the committed 2044+203 and 1714+200), and
+every sha256 differs, the build directory being part of the image.
 
 Linux. PuTTY's SSH core is portable and ships on Linux (Debian's
 putty-tools: plink, pscp, psftp, puttygen), so the same tree was built with the
@@ -90,17 +102,12 @@ own, 15 import thunks and 8 unnamed. psftp.exe: x64 1744 of 1939 (1625 own,
 function of 10 or more instructions that is not PuTTY's own survives except
 ___chkstk_ms; no new baseline gap.
 
-Not built: the Windows-native compilers. 0.77 has no Makefile.vc; its only
-Windows build system is this CMake tree, and upstream's own release script
-(Buildscr) builds the shipped binaries with clang-cl, Release, /MT /O2, so
-the C runtime is linked statically (-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded).
-The same tree also builds with cl on the Windows runner. Either would be a
-different code shape from this MinGW one and the better match for the
-official putty.exe and for a build made on a Windows host; neither can be
-produced here, so no MSVC data is written. Both are follow-ups, and a static
-CRT means the MSVC glue baseline needs to be checked for that link mode
-before the artefacts are trusted. MinGW is itself an upstream-supported
-configuration: Buildscr test-builds it with cmake/toolchain-mingw.cmake.
+MSVC. putty_msvc.py builds the same six with cl (v143) against the DLL
+runtime. Upstream's own release script (Buildscr) builds the shipped binaries
+with clang-cl, Release, /MT /O2 (-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded),
+so the C runtime is linked statically there; neither clang-cl nor /MT is
+covered. MinGW is itself an upstream-supported configuration: Buildscr
+test-builds it with cmake/toolchain-mingw.cmake.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
