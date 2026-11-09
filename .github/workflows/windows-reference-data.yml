@@ -592,12 +592,12 @@ jobs:
         shell: pwsh
         run: |
           $a = if ('${{ matrix.arch }}' -eq 'x64') { 'amd64' } else { 'x86' }
-          $out = cmd /c "`"C:\BT\vs15\VC\Auxiliary\Build\vcvarsall.bat`" $a -vcvars_ver=14.16 && set"
+          $out = cmd /c "`"C:\BT\vs15\VC\Auxiliary\Build\vcvarsall.bat`" $a && set"
           if ($LASTEXITCODE -ne 0) { throw "vcvarsall failed" }
           foreach ($line in $out) {
             if ($line -match '^([^=]+)=(.*)$') { Add-Content -Path $env:GITHUB_ENV -Value "$($matches[1])=$($matches[2])" }
           }
-          cmd /c "`"C:\BT\vs15\VC\Auxiliary\Build\vcvarsall.bat`" $a -vcvars_ver=14.16 && cl"
+          cmd /c "`"C:\BT\vs15\VC\Auxiliary\Build\vcvarsall.bat`" $a && where cl"
 
       - name: Show detected toolchains
         run: python scripts/build_corpus.py list
@@ -1175,7 +1175,7 @@ jobs:
           if (-not $recipes) { throw "there are no recipes to build" }
           Write-Host "building $($recipes.Count) recipe(s): $($recipes -join ', ')"
           New-Item -ItemType Directory -Force -Path build | Out-Null
-          python scripts/build_corpus.py build $recipes 2>&1 |
+          python scripts/build_corpus.py build $recipes --toolchain mingw_${{ matrix.arch }} 2>&1 |
             Tee-Object -FilePath build/build-output.txt
           $code = $LASTEXITCODE
           Add-Content -Path $env:GITHUB_OUTPUT -Value "exit-code=$code"
