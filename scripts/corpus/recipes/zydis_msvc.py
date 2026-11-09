@@ -175,3 +175,124 @@ RECIPES = {
               "build whose names match Hidden.sys's 103 Zydis and Zycore "
               "functions."),
 }
+
+
+# Hidden's vendored copy: master at 6a17c48 with its Zycore pin 4f3746f (see
+# the "Hidden's commit" paragraph above). Built twice the way the 3.1.0 rows
+# are, and once more with the WDK, below.
+_HIDDEN_COMMIT = "6a17c48576e1b016ce098c4bdbd001a1403b6a0a"
+_HIDDEN_NOTE = ("Master at commit 6a17c48 (2021-07-29) with the Zycore commit "
+                "it pins, 4f3746f: the sources Hidden/Disasm vendors, "
+                "identified by content (its ZYDIS_VERSION still reads "
+                "3.1.0, 130 commits after the v3.1.0 tag). ")
+RECIPES["Zydis_3.1.0-6a17c48_msvc"] = _zydis(
+    "3.1.0-6a17c48", _HIDDEN_COMMIT,
+    notes=_HIDDEN_NOTE + "MEASURED_PLAIN")
+RECIPES["Zydis_3.1.0-6a17c48-nolibc_msvc"] = _zydis(
+    "3.1.0-6a17c48-nolibc", _HIDDEN_COMMIT, extra="-DZYAN_NO_LIBC=ON",
+    notes=_HIDDEN_NOTE + "Built with ZYAN_NO_LIBC, Hidden's configuration. "
+    "MEASURED_NOLIBC")
+
+# The WDK build. CMake is run for its configure step only, because that is
+# what writes the two export headers (ZydisExportConfig.h,
+# ZycoreExportConfig.h) the sources include; nothing it would compile is
+# used. The 14 translation units of src/ are then compiled by a generated
+# kernel-mode driver project that carries Hidden.vcxproj's Release|x64
+# settings and nothing else - the WindowsKernelModeDriver10.0 toolset,
+# ConfigurationType Driver, DriverType WDM, the three defines - and is
+# built with the same msbuild properties and the same forced props file as
+# hidden.py's driver step, so the compiler and linker see Hidden.sys's
+# command lines. corpus_entry.c is a DriverEntry that returns
+# STATUS_SUCCESS; a Driver project will not link without one.
+_WDK_PROPS = (
+    'python -c "'
+    "c='<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>"
+    "<ProgramDataBaseFileName>$(IntDir)$(ProjectName).compiler.pdb"
+    "</ProgramDataBaseFileName>"
+    "<WholeProgramOptimization>false</WholeProgramOptimization>"
+    "<TreatWarningAsError>false</TreatWarningAsError>';"
+    "l='<GenerateDebugInformation>true</GenerateDebugInformation>"
+    "<ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>"
+    "<OptimizeReferences>false</OptimizeReferences>"
+    "<EnableCOMDATFolding>false</EnableCOMDATFolding>"
+    "<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>"
+    "<AdditionalOptions>%(AdditionalOptions) /Brepro /INCREMENTAL:NO"
+    "</AdditionalOptions>';"
+    "open('corpus-drv.props','w').write("
+    "'<Project><ItemDefinitionGroup><ClCompile>'+c+'</ClCompile><Link>'"
+    "+l+'</Link></ItemDefinitionGroup></Project>')"
+    '"')
+_WDK_PROJECT = (
+    'python -c "'
+    "q=chr(39);"
+    "i=lambda p: '<Import Project='+q+'$(VCTargetsPath)'+chr(92)+p+q+' />';"
+    "open('zydis.vcxproj','w').write("
+    "'<Project DefaultTargets='+q+'Build'+q+'>'"
+    "'<ItemGroup><ProjectConfiguration Include='+q+'Release|x64'+q+'>'"
+    "'<Configuration>Release</Configuration><Platform>x64</Platform>'"
+    "'</ProjectConfiguration></ItemGroup>'"
+    "'<PropertyGroup><ProjectGuid>{6A17C485-76E1-4B01-8CE0-98C4BDBD0014}'"
+    "'</ProjectGuid><RootNamespace>zydis</RootNamespace></PropertyGroup>'"
+    "+i('Microsoft.Cpp.Default.props')+"
+    "'<PropertyGroup><TargetVersion>Windows7</TargetVersion>'"
+    "'<UseDebugLibraries>false</UseDebugLibraries>'"
+    "'<PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>'"
+    "'<ConfigurationType>Driver</ConfigurationType>'"
+    "'<DriverType>WDM</DriverType></PropertyGroup>'"
+    "+i('Microsoft.Cpp.props')+"
+    "'<ItemDefinitionGroup><ClCompile><PreprocessorDefinitions>'"
+    "'ZYCORE_STATIC_DEFINE;ZYDIS_STATIC_DEFINE;ZYAN_NO_LIBC;'"
+    "'%(PreprocessorDefinitions)</PreprocessorDefinitions>'"
+    "'<AdditionalIncludeDirectories>include;src;dependencies/zycore/include;'"
+    "'build-x64;build-x64/zycore;%(AdditionalIncludeDirectories)'"
+    "'</AdditionalIncludeDirectories></ClCompile></ItemDefinitionGroup>'"
+    "'<ItemGroup><ClCompile Include='+q+'src/*.c'+q+' />'"
+    "'<ClCompile Include='+q+'corpus_entry.c'+q+' /></ItemGroup>'"
+    "+i('Microsoft.Cpp.targets')+'</Project>');"
+    "open('corpus_entry.c','w').write('#include <wdm.h>'+chr(10)+"
+    "'DRIVER_INITIALIZE DriverEntry;'+chr(10)+"
+    "'NTSTATUS DriverEntry(PDRIVER_OBJECT d, PUNICODE_STRING r)'"
+    "'{ UNREFERENCED_PARAMETER(d); UNREFERENCED_PARAMETER(r); '"
+    "'return STATUS_SUCCESS; }'+chr(10))"
+    '"')
+_WDK_MSBUILD = ('msbuild zydis.vcxproj '
+                '/p:Configuration=Release /p:Platform={msbuild_platform} '
+                '/p:TargetVersion=Windows10 /p:SignMode=Off '
+                '/p:SkipPackageVerification=true '
+                '/p:WholeProgramOptimization=false '
+                '/p:OutDir=%CD%\\out\\ /p:IntDir=%CD%\\obj\\drv\\ '
+                '/p:ForceImportBeforeCppTargets=%CD%\\corpus-drv.props '
+                '/m /v:normal')
+
+RECIPES["Zydis_3.1.0-6a17c48-wdk"] = Recipe(
+    family="Zydis",
+    version="3.1.0-6a17c48-wdk",
+    upstream="https://github.com/zyantific/zydis",
+    license="MIT, Copyright (c) Florian Bernd, Joel Hoener",
+    source=Source(git_url="https://github.com/zyantific/zydis.git",
+                  git_ref=_HIDDEN_COMMIT),
+    build=[BuildStep(_CMAKE + "-DZYAN_NO_LIBC=ON"),
+           BuildStep(_WDK_PROPS),
+           BuildStep(_WDK_PROJECT),
+           BuildStep(_WDK_MSBUILD),
+           BuildStep("dir /s out", allow_failure=True)],
+    artifacts=[Artifact(path="out\\zydis.sys", component="zydis.sys",
+                        pdb="out\\zydis.pdb")],
+    # The WDK has no x86 kernel libraries; see hidden.py.
+    toolchains=["msvc_x64"],
+    build_flags="Release|x64 of a generated WDM driver project on the "
+                "WindowsKernelModeDriver10.0 toolset with "
+                "ZYCORE_STATIC_DEFINE, ZYDIS_STATIC_DEFINE and ZYAN_NO_LIBC - "
+                "Hidden.vcxproj's own settings - built with hidden.py's "
+                "msbuild properties (TargetVersion=Windows10, SignMode=Off, "
+                "SkipPackageVerification=true, WholeProgramOptimization=false) "
+                "and its forced props file (/Zi with separate compiler and "
+                "linker PDBs, /DEBUG, /OPT:NOREF /OPT:NOICF, no LTCG, /Brepro, "
+                "/INCREMENTAL:NO, TreatWarningAsError false); the code "
+                "generation flags are the WDK's defaults, as for Hidden.sys. "
+                "CMake configures only, to write the export headers",
+    notes=_HIDDEN_NOTE + "Compiled the way Hidden.sys compiles it: the "
+          "WDK's kernel-mode toolset and Hidden.vcxproj's defines, in a "
+          "generated driver project whose only other code is a DriverEntry "
+          "returning STATUS_SUCCESS. MEASURED_WDK",
+)

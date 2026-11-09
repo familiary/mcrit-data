@@ -141,3 +141,12 @@ RECIPES = {
         "206 of them ten instructions or more; no glue survives the filter. "
         "110 of 198 distinct x64 hashes of 3.1.0 are also in this build."),
 }
+
+# Hidden's vendored copy, identified by content rather than by its version
+# macro (see the "Hidden's commit" paragraph of zydis_msvc.py).
+RECIPES["Zydis_3.1.0-6a17c48"] = _zydis(
+    "3.1.0-6a17c48", "6a17c48576e1b016ce098c4bdbd001a1403b6a0a",
+    _COMMON + "Master at commit 6a17c48 (2021-07-29, \"Update `Zycore` "
+    "submodule\") with the Zycore commit it pins, 4f3746f: the commit whose "
+    "sources Hidden/Disasm vendors (its ZYDIS_VERSION still reads 3.1.0). "
+    "MEASURED_PLACEHOLDER")
