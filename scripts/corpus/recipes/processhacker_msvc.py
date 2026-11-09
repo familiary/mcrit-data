@@ -58,6 +58,69 @@ Vendored code compiled into ProcessHacker.exe: PCRE2 10.21 (2016-01-12,
 ProcessHacker\\pcre, BSD) and Mini-XML 2.8 (ProcessHacker\\mxml, LGPL-2 with
 exception); phlib is linked whole as the application's own library. The
 OnlineChecks plugin carries json-c (plugins\\OnlineChecks\\json-c).
+
+Measured (scratch run 42678836328, windows-2022, MSVC 19.44.35229, wide-stdio
+glue baseline merged on the scratch branch only; the first attempt, run
+42674927927, built every x86 artefact and failed x64 on the LNK2001 above).
+Kept + removed by the glue baseline = image; then functions of 10+
+instructions / distinct PicHashes; every one of those is named (PDB):
+
+    ProcessHacker.exe  x64 3363+204=3567  2371/2291   x86 3150+196=3346  2395/2299
+    peview.exe         x64 1096+172=1268   689/667    x86  972+170=1142   654/630
+
+    plugin                 x64 kept+removed=total     x86 kept+removed=total
+    DotNetTools            266+135=401   92/89        227+125=352   81/77
+    ExtendedNotifications  186+152=338   61/60        180+141=321   66/65
+    ExtendedServices       219+134=353   67/67        195+127=322   61/61
+    ExtendedTools          606+144=750  247/238       536+147=683  242/229
+    HardwareDevices        357+137=494  140/135       332+130=462  142/137
+    NetworkTools           215+140=355   46/45        208+130=338   46/45
+    OnlineChecks           303+170=473  120/116       293+163=456  132/129
+    SbieSupport             65+129=194   13/13         54+121=175   10/10
+    ToolStatus             287+131=418   86/84        263+123=386   78/74
+    Updater                202+136=338   46/46        196+139=335   47/46
+    UserNotes              189+129=318   57/56        166+121=287   54/53
+    WindowExplorer         452+135=587  104/102       406+128=534   89/88
+
+The plugin counts are padded by one-instruction import thunks into
+ProcessHacker.exe; judge them on the 10+ column. x64 ProcessHacker.exe
+carries 327 function names the x86 image lacks, almost all FORCEINLINE
+helpers from the phlib and phnt headers (InitializeListHead,
+PhCompareString, PhEqualStringRef2, PhAcquireQueuedLockShared, ...) that
+/Zc:inline- keeps emitted and /OPT:NOREF keeps linked. They are Process
+Hacker's own header code, but an upstream /GL /OPT:REF build would inline
+or drop them rather than carry them as separate functions.
+
+Overlap, distinct PicHashes of 10+ instructions:
+* data/kphlib (kph.c + reached phlib) is mostly inside ProcessHacker.exe:
+  507 of kphlib's 580 x64 hashes (87.4%) and 479 of 575 x86 (83.3%); the
+  same 507/479 are in peview.exe. Both link phlib whole-object, kphlib
+  links only what kph.c reaches.
+* peview.exe against ProcessHacker.exe: 637 of 667 (95.5%) x64, 605 of 630
+  (96.0%) x86 - peview is almost entirely phlib.
+* The twelve plugins together against ProcessHacker + peview: 26 of 871
+  (x64), 9 of 869 (x86); against KProcessHacker: 0.
+* data/pcre2 (10.39 and 10.45, MSVC) against ProcessHacker + peview: 5 (x64)
+  and 2 (x86) hashes; the vendored PCRE2 is 10.21, five years older.
+* x86 against x64, all fourteen artefacts: 1 hash.
+
+Glue survivors (MSVC startup the baseline's console-main EXE probes do not
+emit): both executables keep the wWinMain flavour of the VC startup,
+x64 / x86 instruction counts and PicHashes: __scrt_common_main_seh 92
+11271104747006965853 / 110 15412194987082466279, pre_c_initialization 48
+973123914783528695 / 53 7114945967067284721, invoke_main 12
+18071112188852371364 / 11 8721064936966453011, wWinMainCRTStartup 4
+10082331731223971200 / 2 13477325577764728392,
+__scrt_winmain_policy::set_app_type 2 13166271553064441970 / 4
+2389322068591341037, __scrt_wide_argv_policy::configure_argv 5
+2758688040441024273 / 5 11359937782907268588,
+__scrt_wide_environment_policy::initialize_environment 1
+6102989692441836808 (both), and on x86 peview a 10-instruction
+__scrt_common_main_seh$+0x124 fragment (13184720424441161382). The same
+startup hashes survive in the PuTTY GUI tools (putty_msvc.py). Generated:
+__acrt_fp_format (fpshim.c) x64 1616887169466728392, x86
+5217805753421424442, the same hashes as in kphlib. The plugins keep no CRT
+name; their DllMain is Process Hacker's own (142-143 instructions).
 """
 
 import base64
