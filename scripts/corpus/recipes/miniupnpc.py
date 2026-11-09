@@ -61,6 +61,34 @@ The ws2_32 ones come out unnamed (31-37 per x64 image) and are not removable
 by name. MinGW's inline ``printf`` / ``fprintf`` / ``snprintf`` wrappers are
 compiled into the library at -Os, and the baseline measures them at -O0 and
 -O2 only; see the README for the survivors.
+
+The 1.9 line, added for the window issue #62 suggests (1.9.x to 2.1.x).
+Upstream has no git tag that tells the 1.9.x snapshots apart: ``miniupnpc_1_9``
+(ce56baf8) is the only one, and VERSION reads "1.9" from 2014-01-31 (b72a782)
+until 2.0, tarballs included. What is dated is the release tarballs that
+miniupnp.free.fr/files/ and miniupnp.tuxfamily.org/files/ serve, from
+miniupnpc-1.9.20140401.tar.gz to miniupnpc-1.9.20160209.tar.gz (twenty-one
+files). ``miniupnpc_1.9.20150206`` is built from miniupnpc-1.9.20150206.tar.gz
+(76864 bytes, sha256 230d3ad5...), the example the issue names, with the same
+Makefile.mingw route as 2.0 (it has the same hardcoded ``dllwrap --driver-name
+gcc`` and Windows-only ``miniupnpcstrings.h`` rule); the archive has no
+``miniupnpc/`` level, so the steps run in its root and the DLL is ./miniupnpc.dll.
+Pinned by sha256 of the download; the file is byte for byte what both mirrors
+serve (HTTP 200, same size from each).
+
+kept + removed = total: x86 75 + 154 = 229, x64 102 + 154 = 256. Of the kept,
+the x86 image has one unnamed function and the x64 image 31 (ws2_32 import
+thunks, as for the other versions); the iphlpapi thunks GetBestRoute and
+GetIpAddrTable are the named ones, one instruction each. 61 (x86) and 59 (x64)
+distinct PicHashes of functions with 10 or more instructions. Overlap with
+the neighbouring builds (x86 / x64, share of the 1.9.20150206 column): 2.0 54%
+/ 53%, 2.1 44% / 42%. So it is a separate cluster in the same sense as the four
+above.
+
+1.9.20160209, the last 1.9 snapshot, was built too and dropped: it has the
+same 63 (x86) and 61 (x64) PicHashes as 2.0, exactly (100% each way), because
+2.0 was cut from it two months later. 1.9.20140401 and the other twenty
+snapshots were not built.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -73,20 +101,20 @@ _STRINGS = ("sed 's|OS_STRING \".*\"|OS_STRING \"Windows/Mingw32\"|' "
             "> miniupnpcstrings.h")
 
 
-def _steps(version):
-    if version == "2.0":
+def _steps(version, cwd="miniupnpc"):
+    if version == "2.0" or version.startswith("1.9"):
         return [
-            BuildStep(_STRINGS, cwd="miniupnpc"),
+            BuildStep(_STRINGS, cwd=cwd),
             BuildStep("mkdir -p tools && for t in dllwrap dlltool as; do "
                       "ln -sf $(command -v {prefix}$t) tools/$t; done && "
-                      "ln -sf $(command -v {cc}) tools/gcc", cwd="miniupnpc"),
+                      "ln -sf $(command -v {cc}) tools/gcc", cwd=cwd),
             BuildStep("PATH=$PWD/tools:$PATH " + _MAKE +
                       " -o wingenminiupnpcstrings init miniupnpc.dll",
-                      cwd="miniupnpc", env={"CFLAGS": "-Os"}),
+                      cwd=cwd, env={"CFLAGS": "-Os"}),
         ]
     goals = "init" if version == "2.1" else "miniupnpcstrings.h rc_version.h"
     return [BuildStep(_MAKE + " " + goals + " miniupnpc.dll",
-                      cwd="miniupnpc", env={"CFLAGS": "-Os"})]
+                      cwd=cwd, env={"CFLAGS": "-Os"})]
 
 
 def _miniupnpc(version, git_ref):
@@ -107,7 +135,29 @@ def _miniupnpc(version, git_ref):
     )
 
 
+def _miniupnpc_tarball(version, sha256):
+    """A dated 1.9.x release tarball. Upstream publishes these as files, not
+    as git tags: the only 1.9 tag, ``miniupnpc_1_9``, carries VERSION "1.9"
+    for the whole 2014-01 to 2016-04 span, and the tarballs (which have no
+    ``miniupnpc/`` level, so cwd is the unpacked root) are what carries the
+    dated names that distributions and vendored copies cite."""
+    r = _miniupnpc(version, None)
+    r.source = Source(url="http://miniupnp.free.fr/files/miniupnpc-%s.tar.gz"
+                      % version, sha256=sha256)
+    r.build = _steps(version, cwd=".")
+    r.artifacts = [Artifact(path="miniupnpc.dll", component="miniupnpc.dll")]
+    r.notes += (" Built from upstream's dated release tarball "
+                "miniupnpc-%s.tar.gz (the same file is on "
+                "miniupnp.tuxfamily.org/files/); upstream publishes no "
+                "checksum, the sha256 is of the download." % version)
+    return r
+
+
 RECIPES = {
+    # The 1.9 line: dated tarball releases, see _miniupnpc_tarball.
+    "miniupnpc_1.9.20150206": _miniupnpc_tarball(
+        "1.9.20150206",
+        "230d3ad5a3047daa77f99602503d798f720428207217ebfbfe2a4f7762b029e7"),
     # Brackets the 2016-2020 period; see the docstring for what is unknown.
     "miniupnpc_2.0": _miniupnpc("2.0", "miniupnpc_2_0"),
     "miniupnpc_2.1": _miniupnpc("2.1", "miniupnpc_2_1"),
