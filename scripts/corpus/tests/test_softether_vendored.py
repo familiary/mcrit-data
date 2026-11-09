@@ -73,9 +73,29 @@ class RecipeWiringTest(unittest.TestCase):
             re.compile(pattern)
 
     def test_the_linux_recipes_exclude_nothing(self):
+        # The Stable 4.x Linux recipes link everything dynamically. The 5.x
+        # Linux recipes do statically link liboqs, the OQS provider,
+        # cpu_features and blake2s, and carry their own table (below).
         for name, recipe in recipes.all_recipes().items():
-            if recipe.family == "SoftEtherVPN" and name != RECIPE:
+            if (recipe.family == "SoftEtherVPN" and name != RECIPE
+                    and not recipe.version.startswith("5.")):
                 self.assertEqual(recipe.exclude_functions, [], name)
+
+    def test_the_5x_recipes_carry_the_5x_table(self):
+        from corpus.recipes import _softether5_vendored as v5
+
+        found = [recipe for recipe in recipes.all_recipes().values()
+                 if recipe.family == "SoftEtherVPN"
+                 and recipe.version.startswith("5.")]
+        self.assertEqual(len(found), 2)
+        for recipe in found:
+            self.assertEqual(recipe.exclude_functions, v5.patterns())
+        for pattern in v5.patterns():
+            self.assertTrue(pattern.startswith("^(?:") and pattern.endswith(")$"))
+            rx = re.compile(pattern)
+            # SoftEther's own CamelCase API must never match.
+            for own in ("StrCpy", "NewPack", "VpnServerMain", "JsonToPack"):
+                self.assertIsNone(rx.search(own), own)
 
     def test_every_category_has_a_table(self):
         self.assertEqual(sorted(vendored.NAMES), sorted(vendored.CATEGORIES))
