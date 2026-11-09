@@ -214,6 +214,74 @@ _CONFIGS = [
 ]
 
 _GRPC_TOOLS = "grpcio-tools==1.85.1"
+# 0.3.9.10 and 0.4.5 get an older protoc/protobuf pair, as in nanopb.py.
+_OLD_TOOLS = ("grpcio-tools==1.51.3 grpcio==1.51.3 protobuf==4.21.12 "
+              "setuptools==84.2.1")
+
+# 0.3.9.10 reads fixed sizes from the .proto itself (see _generate_steps).
+_DRIVER_PROTO_INLINE = [
+    "syntax = \\x27proto3\\x27;",
+    "package driver;",
+    "import \\x27nanopb.proto\\x27;",
+    "enum Kind { KIND_NONE = 0; KIND_PING = 1; KIND_DATA = 2; }",
+    "message Point { sint32 x = 1; sint32 y = 2; }",
+    "message Packet {",
+    "  uint32 id = 1;",
+    "  int64 stamp = 2;",
+    "  fixed32 crc = 3;",
+    "  bool urgent = 4;",
+    "  float gain = 5;",
+    "  double offset = 6;",
+    "  string name = 7 [(nanopb).max_size = 32];",
+    "  bytes payload = 8 [(nanopb).max_size = 64];",
+    "  Kind kind = 9;",
+    "  repeated int32 samples = 10 [(nanopb).max_count = 16];",
+    "  Point origin = 11;",
+    "  repeated Point path = 12 [(nanopb).max_count = 8];",
+    "  oneof body {",
+    "    string text = 13 [(nanopb).max_size = 48];",
+    "    uint64 counter = 14;",
+    "  }",
+    "}",
+]
+
+# version -> (pip requirements for the generator's protoc, how it is driven)
+_GENERATORS = {
+    "0.4.9.2": (_GRPC_TOOLS, "proto"),
+    "0.4.5": (_OLD_TOOLS, "proto"),
+    "0.3.9.10": (_OLD_TOOLS, "pb"),
+}
+
+
+def _generate_steps(version):
+    tools, style = _GENERATORS[version]
+    steps = [
+        BuildStep("python -m pip install --quiet --target gen-deps " + tools),
+        BuildStep("if not exist gen mkdir gen"),
+    ]
+    if style == "proto":
+        steps += [
+            BuildStep(_write("gen/driver.proto", _DRIVER_PROTO)),
+            BuildStep(_write("gen/driver.options", _DRIVER_OPTIONS)),
+            BuildStep("python ..\\generator\\nanopb_generator.py driver.proto",
+                      cwd="gen", env={"PYTHONPATH": "..\\gen-deps"}),
+        ]
+    else:
+        # As in nanopb.py: a descriptor set, the two *_pb2.py made with
+        # grpc_tools.protoc, and the sizes inline in driver.proto because
+        # the 0.3.9.10 options reader opens its file with "rU".
+        steps += [
+            BuildStep("python -m grpc_tools.protoc -I. --python_out=. "
+                      "nanopb.proto plugin.proto", cwd="generator/proto",
+                      env={"PYTHONPATH": "..\\..\\gen-deps"}),
+            BuildStep(_write("gen/driver.proto", _DRIVER_PROTO_INLINE)),
+            BuildStep("python -m grpc_tools.protoc -I. "
+                      "-I..\\generator\\proto -o driver.pb driver.proto",
+                      cwd="gen", env={"PYTHONPATH": "..\\gen-deps"}),
+            BuildStep("python ..\\generator\\nanopb_generator.py driver.pb",
+                      cwd="gen", env={"PYTHONPATH": "..\\gen-deps"}),
+        ]
+    return steps
 
 
 def _def_from_objects(directory):
@@ -264,15 +332,11 @@ def _nanopb_msvc(version, generated=False):
              "data/MSVC. Exports come from a .def written outside the "
              "source tree. Evidence for inclusion is naming only.")
     if generated:
-        steps = steps[:-1] + [
-            BuildStep("python -m pip install --quiet --target gen-deps "
-                      + _GRPC_TOOLS),
-            BuildStep("if not exist gen mkdir gen"),
-            BuildStep(_write("gen/driver.proto", _DRIVER_PROTO)),
-            BuildStep(_write("gen/driver.options", _DRIVER_OPTIONS)),
-            BuildStep("python ..\\generator\\nanopb_generator.py driver.proto",
-                      cwd="gen", env={"PYTHONPATH": "..\\gen-deps"}),
-        ]
+        steps = steps[:-1] + _generate_steps(version)
+        # 0.4.9.2 keeps the text it was imported with.
+        how = ("" if version == "0.4.9.2" else
+               " (nanopb_generator.py %s, protoc from %s)"
+               % (version, _GENERATORS[version][0]))
         for tag, dll, defines in _CONFIGS:
             steps += _config_steps(tag, dll, defines)
             artifacts.append(Artifact(
@@ -280,15 +344,18 @@ def _nanopb_msvc(version, generated=False):
                 component=dll + ".dll",
                 pdb="cfg-%s-{arch}/%s.pdb" % (tag, dll),
                 build_flags="/O2 /MD /Zi %s, runtime plus generated "
-                            "driver.pb.c; /DEBUG /Brepro /INCREMENTAL:NO "
+                            "driver.pb.c%s; /DEBUG /Brepro /INCREMENTAL:NO "
                             "/OPT:NOREF /OPT:NOICF at link, exports from a "
-                            "/DEF generated from the objects" % defines))
+                            "/DEF generated from the objects"
+                            % (defines, how)))
         steps.append(BuildStep("dir", allow_failure=True))
+        tools = _GENERATORS[version][0]
+        opts = (" and driver.options" if _GENERATORS[version][1] == "proto"
+                else " with the sizes inline")
         notes += (" The -all, -small and -big DLLs add the generated "
                   "driver.pb.c (nanopb_generator.py over a minimal "
-                  "driver.proto and driver.options, protoc from "
-                  + _GRPC_TOOLS + ") and the PB_* defines named in their "
-                  "build_flags.")
+                  "driver.proto%s, protoc from %s) and the PB_* defines "
+                  "named in their build_flags." % (opts, tools))
     return Recipe(
         family="nanopb",
         version=version,
@@ -308,7 +375,7 @@ def _nanopb_msvc(version, generated=False):
 
 
 RECIPES = {
-    "nanopb_0.3.9.10_msvc": _nanopb_msvc("0.3.9.10"),
-    "nanopb_0.4.5_msvc": _nanopb_msvc("0.4.5"),
+    "nanopb_0.3.9.10_msvc": _nanopb_msvc("0.3.9.10", generated=True),
+    "nanopb_0.4.5_msvc": _nanopb_msvc("0.4.5", generated=True),
     "nanopb_0.4.9.2_msvc": _nanopb_msvc("0.4.9.2", generated=True),
 }
