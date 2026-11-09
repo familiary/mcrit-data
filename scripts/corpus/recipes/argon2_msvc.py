@@ -74,6 +74,17 @@ more (same tag, same arch):
 
 Disjoint, as with Jansson: the two compilers share no exact function body, so
 a cl-built Argon2 is only matched by this axis.
+
+Overlap with data/libsodium (PicHash, functions of 10 instructions or more,
+re-measured from the committed exports): the MSVC x64 image shares 4 PicHashes
+with both libsodium MSVC x64 builds (1.0.18 and 1.0.20): ``load_block`` and
+``store_block`` (one hash), ``decode_decimal``, ``b64_byte_to_char`` and
+``b64_char_to_byte``. The MSVC x86 image shares none with the MSVC x86
+libsodium builds, and the MinGW libsodium images share nothing with it. The
+MinGW images of this family share only the unnamed 15-instruction MinGW
+runtime routine with the MinGW libsodium images. libsodium has 57 to 70
+Argon2-named functions per image (14 to 28 of 10 instructions or more) and no
+Argon2d.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
