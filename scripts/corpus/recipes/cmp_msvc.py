@@ -77,6 +77,16 @@ essentially nothing with the MinGW one, which is the case for building it.
 MSVC v10 against MSVC v20: 79 / 59 shared of 153 / 145 (x86 / x64), against
 69 / 57 of 137 / 125 for MinGW, so the two tags differ by about as much under
 either compiler and both are worth keeping.
+
+The copy c-toxcore vendors (backlog #47) is built too: recipe
+``cmp_toktok_52bfcfa_msvc`` (version ``toktok-52bfcfa``), TokTok/cmp at
+52bfcfa17d2eb4322da2037ad625f5575129cece with /DCMP_NO_FLOAT=1 and otherwise
+the steps above (pin and derivation in cmp.py on the MinGW branch). Counted
+on the runner (run 42676010529, v143), kept + removed = image total: x86
+204 + 123 = 327, x64 183 + 129 = 312. PicHash overlap of functions of 10+
+instructions (x86 / x64), of its 163 / 152 distinct: 110 / 80 with v20 and
+73 / 55 with v10 (the MSVC v20 has 175 / 161), and 0 / 0 with its MinGW
+counterpart.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
