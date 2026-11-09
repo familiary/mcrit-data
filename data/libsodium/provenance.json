@@ -78,6 +78,71 @@
     },
     "toolchain": "mingw13_x64",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "notes": "Measured on this image: 34 functions carry \"blake2\" in their name (BLAKE2b only). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x64 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "Argon2 reference implementation: core (P-H-C argon2 core.c)",
+        "notes": "Argon2i and Argon2id only; libsodium carries no Argon2d (0 function names contain \"argon2d\" without \"argon2id\"). Measured on this image: 57 functions carry \"argon2\" in their name (15 of them 10+ instructions, the rest small API accessors and wrappers). No function of 10+ instructions shares a PicHash with argon2_20190702_mingw13_x64_libargon2.dll (P-H-C/phc-winner-argon2 20190702, commit 62358ba) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-core.c",
+        "source_sha256": "1850c013dd9a764fed92eabe128855ff3ebd63b517075141c5e56b117203bdf2",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: PHC string encoding (P-H-C argon2 encoding.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-encoding.c",
+        "source_sha256": "9cee75b62668cab99398f595b9a571d3136fd6bc35e60679d9cfba25ccad25f2",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: API layer (P-H-C argon2 argon2.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2.c",
+        "source_sha256": "3621714cd3677ecd346819a1e2e8b3e446a1465a5f35c2a8da1a5deae43587d3",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: portable fill_segment (P-H-C argon2 ref.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c",
+        "source_sha256": "5fbbace0055d92056cdcd7621a9694de1ef7046542f710e1a478c04b0ab423ba",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: SSSE3 fill_segment (P-H-C argon2 opt.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ssse3.c",
+        "source_sha256": "b57e67f3c976bbfec062815b1ce0b3afc796c1bd80fea3868c60119c083408f7",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX2 fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx2.c",
+        "source_sha256": "8192730e7e3c335d3a1924893b832e83832a3e87c7a26615bd4ae964d4509036",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX-512F fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx512f.c",
+        "source_sha256": "1ee75ff725441be5c6f493f14ab3e14e427fd2bd33c27a2ac2bc3e84c80caacb",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: variable-length BLAKE2b H' (P-H-C argon2 blake2b_long)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/blake2b-long.c",
+        "source_sha256": "37f1b01973dd484e009346bc46d7eb16e74d2f9b5186c29f2d8df4a1d286ef2d",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      }
+    ],
     "version": "1.0.18"
   },
   "libsodium_1.0.18_mingw13_x86_libsodium-23.dll": {
@@ -160,6 +225,71 @@
     },
     "toolchain": "mingw13_x86",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "notes": "Measured on this image: 34 functions carry \"blake2\" in their name (BLAKE2b only). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x86 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "Argon2 reference implementation: core (P-H-C argon2 core.c)",
+        "notes": "Argon2i and Argon2id only; libsodium carries no Argon2d (0 function names contain \"argon2d\" without \"argon2id\"). Measured on this image: 57 functions carry \"argon2\" in their name (17 of them 10+ instructions, the rest small API accessors and wrappers). No function of 10+ instructions shares a PicHash with argon2_20190702_mingw13_x86_libargon2.dll (P-H-C/phc-winner-argon2 20190702, commit 62358ba) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-core.c",
+        "source_sha256": "1850c013dd9a764fed92eabe128855ff3ebd63b517075141c5e56b117203bdf2",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: PHC string encoding (P-H-C argon2 encoding.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-encoding.c",
+        "source_sha256": "9cee75b62668cab99398f595b9a571d3136fd6bc35e60679d9cfba25ccad25f2",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: API layer (P-H-C argon2 argon2.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2.c",
+        "source_sha256": "3621714cd3677ecd346819a1e2e8b3e446a1465a5f35c2a8da1a5deae43587d3",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: portable fill_segment (P-H-C argon2 ref.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c",
+        "source_sha256": "5fbbace0055d92056cdcd7621a9694de1ef7046542f710e1a478c04b0ab423ba",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: SSSE3 fill_segment (P-H-C argon2 opt.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ssse3.c",
+        "source_sha256": "b57e67f3c976bbfec062815b1ce0b3afc796c1bd80fea3868c60119c083408f7",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX2 fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx2.c",
+        "source_sha256": "8192730e7e3c335d3a1924893b832e83832a3e87c7a26615bd4ae964d4509036",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX-512F fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx512f.c",
+        "source_sha256": "1ee75ff725441be5c6f493f14ab3e14e427fd2bd33c27a2ac2bc3e84c80caacb",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: variable-length BLAKE2b H' (P-H-C argon2 blake2b_long)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/blake2b-long.c",
+        "source_sha256": "37f1b01973dd484e009346bc46d7eb16e74d2f9b5186c29f2d8df4a1d286ef2d",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      }
+    ],
     "version": "1.0.18"
   },
   "libsodium_1.0.18_msvc143_x64_libsodium.dll": {
@@ -330,6 +460,71 @@
     },
     "toolchain": "msvc143_x64",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "notes": "Measured on this image: 37 functions carry \"blake2\" in their name (BLAKE2b only). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse msvc143 x64 images (data/BLAKE2).",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "Argon2 reference implementation: core (P-H-C argon2 core.c)",
+        "notes": "Argon2i and Argon2id only; libsodium carries no Argon2d (0 function names contain \"argon2d\" without \"argon2id\"). Measured on this image: 57 functions carry \"argon2\" in their name (14 of them 10+ instructions, the rest small API accessors and wrappers). 5 function(s) / 4 distinct PicHash(es) shared at 10+ instructions with argon2_20190702_msvc143_x64_libargon2.dll (P-H-C/phc-winner-argon2 20190702, commit 62358ba): load_block (38), store_block (38), decode_decimal (35), b64_byte_to_char (37), b64_char_to_byte (52).",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-core.c",
+        "source_sha256": "1850c013dd9a764fed92eabe128855ff3ebd63b517075141c5e56b117203bdf2",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: PHC string encoding (P-H-C argon2 encoding.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-encoding.c",
+        "source_sha256": "9cee75b62668cab99398f595b9a571d3136fd6bc35e60679d9cfba25ccad25f2",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: API layer (P-H-C argon2 argon2.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2.c",
+        "source_sha256": "3621714cd3677ecd346819a1e2e8b3e446a1465a5f35c2a8da1a5deae43587d3",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: portable fill_segment (P-H-C argon2 ref.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c",
+        "source_sha256": "5fbbace0055d92056cdcd7621a9694de1ef7046542f710e1a478c04b0ab423ba",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: SSSE3 fill_segment (P-H-C argon2 opt.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ssse3.c",
+        "source_sha256": "b57e67f3c976bbfec062815b1ce0b3afc796c1bd80fea3868c60119c083408f7",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX2 fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx2.c",
+        "source_sha256": "8192730e7e3c335d3a1924893b832e83832a3e87c7a26615bd4ae964d4509036",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX-512F fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx512f.c",
+        "source_sha256": "1ee75ff725441be5c6f493f14ab3e14e427fd2bd33c27a2ac2bc3e84c80caacb",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: variable-length BLAKE2b H' (P-H-C argon2 blake2b_long)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/blake2b-long.c",
+        "source_sha256": "37f1b01973dd484e009346bc46d7eb16e74d2f9b5186c29f2d8df4a1d286ef2d",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      }
+    ],
     "version": "1.0.18"
   },
   "libsodium_1.0.18_msvc143_x86_libsodium.dll": {
@@ -499,6 +694,71 @@
     },
     "toolchain": "msvc143_x86",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "notes": "Measured on this image: 36 functions carry \"blake2\" in their name (BLAKE2b only). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse msvc143 x86 images (data/BLAKE2).",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "Argon2 reference implementation: core (P-H-C argon2 core.c)",
+        "notes": "Argon2i and Argon2id only; libsodium carries no Argon2d (0 function names contain \"argon2d\" without \"argon2id\"). Measured on this image: 57 functions carry \"argon2\" in their name (17 of them 10+ instructions, the rest small API accessors and wrappers). No function of 10+ instructions shares a PicHash with argon2_20190702_msvc143_x86_libargon2.dll (P-H-C/phc-winner-argon2 20190702, commit 62358ba).",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-core.c",
+        "source_sha256": "1850c013dd9a764fed92eabe128855ff3ebd63b517075141c5e56b117203bdf2",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: PHC string encoding (P-H-C argon2 encoding.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-encoding.c",
+        "source_sha256": "9cee75b62668cab99398f595b9a571d3136fd6bc35e60679d9cfba25ccad25f2",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: API layer (P-H-C argon2 argon2.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2.c",
+        "source_sha256": "3621714cd3677ecd346819a1e2e8b3e446a1465a5f35c2a8da1a5deae43587d3",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: portable fill_segment (P-H-C argon2 ref.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c",
+        "source_sha256": "5fbbace0055d92056cdcd7621a9694de1ef7046542f710e1a478c04b0ab423ba",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: SSSE3 fill_segment (P-H-C argon2 opt.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ssse3.c",
+        "source_sha256": "b57e67f3c976bbfec062815b1ce0b3afc796c1bd80fea3868c60119c083408f7",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX2 fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx2.c",
+        "source_sha256": "8192730e7e3c335d3a1924893b832e83832a3e87c7a26615bd4ae964d4509036",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX-512F fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx512f.c",
+        "source_sha256": "1ee75ff725441be5c6f493f14ab3e14e427fd2bd33c27a2ac2bc3e84c80caacb",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: variable-length BLAKE2b H' (P-H-C argon2 blake2b_long)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/blake2b-long.c",
+        "source_sha256": "37f1b01973dd484e009346bc46d7eb16e74d2f9b5186c29f2d8df4a1d286ef2d",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      }
+    ],
     "version": "1.0.18"
   },
   "libsodium_1.0.20_mingw13_x64_libsodium-26.dll": {
@@ -580,6 +840,71 @@
     },
     "toolchain": "mingw13_x64",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "notes": "Measured on this image: 34 functions carry \"blake2\" in their name (BLAKE2b only). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x64 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "Argon2 reference implementation: core (P-H-C argon2 core.c)",
+        "notes": "Argon2i and Argon2id only; libsodium carries no Argon2d (0 function names contain \"argon2d\" without \"argon2id\"). Measured on this image: 68 functions carry \"argon2\" in their name (26 of them 10+ instructions, the rest small API accessors and wrappers). No function of 10+ instructions shares a PicHash with argon2_20190702_mingw13_x64_libargon2.dll (P-H-C/phc-winner-argon2 20190702, commit 62358ba) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-core.c",
+        "source_sha256": "0a386f401f14c2417f9ab6cc03bad124f4c1c035d4aa1396e8349bb299f38324",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: PHC string encoding (P-H-C argon2 encoding.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-encoding.c",
+        "source_sha256": "d1743937f1e5549667fe2d6d65d1c35636b462c95c368fa0900d2e0c00ee223a",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: API layer (P-H-C argon2 argon2.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2.c",
+        "source_sha256": "b91797fc040a6531ac6fd4220226c095d8855b22aa397875165b27c4b4945163",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: portable fill_segment (P-H-C argon2 ref.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c",
+        "source_sha256": "fcc5aa0b37892084c792e1eb8f5c096bbbf9a3ae6c0052efe9444818813cc005",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: SSSE3 fill_segment (P-H-C argon2 opt.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ssse3.c",
+        "source_sha256": "8e539874a0e9a9337ffbb83b2ef2e9e6ee3ff40f47f44080859edcf220342d50",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX2 fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx2.c",
+        "source_sha256": "57c29c603f97fcd367b60cf45ee9ea35fb5c231a5ea4598442fd540f8ecf80ba",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX-512F fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx512f.c",
+        "source_sha256": "0d0b927d51d74a0c757c531eb162f3490dc5517cae8f14018f53ab00c6b41c5a",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: variable-length BLAKE2b H' (P-H-C argon2 blake2b_long)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/blake2b-long.c",
+        "source_sha256": "37f1b01973dd484e009346bc46d7eb16e74d2f9b5186c29f2d8df4a1d286ef2d",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      }
+    ],
     "version": "1.0.20"
   },
   "libsodium_1.0.20_mingw13_x86_libsodium-26.dll": {
@@ -662,6 +987,71 @@
     },
     "toolchain": "mingw13_x86",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "notes": "Measured on this image: 34 functions carry \"blake2\" in their name (BLAKE2b only). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x86 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "Argon2 reference implementation: core (P-H-C argon2 core.c)",
+        "notes": "Argon2i and Argon2id only; libsodium carries no Argon2d (0 function names contain \"argon2d\" without \"argon2id\"). Measured on this image: 68 functions carry \"argon2\" in their name (28 of them 10+ instructions, the rest small API accessors and wrappers). No function of 10+ instructions shares a PicHash with argon2_20190702_mingw13_x86_libargon2.dll (P-H-C/phc-winner-argon2 20190702, commit 62358ba) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-core.c",
+        "source_sha256": "0a386f401f14c2417f9ab6cc03bad124f4c1c035d4aa1396e8349bb299f38324",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: PHC string encoding (P-H-C argon2 encoding.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-encoding.c",
+        "source_sha256": "d1743937f1e5549667fe2d6d65d1c35636b462c95c368fa0900d2e0c00ee223a",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: API layer (P-H-C argon2 argon2.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2.c",
+        "source_sha256": "b91797fc040a6531ac6fd4220226c095d8855b22aa397875165b27c4b4945163",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: portable fill_segment (P-H-C argon2 ref.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c",
+        "source_sha256": "fcc5aa0b37892084c792e1eb8f5c096bbbf9a3ae6c0052efe9444818813cc005",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: SSSE3 fill_segment (P-H-C argon2 opt.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ssse3.c",
+        "source_sha256": "8e539874a0e9a9337ffbb83b2ef2e9e6ee3ff40f47f44080859edcf220342d50",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX2 fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx2.c",
+        "source_sha256": "57c29c603f97fcd367b60cf45ee9ea35fb5c231a5ea4598442fd540f8ecf80ba",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX-512F fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx512f.c",
+        "source_sha256": "0d0b927d51d74a0c757c531eb162f3490dc5517cae8f14018f53ab00c6b41c5a",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: variable-length BLAKE2b H' (P-H-C argon2 blake2b_long)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/blake2b-long.c",
+        "source_sha256": "37f1b01973dd484e009346bc46d7eb16e74d2f9b5186c29f2d8df4a1d286ef2d",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      }
+    ],
     "version": "1.0.20"
   },
   "libsodium_1.0.20_msvc143_x64_libsodium.dll": {
@@ -832,6 +1222,71 @@
     },
     "toolchain": "msvc143_x64",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "notes": "Measured on this image: 37 functions carry \"blake2\" in their name (BLAKE2b only). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse msvc143 x64 images (data/BLAKE2).",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "Argon2 reference implementation: core (P-H-C argon2 core.c)",
+        "notes": "Argon2i and Argon2id only; libsodium carries no Argon2d (0 function names contain \"argon2d\" without \"argon2id\"). Measured on this image: 70 functions carry \"argon2\" in their name (27 of them 10+ instructions, the rest small API accessors and wrappers). 5 function(s) / 4 distinct PicHash(es) shared at 10+ instructions with argon2_20190702_msvc143_x64_libargon2.dll (P-H-C/phc-winner-argon2 20190702, commit 62358ba): load_block (38), store_block (38), decode_decimal (35), b64_byte_to_char (37), b64_char_to_byte (52).",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-core.c",
+        "source_sha256": "0a386f401f14c2417f9ab6cc03bad124f4c1c035d4aa1396e8349bb299f38324",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: PHC string encoding (P-H-C argon2 encoding.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-encoding.c",
+        "source_sha256": "d1743937f1e5549667fe2d6d65d1c35636b462c95c368fa0900d2e0c00ee223a",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: API layer (P-H-C argon2 argon2.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2.c",
+        "source_sha256": "b91797fc040a6531ac6fd4220226c095d8855b22aa397875165b27c4b4945163",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: portable fill_segment (P-H-C argon2 ref.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c",
+        "source_sha256": "fcc5aa0b37892084c792e1eb8f5c096bbbf9a3ae6c0052efe9444818813cc005",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: SSSE3 fill_segment (P-H-C argon2 opt.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ssse3.c",
+        "source_sha256": "8e539874a0e9a9337ffbb83b2ef2e9e6ee3ff40f47f44080859edcf220342d50",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX2 fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx2.c",
+        "source_sha256": "57c29c603f97fcd367b60cf45ee9ea35fb5c231a5ea4598442fd540f8ecf80ba",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX-512F fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx512f.c",
+        "source_sha256": "0d0b927d51d74a0c757c531eb162f3490dc5517cae8f14018f53ab00c6b41c5a",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: variable-length BLAKE2b H' (P-H-C argon2 blake2b_long)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/blake2b-long.c",
+        "source_sha256": "37f1b01973dd484e009346bc46d7eb16e74d2f9b5186c29f2d8df4a1d286ef2d",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      }
+    ],
     "version": "1.0.20"
   },
   "libsodium_1.0.20_msvc143_x86_libsodium.dll": {
@@ -1001,6 +1456,71 @@
     },
     "toolchain": "msvc143_x86",
     "upstream": "https://github.com/jedisct1/libsodium",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b reference implementation",
+        "notes": "Measured on this image: 36 functions carry \"blake2\" in their name (BLAKE2b only). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse msvc143 x86 images (data/BLAKE2).",
+        "source_path": "src/libsodium/crypto_generichash/blake2b/ref/blake2b-ref.c",
+        "source_sha256": "b712bc4f00a81ecec8fef02825506334983fa99e549107dc175ff1f48e3b17f6",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "Argon2 reference implementation: core (P-H-C argon2 core.c)",
+        "notes": "Argon2i and Argon2id only; libsodium carries no Argon2d (0 function names contain \"argon2d\" without \"argon2id\"). Measured on this image: 68 functions carry \"argon2\" in their name (28 of them 10+ instructions, the rest small API accessors and wrappers). No function of 10+ instructions shares a PicHash with argon2_20190702_msvc143_x86_libargon2.dll (P-H-C/phc-winner-argon2 20190702, commit 62358ba).",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-core.c",
+        "source_sha256": "0a386f401f14c2417f9ab6cc03bad124f4c1c035d4aa1396e8349bb299f38324",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: PHC string encoding (P-H-C argon2 encoding.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-encoding.c",
+        "source_sha256": "d1743937f1e5549667fe2d6d65d1c35636b462c95c368fa0900d2e0c00ee223a",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: API layer (P-H-C argon2 argon2.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2.c",
+        "source_sha256": "b91797fc040a6531ac6fd4220226c095d8855b22aa397875165b27c4b4945163",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: portable fill_segment (P-H-C argon2 ref.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ref.c",
+        "source_sha256": "fcc5aa0b37892084c792e1eb8f5c096bbbf9a3ae6c0052efe9444818813cc005",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: SSSE3 fill_segment (P-H-C argon2 opt.c)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-ssse3.c",
+        "source_sha256": "8e539874a0e9a9337ffbb83b2ef2e9e6ee3ff40f47f44080859edcf220342d50",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX2 fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx2.c",
+        "source_sha256": "57c29c603f97fcd367b60cf45ee9ea35fb5c231a5ea4598442fd540f8ecf80ba",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: AVX-512F fill_segment",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/argon2-fill-block-avx512f.c",
+        "source_sha256": "0d0b927d51d74a0c757c531eb162f3490dc5517cae8f14018f53ab00c6b41c5a",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      },
+      {
+        "name": "Argon2 reference implementation: variable-length BLAKE2b H' (P-H-C argon2 blake2b_long)",
+        "notes": "Measurement recorded on the argon2-core.c entry.",
+        "source_path": "src/libsodium/crypto_pwhash/argon2/blake2b-long.c",
+        "source_sha256": "37f1b01973dd484e009346bc46d7eb16e74d2f9b5186c29f2d8df4a1d286ef2d",
+        "upstream": "https://github.com/P-H-C/phc-winner-argon2"
+      }
+    ],
     "version": "1.0.20"
   }
 }

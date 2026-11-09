@@ -1,0 +1,169 @@
+"""Standalone BLAKE2 reference and SSE2 implementations, all six variants.
+
+The reference images compile the upstream ``ref/`` C units at the Makefile's
+``-O2``; SSE images compile the separate upstream ``sse/`` units at ``-O3``.
+Both preserve blake2b/s, bp/sp, and xb/xs implementations. The source pin is
+2023-02-12 (ed1974ea83433eba7b2d95c5dcd9ac33cb847913). Existing libsodium
+images already contain vendored BLAKE2b reference code; the standalone family
+adds both BLAKE2b and BLAKE2s variants, including parallel and extended-output
+implementations. The libsodium provenance records that vendored component.
+
+Image totals are kept+removed=total. Ref: Linux x86 84+4=88, x64 60+6=66;
+MinGW x86 42+50=92, x64 51+50=101; MSVC x86 73+35=108, x64 73+42=115. SSE:
+Linux x86 80+6=86, x64 56+6=62; MinGW x86 38+50=88, x64 47+50=97; MSVC
+x86 65+33=98, x64 65+42=107. The >=10-instruction functions / distinct
+PicHashes are ref Linux x86 43/43, x64 34/34; MinGW x86 39/38, x64 37/37;
+MSVC x86 51/45, x64 48/42. SSE Linux x86 39/39, x64 30/30; MinGW x86
+36/35, x64 36/35; MSVC x86 45/41, x64 44/40.
+
+At >=10 instructions, same-mode compiler pairs and cross-architecture pairs
+share no hashes. Ref and SSE share hashes only within the same compiler and
+architecture: Linux x64 12 (7479948891773896, 774461400286523667,
+1683696317792702654, 1901333545194469325, 2106746542878578048,
+2349569511763554200, 4448995478728049293, 5455402598862610226,
+7115606618437008181, 14563878380153991857, 15331828404104534565,
+15921859942079019047); MinGW x64 8 (3556785065081902843,
+5739552467248598519, 9450931321098931376, 9478816987967410945,
+11584176000006817668, 12166371338578747292, 12578432865501340970,
+15646045006596362182); MSVC x64 20 (118463790781745593,
+547918697158847784, 1516431085176943436, 2212372368648581401,
+3090874284623527783, 3874557155317778465, 4952747726359933088,
+6960042812382538783, 7332111378155661114, 8370392326124424275,
+9314391816016409926, 9641080310167576344, 10643723651866569594,
+11301195446031154368, 12133541295216415095, 12983274252010201048,
+13807917860078595852, 15500094043754507584, 16776724936884294483,
+18278085964489742151); MinGW x86 2 (274526237593242699,
+16132965489037543538); MSVC x86 24 (19633694071432095,
+991646560602557278, 1499835908946858364, 4010518019989291916,
+4244772927363081496, 4497823313262644679, 5821709760240491124,
+6859513794479955516, 8115236169317852973, 8158389882812112409,
+9268665388221597996, 9295598395589078137, 11690363780039051853,
+11926128978286997153, 12198495588762217161, 12456790168485175588,
+13339877390089225172, 14429746693063561578, 15218678102026541512,
+15329288195236732195, 16039635771174741053, 16758156269861299646,
+17376249699674122376, 18078040131870129228). The shared MinGW x86 hashes
+are named ``_blake2s`` (274526237593242699) and one unnamed function; the
+other listed matches have the same named BLAKE2 functions on both sides.
+
+The only standalone-to-libsodium >=10-instruction matches are unnamed hashes
+12578432865501340970 on x64 MinGW and 16132965489037543538 on x86 MinGW; each
+appears in both libsodium versions and both standalone modes. Deep validation
+classifies them as no-symbol matches, with no named cross-family leakage.
+
+No MSVC image retains a ``printf``/``vprintf`` wrapper or
+``__scrt_common_main_seh``.
+
+BLAKE2 elsewhere in the corpus, measured against these standalone images.
+data/OpenSSL and data/7-Zip carry BLAKE2 code that no provenance record
+mentions, so a name search of the corpus does not find it. PicHashes of
+functions of 10+ instructions, same architecture, against all twelve images
+of this family:
+
+* data/OpenSSL (libcrypto; libssl has none). 1.1.1w carries 10 BLAKE2-named
+  functions on MinGW (8 of 10+ instructions: ``BLAKE2b_Init/Update/Final``,
+  ``BLAKE2s_Init/Update/Final``, ``blake2b_compress``, ``blake2s_compress``,
+  ``EVP_blake2b512``, ``EVP_blake2s256``) and 16 on MSVC (12 of 10+, adding
+  ``blake2{b,s}_init0``, ``_init_param`` and ``_set_lastblock``). 3.0.15 has
+  66 on MinGW (48 of 10+ on x86, 43 on x64) and 3.5.8 has 77 (55 and 52),
+  because the 3.x provider layer adds ``blake2b512_*``, ``blake2s256_*`` and
+  ``blake2_mac_*`` (BLAKE2 as a MAC, with ``blake2_setkey``); the 3.x MSVC
+  builds are not in the corpus. The compression functions are OpenSSL's own
+  derived code, not the upstream reference: no BLAKE2-named
+  function of 10+ instructions in any OpenSSL MinGW image has a PicHash in
+  this family. On MSVC 1.1.1w three small helpers do match, ``U32TO8``
+  and ``U8TOU32`` (x86 and x64, 12 and 10-11 instructions, matched to the
+  ref and SSE MSVC images) and ``rotr64`` (x86, 18 instructions, ref only);
+  they are byte-load helpers, not the compression function.
+* data/7-Zip (7z.dll 23.01 and 26.03). Only BLAKE2s and BLAKE2sp, no BLAKE2b:
+  ``Blake2s_Compress/Update/Final``, ``Blake2sp_Init/Update/Final`` and
+  ``CBlake2spHasher``. 13 BLAKE2-named functions in 23.01 on MinGW (8 to 9 of
+  10+) and 17 on MSVC (10 to 11); 25 in 26.03 on MinGW (17 to 19) and 34 on
+  MSVC (19 to 20), the growth being 26.03's SIMD variants
+  (``Blake2sp_Compress2_AVX2_Fast``, ``_V128_Fast``, ``_V128_Way1``,
+  ``Blake2sp_InitState_*``, ``Blake2sp_Final_*``). The code is Igor Pavlov's
+  rewrite and shares no PicHash of 10+ instructions with any image here.
+* In all 24 OpenSSL and 7-Zip images the only other shared PicHash is the
+  unnamed 15-instruction libgcc ``___chkstk`` probe of the MinGW builds
+  (also the one libsodium shares), which is not BLAKE2.
+
+So an upstream-built BLAKE2 image matches neither OpenSSL's nor 7-Zip's
+BLAKE2 bodies; recognising them takes their own families, which already hold
+them. What these notes add is that the names exist there. The cross-family
+notes that this PR does not write, because they belong to other families'
+directories: a data/OpenSSL provenance note (BLAKE2b/BLAKE2s derived code,
+function names above) and a data/7-Zip provenance note (BLAKE2sp rewrite).
+The data/libsodium note is in this PR.
+
+GCC x86 startup glue survives with these names and PicHashes. Ref:
+``_init`` 9608256718953870546, ``deregister_tm_clones`` 2780497305776452871,
+``register_tm_clones`` 12755717022944402199,
+``__do_global_dtors_aux`` 4810785454881136303. SSE:
+``_init`` 15718644553860916983, ``deregister_tm_clones`` 8718169112306472195,
+``register_tm_clones`` 12945903060382388116,
+``__do_global_dtors_aux`` 17331431794667355242.
+"""
+
+from ..recipe import Artifact, BuildStep, Recipe, Source
+
+
+_SOURCE = Source(
+    git_url="https://github.com/BLAKE2/BLAKE2.git",
+    git_ref="ed1974ea83433eba7b2d95c5dcd9ac33cb847913",
+)
+_UPSTREAM = "https://github.com/BLAKE2/BLAKE2"
+
+
+def _recipe(mode, flavor, toolchains):
+    version = "2023-02-12-%s" % mode
+    extension = "dll" if flavor in ("mingw", "msvc") else "so"
+    command = (
+        "python {repo}/scripts/corpus/exercisers/blake2_build.py "
+        "--mode %s --flavor %s --arch {arch} --bitness {bitness} --cc {cc}"
+        % (mode, flavor)
+    )
+    artifact_args = {
+        "path": "build/blake2-%s-{arch}.%s" % (mode, extension),
+        "component": "blake2-%s.%s" % (mode, extension),
+    }
+    if flavor == "msvc":
+        artifact_args["pdb"] = "build/blake2-%s-{arch}.pdb" % mode
+    flags = ("upstream ref/makefile -O2" if mode == "ref" else
+             "upstream sse/makefile -O3; SSE2 enabled with compiler flags")
+    if flavor == "msvc":
+        flags += "; /O2 /MD /Zi /GL-; /DLL /NOENTRY /DEBUG /OPT:NOREF " \
+                 "/OPT:NOICF /Brepro /INCREMENTAL:NO; explicit vcruntime.lib, " \
+                 "ucrt.lib and kernel32.lib at link"
+    elif flavor == "linux":
+        flags += "; -g -fPIC -shared"
+    else:
+        flags += "; -g; -shared; no inserted PE timestamp"
+    return Recipe(
+        family="BLAKE2",
+        version=version,
+        upstream=_UPSTREAM,
+        license="See upstream source",
+        source=_SOURCE,
+        build=[BuildStep(command)],
+        artifacts=[Artifact(**artifact_args)],
+        toolchains=toolchains,
+        build_flags=flags,
+        notes=("All six upstream %s C translation units are combined into a "
+               "single shared image without the self-test mains. "
+               "The upstream source tree is unchanged. Measured: the BLAKE2 "
+               "code in data/libsodium (vendored) and data/OpenSSL and "
+               "data/7-Zip (derived or rewritten, not recorded in their "
+               "provenance) shares no PicHash of 10+ instructions with "
+               "these images apart from the unnamed libgcc ___chkstk probe "
+               "and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 "
+               "helpers; see the module docstring." % mode),
+    )
+
+
+RECIPES = {}
+for _mode in ("ref", "sse"):
+    RECIPES["BLAKE2_2023-02-12-%s_linux" % _mode] = _recipe(
+        _mode, "linux", ["linux_x86", "linux_x64"])
+    RECIPES["BLAKE2_2023-02-12-%s_mingw" % _mode] = _recipe(
+        _mode, "mingw", ["mingw_x86", "mingw_x64"])
+    RECIPES["BLAKE2_2023-02-12-%s_msvc" % _mode] = _recipe(
+        _mode, "msvc", ["msvc_x86", "msvc_x64"])
