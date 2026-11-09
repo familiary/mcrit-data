@@ -128,20 +128,21 @@ def _putty(version, sha256):
             # exactly upstream's own.
             BuildStep(_CMAKE, env={"CFLAGS": ""}),
             BuildStep("cmake --build build-{arch} -j$(nproc) "
-                      "--target putty psftp"),
+                      "--target putty psftp plink pscp pageant puttygen"),
         ],
         artifacts=[
-            Artifact(path="build-{arch}/putty.exe", component="putty.exe"),
-            Artifact(path="build-{arch}/psftp.exe", component="psftp.exe"),
+            Artifact(path="build-{arch}/%s.exe" % tool, component="%s.exe" % tool)
+            for tool in ("putty", "psftp", "plink", "pscp", "pageant",
+                         "puttygen")
         ],
         toolchains=["mingw_x86", "mingw_x64"],
         build_flags="-O3 (CMake Release; upstream's cmake/setup.cmake removes "
                     "-DNDEBUG so assertions stay enabled)",
         notes="MinGW build of the unmodified 0.77 source. Upstream's own "
               "release binaries are built with clang-cl and a static C "
-              "runtime, which is not covered here. psftp.exe is kept because "
-              "it adds the SFTP client that putty.exe lacks; plink, pscp and "
-              "puttytel add under 2% each.",
+              "runtime, which is not covered here (the MSVC /MD build is "
+              "putty_msvc.py). Six executables: putty, psftp, plink, pscp, "
+              "pageant and puttygen; puttytel is not built.",
     )
 
 
