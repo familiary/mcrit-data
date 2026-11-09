@@ -30,17 +30,63 @@ def _pinned_env() -> dict:
     return env
 
 
-def _check_pinned(probe_command: list[str], obj: Path, root: Path) -> None:
+def _probe_pins(probe_command: list[str], obj: Path, root: Path,
+                extra: list[str]) -> bool:
     probe = root / "build" / "time_probe.cpp"
     probe.write_text("extern const char corpus_time[];\n"
                      "const char corpus_time[] = __TIME__;\n")
-    subprocess.run(probe_command + [str(probe)], cwd=root, check=True,
-                   env=_pinned_env())
-    if PINNED_TIME not in obj.read_bytes():
+    if obj.exists():
+        obj.unlink()
+    result = subprocess.run(probe_command + extra + [str(probe)], cwd=root,
+                            env=_pinned_env())
+    return result.returncode == 0 and PINNED_TIME in obj.read_bytes()
+
+
+def _msvc_pin_flags(probe_command: list[str], obj: Path, root: Path) -> list[str]:
+    """The cl flags that pin __TIME__, found by probing, or [] if none does.
+
+    cl (MSVC 14.4 on the windows-2022 runner) was measured not to honour
+    SOURCE_DATE_EPOCH, so the alternatives are tried in turn: a command-line
+    definition and a forced-include header that redefines the macro. A
+    candidate is accepted only if the pinned string is in the probe object.
+    """
+    header = root / "build" / "pin_time.h"
+    header.write_text('#undef __TIME__\n#define __TIME__ "%s"\n'
+                      % PINNED_TIME.decode())
+    candidates = [["/D__TIME__=\"%s\"" % PINNED_TIME.decode()],
+                  ["/FI" + str(header)]]
+    for flags in candidates:
+        if _probe_pins(probe_command, obj, root, flags):
+            return flags
+    return []
+
+
+def _check_pinned(probe_command: list[str], obj: Path, root: Path,
+                  msvc: bool = False) -> list[str]:
+    """Verify that __TIME__ is pinned; return extra compiler flags if needed.
+
+    GCC honours SOURCE_DATE_EPOCH and the build fails if it somehow does not.
+    cl does not, so for cl the flags that do pin it are searched for; if there
+    are none the build proceeds unpinned and says so, because the alternative
+    is no MSVC image at all.
+    """
+    if _probe_pins(probe_command, obj, root, []):
+        print("pinned __TIME__ = %s (SOURCE_DATE_EPOCH)"
+              % PINNED_TIME.decode(), flush=True)
+        return []
+    if not msvc:
         raise SystemExit("SOURCE_DATE_EPOCH=%s was not honoured for __TIME__ "
                          "by %s; the build would not be reproducible"
                          % (PINNED_EPOCH, probe_command[0]))
-    print("pinned __TIME__ = %s" % PINNED_TIME.decode(), flush=True)
+    flags = _msvc_pin_flags(probe_command, obj, root)
+    if flags:
+        print("pinned __TIME__ = %s (cl %s)" % (PINNED_TIME.decode(),
+                                                 " ".join(flags)), flush=True)
+    else:
+        print("NOT PINNED: cl ignores SOURCE_DATE_EPOCH, /D__TIME__ and a "
+              "forced-include redefinition; __TIME__ is the build time and "
+              "this image is not reproducible", flush=True)
+    return flags
 
 
 def _run(command: list[str], root: Path) -> None:
@@ -116,9 +162,10 @@ def build(args: argparse.Namespace) -> Path:
         linker_pdb = build_dir / ("advobfuscator-%s-%s.pdb" %
                                   (args.mode, args.arch))
         probe_obj = build_dir / "time_probe.obj"
-        _check_pinned([args.cxx, "/nologo", "/TP", "/c", "/Fo" + str(probe_obj),
-                       "/Fd" + str(build_dir / "time_probe.pdb")], probe_obj,
-                      root)
+        pin_flags = _check_pinned(
+            [args.cxx, "/nologo", "/TP", "/c", "/Fo" + str(probe_obj),
+             "/Fd" + str(build_dir / "time_probe.pdb")], probe_obj, root,
+            msvc=True)
         optimization = ["/Od", "/Ob0"] if not legacy else ["/O2", "/Ob0"]
         command = [args.cxx, "/nologo", "/TP", "/c", standard,
                    *optimization, "/MD", "/Zi", "/GL-", "/W3",
@@ -127,6 +174,7 @@ def build(args: argparse.Namespace) -> Path:
             command += ["/DADV_LEGACY", "/I" + str(root / "Lib")]
         else:
             command.append("/I" + str(root / "include"))
+        command += pin_flags
         command += ["/Fo" + str(obj), "/Fd" + str(compiler_pdb), str(source)]
         _run(command, root)
         _run(["link", "/DLL", "/DEBUG", "/OPT:NOREF", "/OPT:NOICF",
