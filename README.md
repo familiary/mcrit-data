@@ -38,6 +38,7 @@ Libraries
 * [libuv](#libuv)
 * [libxml2](#libxml2)
 * [lz4](#lz4)
+* [miniz](#miniz)
 * [mbedTLS](#mbedtls)
 * [miniupnpc](#miniupnpc)
 * [pcre2](#pcre2)
@@ -434,6 +435,20 @@ Generated with `scripts/build_corpus.py`; see `data/lz4/provenance.json` for sou
 | lz4 | 1.9.4 | MinGW-w64 GCC 13 | [x86 PE](data/lz4/x86/mcrit/lz4_1.9.4_mingw13_x86_liblz4.dll.mcrit) / [x64 PE](data/lz4/x64/mcrit/lz4_1.9.4_mingw13_x64_liblz4.dll.mcrit) | [x86 PE](data/lz4/x86/smda/lz4_1.9.4_mingw13_x86_liblz4.dll.7z) / [x64 PE](data/lz4/x64/smda/lz4_1.9.4_mingw13_x64_liblz4.dll.7z) |
 | lz4 | 1.10.0 | MinGW-w64 GCC 13 | [x86 PE](data/lz4/x86/mcrit/lz4_1.10.0_mingw13_x86_liblz4.dll.mcrit) / [x64 PE](data/lz4/x64/mcrit/lz4_1.10.0_mingw13_x64_liblz4.dll.mcrit) | [x86 PE](data/lz4/x86/smda/lz4_1.10.0_mingw13_x86_liblz4.dll.7z) / [x64 PE](data/lz4/x64/smda/lz4_1.10.0_mingw13_x64_liblz4.dll.7z) |
 | lz4 | 1.10.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/lz4/x86/mcrit/lz4_1.10.0_msvc143_x86_lz4.dll.mcrit) / [x64 PE](data/lz4/x64/mcrit/lz4_1.10.0_msvc143_x64_lz4.dll.mcrit) | [x86 PE](data/lz4/x86/smda/lz4_1.10.0_msvc143_x86_lz4.dll.7z) / [x64 PE](data/lz4/x64/smda/lz4_1.10.0_msvc143_x64_lz4.dll.7z) |
+<!-- /generated -->
+
+### miniz<a id='miniz'></a>
+
+miniz is a zlib-API subset (deflate, inflate, zip) that small agents vendor instead of zlib; it is the compression layer of AdaptixC2's beacon. Built from the 3.1.0 tag with upstream's CMake as a shared library, so the whole API is exported. It shares no function bodies with the libzlib family beyond a few tiny stubs.  
+The `3.1.0-trim` row is the same tag built with AdaptixC2's `MINIZ_TRIM_FLAGS` (`-DMINIZ_NO_STDIO -DMINIZ_NO_ARCHIVE_APIS -DMINIZ_NO_ARCHIVE_WRITING_APIS -DMINIZ_NO_TIME -DMINIZ_NO_ASSERT`): the zip archive API is gone, the deflate/inflate core is the same code.  
+Generated with `scripts/build_corpus.py`; see `data/miniz/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: miniz -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| miniz | 3.1.0 | MinGW-w64 GCC 13 | [x86 PE](data/miniz/x86/mcrit/miniz_3.1.0_mingw13_x86_libminiz.dll.mcrit) / [x64 PE](data/miniz/x64/mcrit/miniz_3.1.0_mingw13_x64_libminiz.dll.mcrit) | [x86 PE](data/miniz/x86/smda/miniz_3.1.0_mingw13_x86_libminiz.dll.7z) / [x64 PE](data/miniz/x64/smda/miniz_3.1.0_mingw13_x64_libminiz.dll.7z) |
+| miniz | 3.1.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/miniz/x86/mcrit/miniz_3.1.0_msvc143_x86_miniz.dll.mcrit) / [x64 PE](data/miniz/x64/mcrit/miniz_3.1.0_msvc143_x64_miniz.dll.mcrit) | [x86 PE](data/miniz/x86/smda/miniz_3.1.0_msvc143_x86_miniz.dll.7z) / [x64 PE](data/miniz/x64/smda/miniz_3.1.0_msvc143_x64_miniz.dll.7z) |
+| miniz | 3.1.0-trim | MinGW-w64 GCC 13 | [x86 PE](data/miniz/x86/mcrit/miniz_3.1.0-trim_mingw13_x86_libminiz.dll.mcrit) / [x64 PE](data/miniz/x64/mcrit/miniz_3.1.0-trim_mingw13_x64_libminiz.dll.mcrit) | [x86 PE](data/miniz/x86/smda/miniz_3.1.0-trim_mingw13_x86_libminiz.dll.7z) / [x64 PE](data/miniz/x64/smda/miniz_3.1.0-trim_mingw13_x64_libminiz.dll.7z) |
 <!-- /generated -->
 
 ### mbedTLS<a id='mbedtls'></a>
