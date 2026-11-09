@@ -301,7 +301,7 @@ The MinGW-w64 rows were built from unmodified upstream release tarballs with `sc
 
 ### argon2<a id='argon2'></a>
 
-The Argon2 password-hashing reference implementation (P-H-C, release 20190702), the code that RandomX and XMRig derive their own Argon2 from. Built from `src/opt.c`, the Makefile's default on x86, at the SSE2 baseline. libsodium bundles its own Argon2 (`data/libsodium`); it is a restructured copy that shares symbol names but no function PicHash with this one, so the two are complementary rather than duplicates. The portable `ref.c` differs from `opt.c` in two functions (`fill_block`, `fill_segment`) and is not built separately.  
+The Argon2 password-hashing reference implementation (P-H-C, release 20190702), the code that RandomX and XMRig derive their own Argon2 from. Built from `src/opt.c`, the Makefile's default on x86, at the SSE2 baseline. libsodium bundles its own Argon2 (`data/libsodium`); it is a restructured copy (57 to 70 Argon2-named functions per image, no Argon2d) that shares symbol names but no Argon2 function PicHash with these MinGW images (the only shared hash is an unnamed MinGW runtime routine), so the two are complementary rather than duplicates. The portable `ref.c` differs from `opt.c` in two functions (`fill_block`, `fill_segment`) and is not built separately.  
 Generated with `scripts/build_corpus.py`; see `data/argon2/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: argon2 -->

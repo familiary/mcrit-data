@@ -60,7 +60,8 @@ they are libgcc code, not Argon2, and are left in rather than patched around.
 
 Overlap with libsodium 1.0.20 (MinGW, x86 and x64, PicHash of functions of ten
 instructions or more): **none of Argon2's own code matches**. The only shared
-hash is that unnamed ``___chkstk`` probe. Names do overlap - 16 to 17 of the
+hash is the unnamed 15-instruction ``___chkstk`` stack probe (MinGW runtime
+code, not Argon2). Names do overlap - 16 to 17 of the
 same symbols (``argon2_ctx``, ``argon2_hash``, ``argon2{i,id}_hash_raw``,
 ``argon2{i,id}_verify``, ``blake2b_*``, ``fill_block``) - but libsodium's copy
 is restructured (``argon2_fill_segment_{ref,ssse3,avx2,avx512f}`` selected at
@@ -68,35 +69,42 @@ run time, BLAKE2b shared with its generichash, argon2d removed) and compiles
 to different code. So the standalone reference is a distinct, complementary
 reference, not a duplicate of ``data/libsodium``.
 
-Measurement against all of data/libsodium (tracker issue 35 asked for it).
-PicHashes of functions of ten instructions or more, this family's two images
-against the eight libsodium images (1.0.18 and 1.0.20, MinGW and MSVC, x86 and
-x64): no Argon2 body matches in any of them. The only shared hash is the
-unnamed 15-instruction libgcc ``___chkstk`` probe, in the four MinGW images and
-in none of the MSVC ones. Counted by name, libsodium carries the Argon2 core
-as its own functions: ``argon2_ctx``, ``argon2_hash``, ``argon2{i,id}_hash_
-{raw,encoded}``, ``argon2_verify``, ``argon2_initialize``, ``argon2_finalize``,
-``argon2_fill_memory_blocks``, ``argon2_fill_first_blocks``,
-``argon2_fill_segment_{ref,ssse3,avx2,avx512f}``, ``argon2_encode_string``,
-``argon2_decode_string``, ``argon2_validate_inputs``, ``argon2_initial_hash``
-and ``blake2b_long``: 17 functions in 1.0.18 MinGW and 23 in 1.0.20 MinGW (14
-and 21 of ten instructions or more on x64; 16 and 23 on x86), 21 to 23 in
-1.0.18 MSVC and 28 to 34 in 1.0.20 MSVC (the MSVC builds also carry the
-AVX2/AVX-512 fills). They are Argon2 bodies by function and by name, and
-vendored (src/libsodium/crypto_pwhash/argon2/), but they are not this code:
-none of them has this image's PicHash, so a sample statically linking the
-standalone reference is matched only by this family. libsodium carries
-Argon2i and Argon2id and no Argon2d (``argon2d_*`` is absent from it; this
-image has ``argon2d_ctx``, ``argon2d_hash_raw``, ``argon2d_hash_encoded``,
-``argon2d_verify`` and ``argon2d_verify_ctx``).
+Measurement against all of data/libsodium (tracker issue 35 asked for it),
+re-measured from the committed exports. PicHashes of functions of ten
+instructions or more, this family's two MinGW images against the eight
+libsodium images (1.0.18 and 1.0.20, MinGW and MSVC, x86 and x64): no Argon2
+body matches in any of them. The only shared hash is the unnamed
+15-instruction MinGW runtime routine ``___chkstk``, in the four MinGW libsodium
+images and in none of the MSVC ones. (An MSVC build of this reference, kept on
+its own branch, does share hashes with the two MSVC x64 libsodium images:
+``load_block``/``store_block`` (one hash), ``decode_decimal``,
+``b64_byte_to_char`` and ``b64_char_to_byte``, 4 PicHashes in both 1.0.18 and
+1.0.20, and nothing on MSVC x86.) Counted by name, libsodium carries the
+Argon2 core as its own functions (``argon2_ctx``, ``argon2_hash``,
+``argon2{i,id}_hash_{raw,encoded}``, ``argon2_verify``, ``argon2_initialize``,
+``argon2_finalize``, ``argon2_fill_memory_blocks``,
+``argon2_fill_first_blocks``, ``argon2_fill_segment_{ref,ssse3,avx2,avx512f}``,
+``argon2_encode_string``, ``argon2_decode_string``,
+``argon2_validate_inputs``, ``argon2_initial_hash``, ``blake2b_long``, ...):
+counting every function whose name contains ``argon2``, 57 per image in 1.0.18
+(MinGW and MSVC, both architectures) and 68 to 70 per image in 1.0.20, of
+which 14 to 17 (1.0.18) and 26 to 28 (1.0.20) have ten instructions or more.
+They are Argon2 bodies by function and by name, and vendored
+(src/libsodium/crypto_pwhash/argon2/), but with the MinGW builds they are not
+this code: none of them has this image's PicHash, so a sample statically
+linking the standalone reference is matched only by this family. libsodium
+carries Argon2i and Argon2id and no Argon2d (no ``argon2d``-named function in
+any of the eight images; this image has ``argon2d_ctx``, ``argon2d_hash_raw``,
+``argon2d_hash_encoded``, ``argon2d_verify`` and ``argon2d_verify_ctx``).
 
 The libsodium provenance note that issue 35 asks for is still owed, and
 cannot be written from here: data/libsodium lives on main and this branch's
 sparse tree does not hold it. What it should say, from the numbers above:
 libsodium vendors a restructured Argon2 (crypto_pwhash/argon2/, derived from
 P-H-C/phc-winner-argon2 with run-time dispatched fill functions, BLAKE2b
-shared with generichash and Argon2d removed), 17 to 34 named functions in the
-eight images, and none of them matches this family's images by PicHash. (The
+shared with generichash and Argon2d removed), 57 to 70 Argon2-named functions
+per image (14 to 28 of ten instructions or more), and none of them matches this
+family's MinGW images by PicHash. (The
 BLAKE2b reference code in libsodium has its own provenance record on the
 BLAKE2 branch.)
 
@@ -157,10 +165,12 @@ RECIPES = {
         notes="Reference Argon2 (opt.c, SSE2 baseline); libsodium bundles its "
               "own, different Argon2 - see the recipe docstring. Measured "
               "against all eight data/libsodium images: no PicHash of ten "
-              "instructions or more is shared apart from the unnamed libgcc "
-              "___chkstk probe of the MinGW ones, although libsodium has 17 "
-              "to 34 Argon2-named functions (argon2_ctx, argon2_fill_*, "
-              "argon2_encode_string, blake2b_long, ...) and no Argon2d. "
+              "instructions or more is shared by the MinGW images apart from "
+              "the unnamed 15-instruction MinGW runtime routine ___chkstk, "
+              "although libsodium has 57 to 70 Argon2-named functions per "
+              "image (14 to 28 of ten instructions or more: argon2_ctx, "
+              "argon2_fill_*, argon2_encode_string, blake2b_long, ...) and "
+              "no Argon2d. "
               "RandomX's Argon2d subset (randomx_argon2_*, measured, not "
               "committed) shares 5 hashes with this image: index_alpha, "
               "blake2b_compress, blake2b_init_param, blake2b_update and "

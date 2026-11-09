@@ -10,7 +10,7 @@
     "is_blob": false,
     "license": "CC0-1.0 OR Apache-2.0",
     "mcrit": "data/argon2/x64/mcrit/argon2_20190702_mingw13_x64_libargon2.dll.mcrit",
-    "notes": "Reference Argon2 (opt.c, SSE2 baseline); libsodium bundles its own, different Argon2 - see the recipe docstring. Measured against all eight data/libsodium images: no PicHash of ten instructions or more is shared apart from the unnamed libgcc ___chkstk probe of the MinGW ones, although libsodium has 17 to 34 Argon2-named functions (argon2_ctx, argon2_fill_*, argon2_encode_string, blake2b_long, ...) and no Argon2d. RandomX's Argon2d subset (randomx_argon2_*, measured, not committed) shares 5 hashes with this image: index_alpha, blake2b_compress, blake2b_init_param, blake2b_update and ___chkstk; the fill, initialize and validate functions differ. The libsodium provenance note is still owed.",
+    "notes": "Reference Argon2 (opt.c, SSE2 baseline); libsodium bundles its own, different Argon2 - see the recipe docstring. Measured against all eight data/libsodium images: no PicHash of ten instructions or more is shared by the MinGW images apart from the unnamed 15-instruction MinGW runtime routine ___chkstk, although libsodium has 57 to 70 Argon2-named functions per image (14 to 28 of ten instructions or more: argon2_ctx, argon2_fill_*, argon2_encode_string, blake2b_long, ...) and no Argon2d. RandomX's Argon2d subset (randomx_argon2_*, measured, not committed) shares 5 hashes with this image: index_alpha, blake2b_compress, blake2b_init_param, blake2b_update and ___chkstk; the fill, initialize and validate functions differ. The libsodium provenance note is still owed.",
     "num_functions": 73,
     "removed_runtime_functions": [
       "DllEntryPoint",
@@ -90,7 +90,7 @@
     "is_blob": false,
     "license": "CC0-1.0 OR Apache-2.0",
     "mcrit": "data/argon2/x86/mcrit/argon2_20190702_mingw13_x86_libargon2.dll.mcrit",
-    "notes": "Reference Argon2 (opt.c, SSE2 baseline); libsodium bundles its own, different Argon2 - see the recipe docstring. Measured against all eight data/libsodium images: no PicHash of ten instructions or more is shared apart from the unnamed libgcc ___chkstk probe of the MinGW ones, although libsodium has 17 to 34 Argon2-named functions (argon2_ctx, argon2_fill_*, argon2_encode_string, blake2b_long, ...) and no Argon2d. RandomX's Argon2d subset (randomx_argon2_*, measured, not committed) shares 5 hashes with this image: index_alpha, blake2b_compress, blake2b_init_param, blake2b_update and ___chkstk; the fill, initialize and validate functions differ. The libsodium provenance note is still owed.",
+    "notes": "Reference Argon2 (opt.c, SSE2 baseline); libsodium bundles its own, different Argon2 - see the recipe docstring. Measured against all eight data/libsodium images: no PicHash of ten instructions or more is shared by the MinGW images apart from the unnamed 15-instruction MinGW runtime routine ___chkstk, although libsodium has 57 to 70 Argon2-named functions per image (14 to 28 of ten instructions or more: argon2_ctx, argon2_fill_*, argon2_encode_string, blake2b_long, ...) and no Argon2d. RandomX's Argon2d subset (randomx_argon2_*, measured, not committed) shares 5 hashes with this image: index_alpha, blake2b_compress, blake2b_init_param, blake2b_update and ___chkstk; the fill, initialize and validate functions differ. The libsodium provenance note is still owed.",
     "num_functions": 60,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
