@@ -189,7 +189,10 @@ def build(args: argparse.Namespace) -> Path:
     if legacy:
         command.append("-fno-inline")
     if args.flavor == "linux":
-        command += ["-fPIC", "-shared"]
+        # -fvisibility=hidden as for the other Linux obfuscator builds: only
+        # CORPUS_EXPORT stays exported, so the library's own calls stay direct
+        # instead of running through unnamed .plt stubs.
+        command += ["-fPIC", "-shared", "-fvisibility=hidden"]
     else:
         command += ["-shared", "-Wl,--no-insert-timestamp"]
     command += ["-I" + str(Path(args.repo) / "scripts/corpus/exercisers")]

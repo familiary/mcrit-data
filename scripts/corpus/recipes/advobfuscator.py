@@ -7,13 +7,16 @@ upstream (2026-10-27) and the 2020-06-26 legacy layout. Both use the same
 hits; O2 retained 30 / 16. Legacy uses O2 plus no-inline because O0 exposes
 the test literals in plaintext, while O2 alone removes its meaningful code.
 
-The final current images retain 506 Linux x64 functions (5 removed; 172
-functions / 47 distinct PicHashes at >=10 instructions), 765 Linux x86 (4
-removed; 239/231), 616 MSVC x64 (140 removed; 323/60) and 616 MSVC x86 (134
-removed; 402/66). Legacy retains 82 Linux x64 (6 removed; 27/18), 134 Linux
-x86 (3 removed; 38/33), 61 MinGW x64 (50 removed; 25/18), 53 MinGW x86 (49
-removed; 28/19), 88 MSVC x64 (133 removed; 54/42) and 88 MSVC x86 (127
-removed; 40/35). Kept + removed equals the image total in every case.
+The final current images retain 432 Linux x64 functions (6 removed, 438
+total; 200 functions / 59 distinct PicHashes at >=10 instructions), 427 Linux
+x86 (4 removed, 431; 230/230), 616 MSVC x64 (140 removed, 756; 323/60) and 616
+MSVC x86 (134 removed, 750; 402/66). Legacy retains 54 Linux x64 (6 removed,
+60; 24/17), 60 Linux x86 (4 removed, 64; 31/22), 61 MinGW x64 (50 removed;
+25/18), 53 MinGW x86 (49 removed; 28/19), 88 MSVC x64 (133 removed, 221;
+56/41) and 88 MSVC x86 (127 removed, 215; 44/34). Kept + removed equals the
+image total in every case. All twelve images are built with __TIME__ pinned
+to 22:13:20 (see below); the four MSVC images are PATCHED builds for that
+pin and the two current MinGW images for their literal operators.
 Current MinGW x64 retains 273 functions (51 removed, 324 total; 227
 functions / 61 distinct PicHashes at >=10 instructions) and current MinGW x86
 266 (49 removed, 315 total; 201/66); these two are PATCHED builds, described
@@ -83,19 +86,66 @@ not chosen for the outcome (legacy -O2 -fno-inline leaves between 3 and 6
 literal fragments in plaintext in the MinGW x64 image whichever of seven seeds
 was tried, 1 on MinGW x86 in all seven, 1 or 2 on Linux x64).
 
-cl does not honour ``SOURCE_DATE_EPOCH`` and cannot be made to: on the
-windows-2022 runner (MSVC 19.44) the probe finds no pinned string, ``/D__TIME__=
-"22:13:20"`` gives ``warning C4117: macro name '__TIME__' is reserved,
-'#define' ignored`` and a forced-include header with ``#undef __TIME__`` /
-``#define __TIME__`` gives the same warning for both directives (run
-42683708448, scratch/partials-a3). Pinning cl would need a patch to
-``random.h``/``MetaRandom.h``, which was not applied, so the four MSVC images
-are NOT reproducible and carry whatever seed their build second gave. The
-builder logs ``NOT PINNED`` for cl and goes on. The Linux images were built
-before the pin existed (GCC 14, which the current snapshot needs: GCC 13
-cannot deduce its literal-operator parameter, see the MinGW patch above) and
-are unpinned too; they are reproducible only once rebuilt with this script. So
-in the committed corpus only the four MinGW images are pinned.
+cl does not honour ``SOURCE_DATE_EPOCH``, and ``__TIME__`` cannot be
+redefined there: on the windows-2022 runner (MSVC 19.44) the probe finds no
+pinned string, ``/D__TIME__="22:13:20"`` gives ``warning C4117: macro name
+'__TIME__' is reserved, '#define' ignored`` and a forced-include header with
+``#undef __TIME__`` / ``#define __TIME__`` gives the same warning for both
+directives (run 42683708448, scratch/partials-a3). The MSVC builds are
+therefore pinned by a recipe-applied BUILD-TREE EDIT: ``advobfuscator_build.py``
+copies ``include/`` (current) or ``Lib/`` (legacy) to
+``build/include-time-pinned`` or ``build/Lib-time-pinned`` and replaces the
+single use of the macro, the generator's seed, by the literal the GCC builds
+get from ``SOURCE_DATE_EPOCH``; the upstream checkout is not modified and
+nothing is committed into a source tree::
+
+  include/advobfuscator/random.h (current)
+  -    static constexpr char time[] = __TIME__; // __TIME__ has the following format: ...
+  +    static constexpr char time[] = "22:13:20"; // __TIME__ has the following format: ...
+  Lib/MetaRandom.h (legacy)
+  -    constexpr char time[] = __TIME__; // __TIME__ has the following format: ...
+  +    constexpr char time[] = "22:13:20"; // __TIME__ has the following format: ...
+
+The build fails if the line is not found exactly once or if ``__TIME__`` is
+still used anywhere else in the copy. The four MSVC images are therefore NOT
+byte-identical to a build of unmodified upstream: they are what unmodified
+upstream compiles to when its build second is 22:13:20. That this is the same
+seed and not merely a fixed one was checked with GCC: legacy at -O2
+-fno-inline, built from the edited copy without ``SOURCE_DATE_EPOCH`` and from
+the unmodified tree with it, gives byte-identical shared objects (and an
+unpinned build differs). Rebuilt with the pin in run 42687607588
+(scratch/partials-adv-msvc), against the unpinned images they replace: current
+x64 and x86 keep 616 functions (140 and 134 removed) and 323 and 402 of ten
+instructions or more, sharing 58 of 60 and 64 of 66 distinct PicHashes; legacy
+x64 and x86 keep 88 (133 and 127 removed), with 56 and 44 functions of ten
+instructions or more (54 and 40 before) and 41 and 34 distinct PicHashes, of
+which 18 of 42 and 12 of 35 of the unpinned image's survive.
+
+The Linux images are rebuilt with the pin (``SOURCE_DATE_EPOCH=1700000000``,
+verified by the probe on every build) and with GCC 14 (Ubuntu
+14.2.0-4ubuntu2~24.04.1, the gcc-14 package the repository's Linux CI variant
+installs on ubuntu-24.04; the current snapshot does not compile with GCC 13,
+see the MinGW patch above). The images they replace were unpinned builds with
+Debian GCC 14.2.0-19 and without ``-fvisibility=hidden``. That flag is now
+passed, as for the other Linux obfuscator builds: without it the pinned current
+x64 build fails the symbol check, ``only 233 of 519 functions of at least 3
+instructions carry symbols (45%)``, because every call between the
+default-visibility template instantiations runs through one of 248 unnamed
+``.plt.sec`` stubs. Rebuilt twice, current x64 is byte-identical. Against the
+unpinned images, kept + removed: current x64 506 + 5 = 511 to 432 + 6 = 438
+(172/47 to 200/59 at ten instructions or more, 0 distinct PicHashes shared),
+current x86 765 + 4 = 769 to 427 + 4 = 431 (239/231 to 230/230, 0 shared),
+legacy x64 82 + 6 = 88 to 54 + 6 = 60 (27/18 to 24/17, 2 shared), legacy x86
+134 + 3 = 137 to 60 + 4 = 64 (38/33 to 31/22, 3 shared). Seed, compiler build
+(Ubuntu's GCC defaults to ``-fcf-protection``, so every function starts with
+``endbr``) and visibility all changed at once, so the near-zero overlap is not
+the seed's alone. None of the 16 harness literals is in the current images or
+in legacy x86 (no 8-byte window of any literal); legacy x64 at -O2
+-fno-inline carries 8-byte fragments of 10 of them as immediate operands (the
+same 10 with and without ``-fvisibility=hidden``, and with GCC 13). That is a
+stricter count than the ``strings -a`` lines counted above (1 or 2 on Linux
+x64): ``strings`` sees runs of several fragments as one line. In the
+committed corpus all twelve images are now pinned.
 
 Optimisation level, measured with GCC 13 (current built from the patched
 include copy, so it compiles; seed pinned), counts being kept + removed =
@@ -124,15 +174,16 @@ how many of the 16 harness literals are visible to ``strings -a``:
   that are already built and the difference is small.
 
 GCC x86 startup glue survives with these names and PicHashes. Current:
-``_init`` 1007249484536421600, ``deregister_tm_clones`` 569991583881770807,
-``register_tm_clones`` 10179453566455001527,
-``__do_global_dtors_aux`` 7774818233878611077. Legacy:
-``_init`` 16794956033002673114, ``deregister_tm_clones`` 4180412564719701528,
-``register_tm_clones`` 5327937504806600116,
-``__do_global_dtors_aux`` 12336397557569579703.
+``_init`` 17782880407785904189, ``deregister_tm_clones`` 2815564613126712105,
+``register_tm_clones`` 8951438257662281967,
+``__do_global_dtors_aux`` 16633205247285377623. Legacy:
+``_init`` 11089744864052931211, ``deregister_tm_clones`` 14752019995124434799,
+``register_tm_clones`` 14486028247211561301,
+``__do_global_dtors_aux`` 16566269842223238601. (``_fini``, 7 instructions,
+also survives on both.)
 
 The current Linux images also retain ``std::exception::exception()`` at
-PicHash 10659546382074989998 on x86 and 17836628882983317004 on x64.
+PicHash 16427697989858126593 on x86 and 3405998017670570274 on x64.
 
 Current MSVC retains these standard-library bodies at >=10 instructions. Both
 ``std::_Copy_unchecked`` specializations share PicHash 13776350814747620045 on
@@ -183,7 +234,7 @@ def _recipe(mode, flavor, toolchains):
              gcc_opt_flags + (" -std=c++20" if mode == "current" else
                               " -std=c++14"))
     if flavor == "linux":
-        flags += "; -fPIC -shared"
+        flags += "; -fPIC -shared -fvisibility=hidden"
     elif flavor == "mingw":
         flags += "; -shared; no inserted PE timestamp"
     patched = mode == "current" and flavor == "mingw"
