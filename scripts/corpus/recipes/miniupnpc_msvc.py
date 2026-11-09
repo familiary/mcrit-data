@@ -79,6 +79,22 @@ Measurements (first Windows run, cl 19.44, all four tags green on both legs).
   wide-stdio glue baseline (scripts/corpus/baseline.py) now removes both; the
   re-import against it (run 42341850811) moved them to the removed side, which
   is why the 2.0 counts above are the re-imported ones.
+
+1.9.20150206, added for the 1.9.x window of r0ny123/mcrit-data#62 (see
+miniupnpc.py: the only 1.9 git tag does not tell the snapshots apart, so this
+is built from the dated release tarball miniupnpc-1.9.20150206.tar.gz, sha256
+230d3ad5...). The tarball has no ``miniupnpc/`` level, so every step runs in
+its root and the artefact is build-<arch>/miniupnpc.dll; the source list is the
+eleven objects of that release's Makefile.mingw (minissdpc and upnpdev arrived
+with the 2016 snapshots), the rest of the line is the other versions' cl and
+link commands unchanged, including upstream's miniupnpc.def. Built on run
+42680903937 (cl 19.44, wide-stdio glue baseline): x86 93 + 145 = 238, x64 93 +
+153 = 246 (kept + removed = image; MinGW 75 + 154 = 229 / 102 + 154 = 256), no
+unnamed function and none of the kept functions is glue at ten instructions or
+more. PicHash overlap of the 10+ instruction functions: MinGW / MSVC / shared
+61 / 63 / 0 (x86) and 59 / 62 / 1 (x64); against the other MSVC builds, 2.0
+shares 32 of 63 (x86) and 29 of 62 (x64), 2.1 28 and 24, 2.2.3 24 and 21, so
+it is a distinct reference in the MSVC set too.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -88,10 +104,20 @@ _OBJS = ["miniwget", "minixml", "igd_desc_parse", "minisoap", "minissdpc",
          "connecthostport", "portlistingparse", "receivedata", "upnpdev"]
 
 
+# The 1.9.x release tarballs have no miniupnpc/ level, and 1.9.20150206's
+# Makefile.mingw OBJS list is these eleven (minissdpc and upnpdev came in with
+# the 2016 snapshots).
+_OBJS_19 = ["miniwget", "minixml", "igd_desc_parse", "minisoap", "miniupnpc",
+            "upnpreplyparse", "upnpcommands", "upnperrors", "connecthostport",
+            "portlistingparse", "receivedata"]
+
+
 def _steps(version):
-    old = version in ("2.0", "2.1")
+    tarball = version.startswith("1.9")
+    cwd = "." if tarball else "miniupnpc"
+    old = tarball or version in ("2.0", "2.1")
     srcdir = "" if old else "src\\"
-    objs = _OBJS if old else _OBJS + ["addr_is_reserved"]
+    objs = _OBJS_19 if tarball else (_OBJS if old else _OBJS + ["addr_is_reserved"])
     includes = "/I." if old else "/Iinclude /I."
     # 2.2.3 and later write rc_version.h as well.
     genargs = "miniupnpcstrings.h.in miniupnpcstrings.h"
@@ -103,29 +129,36 @@ def _steps(version):
                 " /Foobj-{arch}\\ /Fdbuild-{arch}\\miniupnpc.pdb " + sources)
     return [
         BuildStep("if not exist obj-{arch} mkdir obj-{arch}",
-                  cwd="miniupnpc"),
+                  cwd=cwd),
         BuildStep("if not exist build-{arch} mkdir build-{arch}",
-                  cwd="miniupnpc"),
+                  cwd=cwd),
         # The generator is a build tool; it is not linked into the artefact.
         BuildStep("cl /nologo /W3 /Fogen-{arch}.obj "
                   "/Febuild-{arch}\\wingenminiupnpcstrings.exe "
-                  "wingenminiupnpcstrings.c", cwd="miniupnpc"),
+                  "wingenminiupnpcstrings.c", cwd=cwd),
         BuildStep("build-{arch}\\wingenminiupnpcstrings.exe " + genargs,
-                  cwd="miniupnpc"),
-        BuildStep(compile_, cwd="miniupnpc"),
+                  cwd=cwd),
+        BuildStep(compile_, cwd=cwd),
         BuildStep("link /nologo /DLL /OUT:build-{arch}\\miniupnpc.dll "
                   "/DEF:miniupnpc.def /DEBUG "
                   "/PDB:build-{arch}\\miniupnpc.pdb /INCREMENTAL:NO /Brepro "
                   "/OPT:NOREF /OPT:NOICF obj-{arch}\\*.obj "
-                  "ws2_32.lib iphlpapi.lib", cwd="miniupnpc"),
+                  "ws2_32.lib iphlpapi.lib", cwd=cwd),
         BuildStep("dumpbin /nologo /exports build-{arch}\\miniupnpc.dll",
-                  cwd="miniupnpc", allow_failure=True),
-        BuildStep("dir build-{arch}", cwd="miniupnpc", allow_failure=True),
+                  cwd=cwd, allow_failure=True),
+        BuildStep("dir build-{arch}", cwd=cwd, allow_failure=True),
     ]
 
 
+_TARBALL_19 = {
+    "1.9.20150206": "230d3ad5a3047daa77f99602503d798f720428207217ebfbfe2a4f7762b029e7",
+}
+
+
 def _miniupnpc_msvc(version, git_ref):
-    return Recipe(
+    tarball = version in _TARBALL_19
+    base = "" if tarball else "miniupnpc/"
+    r = Recipe(
         family="miniupnpc",
         version=version,
         upstream="https://github.com/miniupnp/miniupnp",
@@ -133,9 +166,9 @@ def _miniupnpc_msvc(version, git_ref):
         source=Source(git_url="https://github.com/miniupnp/miniupnp.git",
                       git_ref=git_ref),
         build=_steps(version),
-        artifacts=[Artifact(path="miniupnpc/build-{arch}/miniupnpc.dll",
+        artifacts=[Artifact(path=base + "build-{arch}/miniupnpc.dll",
                             component="miniupnpc.dll",
-                            pdb="miniupnpc/build-{arch}/miniupnpc.pdb")],
+                            pdb=base + "build-{arch}/miniupnpc.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags="/MD /O2 /Ob2 /Zi /DNDEBUG /D_WIN32_WINNT=0x501 "
                     "/DMINIUPNP_EXPORTS; link /DEF:miniupnpc.def /DEBUG "
@@ -146,9 +179,20 @@ def _miniupnpc_msvc(version, git_ref):
               "miniupnpc.def. Links ws2_32 and iphlpapi dynamically; the C "
               "runtime is imported (/MD).",
     )
+    if tarball:
+        # A dated release tarball, not a git tag; see miniupnpc.py.
+        r.source = Source(
+            url="http://miniupnp.free.fr/files/miniupnpc-%s.tar.gz" % version,
+            sha256=_TARBALL_19[version])
+        r.notes += (" Built from upstream's dated release tarball "
+                    "miniupnpc-%s.tar.gz (the same file is on "
+                    "miniupnp.tuxfamily.org/files/); upstream publishes no "
+                    "checksum, the sha256 is of the download." % version)
+    return r
 
 
 RECIPES = {
+    "miniupnpc_1.9.20150206_msvc": _miniupnpc_msvc("1.9.20150206", None),
     "miniupnpc_2.0_msvc": _miniupnpc_msvc("2.0", "miniupnpc_2_0"),
     "miniupnpc_2.1_msvc": _miniupnpc_msvc("2.1", "miniupnpc_2_1"),
     "miniupnpc_2.2.3_msvc": _miniupnpc_msvc("2.2.3", "miniupnpc_2_2_3"),
