@@ -141,7 +141,41 @@ def _cmp_msvc(version, git_ref):
     )
 
 
+# The copy c-toxcore vendors (TokTok/cmp at 52bfcfa, see cmp.py on the MinGW
+# branch for how the pin was established), built with the define c-toxcore
+# builds it with. Same steps as above plus /DCMP_NO_FLOAT=1.
+_TOKTOK_COMPILE = ('cl /nologo /c /O2 /MD /Zi /DCMP_NO_FLOAT=1 '
+                   '/Fdcmp.pdb /Focmp.obj cmp.c')
+
+_TOKTOK = Recipe(
+    family="cmp",
+    version="toktok-52bfcfa",
+    upstream="https://github.com/TokTok/cmp",
+    license="MIT",
+    source=Source(git_url="https://github.com/TokTok/cmp.git",
+                  git_ref="52bfcfa17d2eb4322da2037ad625f5575129cece"),
+    build=[
+        BuildStep(_TOKTOK_COMPILE),
+        BuildStep(_DEF),
+        BuildStep(_LINK),
+        BuildStep("dir", allow_failure=True),
+    ],
+    artifacts=[Artifact(path="cmp.dll", component="cmp.dll",
+                        pdb="cmp.pdb")],
+    toolchains=["msvc_x86", "msvc_x64"],
+    build_flags=("/O2 /MD /Zi /DCMP_NO_FLOAT=1 (cmp.c compiled directly); "
+                 "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at "
+                 "link; exports from a /DEF generated from the object's "
+                 "defined external functions"),
+    notes="The TokTok fork c-toxcore vendors as third_party/cmp, at the "
+          "commit pinned there (52bfcfa), built with -DCMP_NO_FLOAT=1 as "
+          "c-toxcore does. Upstream is unpatched; exports are generated "
+          "from the compiled object. Built against the DLL runtime.",
+)
+
+
 RECIPES = {
     "cmp_10_msvc": _cmp_msvc("10", "v10"),
     "cmp_20_msvc": _cmp_msvc("20", "v20"),
+    "cmp_toktok_52bfcfa_msvc": _TOKTOK,
 }
