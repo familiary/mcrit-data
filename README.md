@@ -474,12 +474,16 @@ Generated with `scripts/build_corpus.py`; see `data/pcre2/provenance.json` for s
 ### sqlite3<a id='sqlite3'></a>
 
 SQLite is almost certainly the most widely embedded database on Windows. Built from the official amalgamation, which is how applications consume it.  
+Version 3.30.1 is also recorded as a separate library dependency for [tracker 60](https://github.com/r0ny123/mcrit-data/issues/60). Its official source and header are byte-identical to the consumer-pinned files; only the standalone library is built. This version uses SQLite's default feature profile, so comparisons with the older feature-enabled reference rows change version and profile together. No consumer program or SQLite shell is built or run.
 Generated with `scripts/build_corpus.py`; see `data/sqlite3/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: sqlite3 -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | sqlite3 | 3.8.11.1 | MinGW-w64 GCC 13 | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.8.11.1_mingw13_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.8.11.1_mingw13_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.8.11.1_mingw13_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.8.11.1_mingw13_x64_sqlite3.dll.7z) |
+| sqlite3 | 3.30.1 | GCC 14 (Linux, glibc) | [x86 ELF](data/sqlite3/x86/mcrit/sqlite3_3.30.1_gcc14_x86_libsqlite3.so.mcrit) / [x64 ELF](data/sqlite3/x64/mcrit/sqlite3_3.30.1_gcc14_x64_libsqlite3.so.mcrit) | [x86 ELF](data/sqlite3/x86/smda/sqlite3_3.30.1_gcc14_x86_libsqlite3.so.7z) / [x64 ELF](data/sqlite3/x64/smda/sqlite3_3.30.1_gcc14_x64_libsqlite3.so.7z) |
+| sqlite3 | 3.30.1 | MinGW-w64 GCC 13 | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.30.1_mingw13_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.30.1_mingw13_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.30.1_mingw13_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.30.1_mingw13_x64_sqlite3.dll.7z) |
+| sqlite3 | 3.30.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.30.1_msvc143_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.30.1_msvc143_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.30.1_msvc143_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.30.1_msvc143_x64_sqlite3.dll.7z) |
 | sqlite3 | 3.31.1 | MinGW-w64 GCC 13 | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.31.1_mingw13_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.31.1_mingw13_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.31.1_mingw13_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.31.1_mingw13_x64_sqlite3.dll.7z) |
 | sqlite3 | 3.31.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.31.1_msvc143_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.31.1_msvc143_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.31.1_msvc143_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.31.1_msvc143_x64_sqlite3.dll.7z) |
 | sqlite3 | 3.50.4 | MinGW-w64 GCC 13 | [x86 PE](data/sqlite3/x86/mcrit/sqlite3_3.50.4_mingw13_x86_sqlite3.dll.mcrit) / [x64 PE](data/sqlite3/x64/mcrit/sqlite3_3.50.4_mingw13_x64_sqlite3.dll.mcrit) | [x86 PE](data/sqlite3/x86/smda/sqlite3_3.50.4_mingw13_x86_sqlite3.dll.7z) / [x64 PE](data/sqlite3/x64/smda/sqlite3_3.50.4_mingw13_x64_sqlite3.dll.7z) |
@@ -1039,4 +1043,73 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
+<!-- /generated -->
+
+
+### Gh0st
+
+[Coverage, counts and limits](scripts/corpus/coverage/windows-implants/README.md).
+
+<!-- generated: Gh0st -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Gh0st | 2008-f434b0d-buffer | MinGW-w64 GCC 13 | [x86 PE](data/Gh0st/x86/mcrit/Gh0st_2008-f434b0d-buffer_mingw13_x86_buffer.mcrit) / [x64 PE](data/Gh0st/x64/mcrit/Gh0st_2008-f434b0d-buffer_mingw13_x64_buffer.mcrit) | [x86 PE](data/Gh0st/x86/smda/Gh0st_2008-f434b0d-buffer_mingw13_x86_buffer.7z) / [x64 PE](data/Gh0st/x64/smda/Gh0st_2008-f434b0d-buffer_mingw13_x64_buffer.7z) |
+| Gh0st | 2008-f434b0d-buffer | MSVC 19.44 (Visual Studio 2022, v143) | [x64 PE](data/Gh0st/x64/mcrit/Gh0st_2008-f434b0d-buffer_msvc143_x64_buffer.mcrit) | [x64 PE](data/Gh0st/x64/smda/Gh0st_2008-f434b0d-buffer_msvc143_x64_buffer.7z) |
+| Gh0st | 2008-f434b0d-managers | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Gh0st/x86/mcrit/Gh0st_2008-f434b0d-managers_msvc143_x86_manager-modules.mcrit) | [x86 PE](data/Gh0st/x86/smda/Gh0st_2008-f434b0d-managers_msvc143_x86_manager-modules.7z) |
+| Gh0st | 2008-f434b0d-legacy-analysis | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/Gh0st/x86/mcrit/Gh0st_2008-f434b0d-legacy-analysis_msvc143_x86_legacy-manager-modules.mcrit) | [x86 PE](data/Gh0st/x86/smda/Gh0st_2008-f434b0d-legacy-analysis_msvc143_x86_legacy-manager-modules.7z) |
+<!-- /generated -->
+
+
+### TinyNuke
+
+[Coverage, counts and limits](scripts/corpus/coverage/windows-implants/README.md).
+
+<!-- generated: TinyNuke -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| TinyNuke | 2017-c1e04c3-modules | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TinyNuke/x86/mcrit/TinyNuke_2017-c1e04c3-modules_msvc143_x86_hvnc-socks-modules.mcrit) / [x64 PE](data/TinyNuke/x64/mcrit/TinyNuke_2017-c1e04c3-modules_msvc143_x64_hvnc-socks-modules.mcrit) | [x86 PE](data/TinyNuke/x86/smda/TinyNuke_2017-c1e04c3-modules_msvc143_x86_hvnc-socks-modules.7z) / [x64 PE](data/TinyNuke/x64/smda/TinyNuke_2017-c1e04c3-modules_msvc143_x64_hvnc-socks-modules.7z) |
+| TinyNuke | 2017-c1e04c3-modules-analysis | MinGW-w64 GCC 13 | [x86 PE](data/TinyNuke/x86/mcrit/TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x86_hvnc-socks-modules.mcrit) / [x64 PE](data/TinyNuke/x64/mcrit/TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x64_hvnc-socks-modules.mcrit) | [x86 PE](data/TinyNuke/x86/smda/TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x86_hvnc-socks-modules.7z) / [x64 PE](data/TinyNuke/x64/smda/TinyNuke_2017-c1e04c3-modules-analysis_mingw13_x64_hvnc-socks-modules.7z) |
+<!-- /generated -->
+
+
+### r77
+
+[Coverage, counts and limits](scripts/corpus/coverage/windows-implants/README.md).
+
+<!-- generated: r77 -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| r77 | 1.8.2-collections | MinGW-w64 GCC 13 | [x86 PE](data/r77/x86/mcrit/r77_1.8.2-collections_mingw13_x86_collections.mcrit) / [x64 PE](data/r77/x64/mcrit/r77_1.8.2-collections_mingw13_x64_collections.mcrit) | [x86 PE](data/r77/x86/smda/r77_1.8.2-collections_mingw13_x86_collections.7z) / [x64 PE](data/r77/x64/smda/r77_1.8.2-collections_mingw13_x64_collections.7z) |
+| r77 | 1.8.2-modules | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/r77/x86/mcrit/r77_1.8.2-modules_msvc143_x86_native-modules.mcrit) / [x64 PE](data/r77/x64/mcrit/r77_1.8.2-modules_msvc143_x64_native-modules.mcrit) | [x86 PE](data/r77/x86/smda/r77_1.8.2-modules_msvc143_x86_native-modules.7z) / [x64 PE](data/r77/x64/smda/r77_1.8.2-modules_msvc143_x64_native-modules.7z) |
+<!-- /generated -->
+
+
+### mimikatz
+
+[Coverage, counts and limits](scripts/corpus/coverage/windows-implants/README.md).
+
+<!-- generated: mimikatz -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| mimikatz | 2.2.0-45c42c7-strings | MinGW-w64 GCC 13 | [x86 PE](data/mimikatz/x86/mcrit/mimikatz_2.2.0-45c42c7-strings_mingw13_x86_string-output.mcrit) / [x64 PE](data/mimikatz/x64/mcrit/mimikatz_2.2.0-45c42c7-strings_mingw13_x64_string-output.mcrit) | [x86 PE](data/mimikatz/x86/smda/mimikatz_2.2.0-45c42c7-strings_mingw13_x86_string-output.7z) / [x64 PE](data/mimikatz/x64/smda/mimikatz_2.2.0-45c42c7-strings_mingw13_x64_string-output.7z) |
+| mimikatz | 2.2.0-45c42c7-modules | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/mimikatz/x86/mcrit/mimikatz_2.2.0-45c42c7-modules_msvc143_x86_kuhl-kull-modules.mcrit) / [x64 PE](data/mimikatz/x64/mcrit/mimikatz_2.2.0-45c42c7-modules_msvc143_x64_kuhl-kull-modules.mcrit) | [x86 PE](data/mimikatz/x86/smda/mimikatz_2.2.0-45c42c7-modules_msvc143_x86_kuhl-kull-modules.7z) / [x64 PE](data/mimikatz/x64/smda/mimikatz_2.2.0-45c42c7-modules_msvc143_x64_kuhl-kull-modules.7z) |
+<!-- /generated -->
+
+
+### HavocDemon
+
+[Coverage, counts and limits](scripts/corpus/coverage/windows-implants/README.md).
+
+<!-- generated: HavocDemon -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| HavocDemon | 0.7-c84f775-analysis | MinGW-w64 GCC 13 | [x86 PE](data/HavocDemon/x86/mcrit/HavocDemon_0.7-c84f775-analysis_mingw13_x86_demon-analysis.mcrit) / [x64 PE](data/HavocDemon/x64/mcrit/HavocDemon_0.7-c84f775-analysis_mingw13_x64_demon-analysis.mcrit) | [x86 PE](data/HavocDemon/x86/smda/HavocDemon_0.7-c84f775-analysis_mingw13_x86_demon-analysis.7z) / [x64 PE](data/HavocDemon/x64/smda/HavocDemon_0.7-c84f775-analysis_mingw13_x64_demon-analysis.7z) |
+| HavocDemon | 0.7-c84f775-smb-analysis | MinGW-w64 GCC 13 | [x86 PE](data/HavocDemon/x86/mcrit/HavocDemon_0.7-c84f775-smb-analysis_mingw13_x86_demon-smb-analysis.mcrit) / [x64 PE](data/HavocDemon/x64/mcrit/HavocDemon_0.7-c84f775-smb-analysis_mingw13_x64_demon-smb-analysis.mcrit) | [x86 PE](data/HavocDemon/x86/smda/HavocDemon_0.7-c84f775-smb-analysis_mingw13_x86_demon-smb-analysis.7z) / [x64 PE](data/HavocDemon/x64/smda/HavocDemon_0.7-c84f775-smb-analysis_mingw13_x64_demon-smb-analysis.7z) |
+| HavocDemon | 0.7-c84f775-entry-analysis | MinGW-w64 GCC 13 | [x86 PE](data/HavocDemon/x86/mcrit/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x86_dll-entry-analysis.mcrit) / [x64 PE](data/HavocDemon/x64/mcrit/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x64_dll-entry-analysis.mcrit) | [x86 PE](data/HavocDemon/x86/smda/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x86_dll-entry-analysis.7z) / [x64 PE](data/HavocDemon/x64/smda/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x64_dll-entry-analysis.7z) |
+| HavocDemon | 0.7-c84f775-entry-analysis | MinGW-w64 GCC 13 | [x86 PE](data/HavocDemon/x86/mcrit/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x86_exe-entry-analysis.mcrit) | [x86 PE](data/HavocDemon/x86/smda/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x86_exe-entry-analysis.7z) |
+| HavocDemon | 0.7-c84f775-entry-analysis | MinGW-w64 GCC 13 | [x86 PE](data/HavocDemon/x86/mcrit/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x86_service-entry-analysis.mcrit) / [x64 PE](data/HavocDemon/x64/mcrit/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x64_service-entry-analysis.mcrit) | [x86 PE](data/HavocDemon/x86/smda/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x86_service-entry-analysis.7z) / [x64 PE](data/HavocDemon/x64/smda/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x64_service-entry-analysis.7z) |
+| HavocDemon | 0.7-c84f775-entry-analysis | MinGW-w64 GCC 13 | [x86 PE](data/HavocDemon/x86/mcrit/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x86_shellcode-entry-analysis.mcrit) / [x64 PE](data/HavocDemon/x64/mcrit/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x64_shellcode-entry-analysis.mcrit) | [x86 PE](data/HavocDemon/x86/smda/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x86_shellcode-entry-analysis.7z) / [x64 PE](data/HavocDemon/x64/smda/HavocDemon_0.7-c84f775-entry-analysis_mingw13_x64_shellcode-entry-analysis.7z) |
+| HavocDemon | 0.7-c84f775-entry-analysis | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/HavocDemon/x86/mcrit/HavocDemon_0.7-c84f775-entry-analysis_msvc143_x86_dll-entry-analysis.mcrit) / [x64 PE](data/HavocDemon/x64/mcrit/HavocDemon_0.7-c84f775-entry-analysis_msvc143_x64_dll-entry-analysis.mcrit) | [x86 PE](data/HavocDemon/x86/smda/HavocDemon_0.7-c84f775-entry-analysis_msvc143_x86_dll-entry-analysis.7z) / [x64 PE](data/HavocDemon/x64/smda/HavocDemon_0.7-c84f775-entry-analysis_msvc143_x64_dll-entry-analysis.7z) |
+| HavocDemon | 0.7-c84f775-entry-analysis | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/HavocDemon/x86/mcrit/HavocDemon_0.7-c84f775-entry-analysis_msvc143_x86_service-entry-analysis.mcrit) / [x64 PE](data/HavocDemon/x64/mcrit/HavocDemon_0.7-c84f775-entry-analysis_msvc143_x64_service-entry-analysis.mcrit) | [x86 PE](data/HavocDemon/x86/smda/HavocDemon_0.7-c84f775-entry-analysis_msvc143_x86_service-entry-analysis.7z) / [x64 PE](data/HavocDemon/x64/smda/HavocDemon_0.7-c84f775-entry-analysis_msvc143_x64_service-entry-analysis.7z) |
+| HavocDemon | 0.7-c84f775-entry-analysis | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/HavocDemon/x86/mcrit/HavocDemon_0.7-c84f775-entry-analysis_msvc143_x86_shellcode-entry-analysis.mcrit) / [x64 PE](data/HavocDemon/x64/mcrit/HavocDemon_0.7-c84f775-entry-analysis_msvc143_x64_shellcode-entry-analysis.mcrit) | [x86 PE](data/HavocDemon/x86/smda/HavocDemon_0.7-c84f775-entry-analysis_msvc143_x86_shellcode-entry-analysis.7z) / [x64 PE](data/HavocDemon/x64/smda/HavocDemon_0.7-c84f775-entry-analysis_msvc143_x64_shellcode-entry-analysis.7z) |
 <!-- /generated -->
