@@ -107,6 +107,13 @@ class Recipe:
     # Drop MinGW C runtime glue that every DLL links in, so it is not
     # mis-attributed to this family. See corpus.baseline.
     drop_crt_glue: bool = True
+    # Which glue filter drop_crt_glue applies. "crt" is the measured C/C++
+    # runtime baseline of the artefact's toolchain. "go" is for a program
+    # built with the Go toolchain, which statically links the whole Go
+    # runtime and the standard library: none of that is the project's, the
+    # Golang family already carries it, and there is no C runtime in the
+    # image to measure. See baseline.is_go_runtime_symbol.
+    glue_filter: str = "crt"
     # Minimum share of functions that must carry a recovered symbol before the
     # build is accepted. Lower it only for projects that genuinely cannot keep
     # symbols; 0 disables the check.

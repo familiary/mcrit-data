@@ -1040,3 +1040,33 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
 <!-- /generated -->
+
+
+### Pantegana
+
+Go 1.24.13 references cover isolated fingerprinting helpers and client-source analysis images. Client references are non-operational: certificate initialization is unbound and the entry point calls no client function.
+
+[Coverage, counts and limits](scripts/corpus/coverage/go-implants/README.md).
+
+<!-- generated: Pantegana -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Pantegana | 0.1.0-go1.24.13-fingerprint | Go 1.24.13 | [x86 ELF](data/Pantegana/x86/mcrit/Pantegana_0.1.0-go1.24.13-fingerprint_gcc14_x86_fingerprint.mcrit) / [x64 ELF](data/Pantegana/x64/mcrit/Pantegana_0.1.0-go1.24.13-fingerprint_gcc14_x64_fingerprint.mcrit) | [x86 ELF](data/Pantegana/x86/smda/Pantegana_0.1.0-go1.24.13-fingerprint_gcc14_x86_fingerprint.7z) / [x64 ELF](data/Pantegana/x64/smda/Pantegana_0.1.0-go1.24.13-fingerprint_gcc14_x64_fingerprint.7z) |
+| Pantegana | 0.1.0-go1.24.13-fingerprint | Go 1.24.13 | [x86 PE](data/Pantegana/x86/mcrit/Pantegana_0.1.0-go1.24.13-fingerprint_mingw13_x86_fingerprint.mcrit) / [x64 PE](data/Pantegana/x64/mcrit/Pantegana_0.1.0-go1.24.13-fingerprint_mingw13_x64_fingerprint.mcrit) | [x86 PE](data/Pantegana/x86/smda/Pantegana_0.1.0-go1.24.13-fingerprint_mingw13_x86_fingerprint.7z) / [x64 PE](data/Pantegana/x64/smda/Pantegana_0.1.0-go1.24.13-fingerprint_mingw13_x64_fingerprint.7z) |
+| Pantegana | 0.1.0-go1.24.13-client-analysis | Go 1.24.13 | [x86 ELF](data/Pantegana/x86/mcrit/Pantegana_0.1.0-go1.24.13-client-analysis_gcc14_x86_client-analysis.mcrit) / [x64 ELF](data/Pantegana/x64/mcrit/Pantegana_0.1.0-go1.24.13-client-analysis_gcc14_x64_client-analysis.mcrit) | [x86 ELF](data/Pantegana/x86/smda/Pantegana_0.1.0-go1.24.13-client-analysis_gcc14_x86_client-analysis.7z) / [x64 ELF](data/Pantegana/x64/smda/Pantegana_0.1.0-go1.24.13-client-analysis_gcc14_x64_client-analysis.7z) |
+| Pantegana | 0.1.0-go1.24.13-client-analysis | Go 1.24.13 | [x86 PE](data/Pantegana/x86/mcrit/Pantegana_0.1.0-go1.24.13-client-analysis_mingw13_x86_client-analysis.mcrit) / [x64 PE](data/Pantegana/x64/mcrit/Pantegana_0.1.0-go1.24.13-client-analysis_mingw13_x64_client-analysis.mcrit) | [x86 PE](data/Pantegana/x86/smda/Pantegana_0.1.0-go1.24.13-client-analysis_mingw13_x86_client-analysis.7z) / [x64 PE](data/Pantegana/x64/smda/Pantegana_0.1.0-go1.24.13-client-analysis_mingw13_x64_client-analysis.7z) |
+<!-- /generated -->
+
+
+### Sliver
+
+[Coverage, counts and limits](scripts/corpus/coverage/go-implants/README.md).
+
+<!-- generated: Sliver -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Sliver | 1.5.42-go1.20.14-analysis | Go 1.20.14 | [x86 ELF](data/Sliver/x86/mcrit/Sliver_1.5.42-go1.20.14-analysis_gcc14_x86_implant-analysis.mcrit) / [x64 ELF](data/Sliver/x64/mcrit/Sliver_1.5.42-go1.20.14-analysis_gcc14_x64_implant-analysis.mcrit) | [x86 ELF](data/Sliver/x86/smda/Sliver_1.5.42-go1.20.14-analysis_gcc14_x86_implant-analysis.7z) / [x64 ELF](data/Sliver/x64/smda/Sliver_1.5.42-go1.20.14-analysis_gcc14_x64_implant-analysis.7z) |
+| Sliver | 1.5.42-go1.20.14-analysis | Go 1.20.14 | [x86 PE](data/Sliver/x86/mcrit/Sliver_1.5.42-go1.20.14-analysis_mingw13_x86_implant-analysis.mcrit) / [x64 PE](data/Sliver/x64/mcrit/Sliver_1.5.42-go1.20.14-analysis_mingw13_x64_implant-analysis.mcrit) | [x86 PE](data/Sliver/x86/smda/Sliver_1.5.42-go1.20.14-analysis_mingw13_x86_implant-analysis.7z) / [x64 PE](data/Sliver/x64/smda/Sliver_1.5.42-go1.20.14-analysis_mingw13_x64_implant-analysis.7z) |
+| Sliver | 4c2e8d4-go1.27.3-analysis | Go 1.27.3 | [x86 ELF](data/Sliver/x86/mcrit/Sliver_4c2e8d4-go1.27.3-analysis_gcc14_x86_implant-analysis.mcrit) / [x64 ELF](data/Sliver/x64/mcrit/Sliver_4c2e8d4-go1.27.3-analysis_gcc14_x64_implant-analysis.mcrit) | [x86 ELF](data/Sliver/x86/smda/Sliver_4c2e8d4-go1.27.3-analysis_gcc14_x86_implant-analysis.7z) / [x64 ELF](data/Sliver/x64/smda/Sliver_4c2e8d4-go1.27.3-analysis_gcc14_x64_implant-analysis.7z) |
+| Sliver | 4c2e8d4-go1.27.3-analysis | Go 1.27.3 | [x86 PE](data/Sliver/x86/mcrit/Sliver_4c2e8d4-go1.27.3-analysis_mingw13_x86_implant-analysis.mcrit) / [x64 PE](data/Sliver/x64/mcrit/Sliver_4c2e8d4-go1.27.3-analysis_mingw13_x64_implant-analysis.mcrit) | [x86 PE](data/Sliver/x86/smda/Sliver_4c2e8d4-go1.27.3-analysis_mingw13_x86_implant-analysis.7z) / [x64 PE](data/Sliver/x64/smda/Sliver_4c2e8d4-go1.27.3-analysis_mingw13_x64_implant-analysis.7z) |
+<!-- /generated -->
