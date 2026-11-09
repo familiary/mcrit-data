@@ -38,6 +38,7 @@ Libraries
 * [libuv](#libuv)
 * [libxml2](#libxml2)
 * [lz4](#lz4)
+* [LZO](#lzo)
 * [mbedTLS](#mbedtls)
 * [pcre2](#pcre2)
 * [sqlite3](#sqlite3)
@@ -449,6 +450,18 @@ Generated with `scripts/build_corpus.py`; see `data/lz4/provenance.json` for sou
 | lz4 | 1.9.4 | MinGW-w64 GCC 13 | [x86 PE](data/lz4/x86/mcrit/lz4_1.9.4_mingw13_x86_liblz4.dll.mcrit) / [x64 PE](data/lz4/x64/mcrit/lz4_1.9.4_mingw13_x64_liblz4.dll.mcrit) | [x86 PE](data/lz4/x86/smda/lz4_1.9.4_mingw13_x86_liblz4.dll.7z) / [x64 PE](data/lz4/x64/smda/lz4_1.9.4_mingw13_x64_liblz4.dll.7z) |
 | lz4 | 1.10.0 | MinGW-w64 GCC 13 | [x86 PE](data/lz4/x86/mcrit/lz4_1.10.0_mingw13_x86_liblz4.dll.mcrit) / [x64 PE](data/lz4/x64/mcrit/lz4_1.10.0_mingw13_x64_liblz4.dll.mcrit) | [x86 PE](data/lz4/x86/smda/lz4_1.10.0_mingw13_x86_liblz4.dll.7z) / [x64 PE](data/lz4/x64/smda/lz4_1.10.0_mingw13_x64_liblz4.dll.7z) |
 | lz4 | 1.10.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/lz4/x86/mcrit/lz4_1.10.0_msvc143_x86_lz4.dll.mcrit) / [x64 PE](data/lz4/x64/mcrit/lz4_1.10.0_msvc143_x64_lz4.dll.mcrit) | [x86 PE](data/lz4/x86/smda/lz4_1.10.0_msvc143_x86_lz4.dll.7z) / [x64 PE](data/lz4/x64/smda/lz4_1.10.0_msvc143_x64_lz4.dll.7z) |
+<!-- /generated -->
+
+### LZO<a id='lzo'></a>
+
+LZO is the LZO1X compressor, vendored as miniLZO by UltraVNC and common in VNC software, packers and game data. The full library is built; miniLZO's functions all have PicHashes present in it.  
+Generated with `scripts/build_corpus.py`; see `data/lzo/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: lzo -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| lzo | 2.10 | MinGW-w64 GCC 13 | [x86 PE](data/lzo/x86/mcrit/lzo_2.10_mingw13_x86_liblzo2-2.dll.mcrit) / [x64 PE](data/lzo/x64/mcrit/lzo_2.10_mingw13_x64_liblzo2-2.dll.mcrit) | [x86 PE](data/lzo/x86/smda/lzo_2.10_mingw13_x86_liblzo2-2.dll.7z) / [x64 PE](data/lzo/x64/smda/lzo_2.10_mingw13_x64_liblzo2-2.dll.7z) |
+| lzo | 2.10 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/lzo/x86/mcrit/lzo_2.10_msvc143_x86_lzo2.dll.mcrit) / [x64 PE](data/lzo/x64/mcrit/lzo_2.10_msvc143_x64_lzo2.dll.mcrit) | [x86 PE](data/lzo/x86/smda/lzo_2.10_msvc143_x86_lzo2.dll.7z) / [x64 PE](data/lzo/x64/smda/lzo_2.10_msvc143_x64_lzo2.dll.7z) |
 <!-- /generated -->
 
 ### mbedTLS<a id='mbedtls'></a>
