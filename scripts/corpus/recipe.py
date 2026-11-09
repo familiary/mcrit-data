@@ -77,6 +77,31 @@ class Artifact:
     # without one SMDA can only name exported functions - a VX-API DLL that
     # exports nothing came back with 1 of 4147 functions named.
     pdb: Optional[str] = None
+    # What actually compiled this artefact, for the filename stem, when that
+    # is not the toolchain this pipeline ran.
+    #
+    # The stem names a producer so that a reader can tell a GCC-built
+    # reference from an MSVC-built one, which is most of why a match is or is
+    # not meaningful. For a compiled-here artefact the running toolchain *is*
+    # the producer. Two cases are not compiled here:
+    #
+    #   * a blob committed upstream, which `is_blob` has always labelled
+    #     "msvc" because the three blob families in this corpus were all
+    #     compiled that way. That was a hardcoded guess about the producer,
+    #     correct for those three and wrong for anything else - an
+    #     AdaptixC2 loader stub, say, whose GCC-style alignment padding says
+    #     otherwise.
+    #   * a prebuilt harvested from where upstream publishes it, which
+    #     `scripts/corpus/README.md` recommends preferring and which
+    #     data/libzlib's msvc12 and msvc14 artefacts already are. Those were
+    #     placed by hand, with the producing toolchain in the stem, because a
+    #     recipe had no way to say it.
+    #
+    # So this states it instead of inferring it. Left None, the behaviour is
+    # exactly what it was: the blob default, else the running toolchain.
+    # Setting it on an artefact this pipeline compiled itself would be a lie
+    # in a filename, which is the thing it exists to prevent.
+    producer: Optional[str] = None
 
 
 @dataclass
@@ -149,10 +174,13 @@ class Recipe:
         from .toolchain import get_toolchain
 
         toolchain = get_toolchain(toolchain_id)
-        # A blob was compiled by whoever committed it upstream. Naming it after
-        # the toolchain that merely ran the extraction would be a lie baked
-        # into the filename, so those are labelled by their real compiler.
-        producer = "msvc" if artifact.is_blob else toolchain.short_id
+        # A blob or a harvested prebuilt was compiled by someone else. Naming
+        # it after the toolchain that merely ran the extraction would be a lie
+        # baked into the filename, so those are labelled by their real
+        # compiler: Artifact.producer when the recipe knows it, else the
+        # "msvc" that the three committed-blob families here happen to need.
+        producer = artifact.producer or (
+            "msvc" if artifact.is_blob else toolchain.short_id)
         # The artefact's own family, which is what the pipeline files it under
         # (data/<artifact.family or recipe.family>/). Naming the stem after the
         # recipe's family instead put an artefact attributed to a vendored
