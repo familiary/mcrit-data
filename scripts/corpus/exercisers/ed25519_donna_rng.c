@@ -19,6 +19,13 @@
 #include <stddef.h>
 #include <string.h>
 
-void ed25519_randombytes_unsafe(void *out, size_t count) {
+/* ED25519_SUFFIX renames the hook the library calls (ed25519_randombytes_
+ * unsafe_donna in the Tor-style build), so that build names the stub with
+ * -DED25519_RNG_NAME; every other build defines the upstream name. */
+#ifndef ED25519_RNG_NAME
+#define ED25519_RNG_NAME ed25519_randombytes_unsafe
+#endif
+
+void ED25519_RNG_NAME(void *out, size_t count) {
 	memset(out, 0, count);
 }
