@@ -94,6 +94,21 @@ the build takes whatever the image carries. That means the build is not
 reproducible across runner images from the recipe alone. Read the resolved
 version out of the build log and put it in `notes`.
 
+### Update: x86 drivers can be built, but not through the WDK msbuild toolset
+
+`DiskCryptorDrv` and `WinPmemDrv` have x86 recipes (`*_x86_msvc.py`). What
+was found, in order: the NuGet `Microsoft.Windows.WDK.x86` packages
+(10.0.26100.1, 10.0.26100.6584, 10.0.28000.1839) ship no `Lib\<ver>\km`
+directory; WDK 10.0.22621 installed beside the runner's kit
+(`scripts/corpus/install_wdk_x86.py`, installer stub pinned by sha256) does have
+`Lib\10.0.22621.0\km\x86`, but its msbuild toolset rejects Win32 as well
+(`WindowsDriver.common.targets(235,5): error : 'Win32' is not a valid
+architecture for Kernel mode drivers or UMDF drivers`). So an x86 driver is
+built either with cl/link directly (WinPmemDrv, entry `GsDriverEntry@8`) or
+with the plain v143 toolset and forced props that add `/kernel`, the 22621 km
+headers and libraries and `libcntpr.lib` (DiskCryptorDrv). The kernel-mode glue
+baseline measures x86 the same way (`baseline.kernel_glue`).
+
 ### x86 kernel drivers cannot be built. Declare `msvc_x64` and move on
 
 This is the single rule most likely to save you a red round. WDK 10.0.26100 -
