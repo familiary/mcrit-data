@@ -23,11 +23,22 @@ one-line inlines: every mnemonic is a distinct Frontend member that appends an
 Instr, the encoder is Backend::Assemble and its Encode* helpers, and the
 register allocator in jitasm::compiler is a few thousand lines of ordinary
 out-of-line C++ over std::vector, std::deque and std::map. MSVC is checked in
-jitasm_msvc.py and shows the same thing at /O2. So there is no -O0 build and
-no row in the not-built table: the artefact does not need to describe an
-unoptimised consumer, and an -O2 reference is what a release-built sample
-would match. The -O0 figure is a symbol count of a throwaway link, not a
-corpus artefact.
+jitasm_msvc.py and shows the same thing at /O2.
+
+The unoptimised leg the issue expects (-O0 for MinGW, /Od for MSVC) is built
+as well, as its own version string (2018-11-24-O0 here, 2018-11-24-Od in
+jitasm_msvc.py) so it sits beside the -O2 artefact rather than replacing it.
+It is not a superset of the -O2 one, it is a different image: -O0 keeps
+every Frontend member and every STL helper out of line, so it carries about
+three times as many functions, and PicHash overlap at the ten-instruction
+floor with the -O2 build of the same compiler is 1 hash on each
+architecture. A consumer that builds its syscall-stub generator in a Debug
+configuration matches this artefact and not the other. Counts, kept + removed
+= total: x86 5949 + 52 = 6001, x64 6268 + 53 = 6321, of which 5520 and 5925
+are ten instructions or more (2572 and 2752 distinct PicHashes) and 4993 and
+5352 carry jitasm in their name. The -O0 build shares no PicHash at that
+floor with the ELF build, the MSVC /Od build or across its two
+architectures. The same exerciser, so the same consumer scaffolding is in it.
 
 What the exerciser has to do, which is the real decision in this recipe. The
 emitter covers x86, x64, MMX, SSE through SSE4.2, AVX, AVX2, FMA, FMA4, XOP,
@@ -84,6 +95,11 @@ _BUILD = ("{cxx} -O2 -fno-operator-names -mmmx -msse -msse2 -shared -I. "
           "-o jitasm.dll {repo}/scripts/corpus/exercisers/jitasm.cpp "
           "-shared-libgcc")
 
+# The unoptimised leg the tracker issue asks for (-O0 for MinGW, /Od for
+# MSVC in jitasm_msvc.py). Identical to _BUILD except for the -O level, so
+# the two artefacts differ in the optimiser and nothing else.
+_BUILD_O0 = _BUILD.replace(" -O2 ", " -O0 ")
+
 RECIPES = {
     "jitasm_2018-11-24": Recipe(
         family="jitasm",
@@ -107,8 +123,9 @@ RECIPES = {
               "on x86 (54 MinGW runtime removed), 1867 of 1922 on x64 (55), "
               "1308 and 1627 of them ten instructions or more. -O0 gives "
               "12489 text symbols against 3925 at -O2 on x64 (11634 against "
-              "3235 on x86), so the library survives optimisation and the "
-              "artefact does not describe an unoptimised consumer. About "
+              "3235 on x86), so the library survives optimisation; the "
+              "unoptimised consumer is described by the separate "
+              "2018-11-24-O0 artefact. About "
               "one function in eight is not jitasm's: the sixty test_*::"
               "naked_main bodies are upstream's test cases and, with the "
               "exerciser's ex_* and assemble_one functions and the "
@@ -120,5 +137,31 @@ RECIPES = {
               "the family is structural only: Kaspersky describes jitasm "
               "building NtOpenProcessToken and NtAdjustPrivilegesToken "
               "syscall stubs and publishes no function, constant or table.",
+    ),
+    "jitasm_2018-11-24-O0": Recipe(
+        family="jitasm",
+        version="2018-11-24-O0",
+        upstream="https://github.com/hikaru-i/jitasm",
+        license="New BSD (three-clause), Copyright (c) 2009-2011 Hikaru "
+                "Inoue, Akihiro Yamasaki",
+        source=Source(git_url="https://github.com/hikaru-i/jitasm.git",
+                      git_ref="7cb9d72982c793374c49b804bec842deb1506d92"),
+        build=[BuildStep(_BUILD_O0)],
+        artifacts=[Artifact(path="jitasm.dll", component="jitasm.dll")],
+        toolchains=["mingw_x86", "mingw_x64"],
+        build_flags="-O0 -fno-operator-names -mmmx -msse -msse2 -shared "
+                    "-shared-libgcc",
+        notes="The unoptimised counterpart of jitasm_2018-11-24 that the "
+              "tracker issue expects for MinGW: the same commit, exerciser "
+              "and command line with -O0 in place of -O2, filed under its own "
+              "version string so both stay. Measured: 5949 functions kept of "
+              "6001 on x86 (52 MinGW runtime removed), 6268 of 6321 on x64 "
+              "(53), 5520 and 5925 of them ten instructions or more, 4993 and "
+              "5352 carrying jitasm in their name. Not a superset of the -O2 "
+              "build: one PicHash in common with it per architecture at the "
+              "ten-instruction floor, and none with the ELF or the MSVC /Od "
+              "builds. As in the -O2 artefact, upstream's sixty test_*::"
+              "naked_main cases and the exerciser's ex_* and assemble_one "
+              "functions are consumer code recognisable by name.",
     ),
 }

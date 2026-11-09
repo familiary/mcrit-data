@@ -104,10 +104,34 @@ by name in the MSVC builds of Zydis 3.1.0, with and without ZYAN_NO_LIBC, so the
 vendored copy is 3.1.0 by name; exact PicHash agreement is only 3 of the 91
 that are ten instructions or more (ZydisFormatterBufferGetString,
 ZydisFormatterTokenNext, ZydisIsFeatureEnabled), because the WDK compiles the
-driver with different flags from the user-mode cl line. The 103 are still
-filed under Hidden: moving them out rewrites committed Hidden data and needs
-a name-based removal that refilter, which matches baseline symbol and PicHash
-only, does not do.
+driver with different flags from the user-mode cl line.
+
+Six of them now leave the image by exact name (Recipe.exclude_functions),
+under the evidence rule the miner stack's _stack_vendored.py and SoftEther's
+_softether_vendored.py use, and only six because that rule allows no more:
+
+  P  the function's PicHash equals that of a same-named function in the
+     library's own family. In data/Zydis's Hidden.sys comparison that holds
+     for ZydisFormatterBufferGetString (17 instructions),
+     ZydisFormatterTokenNext (18) and ZydisIsFeatureEnabled (11), and for
+     three below the ten-instruction floor: ZydisGetInstructionEncodingInfo
+     (7), ZydisFormatterIntelFormatInstructionMASM and ZydisGetVersion (2
+     each). The matches are in Zydis 3.1.0 MSVC x64 with and without
+     ZYAN_NO_LIBC, 4.1.1 MSVC x64 and, for ZydisGetVersion, 3.1.0 MinGW x64.
+  W  a same-named function at least 80% similar in opcode sequence - but
+     only for an identifier that another function in the same recipe already
+     shows to be P. Every Zydis identifier occurs once in this recipe (one
+     x64 driver; HiddenCLI.exe carries none), so W can never apply here.
+  N  by namespace, only where no corpus family carries the library. Zydis
+     and Zycore are a family now, so N does not apply either.
+
+So the other 97 Zydis, Zyan and Zycore functions stay filed under Hidden:
+the evidence that they are Zydis's is the name alone, which the rule does
+not accept where a family exists to compare against. The image was
+re-derived from its committed .7z archive, not rebuilt: the six are removed
+from the report and the export, and provenance gains exclude_functions,
+excluded_function_count and num_functions_before_exclusion, so kept +
+removed as runtime + excluded is still the image total of 507.
 
 x64 only, and not because the project says so. All five projects declare
 Debug|Win32, Debug|x64, Release|Win32 and Release|x64, and nothing in the
@@ -344,6 +368,19 @@ _LICENSE = ("No licence of any kind: no LICENSE or COPYING file and no "
             "- so this is taken from the source tree itself, which is the "
             "stronger evidence in any case")
 
+# The Zydis functions of Hidden.sys whose PicHash equals a same-named
+# function of data/Zydis (tier P, see the module docstring). Exact names,
+# anchored, so nothing else in the driver can match.
+_ZYDIS_P = (
+    "ZydisFormatterBufferGetString",
+    "ZydisFormatterIntelFormatInstructionMASM",
+    "ZydisFormatterTokenNext",
+    "ZydisGetInstructionEncodingInfo",
+    "ZydisGetVersion",
+    "ZydisIsFeatureEnabled",
+)
+_EXCLUDE = [r"^(?:%s)$" % "|".join(_ZYDIS_P)]
+
 RECIPES = {
     "Hidden_2022-07-14": Recipe(
         family="Hidden",
@@ -406,6 +443,7 @@ RECIPES = {
         # filter cannot recognise stays under this family and the notes say
         # so rather than a False here hiding it.
         drop_crt_glue=True,
+        exclude_functions=list(_EXCLUDE),
         # Left at the default 0.5, with PDBs forced on for both artefacts.
         # Risk 3 in the docstring is HiddenCLI on x86: C++ with exception
         # handling produces 32-bit unwind funclets that carry no name, and
@@ -454,9 +492,15 @@ RECIPES = {
               "ordinary way - a reason to carry Zydis as a family of its own "
               "rather than to read it through this one - which data/Zydis "
               "now is: all 103 Zydis, Zyan and Zycore functions here are "
-              "present by name in its 3.1.0 MSVC builds, with exact PicHash "
-              "agreement on 3 of the 91 substantial ones, and they remain "
-              "filed under this family. The image also "
+              "present by name in its 3.1.0 MSVC builds. Six whose PicHash "
+              "equals a same-named data/Zydis function (three of ten "
+              "instructions or more: ZydisFormatterBufferGetString, "
+              "ZydisFormatterTokenNext, ZydisIsFeatureEnabled; and "
+              "ZydisGetInstructionEncodingInfo, "
+              "ZydisFormatterIntelFormatInstructionMASM, ZydisGetVersion) are "
+              "excluded by exact name, so Hidden.sys keeps 501 of its 507; "
+              "the other 97 are evidenced by name only and remain filed "
+              "under this family. The image also "
               "carries whatever kernel-mode runtime the WDK links in, which "
               "the compiler-runtime filter cannot recognise because the "
               "baseline it measures against is a user-mode ucrt/vcruntime "
