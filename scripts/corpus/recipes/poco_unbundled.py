@@ -44,6 +44,23 @@ pcre2_tables.c, which Foundation/CMakeLists.txt compiles into Foundation from
 dependencies/pcre2 whenever the external pcre2 is not a static library
 ("HACK: Foundation Unicode.cpp requires functions from these files").
 
+pcre2 import library. Poco's cmake/FindPCRE2.cmake decides the library type
+from the last extension of PCRE2_LIBRARY: ".a" is CMAKE_STATIC_LIBRARY_SUFFIX
+on MinGW, so the import library libpcre2-8.dll.a is taken for a static
+pcre2, Foundation skips the two embedded pcre2 files, and every Poco
+executable then fails to link (scratch run 42674927927, both architectures):
+
+    ld: ../../lib/libPocoFoundation.a(Unicode.cpp.obj):Unicode.cpp:
+    (.rdata$.refptr._pcre2_ucp_gentype_8[...]+0x0): undefined reference to
+    `_pcre2_ucp_gentype_8'   (and _pcre2_ucd_records_8, _pcre2_ucd_stage1_8,
+    _pcre2_ucd_stage2_8), in bin/f2cpsp.exe and bin/poco-arc.exe
+
+The recipe copies the import library to libpcre2-8.implib in the private
+prefix and passes that path as PCRE2_LIBRARY (and PCRE2_INCLUDE_DIR), so the
+type is UNKNOWN, no PCRE2_STATIC is set, and Foundation takes the
+"embedding internal sources" branch its CMake has for a shared pcre2. GNU ld
+reads the import library under any name. Nothing in the Poco tree changes.
+
 Final link: as poco.py, plus the five import libraries from the prefix.
 """
 
@@ -71,7 +88,9 @@ _DEPS = [
         "pcre2-10.48", "b-pcre2-{arch}",
         "-DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=OFF "
         "-DPCRE2_BUILD_PCRE2GREP=OFF -DPCRE2_BUILD_TESTS=OFF "
-        "-DPCRE2_SUPPORT_JIT=OFF")),
+        "-DPCRE2_SUPPORT_JIT=OFF") +
+        # See "pcre2 import library" in the docstring.
+        " && cp deps-{arch}/lib/libpcre2-8.dll.a deps-{arch}/lib/libpcre2-8.implib"),
     BuildStep("tar xf {expat_archive} && " + _dep(
         "expat-2.8.5", "b-expat-{arch}",
         "-DEXPAT_SHARED_LIBS=ON -DEXPAT_BUILD_TOOLS=OFF "
@@ -96,6 +115,8 @@ _CMAKE = (
     "-DCMAKE_C_COMPILER={cc} -DCMAKE_CXX_COMPILER={cxx}-posix "
     "\"-DCMAKE_FIND_ROOT_PATH=/usr/{host};$PWD/deps-{arch}\" "
     "-DCMAKE_PREFIX_PATH=$PWD/deps-{arch} "
+    "-DPCRE2_LIBRARY=$PWD/deps-{arch}/lib/libpcre2-8.implib "
+    "-DPCRE2_INCLUDE_DIR=$PWD/deps-{arch}/include "
     "-DCMAKE_MC_COMPILER={prefix}windmc -DCMAKE_RC_COMPILER={windres} "
     "-DCMAKE_BUILD_TYPE=RelWithDebInfo "
     "-DCMAKE_C_FLAGS_RELWITHDEBINFO='-O3 -DNDEBUG' "
