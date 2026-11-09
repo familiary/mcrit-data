@@ -540,6 +540,10 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| MSVC 14.13.26128, 14.16.27023, 14.21.27702, 14.24.28314, 14.26.28801, 14.27.29110 | MSVC_oldtoolsets | crawled and measured, not committed: 95.0 to 99.0% (x64) and 95.8 to 99.5% (x86) of their PicHashes are already in the kept neighbouring toolsets (14.16.27023 is the same code as 14.15.26726) |
+| msvcprt.lib / msvcprtd.lib (all old toolsets) | MSVC_oldtoolsets | `C:\BT\vs15\VC\Tools\MSVC\14.16.27023\lib\x64\msvcprt.lib : fatal error LNK1127: library is corrupt` under `/WHOLEARCHIVE`, the same in every toolset |
+| /clr:pure startup objects pbinmode.obj ... (14.0 to 14.15) | MSVC_oldtoolsets | `pbinmode.obj : fatal error LNK1313: pure module detected; cannot link with ijw/native modules`; left out, their native twins are linked |
+| VC++ 14.0 via the VS 2015 Build Tools installer | MSVC_oldtoolsets | not needed: the `Microsoft.VisualStudio.Component.VC.140` component of the VS 2017 bootstrapper installed it, so `visualcppbuildtools_full.exe` was not run |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |
