@@ -437,13 +437,14 @@ Generated with `scripts/build_corpus.py`; see `data/lz4/provenance.json` for sou
 
 ### LZO<a id='lzo'></a>
 
-LZO is the LZO1X compressor, vendored as miniLZO by UltraVNC and common in VNC software, packers and game data. The full library is built; miniLZO's functions all have PicHashes present in it.  
+LZO is the LZO1X compressor, vendored as miniLZO by UltraVNC and common in VNC software, packers and game data. Built as the full library and, separately, as miniLZO 2.10 (`minilzo-2.10`, the form UltraVNC vendors); miniLZO's functions all have PicHashes present in the full build.  
 Generated with `scripts/build_corpus.py`; see `data/lzo/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: lzo -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | lzo | 2.10 | MinGW-w64 GCC 13 | [x86 PE](data/lzo/x86/mcrit/lzo_2.10_mingw13_x86_liblzo2-2.dll.mcrit) / [x64 PE](data/lzo/x64/mcrit/lzo_2.10_mingw13_x64_liblzo2-2.dll.mcrit) | [x86 PE](data/lzo/x86/smda/lzo_2.10_mingw13_x86_liblzo2-2.dll.7z) / [x64 PE](data/lzo/x64/smda/lzo_2.10_mingw13_x64_liblzo2-2.dll.7z) |
+| lzo | minilzo-2.10 | MinGW-w64 GCC 13 | [x86 PE](data/lzo/x86/mcrit/lzo_minilzo-2.10_mingw13_x86_minilzo.dll.mcrit) / [x64 PE](data/lzo/x64/mcrit/lzo_minilzo-2.10_mingw13_x64_minilzo.dll.mcrit) | [x86 PE](data/lzo/x86/smda/lzo_minilzo-2.10_mingw13_x86_minilzo.dll.7z) / [x64 PE](data/lzo/x64/smda/lzo_minilzo-2.10_mingw13_x64_minilzo.dll.7z) |
 <!-- /generated -->
 
 ### mbedTLS<a id='mbedtls'></a>
