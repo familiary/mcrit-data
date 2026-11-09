@@ -1,109 +1,155 @@
 name: Windows reference data
 
-# Generates reference data that needs MSVC.
-#
-# Two kinds of recipe run here. VX-API needs ATL, BlackBone needs ATL and the
-# DIA SDK, and SysWhispers v1 emits MASM that neither nasm nor GAS will
-# assemble: those cannot be built with GCC at all. The library recipes whose
-# names end in _msvc can be built with GCC - data/ carries the MinGW artefacts
-# already - but the corpus wants the MSVC build of the same version beside it,
-# because that is the compiler behind most Windows sightings of sqlite3,
-# liblzma and lz4. The windows-2022 runner image carries Visual Studio 2022
-# with ATL and MFC, four Windows SDKs, ml/ml64, nmake, CMake and the WDK,
-# which covers all of them.
-#
-# Nothing below names a recipe or a family. The job asks
-# scripts/build_corpus.py which recipes declare the toolchain this leg has
-# (`list --toolchain msvc_<arch> --names-only`) and which corpus families
-# those recipes file into (`--families-only`), so adding a recipe under
-# scripts/corpus/recipes/ is the whole change: this file does not move. That
-# also keeps the one asymmetry honest without a special case - SysWhispers
-# declares toolchains=["msvc_x64"], so it appears in the x64 leg's list and
-# not in the x86 one, from the recipe's own declaration.
-#
-# What a push builds. A push builds the recipes defined in the recipe files
-# that push changed, and nothing else: rebuilding every MSVC recipe in the
-# repository (about seventy per architecture, an hour a leg) because one
-# recipe was added made each PR's own check re-do work its neighbours had
-# already done. A change to the pipeline itself - toolchain.py, build.py,
-# pipeline.py, baseline.py, smdaify.py, recipe.py, config.py, build_corpus.py
-# or the recipe registry - still rebuilds everything, since it can change what
-# every artefact contains. A change to this file alone builds nothing (run it
-# by hand to exercise it), and so does a push to a recipe that no MSVC leg
-# declares. workflow_dispatch is unchanged: a space-separated list, or
-# all-msvc.
-#
-# The same scripts/build_corpus.py drives this as the Linux side; only the
-# toolchain differs. Results are uploaded as artifacts rather than committed,
-# so a maintainer reviews them before they enter the corpus.
-
+# Scratch workflow for LibreSSL 3.1.0 with the v141_xp toolset (tracker #61).
+# Dispatch only. probe-vs15 installs the VS 2017 Build Tools with the VC
+# Tools workload and builds a hello.c through MSBuild with -T v141_xp on both
+# architectures; build-v141xp runs only when that passed. probe-vs17 tries
+# the other route (adding v141 and the WinXP component to the preinstalled
+# VS 2022) for the record and never gates anything.
 on:
   workflow_dispatch:
     inputs:
       recipes:
-        description: Recipes to build (space separated, or "all-msvc")
-        required: false
-        default: all-msvc
-  # push rather than pull_request: a pull_request path filter is evaluated
-  # against everything the PR changes, not against the push, so once one of
-  # these files is in the branch every later commit re-triggers the job and
-  # cancels the run that was already building. On push the filter means what
-  # it says.
-  push:
-    paths:
-      # The one place a literal list survives, because a path filter is
-      # evaluated before the checkout and so cannot ask Python anything. It is
-      # a whole-directory glob rather than the six recipe files it used to
-      # name, and rather than a tighter `*_msvc.py`, because those two are
-      # wrong in opposite directions and only one of the two failure modes is
-      # visible. Over-triggering costs runner minutes on a run that says
-      # exactly what it built; under-triggering means a newly added MSVC
-      # recipe merges with no Windows CI at all and nothing anywhere says so.
-      # It does mean editing a MinGW-only recipe (sqlite3.py, xz.py, lz4.py
-      # and the rest) now rebuilds the MSVC side, which the previous list
-      # deliberately avoided. If those minutes ever become the binding
-      # constraint, the tighter filter is
-      # `scripts/corpus/recipes/*_msvc.py` plus the MSVC-only families that
-      # do not carry that suffix - but that only holds while every MSVC
-      # recipe is named for the convention, which nothing enforces.
-      - scripts/corpus/recipes/**
-      - scripts/corpus/toolchain.py
-      - scripts/corpus/build.py
-      - scripts/corpus/pipeline.py
-      # These decide what the artefacts contain, not merely whether the build
-      # runs: baseline.py is the glue filter, smdaify.py the disassembly and
-      # symbol handling, recipe.py the naming. A change to any of them that
-      # did not rebuild the MSVC families would leave them describing a
-      # pipeline this branch no longer has.
-      - scripts/corpus/baseline.py
-      - scripts/corpus/smdaify.py
-      - scripts/corpus/recipe.py
-      # config.py is in this list for the same reason rather than as a
-      # catch-all: MIN_NAMED_SAMPLE_INSTRUCTIONS decides which functions the
-      # symbol-coverage gate counts, and MIN_USEFUL_FUNCTIONS and
-      # MIN_USEFUL_BLOB_INSTRUCTIONS decide whether an artefact is accepted
-      # at all. Moving one of those without rebuilding would leave the MSVC
-      # families admitted under a rule this branch no longer applies.
-      - scripts/corpus/config.py
-      # The recipe and family enumeration the job below depends on lives here.
-      - scripts/build_corpus.py
-      - .github/workflows/windows-reference-data.yml
+        description: Recipes to build (space separated)
+        required: true
+        default: LibreSSL_3.1.0_msvc_v141xp
 
 permissions:
   contents: read
 
-# Each push supersedes the last, and these jobs take minutes of runner time
-# building real software. Without this, a quick succession of fixes leaves
-# several runs racing on commits nobody is waiting for any more.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
+  probe-vs15:
     runs-on: windows-2022
+    timeout-minutes: 40
+    steps:
+      - name: Install VS 2017 Build Tools (VC Tools workload, 14.16, WinXP)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $url = 'https://aka.ms/vs/15/release/vs_buildtools.exe'
+          $pin = '79166ebaee58c28f280a7d810af3557a8a3e3f7d2ac298e20504d36d6bf6b3ae'
+          $exe = Join-Path $env:RUNNER_TEMP 'vs15_buildtools.exe'
+          Invoke-WebRequest -Uri $url -OutFile $exe -UseBasicParsing
+          $sha = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLower()
+          Write-Host "INSTALLER vs15 sha256=$sha"
+          if ($sha -ne $pin) { throw "vs15 installer sha256 $sha differs from the pinned $pin" }
+          $argv = @('--quiet','--wait','--norestart','--nocache','--installPath','C:\BT\vs15',
+                    '--add','Microsoft.VisualStudio.Workload.VCTools',
+                    '--add','Microsoft.VisualStudio.Component.VC.CoreBuildTools',
+                    '--add','Microsoft.VisualStudio.Component.VC.Tools.x86.x64',
+                    '--add','Microsoft.VisualStudio.Component.WinXP')
+          $sw = [Diagnostics.Stopwatch]::StartNew()
+          $p = Start-Process -FilePath $exe -ArgumentList $argv -Wait -PassThru
+          Write-Host "INSTALL vs15 exit=$($p.ExitCode) seconds=$([int]$sw.Elapsed.TotalSeconds)"
+          if ($p.ExitCode -ne 0 -and $p.ExitCode -ne 3010) {
+            Get-ChildItem "$env:TEMP\dd_*.log" -ErrorAction SilentlyContinue | ForEach-Object {
+              Select-String -Path $_.FullName -Pattern 'Error|Failed|error:' | Select-Object -Last 40 | ForEach-Object { $_.Line }
+            }
+            throw "vs15 install exit $($p.ExitCode)"
+          }
+          Get-ChildItem C:\BT\vs15\VC\Tools\MSVC | ForEach-Object { Write-Host "VCTOOLS $($_.FullName)" }
+          Get-ChildItem "C:\BT\vs15\Common7\IDE\VC\VCTargets\Platforms\*\PlatformToolsets\*" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "TOOLSET $($_.FullName)" }
+          Get-ChildItem C:\BT\vs15\Common7\Tools\vsdevcmd\ext | ForEach-Object { Write-Host "VSDEVCMD-EXT $($_.Name)" }
+          Write-Host "Microsoft.Cpp.Default.props present: $(Test-Path 'C:\BT\vs15\Common7\IDE\VC\VCTargets\Microsoft.Cpp.Default.props')"
+          Get-ChildItem "C:\Program Files (x86)\Microsoft SDKs\Windows" | ForEach-Object { Write-Host "SDK $($_.FullName)" }
+          Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\Include" | ForEach-Object { Write-Host "KIT10 $($_.Name)" }
+          & 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe' -all -products * -format text -property installationPath
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: CMake 3.31.6
+        run: |
+          python -m pip install --quiet cmake==3.31.6
+          where cmake
+          cmake --version
+
+      - name: vcvarsall x86 puts cl 19.16 on PATH
+        shell: cmd
+        run: |
+          call C:\BT\vs15\VC\Auxiliary\Build\vcvarsall.bat x86 || exit /b 1
+          where cl || exit /b 1
+          cl 2>&1 | findstr /c:"Version 19.16." || exit /b 1
+          echo VCToolsVersion=%VCToolsVersion% WindowsSDKVersion=%WindowsSDKVersion% UCRTVersion=%UCRTVersion%
+
+      - name: vcvarsall amd64 puts cl 19.16 on PATH
+        shell: cmd
+        run: |
+          call C:\BT\vs15\VC\Auxiliary\Build\vcvarsall.bat amd64 || exit /b 1
+          where cl || exit /b 1
+          cl 2>&1 | findstr /c:"Version 19.16." || exit /b 1
+          echo VCToolsVersion=%VCToolsVersion% WindowsSDKVersion=%WindowsSDKVersion% UCRTVersion=%UCRTVersion%
+
+      - name: hello.c through MSBuild with -T v141_xp (both architectures) and -T v141 (x64)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path hello | Out-Null
+          Set-Content hello/hello.c "#include <stdio.h>`r`nint main(void) { printf(""hello %d\n"", _MSC_FULL_VER); return 0; }`r`n"
+          Set-Content hello/CMakeLists.txt "cmake_minimum_required(VERSION 3.15)`r`nproject(hello C)`r`nadd_executable(hello hello.c)`r`n"
+          $fail = 0
+          foreach ($c in @(@('x86','Visual Studio 15 2017','-A','Win32','v141_xp'),
+                           @('x64','Visual Studio 15 2017 Win64','','','v141_xp'),
+                           @('x64v141','Visual Studio 15 2017 Win64','','','v141'))) {
+            $tag, $gen, $aflag, $aval, $ts = $c
+            $b = "hello/build-$tag"
+            $cfg = @('-S','hello','-B',$b,'-G',$gen,'-T',$ts,'-DCMAKE_GENERATOR_INSTANCE=C:/BT/vs15')
+            if ($aflag) { $cfg += @($aflag, $aval) }
+            Write-Host "::group::configure $tag ($gen, -T $ts)"
+            cmake @cfg 2>&1 | Out-Host
+            $rc = $LASTEXITCODE
+            Write-Host "::endgroup::"
+            if ($rc -ne 0) { Write-Host "PROBE $tag configure FAILED ($rc)"; $fail++; continue }
+            Write-Host "::group::build $tag"
+            $log = cmake --build $b --config Release -- /v:d 2>&1
+            $rc = $LASTEXITCODE
+            $log | Select-String -Pattern 'CL.exe|cl.exe /c|link.exe|_USING_V110_SDK71_|v7.1A|PlatformToolset|SUBSYSTEM|error' | Select-Object -First 30 | ForEach-Object { $_.Line }
+            Write-Host "::endgroup::"
+            if ($rc -ne 0) { Write-Host "PROBE $tag build FAILED ($rc)"; $log | Select-Object -Last 40 | Out-Host; $fail++; continue }
+            $hx = Get-ChildItem "$b" -Recurse -Filter hello.exe | Select-Object -First 1
+            $out = & $hx.FullName
+            Write-Host "PROBE $tag ok: $out"
+            cmd /c "call C:\BT\vs15\VC\Auxiliary\Build\vcvarsall.bat x86 >nul && dumpbin /headers `"$($hx.FullName)`"" | Select-String 'machine|subsystem version|operating system version|linker version' | ForEach-Object { Write-Host "  $($_.Line.Trim())" }
+          }
+          if ($fail) { throw "$fail probe configuration(s) failed" }
+
+  probe-vs17:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - name: Add v141 and the WinXP component to the preinstalled VS 2022 (informational)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $vs = & 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe' -latest -property installationPath
+          Write-Host "VS2022 at $vs"
+          $inst = 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe'
+          $argv = @('modify','--installPath',"`"$vs`"",'--quiet','--norestart','--nocache',
+                    '--add','Microsoft.VisualStudio.Component.VC.v141.x86.x64',
+                    '--add','Microsoft.VisualStudio.Component.WinXP')
+          $sw = [Diagnostics.Stopwatch]::StartNew()
+          $p = Start-Process -FilePath $inst -ArgumentList $argv -Wait -PassThru
+          Write-Host "MODIFY vs17 exit=$($p.ExitCode) seconds=$([int]$sw.Elapsed.TotalSeconds)"
+          Get-ChildItem "$vs\MSBuild\Microsoft\VC\v170\Platforms\Win32\PlatformToolsets" | ForEach-Object { Write-Host "TOOLSET Win32 $($_.Name)" }
+          Get-ChildItem "$vs\MSBuild\Microsoft\VC\v170\Platforms\x64\PlatformToolsets" | ForEach-Object { Write-Host "TOOLSET x64 $($_.Name)" }
+          Get-ChildItem "$vs\VC\Tools\MSVC" | ForEach-Object { Write-Host "VCTOOLS $($_.Name)" }
+          New-Item -ItemType Directory -Force -Path hello | Out-Null
+          Set-Content hello/hello.c "int main(void) { return 0; }`r`n"
+          Set-Content hello/CMakeLists.txt "cmake_minimum_required(VERSION 3.15)`r`nproject(hello C)`r`nadd_executable(hello hello.c)`r`n"
+          cmake -S hello -B hello/b -G "Visual Studio 17 2022" -A Win32 -T v141_xp 2>&1 | Out-Host
+          cmake --build hello/b --config Release 2>&1 | Select-Object -Last 15 | Out-Host
+          Write-Host "PROBE vs17 v141_xp x86 build exit=$LASTEXITCODE"
+
+  build-v141xp:
+    needs: probe-vs15
+    runs-on: windows-2022
+    timeout-minutes: 150
     strategy:
-      # One architecture failing should not hide the other's result.
       fail-fast: false
       matrix:
         arch: [x86, x64]
@@ -117,170 +163,62 @@ jobs:
       - name: Install analysis dependencies
         run: python -m pip install --quiet -r scripts/requirements.txt
 
-      # Puts cl, link, ml/ml64, rc and msbuild on PATH for the chosen target.
-      # scripts/corpus/toolchain.py registers the MSVC toolchain from that.
-      - name: Set up MSVC (${{ matrix.arch }})
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: ${{ matrix.arch == 'x64' && 'amd64' || 'x86' }}
+      # CMake 3.x: LibreSSL 3.1.0 picks its MASM sources only when the
+      # generator name says Win64, a spelling CMake 4.0 removed.
+      - name: CMake 3.31.6
+        run: python -m pip install --quiet cmake==3.31.6
 
-      - name: Show detected toolchains
-        run: python scripts/build_corpus.py list
-
-      # Informational only, and deliberately the one step here that looks at
-      # what the image has installed rather than at what a recipe declares.
-      #
-      # Two statements in this repository disagree about the WDK: the header
-      # comment above says the windows-2022 image carries it, and
-      # scripts/corpus/README.md's "Targets investigated but not built" table
-      # gives "a separate solution needing the WDK" as the reason BlackBone's
-      # kernel driver is absent. Both cannot be right in the sense a reader
-      # takes them, and neither is worth "fixing" on speculation. This prints
-      # the answer, so the next round corrects whichever one is wrong and any
-      # kernel-mode recipe - MahmoudZohdy/APICallProxy is the one waiting on
-      # it, and BlackBone's driver would follow - is written against a
-      # measurement. The four things asked about are exactly what
-      # APICallProxy's Release|x64 link line needs: the KMDF platform toolset,
-      # the KMDF import libraries, $(DDK_LIB_PATH)'s ntoskrnl/hal/wmilib, and
-      # netio.lib for its WSK socket layer.
-      #
-      # continue-on-error so a missing path can never fail the leg; the paths
-      # are wildcarded so a different VS edition or SDK version still answers.
-      - name: Probe for a WDK and KMDF (informational, never fatal)
-        continue-on-error: true
+      - name: Install VS 2017 Build Tools (VC Tools workload, 14.16, WinXP)
         shell: pwsh
         run: |
-          function Probe($label, $glob) {
-            $hits = @(Get-ChildItem -Path $glob -ErrorAction SilentlyContinue |
-                      Select-Object -First 6 -ExpandProperty FullName)
-            if ($hits) {
-              Write-Host "WDK-PROBE ${label}: PRESENT"
-              $hits | ForEach-Object { Write-Host "    $_" }
-            } else {
-              Write-Host "WDK-PROBE ${label}: ABSENT ($glob)"
-            }
-          }
-          $vs = "C:\Program Files*\Microsoft Visual Studio\2022\*\MSBuild\Microsoft\VC\*"
-          $kits = "C:\Program Files*\Windows Kits\10\Lib"
-          Probe "WindowsKernelModeDriver10.0 platform toolset" `
-                "$vs\Platforms\*\PlatformToolsets\WindowsKernelModeDriver10.0"
-          Probe "KMDF import libraries (path names the KMDF version)" `
-                "$kits\wdf\kmdf\*\*\WdfDriverEntry.lib"
-          Probe "DDK_LIB_PATH ntoskrnl.lib" "$kits\*\km\*\ntoskrnl.lib"
-          Probe "DDK_LIB_PATH hal.lib" "$kits\*\km\*\hal.lib"
-          Probe "DDK_LIB_PATH wmilib.lib" "$kits\*\km\*\wmilib.lib"
-          Probe "netio.lib (APICallProxy's WSK socket layer)" `
-                "$kits\*\km\*\netio.lib"
+          $ErrorActionPreference = 'Continue'
+          $url = 'https://aka.ms/vs/15/release/vs_buildtools.exe'
+          $pin = '79166ebaee58c28f280a7d810af3557a8a3e3f7d2ac298e20504d36d6bf6b3ae'
+          $exe = Join-Path $env:RUNNER_TEMP 'vs15_buildtools.exe'
+          Invoke-WebRequest -Uri $url -OutFile $exe -UseBasicParsing
+          $sha = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLower()
+          Write-Host "INSTALLER vs15 sha256=$sha"
+          if ($sha -ne $pin) { throw "vs15 installer sha256 $sha differs from the pinned $pin" }
+          $argv = @('--quiet','--wait','--norestart','--nocache','--installPath','C:\BT\vs15',
+                    '--add','Microsoft.VisualStudio.Workload.VCTools',
+                    '--add','Microsoft.VisualStudio.Component.VC.CoreBuildTools',
+                    '--add','Microsoft.VisualStudio.Component.VC.Tools.x86.x64',
+                    '--add','Microsoft.VisualStudio.Component.WinXP')
+          $p = Start-Process -FilePath $exe -ArgumentList $argv -Wait -PassThru
+          Write-Host "INSTALL vs15 exit=$($p.ExitCode)"
+          if ($p.ExitCode -ne 0 -and $p.ExitCode -ne 3010) { throw "vs15 install exit $($p.ExitCode)" }
+          Get-ChildItem C:\BT\vs15\VC\Tools\MSVC | ForEach-Object { Write-Host "VCTOOLS $($_.FullName)" }
 
-      # Decides what the Build step builds; see the note at the top of the file.
-      # Any doubt - the compare call failing, a push with no usable base - falls
-      # back to everything, because building too much costs minutes and
-      # building too little leaves a recipe with no Windows CI at all.
-      - name: Select recipes
-        id: select
+      # The VS 2017 install's own developer environment, exported to the
+      # later steps; scripts/corpus/toolchain.py registers msvc141 from it.
+      - name: VS 2017 developer environment (${{ matrix.arch }})
         shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-          EVENT: ${{ github.event_name }}
-          REPO: ${{ github.repository }}
-          BEFORE: ${{ github.event.before }}
-          FIRST: ${{ github.event.commits[0].id }}
-          HEAD_SHA: ${{ github.sha }}
-          REQUESTED: ${{ github.event.inputs.recipes }}
         run: |
-          function Emit($recipes, $skipped) {
-            Add-Content -Path $env:GITHUB_OUTPUT -Value "recipes=$recipes"
-            Add-Content -Path $env:GITHUB_OUTPUT -Value "skipped=$skipped"
+          $a = if ('${{ matrix.arch }}' -eq 'x64') { 'amd64' } else { 'x86' }
+          $lines = cmd /c "call C:\BT\vs15\VC\Auxiliary\Build\vcvarsall.bat $a >nul && set"
+          if ($LASTEXITCODE -ne 0) { throw "vcvarsall $a failed" }
+          $n = 0
+          foreach ($line in $lines) {
+            if ($line -notmatch '^([^=]+)=(.*)$') { continue }
+            $k = $matches[1]; $v = $matches[2]
+            if ($k -match '^(GITHUB_|RUNNER_|ACTIONS_)') { continue }
+            if ([Environment]::GetEnvironmentVariable($k) -ceq $v) { continue }
+            Add-Content -Path $env:GITHUB_ENV -Value "$k=$v"; $n++
           }
-          if ($env:EVENT -eq "workflow_dispatch") {
-            if (-not $env:REQUESTED) { Emit "all-msvc" "false" } else { Emit $env:REQUESTED "false" }
-            exit 0
-          }
-          $base = $env:BEFORE
-          if (-not $base -or $base -match '^0+$') {
-            # A new branch. The commits this push brought are the ones new to
-            # the repository; the parent of the first is the last thing the
-            # branch shares with the rest of it.
-            if ($env:FIRST) {
-              $base = gh api "repos/$env:REPO/commits/$env:FIRST" --jq '.parents[0].sha'
-              if ($LASTEXITCODE -ne 0) { $base = "" }
-            } else { $base = "" }
-          }
-          $files = @()
-          if ($base) {
-            $files = @(gh api "repos/$env:REPO/compare/$base...$env:HEAD_SHA" `
-                         --paginate --jq '.files[].filename')
-            if ($LASTEXITCODE -ne 0) { $files = @(); $base = "" }
-          }
-          if (-not $base) {
-            Write-Host "::notice::could not tell what this push changed; building every MSVC recipe"
-            Emit "all-msvc" "false"
-            exit 0
-          }
-          Write-Host "this push changed $($files.Count) file(s)"
-          $core = @("scripts/corpus/toolchain.py", "scripts/corpus/build.py",
-                    "scripts/corpus/pipeline.py", "scripts/corpus/baseline.py",
-                    "scripts/corpus/smdaify.py", "scripts/corpus/recipe.py",
-                    "scripts/corpus/config.py", "scripts/build_corpus.py",
-                    "scripts/corpus/recipes/__init__.py")
-          $hit = @($files | Where-Object { $core -contains $_ })
-          if ($hit) {
-            Write-Host "::notice::pipeline code changed ($($hit -join ', ')); building every MSVC recipe"
-            Emit "all-msvc" "false"
-            exit 0
-          }
-          $modules = @($files | Where-Object { $_ -like "scripts/corpus/recipes/*.py" })
-          if (-not $modules) {
-            Write-Host "::notice::no recipe file changed in this push; nothing to build"
-            Emit "" "true"
-            exit 0
-          }
-          $names = python scripts/build_corpus.py list `
-            --toolchain msvc_${{ matrix.arch }} --names-only --modules $modules
-          $code = $LASTEXITCODE
-          if ($code -eq 3) {
-            Write-Host "::notice::the changed recipe file(s) define nothing for msvc_${{ matrix.arch }}; nothing to build"
-            Emit "" "true"
-            exit 0
-          }
-          if ($code -ne 0) { throw "could not select the changed recipes" }
-          $recipes = @($names | ForEach-Object { $_.Trim() } | Where-Object { $_ })
-          Write-Host "changed recipe files: $($modules -join ', ')"
-          Write-Host "selected $($recipes.Count) recipe(s): $($recipes -join ' ')"
-          Emit ($recipes -join " ") "false"
+          Write-Host "exported $n variable(s)"
 
-      # Does NOT fail the job when a recipe fails. Everything this leg did
-      # build is still scoped, validated and uploaded by the steps below, and
-      # the job is failed at the very end instead - see "Fail the job if any
-      # recipe failed". With thirty recipes in a leg, one broken recipe
-      # throwing away the other twenty-nine costs a full cycle for everyone.
+      - name: Show the compiler and detected toolchains
+        run: |
+          where cl
+          cl
+          where cmake
+          python scripts/build_corpus.py list
+
       - name: Build
         id: build
         shell: pwsh
         run: |
-          if ("${{ steps.select.outputs.skipped }}" -eq "true") {
-            Write-Host "nothing selected for this push; not building"
-            Add-Content -Path $env:GITHUB_OUTPUT -Value "exit-code=0"
-            exit 0
-          }
-          $requested = "${{ steps.select.outputs.recipes }}"
-          if (-not $requested -or $requested -eq "all-msvc") {
-            # Asked of the recipe registry rather than listed here, and asked
-            # about what the recipes DECLARE rather than what this runner
-            # registered: an MSVC developer environment targets one
-            # architecture at a time, so msvc_x86 does not exist on the x64
-            # runner and a host-availability filter would come back empty.
-            $names = python scripts/build_corpus.py list `
-              --toolchain msvc_${{ matrix.arch }} --names-only
-            if ($LASTEXITCODE -ne 0) {
-              throw "could not enumerate the msvc_${{ matrix.arch }} recipes"
-            }
-            $recipes = @($names | ForEach-Object { $_.Trim() } |
-                         Where-Object { $_ })
-          } else {
-            $recipes = @($requested.Split(" ") | Where-Object { $_ })
-          }
-          if (-not $recipes) { throw "there are no recipes to build" }
+          $recipes = @("${{ github.event.inputs.recipes }}".Split(" ") | Where-Object { $_ })
           Write-Host "building $($recipes.Count) recipe(s): $($recipes -join ', ')"
           New-Item -ItemType Directory -Force -Path build | Out-Null
           python scripts/build_corpus.py build $recipes 2>&1 |
@@ -292,9 +230,6 @@ jobs:
                         "artefacts that did build are still scoped and " +
                         "uploaded, and this job is failed at the end of the run")
           }
-          # The pwsh wrapper exits on whatever $LASTEXITCODE holds when the
-          # script ends, so a non-zero build would fail this step despite the
-          # above. Exiting explicitly is what defers the verdict.
           exit 0
 
       # What the job uploads has to be what the job built. data/ arrives from
@@ -446,7 +381,7 @@ jobs:
         if: ${{ success() && steps.select.outputs.skipped != 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: reference-data-${{ matrix.arch }}
+          name: reference-data-v141xp-${{ matrix.arch }}
           path: ${{ steps.scope.outputs.upload-paths }}
           if-no-files-found: error
 
@@ -482,7 +417,7 @@ jobs:
              && steps.select.outputs.skipped != 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: build-logs-${{ matrix.arch }}
+          name: build-logs-v141xp-${{ matrix.arch }}
           path: build/*.log
           if-no-files-found: ignore
 
@@ -529,3 +464,4 @@ jobs:
           throw ("this run built a broken recipe: " +
                  "$($failed.Count) failure(s) named above, " +
                  "build_corpus.py exit '$code'")
+
