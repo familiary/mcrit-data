@@ -117,15 +117,14 @@ PicHash match the probe, which is exactly the rule that has to hold here: a
 project shipping its own `open` must keep it. The drop count is recorded in
 provenance so the mechanism can be audited rather than trusted.
 
-**Overlap with Medusa (#40) is not yet measurable.** Issue #55 asks for this
-family to be decided together with #40, which shares 21 symbol names with it
-(`__lxstat`, `__xstat`, `access`, `execve`, `fopen`, `getpwnam_r`, `lstat`,
-`open`, `opendir`, the four `pam_*`, `pcap_loop`, `stat`, `unlink`,
-`unlinkat` and their `*64` variants). Medusa is a kernel module and is not
-built here, so no cross-family PicHash between the two exists yet to measure.
-When Medusa arrives, those 21 names are where leakage would show up, and the
-`validate --deep` rule that fails on one symbol repeated across three
-families is the gate that would catch it.
+**Overlap with Medusa (#40) is measured.** Medusa is a userland LD_PRELOAD
+library, not a kernel module. Its rkld.so references are in PR 102 at
+83fb65b7593931d1c6c530d5cf51381ca60e5dcc. Rechecking the committed x86/x64
+exports at the ten-instruction floor gives Azazel 53/48 distinct hashes and
+Medusa 78/68. The family unions have 101 and 146 hashes, with zero shared
+PicHashes in all four architecture pairings. Shared hook names therefore
+do not establish identical implementations. The counts and export digests
+are recorded in scripts/corpus/coverage/unix-implants/README.md.
 
 `crypthook.c` is vendored from chokepoint/CryptHook - 6 functions in the
 object, of which `gen_key`, `encrypt_data`, `decrypt_data`, `crypt_read` and
@@ -211,8 +210,11 @@ RECIPES = {
               "its own. Upstream links no -lcrypto despite crypthook.c "
               "calling EVP_*, so the artefact carries 8 undefined OpenSSL "
               "references - upstream's shape, not an error here. Issue #55 "
-              "asks that this be decided with Medusa (#40), which shares 21 "
-              "symbol names with it; Medusa is a kernel module and is not "
-              "built, so that overlap is not yet measurable.",
+              "asks that this be decided with Medusa (#40). Medusa is a "
+              "userland LD_PRELOAD library, built separately in PR 102. "
+              "At the ten-instruction PicHash floor, the committed x86/x64 "
+              "family unions have 101 Azazel hashes and 146 Medusa hashes "
+              "with zero shared hashes. Shared hook names do not establish "
+              "identical implementations.",
     ),
 }
