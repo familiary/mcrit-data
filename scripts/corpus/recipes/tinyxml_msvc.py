@@ -91,7 +91,28 @@ version, same arch; mingw / msvc counts):
     TinyXML2 11.0.0 x86 181 / 213   x64 156 / 220     shared 0 and 0
 
 The pair shares no exact function body, which is the case for holding the
-MSVC axis at all. validate --deep (these families plus cJSON, lz4, q3vm,
+MSVC axis at all.
+
+Added later (backlog #24): the TIXML_USE_STL build and TinyXML2 2.0.2,
+counted on the runner as above (kept + removed = image):
+
+    TinyXML 2.6.2 tinyxml_stl  x86  296 + 1532 = 1828   x64  372 + 1538 = 1910
+    TinyXML2 2.0.2             x86  397 +  185 =  582   x64  405 +  192 =  597
+
+The STL build removes about 1.5k functions because every std::basic_string
+and iostream instantiation the .def exports is in the baseline's list of
+runtime functions; what stays is 321 TiXml* functions (x64), the
+operator<< / operator>> stream operators, and, as a measured baseline gap
+reported rather than patched, 20 ``std::basic_string<char,...>`` member
+instantiations (11 to 108 instructions), ``std::operator==``,
+``std::_Traits_find_ch``, ``__std_minmax_element_impl<1/2/3>`` (135 to 218
+instructions) and ``__std_remove_4`` / ``_8`` (66), which are Microsoft's
+STL and not TinyXML. PicHash overlap, 10+ instructions (x86 / x64): STL with
+the default build 26 / 20 (of 147 / 148 distinct), 0 against its MinGW
+counterpart; TinyXML2 2.0.2 with 6.2.0 36 / 37, 9.0.0 34 / 36 and 11.0.0 29 /
+29, with either TinyXML build 1 / 2 (x86 / x64), 0 against the MinGW 2.0.2.
+FOSSIL's "tinyXML 2.0.2" has no SourceForge release; it is the TinyXML2 tag
+2.0.2, see tinyxml.py on the MinGW branch. validate --deep (these families plus cJSON, lz4, q3vm,
 aPLib, bzip2): 0 problems apart from README links to families outside the
 sparse checkout; no leakage.
 """

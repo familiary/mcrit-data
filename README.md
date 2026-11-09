@@ -679,7 +679,7 @@ Generated with `scripts/build_corpus.py`; see `data/libstdc++/provenance.json` f
 
 ### TinyXML<a id='tinyxml'></a>
 
-TinyXML is the original small C++ XML parser (SourceForge, final release 2.6.2). It is a different code base from TinyXML2: the two share one function of about 130 (`ConvertUTF32ToUTF8`), so they are separate families. Built as a non-STL shared library.  
+TinyXML is the original small C++ XML parser (SourceForge, final release 2.6.2). It is a different code base from TinyXML2: the two share one function of about 130 (`ConvertUTF32ToUTF8`), so they are separate families. Built as a shared library, non-STL by default, with a `-DTIXML_USE_STL` build as a second MSVC artefact (std::string; it shares only 20 to 26 of about 148 functions with the default build).  
 
 Generated with `scripts/build_corpus.py`; see `data/TinyXML/provenance.json` for source digests, compiler and flags.
 
@@ -688,17 +688,19 @@ Generated with `scripts/build_corpus.py`; see `data/TinyXML/provenance.json` for
 |----------|---------|----------|-------|------|
 | TinyXML | 2.6.2 | MinGW-w64 GCC 13 | [x86 PE](data/TinyXML/x86/mcrit/TinyXML_2.6.2_mingw13_x86_tinyxml.dll.mcrit) / [x64 PE](data/TinyXML/x64/mcrit/TinyXML_2.6.2_mingw13_x64_tinyxml.dll.mcrit) | [x86 PE](data/TinyXML/x86/smda/TinyXML_2.6.2_mingw13_x86_tinyxml.dll.7z) / [x64 PE](data/TinyXML/x64/smda/TinyXML_2.6.2_mingw13_x64_tinyxml.dll.7z) |
 | TinyXML | 2.6.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TinyXML/x86/mcrit/TinyXML_2.6.2_msvc143_x86_tinyxml.dll.mcrit) / [x64 PE](data/TinyXML/x64/mcrit/TinyXML_2.6.2_msvc143_x64_tinyxml.dll.mcrit) | [x86 PE](data/TinyXML/x86/smda/TinyXML_2.6.2_msvc143_x86_tinyxml.dll.7z) / [x64 PE](data/TinyXML/x64/smda/TinyXML_2.6.2_msvc143_x64_tinyxml.dll.7z) |
+| TinyXML | 2.6.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TinyXML/x86/mcrit/TinyXML_2.6.2_msvc143_x86_tinyxml_stl.dll.mcrit) / [x64 PE](data/TinyXML/x64/mcrit/TinyXML_2.6.2_msvc143_x64_tinyxml_stl.dll.mcrit) | [x86 PE](data/TinyXML/x86/smda/TinyXML_2.6.2_msvc143_x86_tinyxml_stl.dll.7z) / [x64 PE](data/TinyXML/x64/smda/TinyXML_2.6.2_msvc143_x64_tinyxml_stl.dll.7z) |
 <!-- /generated -->
 
 ### TinyXML2<a id='tinyxml2'></a>
 
-TinyXML2 is Lee Thomason's rewrite of TinyXML, a single-file parser with a pooled allocator. Three releases spanning 2018 to current; neighbouring releases share 66 to 85% of their functions.  
+TinyXML2 is Lee Thomason's rewrite of TinyXML, a single-file parser with a pooled allocator. Four releases: 2.0.2 (the tag matching FOSSIL's "tinyXML 2.0.2" reference build; no such TinyXML release exists) built with MSVC, and 2018 to current; neighbouring releases share 66 to 85% of their functions.  
 
 Generated with `scripts/build_corpus.py`; see `data/TinyXML2/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: TinyXML2 -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| TinyXML2 | 2.0.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TinyXML2/x86/mcrit/TinyXML2_2.0.2_msvc143_x86_tinyxml2.dll.mcrit) / [x64 PE](data/TinyXML2/x64/mcrit/TinyXML2_2.0.2_msvc143_x64_tinyxml2.dll.mcrit) | [x86 PE](data/TinyXML2/x86/smda/TinyXML2_2.0.2_msvc143_x86_tinyxml2.dll.7z) / [x64 PE](data/TinyXML2/x64/smda/TinyXML2_2.0.2_msvc143_x64_tinyxml2.dll.7z) |
 | TinyXML2 | 6.2.0 | MinGW-w64 GCC 13 | [x86 PE](data/TinyXML2/x86/mcrit/TinyXML2_6.2.0_mingw13_x86_tinyxml2.dll.mcrit) / [x64 PE](data/TinyXML2/x64/mcrit/TinyXML2_6.2.0_mingw13_x64_tinyxml2.dll.mcrit) | [x86 PE](data/TinyXML2/x86/smda/TinyXML2_6.2.0_mingw13_x86_tinyxml2.dll.7z) / [x64 PE](data/TinyXML2/x64/smda/TinyXML2_6.2.0_mingw13_x64_tinyxml2.dll.7z) |
 | TinyXML2 | 6.2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/TinyXML2/x86/mcrit/TinyXML2_6.2.0_msvc143_x86_tinyxml2.dll.mcrit) / [x64 PE](data/TinyXML2/x64/mcrit/TinyXML2_6.2.0_msvc143_x64_tinyxml2.dll.mcrit) | [x86 PE](data/TinyXML2/x86/smda/TinyXML2_6.2.0_msvc143_x86_tinyxml2.dll.7z) / [x64 PE](data/TinyXML2/x64/smda/TinyXML2_6.2.0_msvc143_x64_tinyxml2.dll.7z) |
 | TinyXML2 | 9.0.0 | MinGW-w64 GCC 13 | [x86 PE](data/TinyXML2/x86/mcrit/TinyXML2_9.0.0_mingw13_x86_tinyxml2.dll.mcrit) / [x64 PE](data/TinyXML2/x64/mcrit/TinyXML2_9.0.0_mingw13_x64_tinyxml2.dll.mcrit) | [x86 PE](data/TinyXML2/x86/smda/TinyXML2_9.0.0_mingw13_x86_tinyxml2.dll.7z) / [x64 PE](data/TinyXML2/x64/smda/TinyXML2_9.0.0_mingw13_x64_tinyxml2.dll.7z) |
