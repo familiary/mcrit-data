@@ -139,6 +139,26 @@ and the rest, with `curve25519_donna` itself 76 instructions - of which 17
 are ten instructions or more. That clears the floor of eight by its own
 count, so `min_functions` is not set here.
 
+The Tor-style component (`ed25519-donna-tor.dll`, third artefact of the
+ed25519-donna recipe, built with run 42682554400 of scratch/partials-a3). The
+flags Tor's src/ext/include.am passes, `/DED25519_CUSTOMHASH
+/DED25519_CUSTOMRANDOM /DED25519_SUFFIX=_donna`, with the digest supplied by
+scripts/corpus/exercisers/ed25519_donna_tor_hash.h through `/FI` (upstream's
+reference SHA-512 renamed `donna_ref_*` and wrapped in Tor's shape, as in
+donna.py) and the memset hook named by `/DED25519_RNG_NAME`; exports in
+ed25519_donna_tor.def. No diagnostics, no upstream file touched. x86 84 kept +
+129 removed = 213 (79 of ten instructions or more, 76 distinct PicHashes), x64
+85 + 133 = 218 (78, 75). Every function has a name; the ones that carry the
+suffix are `ed25519_publickey_donna`, `ed25519_sign_donna`,
+`ed25519_sign_open_donna`, `ed25519_sign_open_batch_donna`,
+`curved25519_scalarmult_basepoint_donna` and `ed25519_randombytes_unsafe_donna`.
+Against the plain MSVC build, 71 of 76 PicHashes (x86) and 71 of 75 (x64) are
+shared: what differs is the digest wrapper and its callers (`ed25519_hash_final`,
+`ed25519_hram`, `ed25519_sign`, `ed25519_sign_open_batch`). Against the MinGW
+Tor-style build, none, as for the plain builds. The exact exports, flags and
+the stand-in digest are the same limits as donna.py states: it is not Tor's
+digest and not Tor's `ed25519_tor.c`.
+
 Existing coverage. data/cryptopp 8.9.0 carries Crypto++'s C++ port of part of
 ed25519-donna, and it has an MSVC build. Against it, PicHashes at ten
 instructions or more shared with this module's MSVC artefacts: ed25519-donna
@@ -265,7 +285,17 @@ def _ed25519():
               "or more is shared on either architecture; against data/"
               "cryptopp 8.9.0 MSVC, 12 of 75 (x86) and 10 of 73 (x64). "
               "Built against the DLL runtime, so the MSVC C runtime is "
-              "imported and stays attributed to data/MSVC.",
+              "imported and stays attributed to data/MSVC. The third "
+              "component, ed25519-donna-tor, is the Tor-style build "
+              "(-DED25519_CUSTOMHASH -DED25519_CUSTOMRANDOM "
+              "-DED25519_SUFFIX=_donna, exports with the _donna suffix): "
+              "the digest is upstream's reference SHA-512, renamed and "
+              "wrapped in Tor's heap-allocated shape by "
+              "scripts/corpus/exercisers/ed25519_donna_tor_hash.h through "
+              "/FI, a stand-in for Tor's libcrypto or NSS digest. 71 of 76 "
+              "(x86) and 71 of 75 (x64) of its PicHashes are shared with "
+              "the plain MSVC component; Tor's own ed25519_tor.c is not "
+              "built.",
     )
 
 
