@@ -143,7 +143,129 @@ _COMPILE = ('cl /nologo /LD /O2 /MD /Zi /I. /Fobuild-{arch}\\ '
             '/PDB:build-{arch}\\protobuf-nanopb.pdb')
 
 
-def _nanopb_msvc(version):
+# --- Generated-code configurations (backlog #38), 0.4.9.2 only. The same
+# artefacts as nanopb.py adds on the MinGW side: runtime plus the generated
+# driver.pb.c with the PB_* defines the tracker names. The driver .proto is
+# written by the build; single quotes only, for cmd.exe.
+_DRIVER_PROTO = [
+    "syntax = \\x27proto3\\x27;",
+    "package driver;",
+    "enum Kind { KIND_NONE = 0; KIND_PING = 1; KIND_DATA = 2; }",
+    "message Point { sint32 x = 1; sint32 y = 2; }",
+    "message Packet {",
+    "  uint32 id = 1;",
+    "  int64 stamp = 2;",
+    "  fixed32 crc = 3;",
+    "  bool urgent = 4;",
+    "  float gain = 5;",
+    "  double offset = 6;",
+    "  string name = 7;",
+    "  bytes payload = 8;",
+    "  Kind kind = 9;",
+    "  repeated int32 samples = 10;",
+    "  Point origin = 11;",
+    "  repeated Point path = 12;",
+    "  oneof body { string text = 13; uint64 counter = 14; }",
+    "}",
+]
+_DRIVER_OPTIONS = [
+    "driver.Packet.name max_size:32",
+    "driver.Packet.payload max_size:64",
+    "driver.Packet.samples max_count:16",
+    "driver.Packet.path max_count:8",
+    "driver.Packet.text max_size:48",
+]
+
+
+def _write(name, lines):
+    body = ", ".join("'%s'" % line for line in lines)
+    return ('python -c "open(\'%s\',\'w\').write(\'\\n\'.join([%s])+\'\\n\')"'
+            % (name, body))
+
+
+_CONFIGS = [
+    ("all", "protobuf-nanopb-all",
+     "/DPB_FIELD_32BIT /DPB_NO_ERRMSG /DPB_BUFFER_ONLY /DPB_ENABLE_MALLOC"),
+    ("small", "protobuf-nanopb-small", "/DPB_NO_ERRMSG /DPB_BUFFER_ONLY"),
+    ("big", "protobuf-nanopb-big", "/DPB_FIELD_32BIT /DPB_ENABLE_MALLOC"),
+]
+
+_GRPC_TOOLS = "grpcio-tools==1.85.1"
+
+
+def _def_from_objects(directory):
+    # Defined External functions of every object in the directory, written to
+    # a .def; the x86 cdecl underscore is stripped. Same rule as cmp_msvc.py.
+    return BuildStep(
+        'python -c "'
+        "import subprocess,glob;"
+        "o=''.join([subprocess.check_output(['dumpbin','/SYMBOLS',f]).decode() "
+        "for f in sorted(glob.glob('%s/*.obj'))]);" % directory +
+        "l=[t[t.index('|')+1] for t in map(str.split,o.splitlines()) "
+        "if '|' in t and '()' in t and 'External' in t "
+        "and any([w.startswith('SECT') for w in t])];"
+        "p='{arch}'=='x86';"
+        "n=sorted(set([s[1:] if p and s.startswith('_') else s for s in l]));"
+        "assert n,'no exports found';"
+        "open('%s/nanopb.def','w').write('EXPORTS\\n'+'\\n'.join(n)+'\\n');" % directory +
+        "print(len(n),'exports')"
+        '"')
+
+
+def _config_steps(tag, dll, defines):
+    d = "cfg-%s-{arch}" % tag
+    return [
+        BuildStep("if not exist %s mkdir %s" % (d, d)),
+        BuildStep("cl /nologo /c /O2 /MD /Zi /I. /Igen %s /Fo%s\\ /Fd%s\\%s.pdb "
+                  "pb_common.c pb_decode.c pb_encode.c gen\\driver.pb.c"
+                  % (defines, d, d, dll)),
+        _def_from_objects(d),
+        BuildStep("link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO "
+                  "/OPT:NOREF /OPT:NOICF /DEF:%s\\nanopb.def /PDB:%s\\%s.pdb "
+                  "/OUT:%s\\%s.dll %s\\*.obj" % (d, d, dll, d, dll, d)),
+    ]
+
+
+def _nanopb_msvc(version, generated=False):
+    steps = [
+        BuildStep("if not exist build-{arch} mkdir build-{arch}"),
+        _def_step(version),
+        BuildStep(_COMPILE),
+        BuildStep("dir build-{arch}", allow_failure=True),
+    ]
+    artifacts = [Artifact(path="build-{arch}/protobuf-nanopb.dll",
+                          component="protobuf-nanopb.dll",
+                          pdb="build-{arch}/protobuf-nanopb.pdb")]
+    notes = ("Same tag as the MinGW recipe, same three files. Built against "
+             "the DLL runtime so the MSVC C runtime stays attributed to "
+             "data/MSVC. Exports come from a .def written outside the "
+             "source tree. Evidence for inclusion is naming only.")
+    if generated:
+        steps = steps[:-1] + [
+            BuildStep("python -m pip install --quiet --target gen-deps "
+                      + _GRPC_TOOLS),
+            BuildStep("if not exist gen mkdir gen"),
+            BuildStep(_write("gen/driver.proto", _DRIVER_PROTO)),
+            BuildStep(_write("gen/driver.options", _DRIVER_OPTIONS)),
+            BuildStep("python ..\\generator\\nanopb_generator.py driver.proto",
+                      cwd="gen", env={"PYTHONPATH": "..\\gen-deps"}),
+        ]
+        for tag, dll, defines in _CONFIGS:
+            steps += _config_steps(tag, dll, defines)
+            artifacts.append(Artifact(
+                path="cfg-%s-{arch}/%s.dll" % (tag, dll),
+                component=dll + ".dll",
+                pdb="cfg-%s-{arch}/%s.pdb" % (tag, dll),
+                build_flags="/O2 /MD /Zi %s, runtime plus generated "
+                            "driver.pb.c; /DEBUG /Brepro /INCREMENTAL:NO "
+                            "/OPT:NOREF /OPT:NOICF at link, exports from a "
+                            "/DEF generated from the objects" % defines))
+        steps.append(BuildStep("dir", allow_failure=True))
+        notes += (" The -all, -small and -big DLLs add the generated "
+                  "driver.pb.c (nanopb_generator.py over a minimal "
+                  "driver.proto and driver.options, protoc from "
+                  + _GRPC_TOOLS + ") and the PB_* defines named in their "
+                  "build_flags.")
     return Recipe(
         family="nanopb",
         version=version,
@@ -151,29 +273,19 @@ def _nanopb_msvc(version):
         license="Zlib",
         source=Source(git_url="https://github.com/nanopb/nanopb.git",
                       git_ref="nanopb-" + version),
-        build=[
-            BuildStep("if not exist build-{arch} mkdir build-{arch}"),
-            _def_step(version),
-            BuildStep(_COMPILE),
-            BuildStep("dir build-{arch}", allow_failure=True),
-        ],
-        artifacts=[Artifact(path="build-{arch}/protobuf-nanopb.dll",
-                            component="protobuf-nanopb.dll",
-                            pdb="build-{arch}/protobuf-nanopb.pdb")],
+        build=steps,
+        artifacts=artifacts,
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags="/O2 /MD /Zi, no PB_* defines (upstream default), cl "
                     "directly over pb_common.c pb_decode.c pb_encode.c; "
                     "/DLL via .def, /DEBUG /Brepro /INCREMENTAL:NO "
                     "/OPT:NOREF /OPT:NOICF at link",
-        notes="Same tag as the MinGW recipe, same three files. Built against "
-              "the DLL runtime so the MSVC C runtime stays attributed to "
-              "data/MSVC. Exports come from a .def written outside the "
-              "source tree. Evidence for inclusion is naming only.",
+        notes=notes,
     )
 
 
 RECIPES = {
     "nanopb_0.3.9.10_msvc": _nanopb_msvc("0.3.9.10"),
     "nanopb_0.4.5_msvc": _nanopb_msvc("0.4.5"),
-    "nanopb_0.4.9.2_msvc": _nanopb_msvc("0.4.9.2"),
+    "nanopb_0.4.9.2_msvc": _nanopb_msvc("0.4.9.2", generated=True),
 }
