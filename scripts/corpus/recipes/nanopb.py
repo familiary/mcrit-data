@@ -41,9 +41,42 @@ x86 43 / x64 40):
   PB_NO_ERRMSG       shares 19 / 16.
   PB_NO_PACKED_STRUCTS  identical to default (43 / 40).
 
-Those options do change the code materially. No variant is shipped, because
-the matrix is unbounded and the project says nothing about which
-combination any given firmware used; the limitation is stated instead.
+Those options do change the code materially. The matrix is unbounded and the
+project says nothing about which combination any given firmware used, so only
+three combinations are shipped, for 0.4.9.2 and as additional artefacts of the
+same recipe beside the default build (see the next section); the limitation
+for every other combination is stated instead.
+
+Generated code and the build-time defines (backlog #38). Three further DLLs,
+each the three runtime files plus ``driver.pb.c``, which the build generates
+with upstream's own ``generator/nanopb_generator.py`` from a minimal
+``driver.proto`` (one enum, two messages, scalar, string, bytes, repeated,
+nested-message and oneof fields) and a ``driver.options`` giving the
+strings and arrays fixed sizes. Both files are written by the build, and the
+generator runs against protoc from ``grpcio-tools==1.85.1`` installed with
+``pip --target`` into the build tree, so nothing is installed on the host. The
+defines are in each artefact's build_flags:
+
+  libprotobuf-nanopb-all    PB_FIELD_32BIT PB_NO_ERRMSG PB_BUFFER_ONLY
+                            PB_ENABLE_MALLOC (the four the tracker names)
+  libprotobuf-nanopb-small  PB_NO_ERRMSG PB_BUFFER_ONLY
+  libprotobuf-nanopb-big    PB_FIELD_32BIT PB_ENABLE_MALLOC
+
+Kept + removed = image total, x86 / x64: all 48 + 51 = 99 / 58 + 52 = 110,
+small 48 + 51 = 99 / 58 + 52 = 110, big 52 + 51 = 103 / 61 + 52 = 113 (the
+default 0.4.9.2 build is 50 + 51 = 101 / 59 + 52 = 111). A generated ``*.pb.c``
+is a table of ``pb_msgdesc_t`` descriptors and contains no function, so it
+adds no code to an image: the symbols that differ from the default build are
+all runtime functions selected by the defines (``pb_release_single_field``,
+``allocate_field`` with PB_ENABLE_MALLOC; ``encode_basic_field`` inlined or
+not under PB_BUFFER_ONLY). What the .proto changes is which descriptor
+layout the runtime is called with, and the driver is not intended to
+vary function bodies; no name in any of the three images mentions it.
+PicHash overlap, functions of 10+ instructions, x86 / x64, against the default
+build (43 / 40 distinct): all 4 / 5, small 12 / 12, big 24 / 22; among the
+three, all~small 22 / 20, all~big 15 / 15, small~big 4 / 5. They are
+therefore distinct data, not copies of the default artefact. Only 0.4.9.2 is
+built this way (the 0.3.9.10 and 0.4.5 generators were not tried).
 The compiler flags matter far more: against the -O2 default, -O3 shares 21 /
 23, -Os 1 / 2 and -O0 1 / 1 (and is 77 / 78 functions rather than 43 / 40).
 Embedded code is commonly built -Os, so a real nanopb sample is more likely
@@ -73,7 +106,94 @@ PicHash dfe3cea2dbb80872 on x86 and ae8f920c3b4e652a on x64.
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
-def _nanopb(version):
+# The driver .proto the generated *.pb.c comes from, written by the build
+# rather than kept as a repository file. Single quotes only (the python -c
+# line is double-quoted for both sh and cmd, and proto accepts 'proto3').
+_DRIVER_PROTO = [
+    "syntax = \\x27proto3\\x27;",
+    "package driver;",
+    "enum Kind { KIND_NONE = 0; KIND_PING = 1; KIND_DATA = 2; }",
+    "message Point { sint32 x = 1; sint32 y = 2; }",
+    "message Packet {",
+    "  uint32 id = 1;",
+    "  int64 stamp = 2;",
+    "  fixed32 crc = 3;",
+    "  bool urgent = 4;",
+    "  float gain = 5;",
+    "  double offset = 6;",
+    "  string name = 7;",
+    "  bytes payload = 8;",
+    "  Kind kind = 9;",
+    "  repeated int32 samples = 10;",
+    "  Point origin = 11;",
+    "  repeated Point path = 12;",
+    "  oneof body { string text = 13; uint64 counter = 14; }",
+    "}",
+]
+_DRIVER_OPTIONS = [
+    "driver.Packet.name max_size:32",
+    "driver.Packet.payload max_size:64",
+    "driver.Packet.samples max_count:16",
+    "driver.Packet.path max_count:8",
+    "driver.Packet.text max_size:48",
+]
+
+
+def _write(name, lines):
+    body = ", ".join("'%s'" % line for line in lines)
+    return ('python -c "open(\'%s\',\'w\').write(\'\\n\'.join([%s])+\'\\n\')"'
+            % (name, body))
+
+
+# Generated-code configurations, additional artefacts of 0.4.9.2 only. Each
+# compiles the three runtime files plus the generated driver.pb.c with the
+# build-time defines the tracker names (#38).
+_CONFIGS = [
+    ("libprotobuf-nanopb-all.dll",
+     "-DPB_FIELD_32BIT -DPB_NO_ERRMSG -DPB_BUFFER_ONLY -DPB_ENABLE_MALLOC"),
+    ("libprotobuf-nanopb-small.dll", "-DPB_NO_ERRMSG -DPB_BUFFER_ONLY"),
+    ("libprotobuf-nanopb-big.dll", "-DPB_FIELD_32BIT -DPB_ENABLE_MALLOC"),
+]
+
+_GRPC_TOOLS = "grpcio-tools==1.85.1"
+
+
+def _nanopb(version, generated=False):
+    steps = [
+        BuildStep("mkdir -p build-{arch}"),
+        BuildStep("{cc} {cflags} -I. -shared "
+                  "-o build-{arch}/libprotobuf-nanopb.dll "
+                  "pb_common.c pb_decode.c pb_encode.c"),
+    ]
+    artifacts = [Artifact(path="build-{arch}/libprotobuf-nanopb.dll",
+                          component="libprotobuf-nanopb.dll")]
+    notes = ("Three source files built as one DLL; upstream CMake needs "
+             "protoc even for the runtime, so it is not used. Evidence for "
+             "inclusion is naming only.")
+    if generated:
+        steps += [
+            BuildStep("python -m pip install --quiet --target gen-deps "
+                      + _GRPC_TOOLS),
+            BuildStep("mkdir gen"),
+            BuildStep(_write("gen/driver.proto", _DRIVER_PROTO)),
+            BuildStep(_write("gen/driver.options", _DRIVER_OPTIONS)),
+            BuildStep("python ../generator/nanopb_generator.py driver.proto",
+                      cwd="gen", env={"PYTHONPATH": "../gen-deps"}),
+        ]
+        for component, defines in _CONFIGS:
+            steps.append(BuildStep(
+                "{cc} {cflags} -I. -Igen %s -shared "
+                "-o build-{arch}/%s pb_common.c pb_decode.c pb_encode.c "
+                "gen/driver.pb.c" % (defines, component)))
+            artifacts.append(Artifact(
+                path="build-{arch}/" + component, component=component,
+                build_flags="-O2 (toolchain default) %s, runtime plus "
+                            "generated driver.pb.c" % defines))
+        notes += (" The -all, -small and -big DLLs add the generated "
+                  "driver.pb.c (nanopb_generator.py over a minimal "
+                  "driver.proto and driver.options, protoc from "
+                  + _GRPC_TOOLS + ") and the PB_* defines named in their "
+                  "build_flags.")
     return Recipe(
         family="nanopb",
         version=version,
@@ -81,25 +201,17 @@ def _nanopb(version):
         license="Zlib",
         source=Source(git_url="https://github.com/nanopb/nanopb.git",
                       git_ref="nanopb-" + version),
-        build=[
-            BuildStep("mkdir -p build-{arch}"),
-            BuildStep("{cc} {cflags} -I. -shared "
-                      "-o build-{arch}/libprotobuf-nanopb.dll "
-                      "pb_common.c pb_decode.c pb_encode.c"),
-        ],
-        artifacts=[Artifact(path="build-{arch}/libprotobuf-nanopb.dll",
-                            component="libprotobuf-nanopb.dll")],
+        build=steps,
+        artifacts=artifacts,
         toolchains=["mingw_x86", "mingw_x64"],
         build_flags="-O2 (toolchain default), no PB_* defines (upstream default), "
                     "linked directly from pb_common.c, pb_decode.c, pb_encode.c",
-        notes="Three source files built as one DLL; upstream CMake needs protoc "
-              "even for the runtime, so it is not used. Evidence for inclusion "
-              "is naming only.",
+        notes=notes,
     )
 
 
 RECIPES = {
     "nanopb_0.3.9.10": _nanopb("0.3.9.10"),
     "nanopb_0.4.5": _nanopb("0.4.5"),
-    "nanopb_0.4.9.2": _nanopb("0.4.9.2"),
+    "nanopb_0.4.9.2": _nanopb("0.4.9.2", generated=True),
 }
