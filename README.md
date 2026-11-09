@@ -39,6 +39,7 @@ Libraries
 * [libxml2](#libxml2)
 * [lz4](#lz4)
 * [mbedTLS](#mbedtls)
+* [miniupnpc](#miniupnpc)
 * [pcre2](#pcre2)
 * [sqlite3](#sqlite3)
 * [libpng](#libpng)
@@ -456,6 +457,26 @@ Generated with `scripts/build_corpus.py`; see `data/mbedTLS/provenance.json` for
 | mbedTLS | 3.6.7 | MinGW-w64 GCC 13 | [x86 PE](data/mbedTLS/x86/mcrit/mbedTLS_3.6.7_mingw13_x86_libmbedtls.dll.mcrit) / [x64 PE](data/mbedTLS/x64/mcrit/mbedTLS_3.6.7_mingw13_x64_libmbedtls.dll.mcrit) | [x86 PE](data/mbedTLS/x86/smda/mbedTLS_3.6.7_mingw13_x86_libmbedtls.dll.7z) / [x64 PE](data/mbedTLS/x64/smda/mbedTLS_3.6.7_mingw13_x64_libmbedtls.dll.7z) |
 | mbedTLS | 3.6.7 | MinGW-w64 GCC 13 | [x86 PE](data/mbedTLS/x86/mcrit/mbedTLS_3.6.7_mingw13_x86_libmbedx509.dll.mcrit) / [x64 PE](data/mbedTLS/x64/mcrit/mbedTLS_3.6.7_mingw13_x64_libmbedx509.dll.mcrit) | [x86 PE](data/mbedTLS/x86/smda/mbedTLS_3.6.7_mingw13_x86_libmbedx509.dll.7z) / [x64 PE](data/mbedTLS/x64/smda/mbedTLS_3.6.7_mingw13_x64_libmbedx509.dll.7z) |
 | mbedTLS | 3.6.7 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/mbedTLS/x86/mcrit/mbedTLS_3.6.7_msvc143_x86_mbedtls_all.dll.mcrit) / [x64 PE](data/mbedTLS/x64/mcrit/mbedTLS_3.6.7_msvc143_x64_mbedtls_all.dll.mcrit) | [x86 PE](data/mbedTLS/x86/smda/mbedTLS_3.6.7_msvc143_x86_mbedtls_all.dll.7z) / [x64 PE](data/mbedTLS/x64/smda/mbedTLS_3.6.7_msvc143_x64_mbedtls_all.dll.7z) |
+<!-- /generated -->
+
+### miniupnpc<a id='miniupnpc'></a>
+
+miniupnpc is the UPnP Internet Gateway Device client library, used in the proxy module of QakBot / Pinkslipbot. Built from upstream's `Makefile.mingw` as `miniupnpc.dll`, so the library only: the `upnpc` client is not in it.  
+Version 1.9.20150206 is a dated release tarball (upstream has no 1.9.x git tags apart from `miniupnpc_1_9`); 1.9.20160209 was built and left out because its functions are exactly 2.0's.  
+Generated with `scripts/build_corpus.py`; see `data/miniupnpc/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: miniupnpc -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| miniupnpc | 1.9.20150206 | MinGW-w64 GCC 13 | [x86 PE](data/miniupnpc/x86/mcrit/miniupnpc_1.9.20150206_mingw13_x86_miniupnpc.dll.mcrit) / [x64 PE](data/miniupnpc/x64/mcrit/miniupnpc_1.9.20150206_mingw13_x64_miniupnpc.dll.mcrit) | [x86 PE](data/miniupnpc/x86/smda/miniupnpc_1.9.20150206_mingw13_x86_miniupnpc.dll.7z) / [x64 PE](data/miniupnpc/x64/smda/miniupnpc_1.9.20150206_mingw13_x64_miniupnpc.dll.7z) |
+| miniupnpc | 2.0 | MinGW-w64 GCC 13 | [x86 PE](data/miniupnpc/x86/mcrit/miniupnpc_2.0_mingw13_x86_miniupnpc.dll.mcrit) / [x64 PE](data/miniupnpc/x64/mcrit/miniupnpc_2.0_mingw13_x64_miniupnpc.dll.mcrit) | [x86 PE](data/miniupnpc/x86/smda/miniupnpc_2.0_mingw13_x86_miniupnpc.dll.7z) / [x64 PE](data/miniupnpc/x64/smda/miniupnpc_2.0_mingw13_x64_miniupnpc.dll.7z) |
+| miniupnpc | 2.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/miniupnpc/x86/mcrit/miniupnpc_2.0_msvc143_x86_miniupnpc.dll.mcrit) / [x64 PE](data/miniupnpc/x64/mcrit/miniupnpc_2.0_msvc143_x64_miniupnpc.dll.mcrit) | [x86 PE](data/miniupnpc/x86/smda/miniupnpc_2.0_msvc143_x86_miniupnpc.dll.7z) / [x64 PE](data/miniupnpc/x64/smda/miniupnpc_2.0_msvc143_x64_miniupnpc.dll.7z) |
+| miniupnpc | 2.1 | MinGW-w64 GCC 13 | [x86 PE](data/miniupnpc/x86/mcrit/miniupnpc_2.1_mingw13_x86_miniupnpc.dll.mcrit) / [x64 PE](data/miniupnpc/x64/mcrit/miniupnpc_2.1_mingw13_x64_miniupnpc.dll.mcrit) | [x86 PE](data/miniupnpc/x86/smda/miniupnpc_2.1_mingw13_x86_miniupnpc.dll.7z) / [x64 PE](data/miniupnpc/x64/smda/miniupnpc_2.1_mingw13_x64_miniupnpc.dll.7z) |
+| miniupnpc | 2.1 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/miniupnpc/x86/mcrit/miniupnpc_2.1_msvc143_x86_miniupnpc.dll.mcrit) / [x64 PE](data/miniupnpc/x64/mcrit/miniupnpc_2.1_msvc143_x64_miniupnpc.dll.mcrit) | [x86 PE](data/miniupnpc/x86/smda/miniupnpc_2.1_msvc143_x86_miniupnpc.dll.7z) / [x64 PE](data/miniupnpc/x64/smda/miniupnpc_2.1_msvc143_x64_miniupnpc.dll.7z) |
+| miniupnpc | 2.2.3 | MinGW-w64 GCC 13 | [x86 PE](data/miniupnpc/x86/mcrit/miniupnpc_2.2.3_mingw13_x86_miniupnpc.dll.mcrit) / [x64 PE](data/miniupnpc/x64/mcrit/miniupnpc_2.2.3_mingw13_x64_miniupnpc.dll.mcrit) | [x86 PE](data/miniupnpc/x86/smda/miniupnpc_2.2.3_mingw13_x86_miniupnpc.dll.7z) / [x64 PE](data/miniupnpc/x64/smda/miniupnpc_2.2.3_mingw13_x64_miniupnpc.dll.7z) |
+| miniupnpc | 2.2.3 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/miniupnpc/x86/mcrit/miniupnpc_2.2.3_msvc143_x86_miniupnpc.dll.mcrit) / [x64 PE](data/miniupnpc/x64/mcrit/miniupnpc_2.2.3_msvc143_x64_miniupnpc.dll.mcrit) | [x86 PE](data/miniupnpc/x86/smda/miniupnpc_2.2.3_msvc143_x86_miniupnpc.dll.7z) / [x64 PE](data/miniupnpc/x64/smda/miniupnpc_2.2.3_msvc143_x64_miniupnpc.dll.7z) |
+| miniupnpc | 2.3.3 | MinGW-w64 GCC 13 | [x86 PE](data/miniupnpc/x86/mcrit/miniupnpc_2.3.3_mingw13_x86_miniupnpc.dll.mcrit) / [x64 PE](data/miniupnpc/x64/mcrit/miniupnpc_2.3.3_mingw13_x64_miniupnpc.dll.mcrit) | [x86 PE](data/miniupnpc/x86/smda/miniupnpc_2.3.3_mingw13_x86_miniupnpc.dll.7z) / [x64 PE](data/miniupnpc/x64/smda/miniupnpc_2.3.3_mingw13_x64_miniupnpc.dll.7z) |
+| miniupnpc | 2.3.3 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/miniupnpc/x86/mcrit/miniupnpc_2.3.3_msvc143_x86_miniupnpc.dll.mcrit) / [x64 PE](data/miniupnpc/x64/mcrit/miniupnpc_2.3.3_msvc143_x64_miniupnpc.dll.mcrit) | [x86 PE](data/miniupnpc/x86/smda/miniupnpc_2.3.3_msvc143_x86_miniupnpc.dll.7z) / [x64 PE](data/miniupnpc/x64/smda/miniupnpc_2.3.3_msvc143_x64_miniupnpc.dll.7z) |
 <!-- /generated -->
 
 ### pcre2<a id='pcre2'></a>
