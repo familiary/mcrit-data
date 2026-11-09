@@ -40,7 +40,9 @@ Reading the files rather than assuming:
     cl-built sample would be a release build. The vcxproj asks for /MT, which
     the corpus does not use: /MD, so the CRT is imported and stays attributed
     to data/MSVC.
-  * the std::string variant (TIXML_USE_STL) is not built, as in MinGW.
+  * the std::string variant (-DTIXML_USE_STL) is a second artefact of the
+    same recipe (tinyxml_stl.dll), objects in stl\\ and its own .def, as in
+    MinGW.
   * /EHsc: both libraries throw nothing but use exception-safe C++ (new,
     STL-free); cl needs the switch to compile C++ without warning C4530.
 
@@ -108,21 +110,33 @@ _V1_COMPILE = "cl %s /Fdtinyxml.pdb %s" % (_COMMON, _V1_SOURCES)
 # A function line of dumpbin /symbols reads
 #   00B 00000000 SECT4 notype ()    External     | ?name@@...
 # data symbols lack the "()" and undefined ones say UNDEF rather than SECTn.
-_V1_DEF = (
+def _v1_def(objects, out):
+    return (
     'python -c "'
     "import re,subprocess,glob;"
-    "o=subprocess.check_output(['dumpbin','/symbols']+sorted(glob.glob('*.obj'))).decode();"
+    "o=subprocess.check_output(['dumpbin','/symbols']+sorted(glob.glob('%s'))).decode();" % objects +
     "n=sorted({m.group(1) for m in re.finditer("
     r"r'SECT\w+\s+notype \(\)\s+External\s+\|\s+(\S+)',o)"
     " if m.group(1).startswith('?') and not m.group(1).startswith('??_')});"
-    "open('tinyxml.def','w').write('EXPORTS\\n'+'\\n'.join(n)+'\\n');"
+    "open('%s','w').write('EXPORTS\\n'+'\\n'.join(n)+'\\n');" % out +
     "print(len(n),'exports')"
     '"')
+
+
+_V1_DEF = _v1_def("*.obj", "tinyxml.def")
+_V1_STL_DEF = _v1_def("stl/*.obj", "tinyxml_stl.def")
 
 _LINK_FLAGS = "/nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF"
 
 _V1_LINK = ("link %s /DEF:tinyxml.def /PDB:tinyxml.pdb /OUT:tinyxml.dll %s"
             % (_LINK_FLAGS, _V1_OBJECTS))
+
+# The TIXML_USE_STL build: objects in stl\ so they do not overwrite the default
+# ones, its own PDB, .def and DLL.
+_V1_STL_COMPILE = ("cl %s /DTIXML_USE_STL /Fostl\\ /Fdtinyxml_stl.pdb %s"
+                   % (_COMMON, _V1_SOURCES))
+_V1_STL_LINK = ("link %s /DEF:tinyxml_stl.def /PDB:tinyxml_stl.pdb "
+                "/OUT:tinyxml_stl.dll stl\\*.obj" % _LINK_FLAGS)
 
 _V2_COMPILE = ("cl %s /DTINYXML2_EXPORT /Fdtinyxml2.pdb tinyxml2.cpp" % _COMMON)
 _V2_LINK = ("link %s /PDB:tinyxml2.pdb /OUT:tinyxml2.dll tinyxml2.obj"
@@ -170,18 +184,31 @@ RECIPES = {
             BuildStep(_V1_COMPILE),
             BuildStep(_V1_DEF),
             BuildStep(_V1_LINK),
+            BuildStep("mkdir stl"),
+            BuildStep(_V1_STL_COMPILE),
+            BuildStep(_V1_STL_DEF),
+            BuildStep(_V1_STL_LINK),
             BuildStep("dir", allow_failure=True),
         ],
-        artifacts=[Artifact(path="tinyxml.dll", component="tinyxml.dll",
-                            pdb="tinyxml.pdb")],
+        artifacts=[
+            Artifact(path="tinyxml.dll", component="tinyxml.dll",
+                     pdb="tinyxml.pdb"),
+            Artifact(path="tinyxml_stl.dll", component="tinyxml_stl.dll",
+                     pdb="tinyxml_stl.pdb",
+                     build_flags=_FLAGS + ", -DTIXML_USE_STL, exports from a "
+                                 "generated .def"),
+        ],
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags=_FLAGS + ", exports from a generated .def",
-        notes="Final SourceForge release, non-STL build, the same four "
-              "library sources as the MinGW recipe, built by a direct cl. "
+        notes="Final SourceForge release, the same four library sources as "
+              "the MinGW recipe, built by a direct cl: tinyxml.dll is the "
+              "default non-STL build, tinyxml_stl.dll the std::string build "
+              "(-DTIXML_USE_STL). "
               "No export macro upstream, so the .def is generated from the "
               "objects at build time; nothing in the tree is patched.",
     ),
     "TinyXML2_6.2.0_msvc": _tinyxml2("6.2.0"),
     "TinyXML2_9.0.0_msvc": _tinyxml2("9.0.0"),
     "TinyXML2_11.0.0_msvc": _tinyxml2("11.0.0"),
+    "TinyXML2_2.0.2_msvc": _tinyxml2("2.0.2"),
 }
