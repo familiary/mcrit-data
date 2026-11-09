@@ -72,6 +72,28 @@ MinGW against MSVC PicHash overlap, functions of 10+ instructions (x86 /
 x64): 0 shared, of 139 / 107 on the MinGW side and 204 / 196 on the MSVC
 side. So this axis shares nothing with the MinGW one, which is the case for
 building it. The --deep cross-family check on this family is clean (0).
+
+miniLZO (backlog #59) is built as its own artefact: recipe
+``lzo_minilzo_2.10_msvc`` (version ``minilzo-2.10``, component minilzo.dll),
+minilzo.c from the minilzo-2.10 tarball pinned in lzo.py on the MinGW branch
+(sha256 eb4ce543aad19533c83550746e0e9d7bcf716b35a42429e3ba17d60fa0f3e47a;
+minilzo.c 213674 bytes, md5 c3d88dfeeabec417b0e3ed0f74e9e91f), compiled by one
+cl line with the same flags and the same generated .def rule. Counted on the
+runner (run 42676010529, v143), kept + removed = image total: x86 25 + 125 =
+150, x64 25 + 131 = 156. Overlap with the full library built here: 8 of its 9
+(x86) / 8 of 8 (x64) distinct PicHashes of 10+ instructions are in the full
+build; with its MinGW counterpart 0 / 0.
+
+Overlap with UltraVNC (data on branch claude/corpus-ultravnc-tightvnc, winvnc
+1.8.3.2 MSVC): on x64 all 18 distinct PicHashes of miniLZO are in the UltraVNC
+image, including all 8 functions of 10+ instructions (``lzo1x_1_compress``
+147, ``lzo1x_1_compress_core`` 233, ``lzo1x_decompress`` 265,
+``lzo1x_decompress_safe`` 369, ``lzo_adler32`` 131, ``_lzo_config_check`` 197,
+``__lzo_init_v2`` 47, ``__lzo_align_gap`` 13 instructions), so UltraVNC's
+vendored copy compiles to exactly this code at /O2 on x64. On x86 only 8 of
+the 18 (all under 10 instructions) match and none of the large ones, so the
+UltraVNC x86 image is not built with these flags. Against UltraVNC's MinGW
+winvnc 1.8.3.1: 4 of 18, none of 10+ instructions.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
