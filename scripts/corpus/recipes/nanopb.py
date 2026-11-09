@@ -47,7 +47,9 @@ three combinations are shipped, for 0.4.9.2 and as additional artefacts of the
 same recipe beside the default build (see the next section); the limitation
 for every other combination is stated instead.
 
-Generated code and the build-time defines (backlog #38). Three further DLLs,
+Generated code and the build-time defines (backlog #38). Three further DLLs
+per version (0.3.9.10, 0.4.5 and 0.4.9.2; the older two are described under
+"The older generators" below),
 each the three runtime files plus ``driver.pb.c``, which the build generates
 with upstream's own ``generator/nanopb_generator.py`` from a minimal
 ``driver.proto`` (one enum, two messages, scalar, string, bytes, repeated,
@@ -75,8 +77,65 @@ vary function bodies; no name in any of the three images mentions it.
 PicHash overlap, functions of 10+ instructions, x86 / x64, against the default
 build (43 / 40 distinct): all 4 / 5, small 12 / 12, big 24 / 22; among the
 three, all~small 22 / 20, all~big 15 / 15, small~big 4 / 5. They are
-therefore distinct data, not copies of the default artefact. Only 0.4.9.2 is
-built this way (the 0.3.9.10 and 0.4.5 generators were not tried).
+therefore distinct data, not copies of the default artefact.
+The older generators (0.3.9.10 and 0.4.5). The same three DLLs per version,
+the same driver and defines, built by the same recipe function. Both
+generators are far older than the current protoc, so protoc comes from
+``grpcio-tools==1.51.3 grpcio==1.51.3 protobuf==4.21.12 setuptools==84.2.1``
+(protoc 3.21.x, installed with ``pip --target`` under Python 3.11, the
+interpreter of the local and CI builds). Nothing in the upstream tree is
+patched; at 0.3.9.10 the two *_pb2.py files are build outputs written into
+generator/proto, as upstream's Makefile does.
+
+  0.4.5      nanopb_generator.py takes driver.proto and runs protoc itself
+             (grpc_tools.protoc through PYTHONPATH); driver.options is used
+             exactly as for 0.4.9.2.
+  0.3.9.10   The generator is Python-2 era and does not take a .proto. It
+             reads a protoc descriptor set and imports
+             generator/proto/{nanopb,plugin}_pb2.py, which upstream's
+             Makefile makes with ``protoc --python_out=.``; the build runs
+             that command through grpc_tools.protoc (no protoc binary is
+             needed), writes the descriptor set with ``-o driver.pb`` and runs
+             ``nanopb_generator.py driver.pb``. One obstacle: its options-file
+             reader opens the file with mode "rU", which Python 3.11 rejects
+             (``ValueError: invalid mode: 'rU'``, nanopb_generator.py line
+             1644). So there is no driver.options at 0.3.9.10: the same fixed
+             sizes (name 32, payload 64, samples 16, path 8, text 48) are given
+             inline in driver.proto as ``[(nanopb).max_size = N]`` and
+             ``[(nanopb).max_count = N]``, nanopb's documented alternative,
+             with ``import 'nanopb.proto'``. The generated structs match the
+             0.4 ones (char name[32], int32_t samples[16], ...).
+
+Kept + removed = image total, x86 / x64:
+
+                       0.3.9.10                       0.4.5
+  default   62 + 49 = 111 / 71 + 50 = 121   48 + 50 = 98 / 57 + 51 = 108
+  -all      63 + 51 = 114 / 72 + 52 = 124   48 + 50 = 98 / 58 + 51 = 109
+  -small    61 + 49 = 110 / 70 + 50 = 120   47 + 50 = 97 / 57 + 51 = 108
+  -big      66 + 51 = 117 / 75 + 52 = 127   51 + 50 = 101 / 60 + 51 = 111
+
+PicHash overlap, functions of 10+ instructions, x86 / x64, distinct hashes in
+the default build 57 / 55 (0.3.9.10) and 42 / 39 (0.4.5):
+
+                         0.3.9.10     0.4.5
+  default ~ all           5 / 5        4 / 5
+  default ~ small        14 / 12      12 / 12
+  default ~ big          31 / 29      24 / 22
+  all ~ small            29 / 27      22 / 20
+  all ~ big              17 / 15      15 / 15
+  small ~ big             5 / 5        4 / 5
+
+Across versions, the same configuration shares (0.3.9.10~0.4.5 / 0.3.9.10~
+0.4.9.2 / 0.4.5~0.4.9.2, x86; x64 in brackets): default 20 / 11 / 27 (18 / 9 /
+25), all 18 / 10 / 28 (14 / 7 / 26), small 18 / 10 / 27 (14 / 7 / 25), big 21
+/ 12 / 31 (19 / 10 / 28). As at 0.4.9.2 the generated driver.pb.c is a
+descriptor table and adds no function; what differs from the default build is
+runtime code selected by the defines (pb_release, pb_release_single_field and
+initialize_pointer_field at 0.3.9.10; pb_release, pb_release_single_field and
+encode_basic_field at 0.4.5 are present in the -all image and not in the
+default one; buf_read and buf_write are absent from it, inlined away). No function name in any of the
+twelve new images mentions the driver.
+
 The compiler flags matter far more: against the -O2 default, -O3 shares 21 /
 23, -Os 1 / 2 and -O0 1 / 1 (and is 77 / 78 functions rather than 43 / 40).
 Embedded code is commonly built -Os, so a real nanopb sample is more likely
@@ -155,7 +214,88 @@ _CONFIGS = [
     ("libprotobuf-nanopb-big.dll", "-DPB_FIELD_32BIT -DPB_ENABLE_MALLOC"),
 ]
 
+# protoc for the generator. 0.4.9.2 uses the current grpcio-tools; the 0.3.9.10
+# and 0.4.5 generators are older code, so they get an older protoc/protobuf
+# pair, installed the same way (pip --target into the build tree). The
+# resolved set is what a clean install of these pins gives (python 3.11):
+# grpcio 1.51.3, grpcio-tools 1.51.3 (protoc 3.21.x), protobuf 4.21.12,
+# setuptools 84.2.1.
 _GRPC_TOOLS = "grpcio-tools==1.85.1"
+_OLD_TOOLS = ("grpcio-tools==1.51.3 grpcio==1.51.3 protobuf==4.21.12 "
+              "setuptools==84.2.1")
+
+# 0.3.9.10 reads fixed sizes from the .proto itself (see _generate_steps).
+_DRIVER_PROTO_INLINE = [
+    "syntax = \\x27proto3\\x27;",
+    "package driver;",
+    "import \\x27nanopb.proto\\x27;",
+    "enum Kind { KIND_NONE = 0; KIND_PING = 1; KIND_DATA = 2; }",
+    "message Point { sint32 x = 1; sint32 y = 2; }",
+    "message Packet {",
+    "  uint32 id = 1;",
+    "  int64 stamp = 2;",
+    "  fixed32 crc = 3;",
+    "  bool urgent = 4;",
+    "  float gain = 5;",
+    "  double offset = 6;",
+    "  string name = 7 [(nanopb).max_size = 32];",
+    "  bytes payload = 8 [(nanopb).max_size = 64];",
+    "  Kind kind = 9;",
+    "  repeated int32 samples = 10 [(nanopb).max_count = 16];",
+    "  Point origin = 11;",
+    "  repeated Point path = 12 [(nanopb).max_count = 8];",
+    "  oneof body {",
+    "    string text = 13 [(nanopb).max_size = 48];",
+    "    uint64 counter = 14;",
+    "  }",
+    "}",
+]
+
+# version -> (pip requirements for the generator's protoc, how it is driven)
+_GENERATORS = {
+    "0.4.9.2": (_GRPC_TOOLS, "proto"),
+    "0.4.5": (_OLD_TOOLS, "proto"),
+    "0.3.9.10": (_OLD_TOOLS, "pb"),
+}
+
+
+def _generate_steps(version):
+    tools, style = _GENERATORS[version]
+    steps = [
+        BuildStep("python -m pip install --quiet --target gen-deps " + tools),
+        BuildStep("mkdir gen"),
+    ]
+    if style == "proto":
+        # 0.4.x: nanopb_generator.py takes the .proto and runs protoc itself
+        # (grpc_tools.protoc is found through PYTHONPATH).
+        steps += [
+            BuildStep(_write("gen/driver.proto", _DRIVER_PROTO)),
+            BuildStep(_write("gen/driver.options", _DRIVER_OPTIONS)),
+            BuildStep("python ../generator/nanopb_generator.py driver.proto",
+                      cwd="gen", env={"PYTHONPATH": "../gen-deps"}),
+        ]
+    else:
+        # 0.3.9.10: the generator reads a protoc descriptor set (.pb) and
+        # imports generator/proto/{nanopb,plugin}_pb2.py, which upstream's
+        # Makefile (and proto/__init__.py, through a protoc on PATH) makes
+        # with `protoc --python_out=.`; both are done here with
+        # grpc_tools.protoc so no protoc binary is needed. Its options-file
+        # reader opens the file with mode "rU", which Python 3.11 rejects
+        # (ValueError: invalid mode: 'rU'), so there is no driver.options
+        # and the same sizes are given inline as (nanopb).max_size /
+        # max_count in driver.proto, nanopb's documented alternative.
+        steps += [
+            BuildStep("python -m grpc_tools.protoc -I. --python_out=. "
+                      "nanopb.proto plugin.proto", cwd="generator/proto",
+                      env={"PYTHONPATH": "../../gen-deps"}),
+            BuildStep(_write("gen/driver.proto", _DRIVER_PROTO_INLINE)),
+            BuildStep("python -m grpc_tools.protoc -I. "
+                      "-I../generator/proto -o driver.pb driver.proto",
+                      cwd="gen", env={"PYTHONPATH": "../gen-deps"}),
+            BuildStep("python ../generator/nanopb_generator.py driver.pb",
+                      cwd="gen", env={"PYTHONPATH": "../gen-deps"}),
+        ]
+    return steps
 
 
 def _nanopb(version, generated=False):
@@ -171,15 +311,15 @@ def _nanopb(version, generated=False):
              "protoc even for the runtime, so it is not used. Evidence for "
              "inclusion is naming only.")
     if generated:
-        steps += [
-            BuildStep("python -m pip install --quiet --target gen-deps "
-                      + _GRPC_TOOLS),
-            BuildStep("mkdir gen"),
-            BuildStep(_write("gen/driver.proto", _DRIVER_PROTO)),
-            BuildStep(_write("gen/driver.options", _DRIVER_OPTIONS)),
-            BuildStep("python ../generator/nanopb_generator.py driver.proto",
-                      cwd="gen", env={"PYTHONPATH": "../gen-deps"}),
-        ]
+        steps += _generate_steps(version)
+        tools = _GENERATORS[version][0]
+        if _GENERATORS[version][1] == "proto":
+            opts = " and driver.options"
+        else:
+            opts = " with the sizes inline"
+        # 0.4.9.2 keeps the text it was imported with.
+        how = ("" if version == "0.4.9.2" else
+               " (nanopb_generator.py %s, protoc from %s)" % (version, tools))
         for component, defines in _CONFIGS:
             steps.append(BuildStep(
                 "{cc} {cflags} -I. -Igen %s -shared "
@@ -188,12 +328,11 @@ def _nanopb(version, generated=False):
             artifacts.append(Artifact(
                 path="build-{arch}/" + component, component=component,
                 build_flags="-O2 (toolchain default) %s, runtime plus "
-                            "generated driver.pb.c" % defines))
+                            "generated driver.pb.c%s" % (defines, how)))
         notes += (" The -all, -small and -big DLLs add the generated "
                   "driver.pb.c (nanopb_generator.py over a minimal "
-                  "driver.proto and driver.options, protoc from "
-                  + _GRPC_TOOLS + ") and the PB_* defines named in their "
-                  "build_flags.")
+                  "driver.proto%s, protoc from %s) and the PB_* defines "
+                  "named in their build_flags." % (opts, tools))
     return Recipe(
         family="nanopb",
         version=version,
@@ -211,7 +350,7 @@ def _nanopb(version, generated=False):
 
 
 RECIPES = {
-    "nanopb_0.3.9.10": _nanopb("0.3.9.10"),
-    "nanopb_0.4.5": _nanopb("0.4.5"),
+    "nanopb_0.3.9.10": _nanopb("0.3.9.10", generated=True),
+    "nanopb_0.4.5": _nanopb("0.4.5", generated=True),
     "nanopb_0.4.9.2": _nanopb("0.4.9.2", generated=True),
 }
