@@ -76,6 +76,16 @@ then discarded.
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
+# The same sentence minhook.py records, measured over every MinHook image:
+# APICallProxy carries a copy of the length disassembler, but not in anything
+# it builds.
+HDE_NOTE = ("data/APICallProxy vendors the same engine as "
+            "DisableDSE/hde64.h, but DisableDSE is one of its unbuilt "
+            "user-mode projects, so no HDE body is in that artefact: "
+            "measured, none of the MinHook images shares a PicHash of "
+            "10 or more instructions with data/APICallProxy. ")
+
+
 # Six settings forced through a props file imported with
 # ForceImportBeforeCppTargets, the technique callobfuscator.py, blackbone.py,
 # q3vm_msvc.py and wowgrail.py use, so that no upstream file is modified.
@@ -251,8 +261,9 @@ def _minhook_msvc(version, git_ref, vc_dir):
               "against the DLL runtime, so the MSVC C runtime is imported "
               "rather than linked in and stays attributed to data/MSVC; "
               "MinHook references only memcpy and memset from it in any "
-              "case. Nothing in the tree is prebuilt at either tag, so no "
-              "shipped binary is filed under this family.",
+              "case. " + HDE_NOTE + "Nothing in the tree is prebuilt at "
+              "either tag; the DLLs upstream attaches to its GitHub releases "
+              "are filed separately by minhook_prebuilt.py.",
     )
 
 

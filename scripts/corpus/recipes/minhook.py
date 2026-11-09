@@ -71,6 +71,16 @@ group rather than this recipe hardcoding it.
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
 
+# The overlap the tracker issue asked to have recorded, measured rather than
+# assumed: APICallProxy carries a copy of the same length disassembler, but
+# not in anything it builds.
+HDE_NOTE = ("data/APICallProxy vendors the same engine as "
+            "DisableDSE/hde64.h, but DisableDSE is one of its unbuilt "
+            "user-mode projects, so no HDE body is in that artefact: "
+            "measured, none of the MinHook images shares a PicHash of "
+            "10 or more instructions with data/APICallProxy. ")
+
+
 # build/MinGW/Makefile, driven from the repository root rather than from its
 # own directory: its SRCS is "wildcard src/*.c src/hde/*.c" and its resource
 # rule names dll_resources/MinHook.res, so those paths only resolve from the
@@ -165,9 +175,10 @@ def _minhook(version, git_ref):
               "Copyright (c) 2008-2009 Vyacheslav Patkov, so the honest "
               "partition is 37 MinHook plus 1 HDE. At -O2 twelve small "
               "statics inline away and 26 bodies survive, which is what this "
-              "artefact contains. Nothing in the tree is prebuilt - no .lib, "
-              ".dll or .obj is committed at either tag - so no shipped "
-              "binary is filed under this family. A DLL rather than the "
+              "artefact contains. " + HDE_NOTE + "Nothing in the tree is "
+              "prebuilt - no .lib, .dll or .obj is committed at either tag; "
+              "the DLLs upstream attaches to its GitHub releases are filed "
+              "separately by minhook_prebuilt.py. A DLL rather than the "
               "libMinHook.a the same makefile also builds, because SMDA has "
               "no COFF/ar loader.",
     )

@@ -1872,6 +1872,29 @@ class ProvenanceToolchainTest(unittest.TestCase):
             self._resolve("Fam_1.0_msvc_x64_b",
                           {"version": "1.0", "component": "b"}, candidates)
 
+    def test_a_harvested_prebuilt_is_told_apart_by_its_component(self):
+        """A prebuilt runs on MinGW and its slug names MSVC.
+
+        Both directions used to go wrong: the MinGW rebuild's entries matched
+        two recipes declaring mingw_x86, and the prebuilt's own msvc143 slug
+        narrowed onto the MSVC rebuild, whose artefacts do not include the
+        prebuilt's component.
+        """
+        prebuilt = _Artifact("f_bin.dll")
+        prebuilt.producer = "msvc143"
+        candidates = self._pair() + [
+            ("Fam_1.0_prebuilt", _Recipe(["mingw_x86", "mingw_x64"],
+                                         [prebuilt]))]
+        recipe, artifact = self._resolve(
+            "Fam_1.0_msvc143_x64_f_bin.dll",
+            {"version": "1.0", "component": "f_bin.dll"}, candidates)
+        self.assertIs(artifact, prebuilt)
+        recipe, artifact = self._resolve(
+            "Fam_1.0_mingw13_x86_f.dll",
+            {"version": "1.0", "component": "f.dll"}, candidates)
+        self.assertEqual(recipe.toolchains, ["mingw_x86", "mingw_x64"])
+        self.assertEqual(artifact.component, "f.dll")
+
     def test_an_unreadable_slug_stays_ambiguous(self):
         from refresh_provenance import Unmatched
 
