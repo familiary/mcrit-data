@@ -20,8 +20,25 @@ beyond the file listing, and there is no GitHub repository for it
 (git ls-remote on github.com/leethomason/tinyxml finds none), so the
 SourceForge zip is pinned by a sha256 computed from the download. Its Makefile builds the four
 translation units tinyxml.cpp, tinyxmlerror.cpp, tinyxmlparser.cpp and
-tinystr.cpp; the std::string variant (TIXML_USE_STL) is a different ABI that
-is not built here.
+tinystr.cpp. The std::string variant (``-DTIXML_USE_STL``) is a different ABI
+and a different body for every parser routine, so it is built as a second
+artefact of recipe ``TinyXML_2.6.2`` (component ``tinyxml_stl.dll``)
+rather than replacing the default one. Measured, counting functions of at least 10 instructions, the STL build shares **15 PicHashes of
+134 (x86) and 13 of 115 (x64)** with the non-STL build; it keeps 263 / 223
+functions (x86 / x64) after removing 159 / 156 of runtime glue (image totals
+422 / 379), against 225 / 193 kept in the default build. A sample compiled
+either way is recognised by only one of the two, which is why both are
+shipped.
+
+FOSSIL's reference build (Table III) is named "tinyXML 2.0.2". No such
+release exists on SourceForge (the file listing has 1.2.4, 2.1.1 ... 2.6.2,
+and ``tinyxml_2_0_2.zip`` returns 404), whereas leethomason/tinyxml2 has an
+annotated tag ``2.0.2`` (commit b59ac45131eab3ad1f53b0d3ec60a98e8a96230a). That
+tag is built as ``TinyXML2_2.0.2`` and is the likeliest referent; this is
+stated as an inference, not a fact. Kept 221 / 220, removed 156 / 152 (totals
+377 / 372, x86 / x64). It shares 30 / 19 PicHashes with 11.0.0, 31 / 23 with
+6.2.0 and 31 / 23 with 9.0.0, and 4 / 2 with either TinyXML build, so it is a
+distinct enough release to keep alongside the three existing ones.
 
 TinyXML2 has eleven tags. Five were built (6.2.0, 8.0.0, 9.0.0, 10.0.0,
 11.0.0) and compared by shared PicHashes (>= 10 instructions, x86 / x64,
@@ -32,7 +49,8 @@ percent of the smaller sample):
     6.2.0 ~ 11.0.0  65 / 52        9.0.0 ~ 11.0.0 85 / 66
     8.0.0 ~ 11.0.0  72 / 60        10.0.0 ~ 11.0.0 87 / 68
 
-Three are kept. 6.2.0 (2018) and 11.0.0 (current) are the ends of the range
+Three are kept (a fourth, 2.0.2, was added later for the FOSSIL reference
+build; see above). 6.2.0 (2018) and 11.0.0 (current) are the ends of the range
 and share only 52-65% of their functions; 9.0.0 is the middle, shared 66-85%
 with the ends, and is the version Debian 12 and Ubuntu 22.04 package. 8.0.0
 and 10.0.0 are each 79-88% identical to a kept neighbour and add nothing a
@@ -64,6 +82,9 @@ not TinyXML code:
     9.0.0 and 11.0.0 builds (x64 checked).
   - operator new/delete and ``_Unwind_Resume`` thunks (1 instruction).
 
+The two new builds carry the same gaps (``printf``/``snprintf``/``sscanf``/
+``fprintf`` instantiations, ``___chkstk_ms`` unnamed, ``_Unwind_Resume``).
+
 No MSVC recipe: not trivial to verify without cl on this host.
 """
 
@@ -72,6 +93,9 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 
 _BUILD_V1 = ("{cxx} -O2 -shared -o tinyxml.dll tinyxml.cpp tinyxmlerror.cpp "
              "tinyxmlparser.cpp tinystr.cpp -shared-libgcc")
+_BUILD_V1_STL = ("{cxx} -O2 -DTIXML_USE_STL -shared -o tinyxml_stl.dll "
+                 "tinyxml.cpp tinyxmlerror.cpp tinyxmlparser.cpp tinystr.cpp "
+                 "-shared-libgcc")
 _BUILD_V2 = "{cxx} -O2 -shared -o tinyxml2.dll tinyxml2.cpp -shared-libgcc"
 
 
@@ -102,13 +126,20 @@ RECIPES = {
             url="https://downloads.sourceforge.net/project/tinyxml/tinyxml/"
                 "2.6.2/tinyxml_2_6_2.zip",
             sha256="ac6bb9501c6f50cc922d22f26b02fab168db47521be5e845b83d3451a3e1d512"),
-        build=[BuildStep(_BUILD_V1)],
-        artifacts=[Artifact(path="tinyxml.dll", component="tinyxml.dll")],
+        build=[BuildStep(_BUILD_V1), BuildStep(_BUILD_V1_STL)],
+        artifacts=[
+            Artifact(path="tinyxml.dll", component="tinyxml.dll"),
+            Artifact(path="tinyxml_stl.dll", component="tinyxml_stl.dll",
+                     build_flags="-O2 -DTIXML_USE_STL"),
+        ],
         toolchains=["mingw_x86", "mingw_x64"],
         build_flags="-O2",
-        notes="Final SourceForge release, non-STL build, compiled into a "
-              "shared library from the four library sources.",
+        notes="Final SourceForge release compiled into a shared library "
+              "from the four library sources: tinyxml.dll is the default "
+              "non-STL build, tinyxml_stl.dll the std::string build "
+              "(-DTIXML_USE_STL).",
     ),
+    "TinyXML2_2.0.2": _tinyxml2("2.0.2"),
     "TinyXML2_6.2.0": _tinyxml2("6.2.0"),
     "TinyXML2_9.0.0": _tinyxml2("9.0.0"),
     "TinyXML2_11.0.0": _tinyxml2("11.0.0"),
