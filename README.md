@@ -35,6 +35,8 @@ Libraries
 * [liblzma](#liblzma)
 * [libsodium](#libsodium)
 * [libtomcrypt](#libtomcrypt)
+* [kphlib](#kphlib)
+* [KProcessHacker](#kprocesshacker)
 * [libuv](#libuv)
 * [libxml2](#libxml2)
 * [lz4](#lz4)
@@ -393,6 +395,28 @@ Generated with `scripts/build_corpus.py`; see `data/libtomcrypt/provenance.json`
 |----------|---------|----------|-------|------|
 | libtomcrypt | 1.18.2 | MinGW-w64 GCC 13 | [x86 PE](data/libtomcrypt/x86/mcrit/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.mcrit) / [x64 PE](data/libtomcrypt/x64/mcrit/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.mcrit) | [x86 PE](data/libtomcrypt/x86/smda/libtomcrypt_1.18.2_mingw13_x86_libtomcrypt.dll.7z) / [x64 PE](data/libtomcrypt/x64/smda/libtomcrypt_1.18.2_mingw13_x64_libtomcrypt.dll.7z) |
 | libtomcrypt | 1.18.2 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libtomcrypt/x86/mcrit/libtomcrypt_1.18.2_msvc143_x86_libtomcrypt.dll.mcrit) / [x64 PE](data/libtomcrypt/x64/mcrit/libtomcrypt_1.18.2_msvc143_x64_libtomcrypt.dll.mcrit) | [x86 PE](data/libtomcrypt/x86/smda/libtomcrypt_1.18.2_msvc143_x86_libtomcrypt.dll.7z) / [x64 PE](data/libtomcrypt/x64/smda/libtomcrypt_1.18.2_msvc143_x64_libtomcrypt.dll.7z) |
+<!-- /generated -->
+
+### kphlib<a id='kphlib'></a>
+
+kphlib is the user-mode client layer of Process Hacker 2.39 (`kph.c` plus the `phlib` support it reaches) that talks to the KProcessHacker driver.  
+Generated with `scripts/build_corpus.py`; see `data/kphlib/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: kphlib -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| kphlib | 2.39 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/kphlib/x86/mcrit/kphlib_2.39_msvc143_x86_kphlib.dll.mcrit) / [x64 PE](data/kphlib/x64/mcrit/kphlib_2.39_msvc143_x64_kphlib.dll.mcrit) | [x86 PE](data/kphlib/x86/smda/kphlib_2.39_msvc143_x86_kphlib.dll.7z) / [x64 PE](data/kphlib/x64/smda/kphlib_2.39_msvc143_x64_kphlib.dll.7z) |
+<!-- /generated -->
+
+### KProcessHacker<a id='kprocesshacker'></a>
+
+KProcessHacker is the Process Hacker 2.39 kernel driver. The x64 image is built with the WDK 10.0.26100 msbuild toolset; to get past the WDK header `shared\warning.h`, which turns C4703 into an error, the recipe shadows that header without its one pragma line and also initialises three flagged locals to NULL at build time, so the image is NOT byte-identical to an unmodified upstream build. The x86 image is built with the v143 toolset against the WDK 10.0.22621 headers and x86 kernel libraries (installed by `scripts/corpus/install_wdk_x86.py`), because neither WDK msbuild toolset accepts Win32; it needed no source or header patch, but it is also NOT byte-identical to a build of unmodified upstream, since the toolset, forced props file and force-included `kph_fi_a.h` differ from the project's own settings. Both are linked and disassembled, never packaged, signed, installed or loaded. The kernel-mode runtime glue (`memcpy`, `memset`, `__security_init_cookie`, `GsDriverEntry`, ...) is removed from the image by the glue baseline; see the recipe docstring.  
+Generated with `scripts/build_corpus.py`; see `data/KProcessHacker/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: KProcessHacker -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| KProcessHacker | 2.39 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/KProcessHacker/x86/mcrit/KProcessHacker_2.39_msvc143_x86_kprocesshacker.sys.mcrit) / [x64 PE](data/KProcessHacker/x64/mcrit/KProcessHacker_2.39_msvc143_x64_kprocesshacker.sys.mcrit) | [x86 PE](data/KProcessHacker/x86/smda/KProcessHacker_2.39_msvc143_x86_kprocesshacker.sys.7z) / [x64 PE](data/KProcessHacker/x64/smda/KProcessHacker_2.39_msvc143_x64_kprocesshacker.sys.7z) |
 <!-- /generated -->
 
 ### libuv<a id='libuv'></a>
