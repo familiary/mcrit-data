@@ -122,6 +122,25 @@ unzip.exe 6.0 (both MSVC): 8 of 17 on each architecture (inflate.c, crc32).
 Against every libzlib and every 7-Zip image of the same architecture: zip 3.1c
 x64 shares one hash, bi_reverse (11 instructions, deflate's trees.c routine
 that zlib inherited), and nothing else; funzip and the x86 images share none.
+Added later for #23: `infozip_zip_3.1a_msvc` and `infozip_zip_3.1b_msvc`, the
+other two public zip betas (zip31a.zip, sha256 b68a8d1b...; zip31b.zip, sha256
+44e931c1...; SourceForge unreleased Betas/Zip betas, digests equal to those
+SourceForge lists; ftp.info-zip.org was unreachable from the build host). Same
+translation units, defines and flags as `infozip_zip_3.1c_msvc`; their
+makefile.w32 lists the same objects. Measured on run 42683496249 (cl 19.44,
+wide-stdio glue baseline, kept + removed = image):
+
+    zip.exe 3.1a   x86  344 + 211 = 555    x64  343 + 218 = 561
+    zip.exe 3.1b   x86  343 + 211 = 554    x64  342 + 218 = 560
+
+PicHash overlap, MSVC zip.exe, 10+ instruction functions (x86 / x64; the
+diagonal is the number of such PicHashes in the image): 3.0 222 / 218, 3.1a
+222 / 218, 3.1b 220 / 216, 3.1c 222 / 218. Shared: 3.0-3.1a 217 / 213,
+3.0-3.1b 198 / 181, 3.0-3.1c 194 / 177, 3.1a-3.1b 200 / 183, 3.1a-3.1c 195 /
+178, 3.1b-3.1c 207 / 189. Under cl the 3.1a beta is almost the same code as
+3.0 (217 of 222 on x86), where the MinGW builds share only 127 of 191 (the
+MinGW 3.1 makefile builds at -O3 and 3.0's at -O2). Against the MinGW images of
+the same program and architecture the MSVC images again share no hash.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
