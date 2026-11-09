@@ -121,6 +121,15 @@ startup hashes survive in the PuTTY GUI tools (putty_msvc.py). Generated:
 __acrt_fp_format (fpshim.c) x64 1616887169466728392, x86
 5217805753421424442, the same hashes as in kphlib. The plugins keep no CRT
 name; their DllMain is Process Hacker's own (142-143 instructions).
+
+validate --deep (sparse tree: kphlib, KProcessHacker and these two
+families) reports one FAIL: PicHash 12799676210337176181 (21 instructions)
+under ProcessHacker, ProcessHackerPlugins and kphlib as the same symbol
+RtlInitUnicodeString. That is phnt's own FORCEINLINE RtlInitUnicodeString
+(phnt/include/ntrtl.h:1375, PHNT_NO_INLINE_INIT_STRING not defined) emitted
+out of line in the x64 images - Process Hacker code split across three
+families of one project, not runtime glue; the classifier cannot tell the
+two apart. No shared tooling was changed for it.
 """
 
 import base64
