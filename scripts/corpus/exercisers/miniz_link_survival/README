@@ -1,0 +1,10 @@
+Link-survival check for miniz (issue #81). Never run, only linked and inspected
+with nm. nodns.c does not reference miniz (a beacon variant without the DNS
+codec); dns.c calls compress/uncompress/compressBound (the control). Compile
+miniz.c, miniz_tdef.c, miniz_tinfl.c and miniz_zip.c with
+-DMINIZ_NO_STDIO -DMINIZ_NO_ARCHIVE_APIS -DMINIZ_NO_ARCHIVE_WRITING_APIS
+-DMINIZ_NO_TIME -DMINIZ_NO_ASSERT -DMINIZ_STATIC_DEFINE -O0 -std=gnu90 with
+x86_64-w64-mingw32-gcc and i686-w64-mingw32-gcc (include path: the miniz tree
+and the CMake build directory holding miniz_export.h), link nodns.o with the
+objects (optionally -Wl,--gc-sections) or with an ar archive of them, and look
+for tinfl_decompress with nm. Results are in scripts/corpus/recipes/miniz.py.

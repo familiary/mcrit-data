@@ -49,6 +49,64 @@ all but one are bodies of one to four instructions (mz_free, mz_version,
 miniz_def_free_func, tdefl/tinfl_decompressor_free, CRT thunks such as
 _utime); the single larger one is a 15-instruction unnamed stub that appears
 in both. Only the API names (adler32, crc32, compress, uncompress) overlap.
+
+The trimmed artefact (issue #81 asks for what AdaptixC2's beacon compiles).
+``miniz_3.1.0_trim`` builds the same tag, the same CMake options, with
+AdaptixC2's MINIZ_TRIM_FLAGS (Makefile lines 44-46, as the issue lists them)
+added through CMAKE_C_FLAGS: -DMINIZ_NO_STDIO -DMINIZ_NO_ARCHIVE_APIS
+-DMINIZ_NO_ARCHIVE_WRITING_APIS -DMINIZ_NO_TIME -DMINIZ_NO_ASSERT. flags.make
+reads `-DMINIZ_NO_STDIO ... -DMINIZ_NO_ASSERT -Wshadow -Wformat=2 -Wall
+-Wno-overlength-strings -pedantic -O3 -DNDEBUG -std=gnu90 -fvisibility=hidden`.
+It is filed under the version label 3.1.0-trim (the provenance refresh matches
+images to recipes by family, version and toolchain, and a second 3.1.0 recipe
+would be ambiguous), component libminiz.dll. Differences from what the beacon
+really compiles, stated so nobody mistakes this for a byte-level copy: the
+beacon builds the amalgamated miniz.cpp with g++ and no -O flag, this is
+upstream's multi-file C build at -O3; the trim macros are the same.
+
+kept + removed = total: x86 56 + 52 = 108, x64 65 + 53 = 118 (the default
+build is 149 + 62 = 211 and 164 + 66 = 230). With NO_ARCHIVE_APIS miniz_zip.c
+compiles to nothing, so every mz_zip_*, mz_fopen, fseeki64/ftelli64 of the
+default image (about 100 names) is gone and nothing is added: the trimmed image
+is a strict subset. 43 of 43 (x64) and 44 of 44 (x86) of its 10+ instruction
+PicHashes are also in the default image (43 of 119 and 44 of 127 the other
+way), so for exact matching it adds no hash; what it records is the build the
+issue asks for and its smaller function set. What stays is mz_adler32,
+mz_crc32, mz_compress/compress2/compressBound, mz_uncompress/uncompress2,
+mz_deflate*/mz_inflate*, the tdefl_* compressor, the tinfl_* decompressor
+(tinfl_decompress 2.9k instructions on x64) and the three miniz_def_*_func
+allocator stubs; 1 (x86) and 10 (x64) kept functions are unnamed import thunks.
+
+Does miniz survive linking where nothing calls it (the issue's open question)?
+Answered with a throwaway exerciser, linked only, never run: miniz compiled
+with the same trim macros at -O0 (the beacon has no -O flag), a main() that
+does not touch miniz, linked for MinGW x86 and x64 (sources in
+scripts/corpus/exercisers/miniz_link_survival/). Whether tinfl_decompress ends up in the
+executable, by how miniz reaches the linker:
+
+  * object files on the link line, no --gc-sections: kept (tinfl_decompress,
+    tdefl_compress, mz_crc32, mz_adler32, mz_compress2, mz_uncompress all
+    present). Same with -ffunction-sections -fdata-sections.
+  * the same with -Wl,--gc-sections: STILL kept, on both architectures, with
+    and without -ffunction-sections. MinGW's unwind tables are linker roots:
+    x64's .pdata/.xdata and x86's .eh_frame carry relocations against every
+    function and are never collected, which keeps .text alive. Recompiling the
+    objects with -fno-asynchronous-unwind-tables -fno-unwind-tables (alone,
+    or with -ffunction-sections) and --gc-sections removes all of it.
+  * a static archive (libminiz.a) on the link line with a main that does not
+    reference miniz: dropped, with or without --gc-sections (an archive member
+    is pulled in only to satisfy a reference).
+  * control, the DNS variant calling compress/uncompress/compressBound: kept,
+    as expected, in every mode.
+
+So whether a non-DNS beacon carries miniz depends on the part of the build that
+the issue says the Makefile does not contain (it stops at .o files): miniz.o
+listed as an object survives the default MinGW link even under --gc-sections,
+unless the beacon is also compiled without unwind tables. The beacon's real
+link line was not examined (the AdaptixC2 repository is not reachable from the
+build host), so this is a statement about the toolchain, not about the HTTP
+variant itself; the issue's suggested test, looking for tinfl_decompress in a
+built HTTP beacon, is still the one that settles it.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -61,27 +119,55 @@ _CMAKE = ("cmake -S . -B build-{arch} -DCMAKE_SYSTEM_NAME=Windows "
           "-DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF -DINSTALL_PROJECT=OFF")
 
 
-def _miniz(version, git_ref):
+# AdaptixC2's MINIZ_TRIM_FLAGS (Makefile lines 44-46), as issue #81 lists them.
+# With NO_ARCHIVE_APIS the whole zip reader/writer (miniz_zip.c) preprocesses
+# to nothing, NO_STDIO drops the FILE-based helpers, NO_TIME drops the
+# time_t/utime paths and NO_ASSERT turns MZ_ASSERT into a no-op; what is left
+# is the deflate/inflate core, checksums and the mz_* zlib-style wrappers that
+# AdaptixC2's DnsCodec.cpp calls (compressBound, compress, uncompress).
+_TRIM_FLAGS = ("-DMINIZ_NO_STDIO -DMINIZ_NO_ARCHIVE_APIS "
+               "-DMINIZ_NO_ARCHIVE_WRITING_APIS -DMINIZ_NO_TIME "
+               "-DMINIZ_NO_ASSERT")
+
+
+def _miniz(version, git_ref, trimmed=False):
+    """``trimmed`` builds the same tag with _TRIM_FLAGS. It is filed under the
+    version label ``<tag>-trim`` rather than as a second component of the same
+    version, because the provenance refresh matches an image to its recipe by
+    family, version and toolchain and two recipes sharing all three are
+    ambiguous."""
+    cmake = _CMAKE
+    if trimmed:
+        cmake += ' "-DCMAKE_C_FLAGS=%s"' % _TRIM_FLAGS
     return Recipe(
         family="miniz",
-        version=version,
+        version=version + ("-trim" if trimmed else ""),
         upstream="https://github.com/richgel999/miniz",
         license="MIT",
         source=Source(git_url="https://github.com/richgel999/miniz.git",
                       git_ref=git_ref),
         build=[
-            BuildStep(_CMAKE),
+            BuildStep(cmake),
             BuildStep("cmake --build build-{arch} -j$(nproc)"),
         ],
         artifacts=[Artifact(path="bin/libminiz.dll",
                             component="libminiz.dll")],
         toolchains=["mingw_x86", "mingw_x64"],
-        build_flags="-O3 -DNDEBUG -std=gnu90 (CMake Release, upstream CMakeLists)",
-        notes="Shared build of upstream CMake: miniz.c, miniz_zip.c, "
-              "miniz_tinfl.c and miniz_tdef.c; the whole API is exported.",
+        build_flags=("-O3 -DNDEBUG -std=gnu90 (CMake Release, upstream "
+                     "CMakeLists)" + (" plus " + _TRIM_FLAGS if trimmed else "")),
+        notes=("Shared build of upstream CMake: miniz.c, miniz_zip.c, "
+               "miniz_tinfl.c and miniz_tdef.c; the whole API is exported."
+               if not trimmed else
+               "The same CMake build with AdaptixC2's MINIZ_TRIM_FLAGS "
+               "(" + _TRIM_FLAGS + ") added to CMAKE_C_FLAGS. Upstream "
+               "CMake, not AdaptixC2's amalgamated miniz.cpp compiled by "
+               "g++ at -O0, so the optimisation level and the language "
+               "differ from the beacon's own object; the trim macros are "
+               "the same."),
     )
 
 
 RECIPES = {
     "miniz_3.1.0": _miniz("3.1.0", "3.1.0"),
+    "miniz_3.1.0_trim": _miniz("3.1.0", "3.1.0", trimmed=True),
 }
