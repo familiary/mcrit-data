@@ -71,12 +71,76 @@ under `-DED25519_RNG_NAME`. Measured against the same-target plain
 (REFHASH) build, PicHashes at ten instructions or more are shared 29 of 33 on
 MinGW x86, 29 of 31 on MinGW x64, 21 of 36 on Linux x86 and 27 of 30 on Linux
 x64: the field and group arithmetic is the same code, and what differs is the
-digest wrapper and the callers of the digest. Not built: Tor's own
-`ed25519_tor.c`, whose Tor-specific API (`_blind_secret_key`,
-`_blind_public_key`, `_pubkey_from_curve25519_pubkey`,
-`_scalarmult_with_group_order`, `_seckey_expand`, `_keygen`, `_selftest`) is
-Tor code written against Tor's `orconfig.h` and `lib/` headers rather than
-floodyberry's file; it belongs to a build of Tor itself.
+digest wrapper and the callers of the digest. Tor's own
+`ed25519_tor.c` is built as well, from the Tor tree, as version
+`2026-10-07-tor` (next section).
+
+Tor's ed25519_tor.c
+===================
+Tor does not compile floodyberry's `ed25519.c`. Its `src/ext/include.am`
+builds `libed25519_donna.a` from one file, `src/ext/ed25519/donna/
+ed25519_tor.c`, with `@CFLAGS_CONSTTIME@ -DED25519_CUSTOMRANDOM
+-DED25519_CUSTOMHASH -DED25519_SUFFIX=_donna` (CFLAGS_CONSTTIME is
+`-fwrapv` in configure.ac), against Tor's own copies of the donna headers in
+the same directory (README.tor lists Tor's edits: the API reworked to match
+ref10, the expanded secret key, multiplicative key blinding, the curve25519
+to ed25519 conversion, a static random hook calling Tor's crypto_rand, SSE2
+forced on 32-bit x86 when `__SSE2__` is set). Recipes
+`ed25519-donna_2026-10-07-tor` (MinGW) and `_tor_linux` (Linux) build exactly
+that file from the Tor tree pinned at commit
+8dbbbe6e86a6ca0d058ec3c6a4e937859857d7bb (2026-10-07, `AC_INIT([tor],
+[0.5.0.0-alpha-dev])`; a depth-1 git fetch of gitlab.torproject.org works,
+the GitLab raw route returns 403, and the GitHub mirror holds only a README).
+The same pin is the one recorded for tracker issues #30 (Tor) and #49
+(Equi-X/HashX, src/ext/equix), so a later build of either can reuse it. Two
+components: `ed25519_tor` with Tor's flags, and `ed25519_tor-sse2` with
+`-DED25519_SSE2 -msse2` added (what Tor's portable header forces on 32-bit x86
+whenever the target has SSE2; built on x64 too, like the floodyberry SSE2
+component). The version is the commit date, so the rows sort next to the
+2015-03-16 floodyberry builds they derive from.
+
+ed25519_tor.c reaches the rest of Tor through `orconfig.h`, five
+lib/crypt_ops and lib/cc headers, and eight functions. The headers are used
+unmodified from the pinned tree (`-Isrc`). What configure would generate and
+what libcrypto/NSS would provide comes from a shim OUTSIDE the tree,
+`scripts/corpus/exercisers/ed25519_tor_shim/`: `orconfig.h` (type sizes and
+four feature tests, the values configure finds on these targets) and
+`ed25519_tor_shim.c`, which defines `crypto_digest512_new`,
+`crypto_digest_add_bytes`, `crypto_digest_get_digest`, `crypto_digest_free_`
+and `crypto_digest512` over donna's reference SHA-512 (the code
+`-DED25519_REFHASH` selects in the same tree's `ed25519-hash.h`, renamed
+`corpus_sha512_*`; `sha512_blocks` keeps its name), `crypto_rand_unmocked` and
+`crypto_strongest_rand` over `corpus_os_random` (`BCryptGenRandom`, linked
+with `-lbcrypt`, on Windows; `/dev/urandom` on Linux), and `memwipe` (memset
+through a volatile pointer). None of it runs, and none of it is Tor's: 7 or 8
+distinct PicHashes of ten instructions or more per image are these shim
+functions, named so they can be set aside. No file of the Tor tree is edited,
+so the images are Tor's glue as Tor compiles it, with a stand-in digest and
+random source.
+
+Measured, kept + removed = total and, at ten instructions or more, functions /
+distinct PicHashes: MinGW x86 56 + 53 = 109, 48/47 (SSE2 58 + 52 = 110,
+50/49); MinGW x64 61 + 53 = 114, 47/46 (SSE2 66 + 53 = 119, 51/50); Linux x86
+84 + 5 = 89, 50/50 (SSE2 89 + 5 = 94, 52/52); Linux x64 73 + 5 = 78, 44/44
+(SSE2 80 + 5 = 85, 50/50). Overlap with the floodyberry-tree Tor-style
+component (`ed25519-donna-tor`) of the same target, distinct PicHashes of ten
+instructions or more: 21 of its 33 (MinGW x86), 24 of 31 (MinGW x64), 15 of 36
+(Linux x86) and 21 of 30 (Linux x64); the SSE2 components share 25 of 34
+(MinGW x86), 26 of 34 (MinGW x64), 11 of 38 (Linux x86) and 25 of 34 (Linux
+x64) with the floodyberry SSE2 build. Leaving out the shim and the GCC glue,
+17 to 30 distinct PicHashes per image are in none of the three floodyberry
+components of the same target: the Tor API itself (`ed25519_donna_seckey`,
+`_seckey_expand`, `_pubkey`, `_keygen`, `_sign`, `_open`,
+`_blind_secret_key`, `_blind_public_key`, `_pubkey_from_curve25519_pubkey`,
+`_scalarmult_with_group_order`, `_selftest`), `ed25519_hram` and
+`ed25519_sign_open(_batch)_donna` as Tor's copy compiles them, and donna
+internals whose inlining differs in Tor's translation unit
+(`contract256_modm`, `contract256_slidingwindow_modm`,
+`ge25519_double_scalarmult_vartime`, `ge25519_unpack_negative_vartime`,
+`ge25519_scalarmult_base_niels`, and further `curve25519_*`/`ge25519_*`
+helpers on x86). So the Tor glue adds coverage beyond `ed25519-donna-tor` and
+is kept beside it; `ed25519-donna-tor` remains the reference for
+floodyberry's `ed25519.c` built with Tor's flags. MSVC is in donna_msvc.py.
 
 Force-inline measurement, which the issue asked for. donna defines
 `DONNA_INLINE` as `inline __attribute__((always_inline))` on GCC, and the
@@ -181,8 +245,7 @@ derivatives of agl's but were rewritten around different function names and
 limb handling (`curve25519_mul`, `curve25519_square_times` against `fproduct`,
 `fsquare_inner`).
 
-What is not covered, honestly: Mach-O, Tor's own ed25519_tor.c, the digest
-Tor really uses, and the -O3 and -Os builds of either. (MSVC is donna_msvc.py.) Everything stripped by a malware author is
+What is not covered, honestly: Mach-O, the digest Tor really uses, and the -O3 and -Os builds of either. (MSVC is donna_msvc.py.) Everything stripped by a malware author is
 also not covered: these are unstripped, with symbols, like the rest of the
 corpus.
 """
@@ -287,11 +350,10 @@ def _ed25519(linux):
               "says nothing about what libcrypto's SHA-512 compiles to. "
               'ed25519_randombytes_unsafe_donna is the memset stub of '
               'ed25519_donna_rng.c, named through -DED25519_RNG_NAME, and '
-              "must never run. Not Tor's ed25519_tor.c: its Tor-specific API "
-              '(_blind_secret_key, _blind_public_key, '
-              '_pubkey_from_curve25519_pubkey, _scalarmult_with_group_order, '
-              '_seckey_expand, _keygen, _selftest) is Tor code that needs '
-              "Tor's orconfig.h and lib/ headers, and is not built. MinGW x86"
+              "must never run. Tor's own ed25519_tor.c, with its "
+              "Tor-specific API (_blind_secret_key, _blind_public_key, "
+              "_pubkey_from_curve25519_pubkey, ...), is the separate "
+              "2026-10-07-tor build from the Tor tree. MinGW x86"
               ' 36 kept + 53 removed = 89, x64 42 + 53 = 95; Linux x86 57 + 5'
               ' = 62, x64 44 + 6 = 50 (33, 31, 36 and 30 functions of ten '
               'instructions or more). Against the same-target REFHASH build '
@@ -302,6 +364,83 @@ def _ed25519(linux):
               ' it (sign, hram, sign_open_batch on some targets), so a Tor-'
               'built sample matches this component on the field and group '
               'arithmetic and on the renamed public API, not on the hash.',
+    )
+
+
+_TOR_GLUE_NOTES = (
+    "Tor's own ed25519-donna glue, src/ext/ed25519/donna/ed25519_tor.c from "
+    "the Tor tree at commit 8dbbbe6e86a6 (2026-10-07, configure AC_INIT "
+    "0.5.0.0-alpha-dev; the same pin serves the Tor notes of tracker issues "
+    "#30 and #49), compiled with the flags of Tor's src/ext/include.am: "
+    "-DED25519_CUSTOMRANDOM -DED25519_CUSTOMHASH -DED25519_SUFFIX=_donna and "
+    "CFLAGS_CONSTTIME (-fwrapv), at -O2, against Tor's own copies of the donna "
+    "headers in that directory (Tor's edits listed in its README.tor) and "
+    "Tor's unmodified lib/ headers. This is Tor's API, not floodyberry's "
+    "ed25519.c: ed25519_donna_seckey, _seckey_expand, _pubkey, _keygen, "
+    "_open, _sign, _blind_secret_key, _blind_public_key, "
+    "_pubkey_from_curve25519_pubkey, _scalarmult_with_group_order and "
+    "_selftest, with the expanded secret key. The second component adds "
+    "-DED25519_SSE2 -msse2 (what Tor's ed25519-donna-portable.h forces on "
+    "32-bit x86 whenever __SSE2__ is set). Tor's crypto entry points are "
+    "supplied OUTSIDE the tree by scripts/corpus/exercisers/ed25519_tor_shim/: "
+    "orconfig.h stands in for configure's output (type sizes and four "
+    "feature tests), and ed25519_tor_shim.c defines crypto_digest512_new, "
+    "crypto_digest_add_bytes, crypto_digest_get_digest, crypto_digest_free_, "
+    "crypto_digest512 (donna's reference SHA-512 from the same tree's "
+    "ed25519-hash.h, renamed corpus_sha512_*), crypto_rand_unmocked and "
+    "crypto_strongest_rand (BCryptGenRandom on Windows, /dev/urandom on "
+    "Linux, through corpus_os_random) and memwipe. Those shim functions, "
+    "and sha512_blocks, are not Tor's code and never run. No file of the "
+    "Tor tree is edited. Measured at ten instructions or more: 15 to 24 "
+    "distinct PicHashes shared with the same-target ed25519-donna-tor "
+    "component (floodyberry's ed25519.c with Tor's flags), 11 to 26 between "
+    "the SSE2 components, and 17 to 30 per image, the shim and GCC glue "
+    "left out, in none of the floodyberry components: the Tor API and the "
+    "donna internals as Tor's translation unit inlines them. Counts per "
+    "image are in the recipe docstring."
+)
+
+
+# Tor's own glue around donna (src/ext/ed25519/donna/ed25519_tor.c), built from
+# the Tor tree at a pinned commit with the flags of src/ext/include.am; see the
+# "Tor's ed25519_tor.c" section of the module docstring.
+_TOR_COMMIT = "8dbbbe6e86a6ca0d058ec3c6a4e937859857d7bb"
+_TOR_SHIM = "{repo}/scripts/corpus/exercisers/ed25519_tor_shim"
+_TOR_GLUE_FLAGS = ("-DED25519_CUSTOMRANDOM -DED25519_CUSTOMHASH "
+                   "-DED25519_SUFFIX=_donna")
+_TOR_GLUE = ("{cc} {archflag} -O2 -fwrapv %s -shared " + _TOR_GLUE_FLAGS
+             + " %s -I" + _TOR_SHIM + " -Isrc -Isrc/ext/ed25519/donna -o %s "
+             "src/ext/ed25519/donna/ed25519_tor.c " + _TOR_SHIM
+             + "/ed25519_tor_shim.c%s")
+
+
+def _ed25519_tor_glue(linux):
+    pic = _PIC if linux else ""
+    ext = "so" if linux else "dll"
+    libs = "" if linux else " -lbcrypt"
+    plain = "ed25519_tor." + ext
+    sse2 = "ed25519_tor-sse2." + ext
+    base_flags = ("-O2 -fwrapv " + (_PIC + " " if linux else "")
+                  + _TOR_GLUE_FLAGS)
+    return Recipe(
+        family="ed25519-donna",
+        version="2026-10-07-tor",
+        upstream="https://gitlab.torproject.org/tpo/core/tor",
+        license="BSD-3-Clause (Tor, LICENSE at the pinned commit) for "
+                "ed25519_tor.c and Tor's edits; the donna code it includes "
+                "is public domain (Andrew M.)",
+        source=Source(git_url="https://gitlab.torproject.org/tpo/core/tor.git",
+                      git_ref=_TOR_COMMIT),
+        build=[BuildStep(_TOR_GLUE % (pic, "", plain, libs)),
+               BuildStep(_TOR_GLUE % (pic, "-DED25519_SSE2 -msse2", sse2,
+                                      libs))],
+        artifacts=[Artifact(path=plain, component=plain),
+                   Artifact(path=sse2, component=sse2,
+                            build_flags=base_flags
+                            + " -DED25519_SSE2 -msse2")],
+        toolchains=["linux_x86", "linux_x64"] if linux else ["mingw_x86", "mingw_x64"],
+        build_flags=base_flags,
+        notes=_TOR_GLUE_NOTES,
     )
 
 
@@ -383,6 +522,8 @@ def _curve25519_c64(linux):
 RECIPES = {
     "ed25519-donna_2015-03-16": _ed25519(False),
     "ed25519-donna_2015-03-16_linux": _ed25519(True),
+    "ed25519-donna_2026-10-07-tor": _ed25519_tor_glue(False),
+    "ed25519-donna_2026-10-07-tor_linux": _ed25519_tor_glue(True),
     "curve25519-donna_1.3": _curve25519(False),
     "curve25519-donna_1.3_linux": _curve25519(True),
     "curve25519-donna_1.3-c64": _curve25519_c64(False),
