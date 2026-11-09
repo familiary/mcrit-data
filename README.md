@@ -334,7 +334,9 @@ Generated with `scripts/build_corpus.py`; see `data/Jansson/provenance.json` for
 <!-- generated: Jansson -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| Jansson | 2.13.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/Jansson/x86/mcrit/Jansson_2.13.1_gcc13_x86_libjansson.so.mcrit) / [x64 ELF](data/Jansson/x64/mcrit/Jansson_2.13.1_gcc13_x64_libjansson.so.mcrit) | [x86 ELF](data/Jansson/x86/smda/Jansson_2.13.1_gcc13_x86_libjansson.so.7z) / [x64 ELF](data/Jansson/x64/smda/Jansson_2.13.1_gcc13_x64_libjansson.so.7z) |
 | Jansson | 2.13.1 | MinGW-w64 GCC 13 | [x86 PE](data/Jansson/x86/mcrit/Jansson_2.13.1_mingw13_x86_libjansson.dll.mcrit) / [x64 PE](data/Jansson/x64/mcrit/Jansson_2.13.1_mingw13_x64_libjansson.dll.mcrit) | [x86 PE](data/Jansson/x86/smda/Jansson_2.13.1_mingw13_x86_libjansson.dll.7z) / [x64 PE](data/Jansson/x64/smda/Jansson_2.13.1_mingw13_x64_libjansson.dll.7z) |
+| Jansson | 2.15.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/Jansson/x86/mcrit/Jansson_2.15.1_gcc13_x86_libjansson.so.mcrit) / [x64 ELF](data/Jansson/x64/mcrit/Jansson_2.15.1_gcc13_x64_libjansson.so.mcrit) | [x86 ELF](data/Jansson/x86/smda/Jansson_2.15.1_gcc13_x86_libjansson.so.7z) / [x64 ELF](data/Jansson/x64/smda/Jansson_2.15.1_gcc13_x64_libjansson.so.7z) |
 | Jansson | 2.15.1 | MinGW-w64 GCC 13 | [x86 PE](data/Jansson/x86/mcrit/Jansson_2.15.1_mingw13_x86_libjansson.dll.mcrit) / [x64 PE](data/Jansson/x64/mcrit/Jansson_2.15.1_mingw13_x64_libjansson.dll.mcrit) | [x86 PE](data/Jansson/x86/smda/Jansson_2.15.1_mingw13_x86_libjansson.dll.7z) / [x64 PE](data/Jansson/x64/smda/Jansson_2.15.1_mingw13_x64_libjansson.dll.7z) |
 <!-- /generated -->
 

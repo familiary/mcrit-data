@@ -61,6 +61,57 @@ assumed, identical at both tags: `-O2 -Wno-format-truncation -O3 -DNDEBUG`.
 The -O2 is this tooling's own CFLAGS, -Wno-format-truncation is upstream's
 and -O3 -DNDEBUG is CMake's Release default; the last -O wins, so the code is
 -O3. Jansson adds no hardening or visibility flags of its own, unlike cJSON.
+
+Native Linux half (r0ny123/mcrit-data#68 asks for a native GCC build next to
+the MinGW DLLs, and a .so with -fvisibility=hidden). The same two tags and the
+same CMake options, built by the host gcc 13.3 to a shared object for x86 and
+x64 (`linux_x86`/`linux_x64`; `{archflag}` supplies -m32/-m64). Flags read from
+flags.make: `-m64|-m32 -fvisibility=hidden -Wno-format-truncation -O3 -DNDEBUG
+-fPIC`, i.e. the PE build's -O3 plus the visibility flag and CMake's -fPIC.
+Nothing is patched. The artefact is build-<arch>/lib/libjansson.so (a symlink
+to libjansson.so.4.13.0 / .4.15.1, which the pipeline resolves).
+
+Measured (kept + removed = total):
+
+                          x86                      x64
+    2.13.1 ELF    207 + 5 = 212            201 + 6 = 207
+    2.15.1 ELF    232 + 7 = 239            228 + 6 = 234
+
+and for comparison the MinGW DLLs: 2.13.1 144 + 104 = 248 (x86), 164 + 102 =
+266 (x64); 2.15.1 168 + 146 = 314 (x86), 192 + 138 = 330 (x64).
+
+The removed ones are the compiler's own: _init, _fini, frame_dummy,
+register_tm_clones, deregister_tm_clones and __do_global_dtors_aux on x64; on
+x86 frame_dummy and __x86.get_pc_thunk.{ax,bx,di,dx} and, in 2.15.1 only,
+`__divdi3` and `__udivdi3` (libgcc's 64-bit division, statically pulled into
+the 32-bit object by dtoa.c). On x86 the glue the baseline cannot match survives as the
+README's "Linux half" section describes: _init (2.13.1 only), deregister_- and
+register_tm_clones, __do_global_dtors_aux, __stack_chk_fail_local and the
+get_pc_thunk.{si,bp,cx} helpers (two instructions each) - their PIC deltas
+differ per image, so the PicHash matcher keeps them. 56 (2.13.1) and 58
+(2.15.1) of each image's functions are unnamed one-to-three instruction .plt
+stubs for libc calls; glibc is NEEDED (libc.so.6 only), not linked in.
+
+-fvisibility=hidden has one consequence that is worth stating: jansson
+carries no export annotation outside Windows (no JANSSON_API, no
+visibility attribute, and upstream's autotools build restricts exports with a
+linker flag that CMake does not pass), so the hidden build exports nothing:
+`nm -D --defined-only` lists no function in any of the four images. The code
+is complete and every name is in .symtab, which is what SMDA reads, so the
+reference is unaffected; it is what a statically linked copy looks like, with
+the library's own calls direct rather than through the PLT. It is not a
+loadable library for a caller, and was not built to be one.
+
+PicHash overlap (functions of 10 or more instructions, the .so against the
+.dll of the same architecture): x64 0 of 118 (2.13.1) and 0 of 141 (2.15.1);
+x86 14 of 125 / 14 of 118 (2.13.1) and 16 of 148 / 16 of 140 (2.15.1). The
+x86 matches are real project functions (utf8_check_first, utf8_check_full,
+utf8_encode, next_token, strbuffer_pop, json_integer_value, json_array_get,
+b2d ...), identical bodies behind the PE build's leading underscore; the x64
+ELF and PE images share nothing because the SysV and Windows calling
+conventions change every prologue. Between the two ELF versions: 81 shared of
+118/141 on x64, 21 of 125/148 on x86 (32-bit PIC reaches the GOT through a
+per-image delta, see the README).
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -92,10 +143,42 @@ def _jansson(version, git_ref):
     )
 
 
+_CMAKE_LINUX = ("cmake -S . -B build-{arch} -DCMAKE_C_COMPILER=gcc "
+                "\"-DCMAKE_C_FLAGS={archflag} -fvisibility=hidden\" "
+                "-DCMAKE_BUILD_TYPE=Release -DJANSSON_BUILD_SHARED_LIBS=ON "
+                "-DJANSSON_BUILD_DOCS=OFF -DJANSSON_EXAMPLES=OFF "
+                "-DJANSSON_WITHOUT_TESTS=ON")
+
+
+def _jansson_linux(version, git_ref):
+    return Recipe(
+        family="Jansson",
+        version=version,
+        upstream="https://github.com/akheron/jansson",
+        license="MIT",
+        source=Source(git_url="https://github.com/akheron/jansson.git",
+                      git_ref=git_ref),
+        build=[
+            BuildStep(_CMAKE_LINUX),
+            BuildStep("cmake --build build-{arch} -j$(nproc)"),
+        ],
+        artifacts=[Artifact(path="build-{arch}/lib/libjansson.so",
+                            component="libjansson.so")],
+        toolchains=["linux_x86", "linux_x64"],
+        build_flags="-O3 -DNDEBUG (CMake Release), -fPIC (CMake shared "
+                    "default), -fvisibility=hidden",
+        notes="The native GCC build of the same tag and options as the "
+              "MinGW DLL, shared object only: glibc is NEEDED, not linked "
+              "in, so no libc body is filed under this family.",
+    )
+
+
 RECIPES = {
     # Most vendored older line (tied with 2.14, see above) and the one that
     # overlaps least with the current release.
     "Jansson_2.13.1": _jansson("2.13.1", "v2.13.1"),
     # Current release; adds the vendored dtoa.
     "Jansson_2.15.1": _jansson("2.15.1", "v2.15.1"),
+    "Jansson_2.13.1_linux": _jansson_linux("2.13.1", "v2.13.1"),
+    "Jansson_2.15.1_linux": _jansson_linux("2.15.1", "v2.15.1"),
 }
