@@ -47,6 +47,10 @@ _COMPILE = ("cl /nologo /c /O2 /MD /Zi /EHsc /bigobj /I. "
 _LINK = ("link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF "
          "/OPT:NOICF /PDB:jitasm.pdb /OUT:jitasm.dll jitasm.obj kernel32.lib")
 
+# The unoptimised leg the tracker issue asks for: /Od in place of /O2 and
+# nothing else changed, so the two artefacts differ in the optimiser alone.
+_COMPILE_OD = _COMPILE.replace(" /O2 ", " /Od ")
+
 RECIPES = {
     "jitasm_2018-11-24_msvc": Recipe(
         family="jitasm",
@@ -77,5 +81,21 @@ RECIPES = {
               "zero at the ten-instruction floor on both architectures. "
               "The MSVC STL's __std_remove_4 and __std_remove_8 survive the "
               "glue filter on x64.",
+    ),
+    "jitasm_2018-11-24-Od_msvc": Recipe(
+        family="jitasm",
+        version="2018-11-24-Od",
+        upstream="https://github.com/hikaru-i/jitasm",
+        license="New BSD (three-clause), Copyright (c) 2009-2011 Hikaru "
+                "Inoue, Akihiro Yamasaki",
+        source=Source(git_url="https://github.com/hikaru-i/jitasm.git",
+                      git_ref="7cb9d72982c793374c49b804bec842deb1506d92"),
+        build=[BuildStep(_COMPILE_OD), BuildStep(_LINK)],
+        artifacts=[Artifact(path="jitasm.dll", component="jitasm.dll",
+                            pdb="jitasm.pdb")],
+        toolchains=["msvc_x86", "msvc_x64"],
+        build_flags="/Od /MD /Zi /EHsc /bigobj; /DEBUG /Brepro "
+                    "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
+        notes="TODO",
     ),
 }
