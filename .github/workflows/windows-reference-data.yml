@@ -3,9 +3,8 @@ name: Windows reference data
 # Scratch workflow for LibreSSL 3.1.0 with the v141_xp toolset (tracker #61).
 # Dispatch only. probe-vs15 installs the VS 2017 Build Tools with the VC
 # Tools workload and builds a hello.c through MSBuild with -T v141_xp on both
-# architectures; build-v141xp runs only when that passed. probe-vs17 tries
-# the other route (adding v141 and the WinXP component to the preinstalled
-# VS 2022) for the record and never gates anything.
+# architectures; build-v141xp runs only when that passed. ATL is installed
+# so the glue baseline's ATL probes build (run 42686111161 lacked atlbase.h).
 on:
   workflow_dispatch:
     inputs:
@@ -41,7 +40,8 @@ jobs:
                     '--add','Microsoft.VisualStudio.Workload.VCTools',
                     '--add','Microsoft.VisualStudio.Component.VC.CoreBuildTools',
                     '--add','Microsoft.VisualStudio.Component.VC.Tools.x86.x64',
-                    '--add','Microsoft.VisualStudio.Component.WinXP')
+                    '--add','Microsoft.VisualStudio.Component.WinXP',
+                    '--add','Microsoft.VisualStudio.Component.VC.ATL')
           $sw = [Diagnostics.Stopwatch]::StartNew()
           $p = Start-Process -FilePath $exe -ArgumentList $argv -Wait -PassThru
           Write-Host "INSTALL vs15 exit=$($p.ExitCode) seconds=$([int]$sw.Elapsed.TotalSeconds)"
@@ -52,6 +52,7 @@ jobs:
             throw "vs15 install exit $($p.ExitCode)"
           }
           Get-ChildItem C:\BT\vs15\VC\Tools\MSVC | ForEach-Object { Write-Host "VCTOOLS $($_.FullName)" }
+          Write-Host "atlbase.h present: $(Test-Path 'C:\BT\vs15\VC\Tools\MSVC\14.16.27023\atlmfc\include\atlbase.h')"
           Get-ChildItem "C:\BT\vs15\Common7\IDE\VC\VCTargets\Platforms\*\PlatformToolsets\*" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "TOOLSET $($_.FullName)" }
           Get-ChildItem C:\BT\vs15\Common7\Tools\vsdevcmd\ext | ForEach-Object { Write-Host "VSDEVCMD-EXT $($_.Name)" }
           Write-Host "Microsoft.Cpp.Default.props present: $(Test-Path 'C:\BT\vs15\Common7\IDE\VC\VCTargets\Microsoft.Cpp.Default.props')"
@@ -117,34 +118,6 @@ jobs:
           }
           if ($fail) { throw "$fail probe configuration(s) failed" }
 
-  probe-vs17:
-    runs-on: windows-2022
-    timeout-minutes: 45
-    continue-on-error: true
-    steps:
-      - name: Add v141 and the WinXP component to the preinstalled VS 2022 (informational)
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Continue'
-          $vs = & 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe' -latest -property installationPath
-          Write-Host "VS2022 at $vs"
-          $inst = 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe'
-          $argv = @('modify','--installPath',"`"$vs`"",'--quiet','--norestart','--nocache',
-                    '--add','Microsoft.VisualStudio.Component.VC.v141.x86.x64',
-                    '--add','Microsoft.VisualStudio.Component.WinXP')
-          $sw = [Diagnostics.Stopwatch]::StartNew()
-          $p = Start-Process -FilePath $inst -ArgumentList $argv -Wait -PassThru
-          Write-Host "MODIFY vs17 exit=$($p.ExitCode) seconds=$([int]$sw.Elapsed.TotalSeconds)"
-          Get-ChildItem "$vs\MSBuild\Microsoft\VC\v170\Platforms\Win32\PlatformToolsets" | ForEach-Object { Write-Host "TOOLSET Win32 $($_.Name)" }
-          Get-ChildItem "$vs\MSBuild\Microsoft\VC\v170\Platforms\x64\PlatformToolsets" | ForEach-Object { Write-Host "TOOLSET x64 $($_.Name)" }
-          Get-ChildItem "$vs\VC\Tools\MSVC" | ForEach-Object { Write-Host "VCTOOLS $($_.Name)" }
-          New-Item -ItemType Directory -Force -Path hello | Out-Null
-          Set-Content hello/hello.c "int main(void) { return 0; }`r`n"
-          Set-Content hello/CMakeLists.txt "cmake_minimum_required(VERSION 3.15)`r`nproject(hello C)`r`nadd_executable(hello hello.c)`r`n"
-          cmake -S hello -B hello/b -G "Visual Studio 17 2022" -A Win32 -T v141_xp 2>&1 | Out-Host
-          cmake --build hello/b --config Release 2>&1 | Select-Object -Last 15 | Out-Host
-          Write-Host "PROBE vs17 v141_xp x86 build exit=$LASTEXITCODE"
-
   build-v141xp:
     needs: probe-vs15
     runs-on: windows-2022
@@ -183,11 +156,13 @@ jobs:
                     '--add','Microsoft.VisualStudio.Workload.VCTools',
                     '--add','Microsoft.VisualStudio.Component.VC.CoreBuildTools',
                     '--add','Microsoft.VisualStudio.Component.VC.Tools.x86.x64',
-                    '--add','Microsoft.VisualStudio.Component.WinXP')
+                    '--add','Microsoft.VisualStudio.Component.WinXP',
+                    '--add','Microsoft.VisualStudio.Component.VC.ATL')
           $p = Start-Process -FilePath $exe -ArgumentList $argv -Wait -PassThru
           Write-Host "INSTALL vs15 exit=$($p.ExitCode)"
           if ($p.ExitCode -ne 0 -and $p.ExitCode -ne 3010) { throw "vs15 install exit $($p.ExitCode)" }
           Get-ChildItem C:\BT\vs15\VC\Tools\MSVC | ForEach-Object { Write-Host "VCTOOLS $($_.FullName)" }
+          Write-Host "atlbase.h present: $(Test-Path 'C:\BT\vs15\VC\Tools\MSVC\14.16.27023\atlmfc\include\atlbase.h')"
 
       # The VS 2017 install's own developer environment, exported to the
       # later steps; scripts/corpus/toolchain.py registers msvc141 from it.

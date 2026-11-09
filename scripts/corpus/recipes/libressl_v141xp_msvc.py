@@ -120,20 +120,22 @@ RECIPES = {
                      pdb="build-{arch}/libtls.pdb"),
         ],
         toolchains=["msvc141_x86", "msvc141_x64"],
-        build_flags="v141_xp platform toolset (MSVC 14.16, Windows 7.1A SDK) "
-                    "through the Visual Studio 15 2017 generator; /MD /O2 "
-                    "/Ob2 /DNDEBUG /Zi /Urestrict, /W4 /MP from upstream; "
-                    "/INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at "
-                    "link; no /GL, no /LTCG; x64 MASM assembly (generator "
-                    "name Win64), x86 C only",
+        build_flags="v141_xp platform toolset (MSVC 14.16.27023, cl 19.16.27054; "
+                    "Windows 7.1A SDK, UCRT 10.0.10240) through the Visual Studio "
+                    "15 2017 generator; /MD /O2 /Ob2 /DNDEBUG /Zi /Urestrict, /W4 "
+                    "/MP /GS from upstream and MSBuild, /Oy- on x86 added by "
+                    "MSBuild; /INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF /OPT:NOICF "
+                    "at link, /SUBSYSTEM 5.01 (x86) / 5.02 (x64); no /GL, no "
+                    "/LTCG; x64 MASM assembly (generator name Win64), x86 C only",
         notes="The version and toolset tracker #61 evidences for Meterpreter's "
               "ext_server_python.dll, built stock: Meterpreter's /MT change "
               "and its removal of sleep() from crypto/compat/posix_win.c are "
               "not applied, and the libraries are DLLs rather than the "
               "static crypto-46/ssl-48/tls-20 .lib files it links. VS 2017 "
-              "Build Tools (14.16 + WinXP component) installed on the runner "
-              "from the pinned VS 2017 bootstrapper; the downloaded payload "
-              "is not pinned. Named libcrypto/libssl/libtls as in the other "
-              "LibreSSL rows; the DLLs are crypto-46, ssl-48 and tls-20.",
+              "Build Tools (VC Tools workload, 14.16, WinXP and ATL "
+              "components) installed on the runner from the pinned VS 2017 "
+              "bootstrapper; the downloaded payload is not pinned. Named "
+              "libcrypto/libssl/libtls as in the other LibreSSL rows; the "
+              "DLLs are crypto-46, ssl-48 and tls-20.",
     ),
 }
