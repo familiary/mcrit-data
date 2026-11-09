@@ -29,8 +29,21 @@ The releases fall in clusters: 5.3, 6.6, 7.4+7.6 (61%) and 8.0+8.4 (71%),
 (RHEL 6 5.3, RHEL 7 7.4, RHEL 8 8.0, Ubuntu 22.04 8.9, Debian 12 9.2,
 Ubuntu 24.04 9.6) plus 6.6, 10.0 and the latest 10.6p2. 7.6p1 (61% of 7.4p1),
 8.4p1 (71% of 8.0p1) and 10.2p1 (54% of 10.0p1, 42% of 10.6p2) were measured
-and not kept; 9.8p1 and 9.9p2 were not kept either (their sshd-session split is
-in 10.0p1). On x86 the
+and not kept; 9.9p2 was not kept either. 9.8p1 was first left out (its sshd-session
+split is in 10.0p1) and was added afterwards because issue #46 names the tag
+V_9_8_P1: ssh, sshd, sshd-session, scp and sftp (no sshd-auth before 10.0).
+Measured on the x64 images (PicHash, functions of 10 or more instructions,
+union of each release's gcc13 binaries, percent of 9.8p1 found in the other
+and of the other found in 9.8p1): 9.6p1 70% and 71%, 10.0p1 61% and 60%, 10.6p2
+32% and 29%, 9.2p1 4% and 4%; x86 6% and 7% (9.6p1), 3% and 2% (10.0p1). 9.8p1
+is in the 9.6 cluster on x64, with its own 30% (the sshd-session split), so it
+is a near duplicate of 9.6p1 for matching and was added for the tag the issue
+names. Counts, kept + removed = image total: x64 scp 680 + 6, sftp 697 + 6, ssh
+1905 + 6, sshd 1313 + 6, sshd-session 2053 + 6; x86 scp 692 + 10, sftp 709 + 10,
+ssh 1907 + 10, sshd 1323 + 10, sshd-session 2059 + 10. The x86 glue that
+survives is the same as the other releases' (_init 11, _start 16,
+deregister_tm_clones 18, register_tm_clones 26, __do_global_dtors_aux 21,
+__stack_chk_fail_local 6, __x86.get_pc_thunk.{bp,cx,si} 2); x64 has none. On x86 the
 overlap between two releases is 0-6% in every pair (see "The Linux half" in the
 corpus README), so each release is separate reference data on that axis.
 
@@ -271,6 +284,8 @@ def _openssh_musl(version, sha256, openssl, binaries):
 
 _CLIENTS = ["ssh", "sshd", "scp", "sftp"]
 _SPLIT = ["ssh", "sshd", "sshd-session", "sshd-auth", "scp", "sftp"]
+# 9.8p1 has the sshd-session split but not yet sshd-auth (10.0).
+_SPLIT_98 = ["ssh", "sshd", "sshd-session", "scp", "sftp"]
 
 # -fcommon and the arc4random cache variable: see the module docstring.
 _OLD = dict(cflags="-fcommon", configure_env="ac_cv_func_arc4random=no ")
@@ -297,6 +312,13 @@ RECIPES = {
     "OpenSSH_9.6p1": _openssh(
         "9.6p1", "910211c07255a8c5ad654391b40ee59800710dd8119dd5362de09385aa7a777c",
         "3.0.15", _CLIENTS),
+    # The tag V_9_8_P1 named by issue #46. Same recipe as its neighbours
+    # (OpenSSL 3.0.15, zlib 1.3.1, libxcrypt 4.4.38, nothing patched); the
+    # tarball's detached .asc verifies against RELEASE_KEY.asc (good signature,
+    # RSA key 7168B983815A5EEF59A4ADFD2A3F414E736060BA).
+    "OpenSSH_9.8p1": _openssh(
+        "9.8p1", "dd8bd002a379b5d499dfb050dd1fa9af8029e80461f4bb6c523c49973f5a39f3",
+        "3.0.15", _SPLIT_98),
     "OpenSSH_10.0p1": _openssh(
         "10.0p1", "021a2e709a0edf4250b1256bd5a9e500411a90dddabea830ed59cef90eb9d85c",
         "3.0.15", _SPLIT),
