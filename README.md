@@ -678,6 +678,8 @@ Generated with `scripts/build_corpus.py`; see `data/libstdc++/provenance.json` f
 ### MIRACL<a id='miracl'></a>
 
 MIRACL is the big-number and elliptic-curve library LockBit 3.0's keygen is reported to be built on; that link is by name only. It is built from upstream commit `b9b8fd4` in every generic-C and upstream-script configuration that ships a ready `mirdef.h` template, as separate versions, because the configuration of the sample is unknown (word size, assembly, curve arithmetic all change the code shape). Version suffixes: `generic32`/`generic64` use no hand-written assembly, `asm32`/`asm64` use the assembly `muldiv` of upstream's own build script. AGPL-3.0-or-later (commercial licence offered).  
+The added MinGW x86 assembly axis uses upstream's unchanged `mirdef.h32` and `mrmuldv.gcc`: 862 retained + 71 runtime removals = 933 recovered functions. It contributes 19 named arithmetic PicHashes beyond all ten earlier images at the ten-instruction floor, after excluding two `multi_add` fragment hashes from novelty. The [coverage record](scripts/corpus/coverage/miracl/README.md) lists the full comparisons and retained runtime residues. No upstream source edit or sample-specific key generator is involved.
+
 Generated with `scripts/build_corpus.py`; see `data/MIRACL/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: MIRACL -->
@@ -687,6 +689,7 @@ Generated with `scripts/build_corpus.py`; see `data/MIRACL/provenance.json` for 
 | MIRACL | 2019-08-21-asm64 | GCC 13 (Linux, glibc) | [x64 ELF](data/MIRACL/x64/mcrit/MIRACL_2019-08-21-asm64_gcc13_x64_libmiracl.so.mcrit) | [x64 ELF](data/MIRACL/x64/smda/MIRACL_2019-08-21-asm64_gcc13_x64_libmiracl.so.7z) |
 | MIRACL | 2019-08-21-generic32 | GCC 13 (Linux, glibc) | [x86 ELF](data/MIRACL/x86/mcrit/MIRACL_2019-08-21-generic32_gcc13_x86_libmiracl.so.mcrit) | [x86 ELF](data/MIRACL/x86/smda/MIRACL_2019-08-21-generic32_gcc13_x86_libmiracl.so.7z) |
 | MIRACL | 2019-08-21-generic64 | GCC 13 (Linux, glibc) | [x64 ELF](data/MIRACL/x64/mcrit/MIRACL_2019-08-21-generic64_gcc13_x64_libmiracl.so.mcrit) | [x64 ELF](data/MIRACL/x64/smda/MIRACL_2019-08-21-generic64_gcc13_x64_libmiracl.so.7z) |
+| MIRACL | 2019-08-21-asm32 | MinGW-w64 GCC 13 | [x86 PE](data/MIRACL/x86/mcrit/MIRACL_2019-08-21-asm32_mingw13_x86_libmiracl.dll.mcrit) | [x86 PE](data/MIRACL/x86/smda/MIRACL_2019-08-21-asm32_mingw13_x86_libmiracl.dll.7z) |
 | MIRACL | 2019-08-21-asm64 | MinGW-w64 GCC 13 | [x64 PE](data/MIRACL/x64/mcrit/MIRACL_2019-08-21-asm64_mingw13_x64_libmiracl.dll.mcrit) | [x64 PE](data/MIRACL/x64/smda/MIRACL_2019-08-21-asm64_mingw13_x64_libmiracl.dll.7z) |
 | MIRACL | 2019-08-21-generic32 | MinGW-w64 GCC 13 | [x86 PE](data/MIRACL/x86/mcrit/MIRACL_2019-08-21-generic32_mingw13_x86_libmiracl.dll.mcrit) | [x86 PE](data/MIRACL/x86/smda/MIRACL_2019-08-21-generic32_mingw13_x86_libmiracl.dll.7z) |
 | MIRACL | 2019-08-21-generic64 | MinGW-w64 GCC 13 | [x64 PE](data/MIRACL/x64/mcrit/MIRACL_2019-08-21-generic64_mingw13_x64_libmiracl.dll.mcrit) | [x64 PE](data/MIRACL/x64/smda/MIRACL_2019-08-21-generic64_mingw13_x64_libmiracl.dll.7z) |

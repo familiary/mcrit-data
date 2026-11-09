@@ -12,7 +12,9 @@ Variants (MinGW):
              MR_LBITS 32) for MinGW-w64 and that is the template used.
   asm64      include/mirdef.mgw + source/mrmuldv.g64 as mrmuldv.c: upstream's
              lib/mingw.bat.
-There is no asm32 here: upstream's only MinGW script is the 64-bit one.
+The separate miracl_mingw_asm32.py recipe adds the tested x86 assembly axis
+using upstream's mirdef.h32 and unchanged mrmuldv.gcc; lib/mingw.bat itself
+still only documents x64.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

@@ -1,8 +1,8 @@
 """Shared description of the MIRACL builds (not a recipe module).
 
-The three recipe modules, miracl_linux.py, miracl.py (MinGW) and
-miracl_msvc.py, differ only in how a compiler is driven. What is built, and
-the variant names, live here so the three cannot drift apart.
+The recipe modules miracl_linux.py, miracl.py (MinGW), miracl_msvc.py and
+miracl_mingw_asm32.py differ in how a compiler is driven. The module list and
+variant names live here so the compiler axes use the same library scope.
 
 Measured (kept + removed = total; removed is the measured runtime-glue
 baseline; PicHash overlap counts functions of 10 or more instructions):
@@ -12,6 +12,7 @@ baseline; PicHash overlap counts functions of 10 or more instructions):
   generic32 mingw x86               861       72    933
   generic32 msvc x86                759      235    994
   asm32     linux x86               744        6    750
+  asm32     mingw x86               862       71    933
   asm32     msvc x86                759      234    993
   generic64 linux x64               737        6    743
   generic64 mingw x64               650       70    720
@@ -27,7 +28,11 @@ assembly muldiv barely moves the shape; x86 generic32 vs asm32 is 196 of 610
 554 (98%) on MSVC where only mrmuldv differs. Across compilers the overlap is
 essentially nil: gcc/MinGW share 32 x86 hashes (6%), and no hash is shared
 between MSVC and either GCC build or between 32- and 64-bit. So the compiler
-and word size dominate; the assembly setting matters on 32-bit ELF only.
+and word size dominate. The added MinGW asm32 image has 530 distinct hashes,
+508 shared with generic32 (527). It adds 19 named arithmetic hashes beyond
+all ten prior images; two more apparent additions are SMDA fragments of
+multi_add and are excluded from novelty. See miracl_mingw_asm32.py for the
+complete matrix and runtime survivor names/hashes.
 
 Surviving glue and runtime, all named and kept deliberately: ELF x86 keeps
 _init (11 insn, e54662b85aae2ecd), __do_global_dtors_aux (21,
