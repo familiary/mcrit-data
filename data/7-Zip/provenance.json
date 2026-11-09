@@ -246,6 +246,15 @@
     },
     "toolchain": "mingw13_x64",
     "upstream": "https://www.7-zip.org/",
+    "vendored_components": [
+      {
+        "name": "BLAKE2s and BLAKE2sp (rewritten from Samuel Neves' public-domain code)",
+        "notes": "Measured on this image: 13 functions carry \"blake2\" in their name, all BLAKE2s/BLAKE2sp (0 BLAKE2b); heavily rewritten by Igor Pavlov, so an upstream build is not expected to match. No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x64 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "C/Blake2s.c",
+        "source_sha256": "fae58714b2bd87151aef4a002ceefb207167e4678376d410b1ea93c410b0926a",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "23.01"
   },
   "7-Zip_23.01_mingw13_x86_7z.dll": {
@@ -509,6 +518,15 @@
     },
     "toolchain": "mingw13_x86",
     "upstream": "https://www.7-zip.org/",
+    "vendored_components": [
+      {
+        "name": "BLAKE2s and BLAKE2sp (rewritten from Samuel Neves' public-domain code)",
+        "notes": "Measured on this image: 13 functions carry \"blake2\" in their name, all BLAKE2s/BLAKE2sp (0 BLAKE2b); heavily rewritten by Igor Pavlov, so an upstream build is not expected to match. No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x86 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "C/Blake2s.c",
+        "source_sha256": "fae58714b2bd87151aef4a002ceefb207167e4678376d410b1ea93c410b0926a",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "23.01"
   },
   "7-Zip_23.01_msvc143_x64_7z.dll": {
@@ -731,6 +749,15 @@
     },
     "toolchain": "msvc143_x64",
     "upstream": "https://www.7-zip.org/",
+    "vendored_components": [
+      {
+        "name": "BLAKE2s and BLAKE2sp (rewritten from Samuel Neves' public-domain code)",
+        "notes": "Measured on this image: 17 functions carry \"blake2\" in their name, all BLAKE2s/BLAKE2sp (0 BLAKE2b); heavily rewritten by Igor Pavlov, so an upstream build is not expected to match. No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse msvc143 x64 images (data/BLAKE2).",
+        "source_path": "C/Blake2s.c",
+        "source_sha256": "fae58714b2bd87151aef4a002ceefb207167e4678376d410b1ea93c410b0926a",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "23.01"
   },
   "7-Zip_23.01_msvc143_x86_7z.dll": {
@@ -969,6 +996,15 @@
     },
     "toolchain": "msvc143_x86",
     "upstream": "https://www.7-zip.org/",
+    "vendored_components": [
+      {
+        "name": "BLAKE2s and BLAKE2sp (rewritten from Samuel Neves' public-domain code)",
+        "notes": "Measured on this image: 17 functions carry \"blake2\" in their name, all BLAKE2s/BLAKE2sp (0 BLAKE2b); heavily rewritten by Igor Pavlov, so an upstream build is not expected to match. No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse msvc143 x86 images (data/BLAKE2).",
+        "source_path": "C/Blake2s.c",
+        "source_sha256": "fae58714b2bd87151aef4a002ceefb207167e4678376d410b1ea93c410b0926a",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "23.01"
   },
   "7-Zip_26.03_mingw13_x64_7z.dll": {
@@ -1217,6 +1253,15 @@
     },
     "toolchain": "mingw13_x64",
     "upstream": "https://www.7-zip.org/",
+    "vendored_components": [
+      {
+        "name": "BLAKE2sp (rewritten from Samuel Neves' CC0 BLAKE2 code)",
+        "notes": "Measured on this image: 25 functions carry \"blake2\" in their name, all BLAKE2s/BLAKE2sp (0 BLAKE2b); heavily rewritten by Igor Pavlov, so an upstream build is not expected to match. No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x64 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "C/Blake2s.c",
+        "source_sha256": "9bd16d56cf8a88a6f43a8aa05d25eb55ee655064712781d7afd349b4edb323a5",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "26.03"
   },
   "7-Zip_26.03_mingw13_x86_7z.dll": {
@@ -1479,6 +1524,15 @@
     },
     "toolchain": "mingw13_x86",
     "upstream": "https://www.7-zip.org/",
+    "vendored_components": [
+      {
+        "name": "BLAKE2sp (rewritten from Samuel Neves' CC0 BLAKE2 code)",
+        "notes": "Measured on this image: 25 functions carry \"blake2\" in their name, all BLAKE2s/BLAKE2sp (0 BLAKE2b); heavily rewritten by Igor Pavlov, so an upstream build is not expected to match. No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x86 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "C/Blake2s.c",
+        "source_sha256": "9bd16d56cf8a88a6f43a8aa05d25eb55ee655064712781d7afd349b4edb323a5",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "26.03"
   },
   "7-Zip_26.03_msvc143_x64_7z.dll": {
@@ -1701,6 +1755,15 @@
     },
     "toolchain": "msvc143_x64",
     "upstream": "https://www.7-zip.org/",
+    "vendored_components": [
+      {
+        "name": "BLAKE2sp (rewritten from Samuel Neves' CC0 BLAKE2 code)",
+        "notes": "Measured on this image: 34 functions carry \"blake2\" in their name, all BLAKE2s/BLAKE2sp (0 BLAKE2b); heavily rewritten by Igor Pavlov, so an upstream build is not expected to match. No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse msvc143 x64 images (data/BLAKE2).",
+        "source_path": "C/Blake2s.c",
+        "source_sha256": "9bd16d56cf8a88a6f43a8aa05d25eb55ee655064712781d7afd349b4edb323a5",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "26.03"
   },
   "7-Zip_26.03_msvc143_x86_7z.dll": {
@@ -1939,6 +2002,15 @@
     },
     "toolchain": "msvc143_x86",
     "upstream": "https://www.7-zip.org/",
+    "vendored_components": [
+      {
+        "name": "BLAKE2sp (rewritten from Samuel Neves' CC0 BLAKE2 code)",
+        "notes": "Measured on this image: 34 functions carry \"blake2\" in their name, all BLAKE2s/BLAKE2sp (0 BLAKE2b); heavily rewritten by Igor Pavlov, so an upstream build is not expected to match. No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse msvc143 x86 images (data/BLAKE2).",
+        "source_path": "C/Blake2s.c",
+        "source_sha256": "9bd16d56cf8a88a6f43a8aa05d25eb55ee655064712781d7afd349b4edb323a5",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "26.03"
   }
 }

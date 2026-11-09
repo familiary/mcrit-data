@@ -197,6 +197,22 @@
     },
     "toolchain": "mingw13_x64",
     "upstream": "https://github.com/openssl/openssl",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b (derived from the BLAKE2 reference implementation)",
+        "notes": "Measured on this image: 10 functions (10 distinct names) carry \"blake2\" in their name (BLAKE2b and BLAKE2s). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x64 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "crypto/blake2/blake2b.c",
+        "source_sha256": "a270a88442ff7a5ad50aeb98f201631733ecd94b3d16ccf4e293f326069870f4",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "BLAKE2s (derived from the BLAKE2 reference implementation)",
+        "notes": "Measurement recorded on the BLAKE2b entry.",
+        "source_path": "crypto/blake2/blake2s.c",
+        "source_sha256": "3127b5f1e4b7c86b4b3f98906be4e02cbf6c6ddb76ec562df22bb90f8dc703e3",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "1.1.1w"
   },
   "OpenSSL_1.1.1w_mingw13_x64_libssl": {
@@ -547,6 +563,22 @@
     },
     "toolchain": "mingw13_x86",
     "upstream": "https://github.com/openssl/openssl",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b (derived from the BLAKE2 reference implementation)",
+        "notes": "Measured on this image: 10 functions (10 distinct names) carry \"blake2\" in their name (BLAKE2b and BLAKE2s). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x86 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "crypto/blake2/blake2b.c",
+        "source_sha256": "a270a88442ff7a5ad50aeb98f201631733ecd94b3d16ccf4e293f326069870f4",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "BLAKE2s (derived from the BLAKE2 reference implementation)",
+        "notes": "Measurement recorded on the BLAKE2b entry.",
+        "source_path": "crypto/blake2/blake2s.c",
+        "source_sha256": "3127b5f1e4b7c86b4b3f98906be4e02cbf6c6ddb76ec562df22bb90f8dc703e3",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "1.1.1w"
   },
   "OpenSSL_1.1.1w_mingw13_x86_libssl": {
@@ -903,6 +935,22 @@
     },
     "toolchain": "msvc143_x64",
     "upstream": "https://github.com/openssl/openssl",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b (derived from the BLAKE2 reference implementation)",
+        "notes": "Measured on this image: 16 functions (16 distinct names) carry \"blake2\" in their name (BLAKE2b and BLAKE2s). 2 function(s) / 2 distinct PicHash(es) shared at 10+ instructions with the BLAKE2 2023-02-12 ref and sse msvc143 x64 images (data/BLAKE2): U32TO8 (10), U8TOU32 (11).",
+        "source_path": "crypto/blake2/blake2b.c",
+        "source_sha256": "a270a88442ff7a5ad50aeb98f201631733ecd94b3d16ccf4e293f326069870f4",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "BLAKE2s (derived from the BLAKE2 reference implementation)",
+        "notes": "Measurement recorded on the BLAKE2b entry.",
+        "source_path": "crypto/blake2/blake2s.c",
+        "source_sha256": "3127b5f1e4b7c86b4b3f98906be4e02cbf6c6ddb76ec562df22bb90f8dc703e3",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "1.1.1w"
   },
   "OpenSSL_1.1.1w_msvc143_x64_libssl": {
@@ -1315,6 +1363,22 @@
     },
     "toolchain": "msvc143_x86",
     "upstream": "https://github.com/openssl/openssl",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b (derived from the BLAKE2 reference implementation)",
+        "notes": "Measured on this image: 16 functions (16 distinct names) carry \"blake2\" in their name (BLAKE2b and BLAKE2s). 3 function(s) / 3 distinct PicHash(es) shared at 10+ instructions with the BLAKE2 2023-02-12 ref and sse msvc143 x86 images (data/BLAKE2): rotr64 (18), U32TO8 (12), U8TOU32 (12).",
+        "source_path": "crypto/blake2/blake2b.c",
+        "source_sha256": "a270a88442ff7a5ad50aeb98f201631733ecd94b3d16ccf4e293f326069870f4",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "BLAKE2s (derived from the BLAKE2 reference implementation)",
+        "notes": "Measurement recorded on the BLAKE2b entry.",
+        "source_path": "crypto/blake2/blake2s.c",
+        "source_sha256": "3127b5f1e4b7c86b4b3f98906be4e02cbf6c6ddb76ec562df22bb90f8dc703e3",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "1.1.1w"
   },
   "OpenSSL_1.1.1w_msvc143_x86_libssl": {
@@ -1694,6 +1758,22 @@
     },
     "toolchain": "mingw13_x64",
     "upstream": "https://github.com/openssl/openssl",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b (derived from the BLAKE2 reference implementation)",
+        "notes": "Measured on this image: 66 functions (55 distinct names) carry \"blake2\" in their name (BLAKE2b and BLAKE2s). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x64 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "providers/implementations/digests/blake2b_prov.c",
+        "source_sha256": "bccde7fd7872aa730cc157eaeeab905a187a32cae01102b4d46afdec8ba1a740",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "BLAKE2s (derived from the BLAKE2 reference implementation)",
+        "notes": "Measurement recorded on the BLAKE2b entry.",
+        "source_path": "providers/implementations/digests/blake2s_prov.c",
+        "source_sha256": "17dd381dce21e15c42469c25de064ca28b2c8d5719349ad33d858c0c7ed51d32",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "3.0.15"
   },
   "OpenSSL_3.0.15_mingw13_x64_libssl": {
@@ -2048,6 +2128,22 @@
     },
     "toolchain": "mingw13_x86",
     "upstream": "https://github.com/openssl/openssl",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b (derived from the BLAKE2 reference implementation)",
+        "notes": "Measured on this image: 66 functions (55 distinct names) carry \"blake2\" in their name (BLAKE2b and BLAKE2s). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x86 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "providers/implementations/digests/blake2b_prov.c",
+        "source_sha256": "bccde7fd7872aa730cc157eaeeab905a187a32cae01102b4d46afdec8ba1a740",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "BLAKE2s (derived from the BLAKE2 reference implementation)",
+        "notes": "Measurement recorded on the BLAKE2b entry.",
+        "source_path": "providers/implementations/digests/blake2s_prov.c",
+        "source_sha256": "17dd381dce21e15c42469c25de064ca28b2c8d5719349ad33d858c0c7ed51d32",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "3.0.15"
   },
   "OpenSSL_3.0.15_mingw13_x86_libssl": {
@@ -2395,6 +2491,22 @@
     },
     "toolchain": "mingw13_x64",
     "upstream": "https://github.com/openssl/openssl",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b (derived from the BLAKE2 reference implementation)",
+        "notes": "Measured on this image: 77 functions (66 distinct names) carry \"blake2\" in their name (BLAKE2b and BLAKE2s). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x64 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries. This libcrypto also carries OpenSSL's own RFC 9106 Argon2 KDF (providers/implementations/kdfs/argon2.c, Argon2d/i/id, not vendored from P-H-C): 10 functions carry \"argon2\" in their name. No function of 10+ instructions shares a PicHash with argon2_20190702_mingw13_x64_libargon2.dll apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "providers/implementations/digests/blake2b_prov.c",
+        "source_sha256": "89bd3c26f33a79873dcba798c9eecb8b2f586e07ee6f2d5fb466f839c941607e",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "BLAKE2s (derived from the BLAKE2 reference implementation)",
+        "notes": "Measurement recorded on the BLAKE2b entry.",
+        "source_path": "providers/implementations/digests/blake2s_prov.c",
+        "source_sha256": "5ae09603694411a1f8cc3fabc1119f7ed9e37a627d1f592638d6a11453902945",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "3.5.8"
   },
   "OpenSSL_3.5.8_mingw13_x64_libssl": {
@@ -2690,6 +2802,22 @@
     },
     "toolchain": "mingw13_x86",
     "upstream": "https://github.com/openssl/openssl",
+    "vendored_components": [
+      {
+        "name": "BLAKE2b (derived from the BLAKE2 reference implementation)",
+        "notes": "Measured on this image: 77 functions (66 distinct names) carry \"blake2\" in their name (BLAKE2b and BLAKE2s). No function of 10+ instructions shares a PicHash with the BLAKE2 2023-02-12 ref and sse mingw13 x86 images (data/BLAKE2) apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries. This libcrypto also carries OpenSSL's own RFC 9106 Argon2 KDF (providers/implementations/kdfs/argon2.c, Argon2d/i/id, not vendored from P-H-C): 10 functions carry \"argon2\" in their name. No function of 10+ instructions shares a PicHash with argon2_20190702_mingw13_x86_libargon2.dll apart from the unnamed 15-instruction MinGW-w64 runtime routine that every MinGW image compared carries.",
+        "source_path": "providers/implementations/digests/blake2b_prov.c",
+        "source_sha256": "89bd3c26f33a79873dcba798c9eecb8b2f586e07ee6f2d5fb466f839c941607e",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      },
+      {
+        "name": "BLAKE2s (derived from the BLAKE2 reference implementation)",
+        "notes": "Measurement recorded on the BLAKE2b entry.",
+        "source_path": "providers/implementations/digests/blake2s_prov.c",
+        "source_sha256": "5ae09603694411a1f8cc3fabc1119f7ed9e37a627d1f592638d6a11453902945",
+        "upstream": "https://github.com/BLAKE2/BLAKE2"
+      }
+    ],
     "version": "3.5.8"
   },
   "OpenSSL_3.5.8_mingw13_x86_libssl": {
