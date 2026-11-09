@@ -10,7 +10,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/BLAKE2/x64/mcrit/BLAKE2_2023-02-12-ref_gcc14_x64_blake2-ref.so.mcrit",
-    "notes": "All six upstream ref C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged.",
+    "notes": "All six upstream ref C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged. Measured: the BLAKE2 code in data/libsodium (vendored) and data/OpenSSL and data/7-Zip (derived or rewritten, not recorded in their provenance) shares no PicHash of 10+ instructions with these images apart from the unnamed libgcc ___chkstk probe and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 helpers; see the module docstring.",
     "num_functions": 60,
     "removed_runtime_functions": [
       "__do_global_dtors_aux",
@@ -43,7 +43,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/BLAKE2/x86/mcrit/BLAKE2_2023-02-12-ref_gcc14_x86_blake2-ref.so.mcrit",
-    "notes": "All six upstream ref C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged.",
+    "notes": "All six upstream ref C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged. Measured: the BLAKE2 code in data/libsodium (vendored) and data/OpenSSL and data/7-Zip (derived or rewritten, not recorded in their provenance) shares no PicHash of 10+ instructions with these images apart from the unnamed libgcc ___chkstk probe and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 helpers; see the module docstring.",
     "num_functions": 84,
     "removed_runtime_functions": [
       "__x86.get_pc_thunk.ax",
@@ -74,7 +74,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/BLAKE2/x64/mcrit/BLAKE2_2023-02-12-ref_mingw13_x64_blake2-ref.dll.mcrit",
-    "notes": "All six upstream ref C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged.",
+    "notes": "All six upstream ref C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged. Measured: the BLAKE2 code in data/libsodium (vendored) and data/OpenSSL and data/7-Zip (derived or rewritten, not recorded in their provenance) shares no PicHash of 10+ instructions with these images apart from the unnamed libgcc ___chkstk probe and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 helpers; see the module docstring.",
     "num_functions": 51,
     "removed_runtime_functions": [
       "DllEntryPoint",
@@ -151,7 +151,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/BLAKE2/x86/mcrit/BLAKE2_2023-02-12-ref_mingw13_x86_blake2-ref.dll.mcrit",
-    "notes": "All six upstream ref C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged.",
+    "notes": "All six upstream ref C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged. Measured: the BLAKE2 code in data/libsodium (vendored) and data/OpenSSL and data/7-Zip (derived or rewritten, not recorded in their provenance) shares no PicHash of 10+ instructions with these images apart from the unnamed libgcc ___chkstk probe and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 helpers; see the module docstring.",
     "num_functions": 42,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
@@ -228,7 +228,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/BLAKE2/x64/mcrit/BLAKE2_2023-02-12-ref_msvc143_x64_blake2-ref.dll.mcrit",
-    "notes": "All six upstream ref C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged.",
+    "notes": "All six upstream ref C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged. Measured: the BLAKE2 code in data/libsodium (vendored) and data/OpenSSL and data/7-Zip (derived or rewritten, not recorded in their provenance) shares no PicHash of 10+ instructions with these images apart from the unnamed libgcc ___chkstk probe and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 helpers; see the module docstring.",
     "num_functions": 73,
     "removed_runtime_functions": [
       "GetCurrentProcess",
@@ -297,7 +297,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/BLAKE2/x86/mcrit/BLAKE2_2023-02-12-ref_msvc143_x86_blake2-ref.dll.mcrit",
-    "notes": "All six upstream ref C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged.",
+    "notes": "All six upstream ref C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged. Measured: the BLAKE2 code in data/libsodium (vendored) and data/OpenSSL and data/7-Zip (derived or rewritten, not recorded in their provenance) shares no PicHash of 10+ instructions with these images apart from the unnamed libgcc ___chkstk probe and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 helpers; see the module docstring.",
     "num_functions": 73,
     "removed_runtime_functions": [
       "ReadNoFence",
@@ -359,7 +359,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/BLAKE2/x64/mcrit/BLAKE2_2023-02-12-sse_gcc14_x64_blake2-sse.so.mcrit",
-    "notes": "All six upstream sse C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged.",
+    "notes": "All six upstream sse C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged. Measured: the BLAKE2 code in data/libsodium (vendored) and data/OpenSSL and data/7-Zip (derived or rewritten, not recorded in their provenance) shares no PicHash of 10+ instructions with these images apart from the unnamed libgcc ___chkstk probe and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 helpers; see the module docstring.",
     "num_functions": 56,
     "removed_runtime_functions": [
       "__do_global_dtors_aux",
@@ -392,7 +392,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/BLAKE2/x86/mcrit/BLAKE2_2023-02-12-sse_gcc14_x86_blake2-sse.so.mcrit",
-    "notes": "All six upstream sse C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged.",
+    "notes": "All six upstream sse C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged. Measured: the BLAKE2 code in data/libsodium (vendored) and data/OpenSSL and data/7-Zip (derived or rewritten, not recorded in their provenance) shares no PicHash of 10+ instructions with these images apart from the unnamed libgcc ___chkstk probe and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 helpers; see the module docstring.",
     "num_functions": 80,
     "removed_runtime_functions": [
       "__x86.get_pc_thunk.ax",
@@ -425,7 +425,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/BLAKE2/x64/mcrit/BLAKE2_2023-02-12-sse_mingw13_x64_blake2-sse.dll.mcrit",
-    "notes": "All six upstream sse C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged.",
+    "notes": "All six upstream sse C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged. Measured: the BLAKE2 code in data/libsodium (vendored) and data/OpenSSL and data/7-Zip (derived or rewritten, not recorded in their provenance) shares no PicHash of 10+ instructions with these images apart from the unnamed libgcc ___chkstk probe and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 helpers; see the module docstring.",
     "num_functions": 47,
     "removed_runtime_functions": [
       "DllEntryPoint",
@@ -502,7 +502,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/BLAKE2/x86/mcrit/BLAKE2_2023-02-12-sse_mingw13_x86_blake2-sse.dll.mcrit",
-    "notes": "All six upstream sse C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged.",
+    "notes": "All six upstream sse C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged. Measured: the BLAKE2 code in data/libsodium (vendored) and data/OpenSSL and data/7-Zip (derived or rewritten, not recorded in their provenance) shares no PicHash of 10+ instructions with these images apart from the unnamed libgcc ___chkstk probe and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 helpers; see the module docstring.",
     "num_functions": 38,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
@@ -579,7 +579,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/BLAKE2/x64/mcrit/BLAKE2_2023-02-12-sse_msvc143_x64_blake2-sse.dll.mcrit",
-    "notes": "All six upstream sse C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged.",
+    "notes": "All six upstream sse C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged. Measured: the BLAKE2 code in data/libsodium (vendored) and data/OpenSSL and data/7-Zip (derived or rewritten, not recorded in their provenance) shares no PicHash of 10+ instructions with these images apart from the unnamed libgcc ___chkstk probe and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 helpers; see the module docstring.",
     "num_functions": 65,
     "removed_runtime_functions": [
       "GetCurrentProcess",
@@ -648,7 +648,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/BLAKE2/x86/mcrit/BLAKE2_2023-02-12-sse_msvc143_x86_blake2-sse.dll.mcrit",
-    "notes": "All six upstream sse C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged.",
+    "notes": "All six upstream sse C translation units are combined into a single shared image without the self-test mains. The upstream source tree is unchanged. Measured: the BLAKE2 code in data/libsodium (vendored) and data/OpenSSL and data/7-Zip (derived or rewritten, not recorded in their provenance) shares no PicHash of 10+ instructions with these images apart from the unnamed libgcc ___chkstk probe and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 helpers; see the module docstring.",
     "num_functions": 65,
     "removed_runtime_functions": [
       "ReadNoFence",

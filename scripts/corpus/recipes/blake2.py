@@ -53,6 +53,47 @@ classifies them as no-symbol matches, with no named cross-family leakage.
 No MSVC image retains a ``printf``/``vprintf`` wrapper or
 ``__scrt_common_main_seh``.
 
+BLAKE2 elsewhere in the corpus, measured against these standalone images.
+data/OpenSSL and data/7-Zip carry BLAKE2 code that no provenance record
+mentions, so a name search of the corpus does not find it. PicHashes of
+functions of 10+ instructions, same architecture, against all twelve images
+of this family:
+
+* data/OpenSSL (libcrypto; libssl has none). 1.1.1w carries 10 BLAKE2-named
+  functions on MinGW (8 of 10+ instructions: ``BLAKE2b_Init/Update/Final``,
+  ``BLAKE2s_Init/Update/Final``, ``blake2b_compress``, ``blake2s_compress``,
+  ``EVP_blake2b512``, ``EVP_blake2s256``) and 16 on MSVC (12 of 10+, adding
+  ``blake2{b,s}_init0``, ``_init_param`` and ``_set_lastblock``). 3.0.15 has
+  66 on MinGW (48 of 10+ on x86, 43 on x64) and 3.5.8 has 77 (55 and 52),
+  because the 3.x provider layer adds ``blake2b512_*``, ``blake2s256_*`` and
+  ``blake2_mac_*`` (BLAKE2 as a MAC, with ``blake2_setkey``); the 3.x MSVC
+  builds are not in the corpus. The compression functions are OpenSSL's own
+  derived code, not the upstream reference: no BLAKE2-named
+  function of 10+ instructions in any OpenSSL MinGW image has a PicHash in
+  this family. On MSVC 1.1.1w three small helpers do match, ``U32TO8``
+  and ``U8TOU32`` (x86 and x64, 12 and 10-11 instructions, matched to the
+  ref and SSE MSVC images) and ``rotr64`` (x86, 18 instructions, ref only);
+  they are byte-load helpers, not the compression function.
+* data/7-Zip (7z.dll 23.01 and 26.03). Only BLAKE2s and BLAKE2sp, no BLAKE2b:
+  ``Blake2s_Compress/Update/Final``, ``Blake2sp_Init/Update/Final`` and
+  ``CBlake2spHasher``. 13 BLAKE2-named functions in 23.01 on MinGW (8 to 9 of
+  10+) and 17 on MSVC (10 to 11); 25 in 26.03 on MinGW (17 to 19) and 34 on
+  MSVC (19 to 20), the growth being 26.03's SIMD variants
+  (``Blake2sp_Compress2_AVX2_Fast``, ``_V128_Fast``, ``_V128_Way1``,
+  ``Blake2sp_InitState_*``, ``Blake2sp_Final_*``). The code is Igor Pavlov's
+  rewrite and shares no PicHash of 10+ instructions with any image here.
+* In all 24 OpenSSL and 7-Zip images the only other shared PicHash is the
+  unnamed 15-instruction libgcc ``___chkstk`` probe of the MinGW builds
+  (also the one libsodium shares), which is not BLAKE2.
+
+So an upstream-built BLAKE2 image matches neither OpenSSL's nor 7-Zip's
+BLAKE2 bodies; recognising them takes their own families, which already hold
+them. What these notes add is that the names exist there. The cross-family
+notes that this PR does not write, because they belong to other families'
+directories: a data/OpenSSL provenance note (BLAKE2b/BLAKE2s derived code,
+function names above) and a data/7-Zip provenance note (BLAKE2sp rewrite).
+The data/libsodium note is in this PR.
+
 GCC x86 startup glue survives with these names and PicHashes. Ref:
 ``_init`` 9608256718953870546, ``deregister_tm_clones`` 2780497305776452871,
 ``register_tm_clones`` 12755717022944402199,
@@ -108,7 +149,13 @@ def _recipe(mode, flavor, toolchains):
         build_flags=flags,
         notes=("All six upstream %s C translation units are combined into a "
                "single shared image without the self-test mains. "
-               "The upstream source tree is unchanged." % mode),
+               "The upstream source tree is unchanged. Measured: the BLAKE2 "
+               "code in data/libsodium (vendored) and data/OpenSSL and "
+               "data/7-Zip (derived or rewritten, not recorded in their "
+               "provenance) shares no PicHash of 10+ instructions with "
+               "these images apart from the unnamed libgcc ___chkstk probe "
+               "and, on OpenSSL 1.1.1w MSVC, the U32TO8/U8TOU32/rotr64 "
+               "helpers; see the module docstring." % mode),
     )
 
 
