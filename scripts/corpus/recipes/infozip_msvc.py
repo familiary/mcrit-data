@@ -226,6 +226,33 @@ RECIPES = {
         "win32/makefile.w32 is not used: it defaults to a static CRT and this "
         "corpus builds /MD. USE_ZLIB is not set, so the image carries "
         "Info-ZIP's own deflate. Assembler fast paths disabled."),
+    # The two earlier public zip betas, same translation units, defines and
+    # makefile.w32 as 3.1c (diffed: only dates, the DLL targets and a
+    # /OPT:NOWIN98 link switch differ in 3.1a).
+    "infozip_zip_3.1a_msvc": _recipe(
+        "3.1a", "https://downloads.sourceforge.net/project/infozip/"
+                "unreleased%20Betas/Zip%20betas/zip31a.zip",
+        "b68a8d1b3c759622cf9f9c01fa9823b041ed18a89c2e78eafc37991ab5428acf",
+        "zip", _ZIP31_SOURCES, _DEFS + " /DNO_ASM /DNO_ASM_CRC",
+        "https://infozip.sourceforge.net/Zip.html",
+        "zip.exe only (3.1a BETA, 21 September 2008: an earlier public beta, "
+        "no final 3.1 exists), over the translation units the MinGW recipe "
+        "links. Upstream's win32/makefile.w32 is not used: it defaults to a "
+        "static CRT and this corpus builds /MD. USE_ZLIB is not set, so the "
+        "image carries Info-ZIP's own deflate. Assembler fast paths "
+        "disabled."),
+    "infozip_zip_3.1b_msvc": _recipe(
+        "3.1b", "https://downloads.sourceforge.net/project/infozip/"
+                "unreleased%20Betas/Zip%20betas/zip31b.zip",
+        "44e931c10b1748cb43e4ea4fb7d58f134551a478f5f8afaf0f2cfb613adc25bb",
+        "zip", _ZIP31_SOURCES, _DEFS + " /DNO_ASM /DNO_ASM_CRC",
+        "https://infozip.sourceforge.net/Zip.html",
+        "zip.exe only (3.1b BETA, 9 April 2009: an earlier public beta, no "
+        "final 3.1 exists), over the translation units the MinGW recipe "
+        "links. Upstream's win32/makefile.w32 is not used: it defaults to a "
+        "static CRT and this corpus builds /MD. USE_ZLIB is not set, so the "
+        "image carries Info-ZIP's own deflate. Assembler fast paths "
+        "disabled."),
     "infozip_unzip_6.0_msvc": _recipe(
         "6.0", "https://downloads.sourceforge.net/infozip/unzip60.tar.gz",
         "036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37",
