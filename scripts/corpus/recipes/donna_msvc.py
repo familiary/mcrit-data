@@ -9,6 +9,14 @@ PicHashes at ten instructions or more in every pairing, on both architectures
 SSE2 builds 84 against 34 and 81 against 34; curve25519-donna 17 against 8 and
 17 against 7). That is what this module is for.
 
+Tor's own ed25519_tor.c (recipe ``ed25519-donna_2026-10-07-tor_msvc``) is the
+cl build of the Tor-tree recipes of donna.py ("Tor's ed25519_tor.c"): the same
+Tor commit 8dbbbe6, the same three defines (cl has no ``-fwrapv``), the same
+out-of-tree shim (orconfig.h, Tor's crypto entry points over donna's reference
+SHA-512 and BCryptGenRandom, memwipe), exports from
+scripts/corpus/exercisers/ed25519_tor.def, and bcrypt.lib at link. Built on
+the windows-2022 runner; its counts and overlap are recorded once imported.
+
 A separate registry entry rather than another toolchain on the MinGW recipe,
 for the reason spelled out in sqlite3_msvc.py: one Recipe has one build list
 and these steps are cmd.exe, not sh. Both families live here, as in donna.py,
@@ -299,6 +307,82 @@ def _ed25519():
     )
 
 
+_TOR_GLUE_MSVC_NOTES = (
+    "Tor's own ed25519-donna glue, src/ext/ed25519/donna/ed25519_tor.c from "
+    "the Tor tree at commit 8dbbbe6e86a6 (2026-10-07, 0.5.0.0-alpha-dev; the "
+    "pin of the tracker notes for #30 and #49), built with cl and the "
+    "defines of Tor's src/ext/include.am: -DED25519_CUSTOMRANDOM "
+    "-DED25519_CUSTOMHASH -DED25519_SUFFIX=_donna (CFLAGS_CONSTTIME's "
+    "-fwrapv has no cl spelling), once more with -DED25519_SSE2. Tor's copy "
+    "of the donna headers and Tor's lib/ headers are used unmodified; "
+    "orconfig.h and the Tor entry points the file calls (crypto_digest512_new, "
+    "crypto_digest_add_bytes, crypto_digest_get_digest, crypto_digest_free_, "
+    "crypto_digest512 over donna's reference SHA-512 renamed corpus_sha512_*, "
+    "crypto_rand_unmocked and crypto_strongest_rand over BCryptGenRandom, "
+    "memwipe) come from scripts/corpus/exercisers/ed25519_tor_shim/, outside "
+    "the tree; those functions are not Tor's and never run. Exports from "
+    "scripts/corpus/exercisers/ed25519_tor.def (Tor's API: "
+    "ed25519_donna_seckey, _pubkey, _sign, _blind_secret_key, "
+    "_pubkey_from_curve25519_pubkey, ...). No file of the Tor tree is edited."
+)
+
+
+# Tor's own ed25519_tor.c from the Tor tree (donna.py, "Tor's ed25519_tor.c"):
+# the same commit, Tor's three defines (no -fwrapv equivalent in cl, whose
+# signed overflow is not optimised on), and the shim of
+# scripts/corpus/exercisers/ed25519_tor_shim/ for orconfig.h and Tor's crypto
+# entry points; BCryptGenRandom needs bcrypt.lib.
+_TOR_COMMIT = "8dbbbe6e86a6ca0d058ec3c6a4e937859857d7bb"
+_TOR_SHIM = "{repo}/scripts/corpus/exercisers/ed25519_tor_shim"
+_TOR_GLUE_DEF = "{repo}/scripts/corpus/exercisers/ed25519_tor.def"
+_TOR_GLUE_DEFINES = ("/DED25519_CUSTOMRANDOM /DED25519_CUSTOMHASH "
+                     "/DED25519_SUFFIX=_donna")
+
+
+def _tor_glue_steps(name, objdir, defines):
+    return [
+        BuildStep("if not exist %s mkdir %s" % (objdir, objdir)),
+        BuildStep("%s /Fd%s.pdb %s %s/I%s /Isrc /Isrc/ext/ed25519/donna "
+                  "/Fo%s\\ src/ext/ed25519/donna/ed25519_tor.c "
+                  "%s/ed25519_tor_shim.c"
+                  % (_CL, name, _TOR_GLUE_DEFINES, defines, _TOR_SHIM,
+                     objdir, _TOR_SHIM)),
+        BuildStep("%s /DEF:%s /PDB:%s.pdb /OUT:%s.dll %s\\ed25519_tor.obj "
+                  "%s\\ed25519_tor_shim.obj bcrypt.lib"
+                  % (_LINK, _TOR_GLUE_DEF, name, name, objdir, objdir)),
+    ]
+
+
+def _ed25519_tor_glue():
+    flags = ("/O2 /MD /Zi -DED25519_CUSTOMRANDOM -DED25519_CUSTOMHASH "
+             "-DED25519_SUFFIX=_donna%s; /DEBUG /Brepro /INCREMENTAL:NO "
+             "/OPT:NOREF /OPT:NOICF at link, bcrypt.lib")
+    return Recipe(
+        family="ed25519-donna",
+        version="2026-10-07-tor",
+        upstream="https://gitlab.torproject.org/tpo/core/tor",
+        license="BSD-3-Clause (Tor, LICENSE at the pinned commit) for "
+                "ed25519_tor.c and Tor's edits; the donna code it includes "
+                "is public domain (Andrew M.)",
+        source=Source(git_url="https://gitlab.torproject.org/tpo/core/tor.git",
+                      git_ref=_TOR_COMMIT),
+        build=(_tor_glue_steps("ed25519_tor", "obj-tor-glue", "")
+               + _tor_glue_steps("ed25519_tor-sse2", "obj-tor-glue-sse2",
+                                 "/DED25519_SSE2 ")),
+        artifacts=[
+            Artifact(path="ed25519_tor.dll", component="ed25519_tor.dll",
+                     pdb="ed25519_tor.pdb"),
+            Artifact(path="ed25519_tor-sse2.dll",
+                     component="ed25519_tor-sse2.dll",
+                     pdb="ed25519_tor-sse2.pdb",
+                     build_flags=flags % " -DED25519_SSE2"),
+        ],
+        toolchains=["msvc_x86", "msvc_x64"],
+        build_flags=flags % "",
+        notes=_TOR_GLUE_MSVC_NOTES,
+    )
+
+
 def _curve25519():
     name = "curve25519-donna"
     return Recipe(
@@ -333,5 +417,6 @@ def _curve25519():
 
 RECIPES = {
     "ed25519-donna_2015-03-16_msvc": _ed25519(),
+    "ed25519-donna_2026-10-07-tor_msvc": _ed25519_tor_glue(),
     "curve25519-donna_1.3_msvc": _curve25519(),
 }
