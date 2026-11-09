@@ -4,6 +4,12 @@ Pinned Windows source-reference coverage for Havoc, Gh0st, TinyNuke, r77 and the
 
 This snapshot contains **34 report/export pairs: 4962 kept + 730 removed = 5692 image functions**. Counts describe retained functions, including documented residues; they are not a count of unique project implementations. Each export is marked `is_library=true`.
 
+The same PR separately adds six SQLite 3.30.1 dependency references under
+`data/sqlite3`, covering Linux, MinGW and MSVC x86/x64. They are outside the
+34-image component matrix below. The [dependency coverage record](../sqlite-3.30.1/README.md)
+gives their counts, source identity and comparisons; no consumer program or
+SQLite amalgamation is added to the mimikatz family.
+
 Coverage is limited to the source components below. PE analysis containers with no entry point or unresolved references are not runnable releases. A `.dll` analysis filename does not establish coverage of the upstream DLL startup, service installation or raw-payload format. Compiler/architecture axes are justified by the >=10-instruction PicHash matrices in the recipe docstrings.
 
 ## Committed matrix

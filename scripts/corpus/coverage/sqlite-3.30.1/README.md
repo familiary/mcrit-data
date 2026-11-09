@@ -20,36 +20,77 @@ together. No causal version-only claim is made. Source is unmodified; retained
 unnamed fragments and runtime residue are disclosed, not renamed or filtered
 through a shared-tooling change. The real consumer program is not built.
 
-## Completed local axes
+## Completed axes
 
-| Image | Kept | Removed | Excluded | Image total | Distinct hashes >=10 instructions | Conservative named new hashes vs all prior SQLite images |
+| Image | Kept | Removed | Excluded | Image total | Distinct hashes >=10 instructions | Conservative named additions vs all older SQLite images |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | `sqlite3_3.30.1_gcc14_x64_libsqlite3.so` | 1278 | 4 | 0 | 1282 | 1077 | 1076 |
 | `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` | 1324 | 12 | 0 | 1336 | 1124 | 1035 |
 | `sqlite3_3.30.1_mingw13_x64_sqlite3.dll` | 1321 | 53 | 0 | 1374 | 1100 | 520 |
 | `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` | 1314 | 58 | 0 | 1372 | 1128 | 514 |
+| `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | 2164 | 164 | 0 | 2328 | 1687 | 790 |
+| `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | 2173 | 178 | 0 | 2351 | 1755 | 731 |
 
-The local subtotal is 5237 kept + 127 removed + 0 excluded = 5364 recovered
-functions. MSVC x86/x64 are declared for the scoped CI build but not counted
-as built in this snapshot. The recipe uses /MD /O2 /Zi /GL- /Brepro and
-/OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO, with no /LTCG.
+All six total 9574 kept + 469 removed + 0 excluded = 10043 recovered
+functions. MSVC x86/x64 come from [run 42683286951](https://github.com/familiary/mcrit-data/actions/runs/42683286951),
+which passed both jobs and selected exactly sqlite3_3.30.1_msvc per architecture.
+Actual command logs confirm /MD /O2 /Zi /GL- /Brepro and the mandated
+/OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO, with no /MT or /LTCG.
+Both Windows exports are fully named; no known runtime survives at ten
+instructions. Three one-instruction CRT import thunks remain per architecture:
+x86 __msize/__beginthreadex/__endthreadex and x64 _msize/_beginthreadex/_endthreadex,
+all PicHash 0x1165511d87767dcf. SQLite's own sqlite3_msize wrapper is not CRT glue.
+
+Linux and MinGW use SMDA 5.0.2/MCRIT 1.16.0; Windows uses SMDA 4.8.0/MCRIT 1.9.0.
+Their exported configuration hashes agree with the corpus. No built program
+was executed or uploaded: CI artifacts contain reports, exports and provenance.
+
+## Analysis limitations and residues
 
 The MinGW x86 unnamed 37/45-instruction bodies are not counted as novel named
 implementations. Linux x86 has a 423-instruction unnamed body within the ELF
-sqlite3Pragma symbol; both this body and its named owner are excluded from
-novelty. Linux x86 retains four qualifying startup bodies, also excluded.
-Full runtime/fragment names and exact hashes are in sqlite_3301.py.
+sqlite3Pragma symbol; both the fragment and its named owner are excluded from
+novelty. Four qualifying Linux x86 startup functions are also excluded.
+No report names, function thresholds or shared baseline are modified.
 
-## Between the new local axes
+| Image | Retained runtime/unnamed name | Instructions | PicHash |
+| --- | --- | ---: | --- |
+| `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` | `_init` | 11 | `0xebf7442843bf7959` |
+| `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` | `deregister_tm_clones` | 18 | `0xa79718d3eeacec81` |
+| `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` | `register_tm_clones` | 26 | `0x35e2f6e74049cbba` |
+| `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` | `__do_global_dtors_aux` | 21 | `0x4589935d0552bb3f` |
+| `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` | `(unnamed)` | 423 | `0x6489713230055b96` |
+| `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` | `__x86.get_pc_thunk.bp` | 2 | `0x7c99608cc56520ba` |
+| `sqlite3_3.30.1_mingw13_x64_sqlite3.dll` | `(unnamed)` | 15 | `0xae8f920c3b4e652a` |
+| `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` | `(unnamed)` | 37 | `0x349d32cfaa300ab0` |
+| `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` | `(unnamed)` | 45 | `0x5a3b8afa141533f4` |
+| `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` | `(unnamed)` | 15 | `0xdfe3cea2dbb80872` |
+
+The 15-instruction MinGW bodies are the known stack-probe residues, not
+project novelty. printfTempBuf/printfFunc are SQLite SQL-formatting helpers,
+not CRT printf wrappers. The recipe lists the other surviving short helper
+and runtime names/hashes. Counts are recovered-function counts, not unique
+source implementations.
+
+## New-axis comparisons
 
 | Pair | Shared distinct hashes >=10 instructions |
 | --- | ---: |
 | `sqlite3_3.30.1_gcc14_x64_libsqlite3.so` / `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` | 0 |
 | `sqlite3_3.30.1_gcc14_x64_libsqlite3.so` / `sqlite3_3.30.1_mingw13_x64_sqlite3.dll` | 1 |
 | `sqlite3_3.30.1_gcc14_x64_libsqlite3.so` / `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` | 0 |
+| `sqlite3_3.30.1_gcc14_x64_libsqlite3.so` / `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | 0 |
+| `sqlite3_3.30.1_gcc14_x64_libsqlite3.so` / `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | 0 |
 | `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` / `sqlite3_3.30.1_mingw13_x64_sqlite3.dll` | 0 |
 | `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` / `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` | 89 |
+| `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` / `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | 0 |
+| `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` / `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | 0 |
 | `sqlite3_3.30.1_mingw13_x64_sqlite3.dll` / `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` | 0 |
+| `sqlite3_3.30.1_mingw13_x64_sqlite3.dll` / `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | 1 |
+| `sqlite3_3.30.1_mingw13_x64_sqlite3.dll` / `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | 0 |
+| `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` / `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | 0 |
+| `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` / `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | 0 |
+| `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` / `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | 0 |
 
 ## Comparisons with prior references
 
@@ -95,10 +136,30 @@ Full runtime/fragment names and exact hashes are in sqlite_3301.py.
 | `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` | `sqlite3_3.50.4_msvc143_x86_sqlite3.dll` | 2749 | 0 | 1128 |
 | `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` | `sqlite3_3.8.11.1_mingw13_x64_sqlite3.dll` | 1150 | 0 | 1128 |
 | `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` | `sqlite3_3.8.11.1_mingw13_x86_sqlite3.dll` | 1171 | 131 | 997 |
+| `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | `sqlite3_3.31.1_mingw13_x64_sqlite3.dll` | 1462 | 1 | 1686 |
+| `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | `sqlite3_3.31.1_mingw13_x86_sqlite3.dll` | 1500 | 0 | 1687 |
+| `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | `sqlite3_3.31.1_msvc143_x64_sqlite3.dll` | 2307 | 896 | 791 |
+| `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | `sqlite3_3.31.1_msvc143_x86_sqlite3.dll` | 2387 | 0 | 1687 |
+| `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | `sqlite3_3.50.4_mingw13_x64_sqlite3.dll` | 1683 | 1 | 1686 |
+| `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | `sqlite3_3.50.4_mingw13_x86_sqlite3.dll` | 1732 | 0 | 1687 |
+| `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | `sqlite3_3.50.4_msvc143_x64_sqlite3.dll` | 2654 | 292 | 1395 |
+| `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | `sqlite3_3.50.4_msvc143_x86_sqlite3.dll` | 2749 | 0 | 1687 |
+| `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | `sqlite3_3.8.11.1_mingw13_x64_sqlite3.dll` | 1150 | 0 | 1687 |
+| `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | `sqlite3_3.8.11.1_mingw13_x86_sqlite3.dll` | 1171 | 0 | 1687 |
+| `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | `sqlite3_3.31.1_mingw13_x64_sqlite3.dll` | 1462 | 0 | 1755 |
+| `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | `sqlite3_3.31.1_mingw13_x86_sqlite3.dll` | 1500 | 0 | 1755 |
+| `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | `sqlite3_3.31.1_msvc143_x64_sqlite3.dll` | 2307 | 0 | 1755 |
+| `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | `sqlite3_3.31.1_msvc143_x86_sqlite3.dll` | 2387 | 1022 | 733 |
+| `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | `sqlite3_3.50.4_mingw13_x64_sqlite3.dll` | 1683 | 0 | 1755 |
+| `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | `sqlite3_3.50.4_mingw13_x86_sqlite3.dll` | 1732 | 0 | 1755 |
+| `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | `sqlite3_3.50.4_msvc143_x64_sqlite3.dll` | 2654 | 0 | 1755 |
+| `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | `sqlite3_3.50.4_msvc143_x86_sqlite3.dll` | 2749 | 331 | 1424 |
+| `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | `sqlite3_3.8.11.1_mingw13_x64_sqlite3.dll` | 1150 | 0 | 1755 |
+| `sqlite3_3.30.1_msvc143_x86_sqlite3.dll` | `sqlite3_3.8.11.1_mingw13_x86_sqlite3.dll` | 1171 | 0 | 1755 |
 
 ## Shared new-axis hashes and names
 
-Names explain matching hashes; matching names alone are not code evidence.
+Names explain matched hashes; matching names alone are not code evidence.
 
 | Image pair | PicHash | Names in first image | Names in second image |
 | --- | --- | --- | --- |
@@ -192,3 +253,4 @@ Names explain matching hashes; matching names alone are not code evidence.
 | `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` / `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` | `0xfc9933263b1aaf61` | pcache1Cachesize | _pcache1Cachesize |
 | `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` / `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` | `0xfcb7ea73b958592e` | exprIdxCover | _exprIdxCover |
 | `sqlite3_3.30.1_gcc14_x86_libsqlite3.so` / `sqlite3_3.30.1_mingw13_x86_sqlite3.dll` | `0xffd94251266b3224` | sqlite3WhereSplit | _sqlite3WhereSplit |
+| `sqlite3_3.30.1_mingw13_x64_sqlite3.dll` / `sqlite3_3.30.1_msvc143_x64_sqlite3.dll` | `0x7d347f333da0b3b1` | sqlite3MallocAlarm.isra.0 | sqlite3MallocAlarm |

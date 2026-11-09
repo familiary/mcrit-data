@@ -26,6 +26,21 @@ novelty, new named hashes beyond every old SQLite reference are 514/520
 for MinGW and 1035/1076 for Linux. Version, default-feature profile, OS and
 compiler differ together; this does not isolate one cause.
 
+MSVC 19.44, SMDA 4.8.0/MCRIT 1.9.0, scoped run 42683286951:
+  x86 2173 kept + 178 removed = 2351; x64 2164 + 164 = 2328.
+Both have zero unnamed functions and no named runtime survivor at the
+comparison floor. Their
+qualifying distinct sets have 1755/1687 hashes and share zero. MSVC x86
+shares zero with every other new axis; MSVC x64 shares one with MinGW x64
+and zero with all others. New named hashes beyond all older SQLite images
+are 731/790. The complete pairwise names/hashes are in the coverage record.
+Actual compile/link logs confirm /MD /O2 /Zi /GL- /Brepro and /OPT:NOREF
+/OPT:NOICF /Brepro /INCREMENTAL:NO, with /GL disabled and no /MT or /LTCG.
+All six images total 9574 kept + 469 removed + 0 excluded = 10043.
+The retained MSVC CRT imports are one-instruction thunks with PicHash
+0x1165511d87767dcf: x86 __msize, __beginthreadex, __endthreadex; x64
+_msize, _beginthreadex, _endthreadex. None enters the comparison floor.
+
 Retained Linux x86 runtime: _init 0xebf7442843bf7959 (11 instructions),
 deregister_tm_clones 0xa79718d3eeacec81 (18), register_tm_clones
 0x35e2f6e74049cbba (26), __do_global_dtors_aux 0x4589935d0552bb3f (21),
