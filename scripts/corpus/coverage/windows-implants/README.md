@@ -49,6 +49,24 @@ Each row links the retained SMDA report and MCRIT export. Source pins, build fla
 
 ## Boundaries and remaining inputs
 
+### Translation-unit audit
+
+At pinned mimikatz commit `45c42c710fc3a9d7acdcd1f7acf966cc4ce07a49`,
+`mimikatz/mimikatz.vcxproj` lists 114 C translation units. Exactly 112 have
+`kuhl_m_` or `kull_m_` basenames; these are the selected MSVC references.
+The other two are `mimikatz.c` and `../modules/sqlite3.c`, not missing helper
+units. The project-file SHA-256 is
+`179e0d2012b0ad10ba6c96a848755e16256fba4189b858fa2e6e6d44be1a8bec`.
+The four committed mimikatz exports contain no `sqlite3` implementation names.
+This closes the translation-unit inventory question within the approved
+helper-tree scope; it does not claim a dispatcher, SQLite family or
+`ext_server_kiwi` DLL build.
+
+The follow-up audit added no images. Builds of working credential-theft
+extensions, rootkit deployment programs and the remaining RAT program were
+stopped at the audit stage by safeguards, before a compiler or CI job was
+started. No compiler error is claimed for those unattempted targets.
+
 | Item | Covered | Remaining boundary / closure condition |
 | --- | --- | --- |
 | [Havoc](https://github.com/r0ny123/mcrit-data/issues/19) | HTTP/SMB core and matching NASM sources on MinGW x86/x64; thirteen isolated source-entry references on MinGW/MSVC | Configured releases are not represented. Empty configuration, unresolved imports and zero PE entry differ from releases. A future reference must identify its exact source/configuration differences rather than treating this matrix as release coverage. |
