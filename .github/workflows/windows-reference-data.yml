@@ -588,16 +588,48 @@ jobs:
           Get-ChildItem "C:\BT\vs15\Common7\IDE\VC\VCTargets\Platforms\*\PlatformToolsets" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName; Get-ChildItem $_.FullName | ForEach-Object { Write-Host "  $($_.Name)" } }
           Get-ChildItem "C:\Program Files (x86)\Microsoft SDKs\Windows" -ErrorAction SilentlyContinue | ForEach-Object { Write-Host $_.FullName }
 
-      - name: VS 2017 14.16 developer environment (${{ matrix.arch }})
+      # Diagnostics only: in runs 42674927927 and 42678836328 this install's
+      # vcvarsall.bat printed "Environment initialized" and left no cl on PATH.
+      - name: VS 2017 vcvarsall diagnostics (never fatal)
+        continue-on-error: true
+        shell: cmd
+        run: |
+          dir /b C:\BT\vs15\VC\Auxiliary\Build
+          type C:\BT\vs15\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt
+          dir /b C:\BT\vs15\Common7\Tools\vsdevcmd\ext
+          dir /s /b C:\BT\vs15\VC\Tools\MSVC\14.16.27023\bin\cl.exe
+          set VSCMD_DEBUG=2
+          call C:\BT\vs15\VC\Auxiliary\Build\vcvarsall.bat ${{ matrix.arch == 'x64' && 'amd64' || 'x86' }} > vcvars-debug.txt 2>&1
+          findstr /i "error warning vcvars.bat cl.exe" vcvars-debug.txt
+          where cl
+
+      # The VS 2022 environment (Windows SDK, UCRT, PATH) with every VC tools
+      # path pointed at the VS 2017 14.16 install instead of 14.44.
+      - name: Set up MSVC (${{ matrix.arch }})
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch == 'x64' && 'amd64' || 'x86' }}
+
+      - name: Switch the VC tools to 14.16 (${{ matrix.arch }})
         shell: pwsh
         run: |
-          $a = if ('${{ matrix.arch }}' -eq 'x64') { 'amd64' } else { 'x86' }
-          $out = cmd /c "`"C:\BT\vs15\VC\Auxiliary\Build\vcvarsall.bat`" $a && set"
-          if ($LASTEXITCODE -ne 0) { throw "vcvarsall failed" }
-          foreach ($line in $out) {
-            if ($line -match '^([^=]+)=(.*)$') { Add-Content -Path $env:GITHUB_ENV -Value "$($matches[1])=$($matches[2])" }
+          $old = $env:VCToolsInstallDir
+          $new = 'C:\BT\vs15\VC\Tools\MSVC\14.16.27023\'
+          if (-not $old) { throw "VCToolsInstallDir is not set" }
+          $h = if ('${{ matrix.arch }}' -eq 'x64') { 'HostX64\x64' } else { 'HostX86\x86' }
+          if (-not (Test-Path "$new\bin\$h\cl.exe")) { Get-ChildItem "$new\bin" -Recurse -Filter cl.exe | ForEach-Object { $_.FullName }; throw "no cl.exe under $new\bin\$h" }
+          Write-Host "replacing $old with $new"
+          foreach ($v in 'PATH','INCLUDE','LIB','LIBPATH','EXTERNAL_INCLUDE') {
+            $val = [Environment]::GetEnvironmentVariable($v)
+            if ($val) { Add-Content -Path $env:GITHUB_ENV -Value "$v=$($val.Replace($old, $new))" }
           }
-          cmd /c "`"C:\BT\vs15\VC\Auxiliary\Build\vcvarsall.bat`" $a && where cl"
+          Add-Content -Path $env:GITHUB_ENV -Value "VCToolsInstallDir=$new"
+          Add-Content -Path $env:GITHUB_ENV -Value "VCToolsVersion=14.16.27023"
+          Add-Content -Path $env:GITHUB_ENV -Value "VCINSTALLDIR=C:\BT\vs15\VC\"
+          Add-Content -Path $env:GITHUB_ENV -Value "VSINSTALLDIR=C:\BT\vs15\"
+          Add-Content -Path $env:GITHUB_ENV -Value "VCIDEInstallDir=C:\BT\vs15\Common7\IDE\VC\"
+          Add-Content -Path $env:GITHUB_ENV -Value "VisualStudioVersion=15.0"
+          & "$new\bin\$h\cl.exe"
 
       - name: Show detected toolchains
         run: python scripts/build_corpus.py list
