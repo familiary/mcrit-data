@@ -1,0 +1,35 @@
+# Driver crate for rayon-core 1.12.1. See ../../../recipes/rayon_core.py.
+#
+# rayon-core is resolved from the crates.io tarball the recipe fetches and
+# checksums (sha256 = the crates.io checksum), through a --config
+# patch.crates-io path override on the command line, so nothing about
+# rayon-core is taken from the registry. The lockfile next to this manifest
+# pins its dependencies (crossbeam-deque, crossbeam-epoch, crossbeam-utils)
+# by crates.io checksum.
+
+# Empty table on purpose: without it cargo walks upwards looking for a
+# workspace root.
+[workspace]
+
+[package]
+name = "rayon_core_driver"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+# A cdylib: SMDA cannot read a Rust static library.
+crate-type = ["cdylib"]
+path = "../src/lib.rs"
+
+[dependencies]
+rayon-core = "=1.12.1"
+
+[profile.release]
+# rayon-core needs std and carries panics between threads with catch_unwind,
+# so the profile is cargo's own release profile with unwinding left on.
+opt-level = 3
+lto = false
+codegen-units = 16
+debug = false
+strip = "none"
