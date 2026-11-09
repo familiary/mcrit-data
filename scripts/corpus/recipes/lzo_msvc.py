@@ -115,7 +115,48 @@ _FLAGS = ("/O2 /MD /Zi, -DLZO_CFG_NO_CONFIG_HEADER=1 -DLZO_ABI_LITTLE_ENDIAN=1 "
           "the objects' defined external functions")
 
 
+# miniLZO (backlog #59), the form UltraVNC vendors; pin and size in lzo.py on
+# the MinGW branch. One translation unit, so the .def step globs the single
+# minilzo.obj. Same flags as the full library, minus its include paths.
+_MINI_COMPILE = ('cl /nologo /c /O2 /MD /Zi /Fdminilzo.pdb '
+                 '/D_CRT_NONSTDC_NO_DEPRECATE /D_CRT_NONSTDC_NO_WARNINGS '
+                 '/D_CRT_SECURE_NO_DEPRECATE /D_CRT_SECURE_NO_WARNINGS '
+                 'minilzo.c')
+_MINI_DEF = _DEF.replace("lzo.def", "minilzo.def")
+_MINI_LINK = ('link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO '
+              '/OPT:NOREF /OPT:NOICF /DEF:minilzo.def '
+              '/PDB:minilzo.pdb /OUT:minilzo.dll minilzo.obj')
+
+_MINILZO = Recipe(
+    family="lzo",
+    version="minilzo-2.10",
+    upstream="https://www.oberhumer.com/opensource/lzo/",
+    license="GPL-2.0-or-later",
+    source=Source(
+        url="https://www.oberhumer.com/opensource/lzo/download/minilzo-2.10.tar.gz",
+        sha256="eb4ce543aad19533c83550746e0e9d7bcf716b35a42429e3ba17d60fa0f3e47a"),
+    build=[
+        BuildStep(_MINI_COMPILE),
+        BuildStep(_MINI_DEF),
+        BuildStep(_MINI_LINK),
+        BuildStep("dir", allow_failure=True),
+    ],
+    artifacts=[Artifact(path="minilzo.dll", component="minilzo.dll",
+                        pdb="minilzo.pdb")],
+    toolchains=["msvc_x86", "msvc_x64"],
+    build_flags=("/O2 /MD /Zi (minilzo.c compiled directly); /DEBUG /Brepro "
+                 "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link; exports "
+                 "from a /DEF generated from the object's defined external "
+                 "functions"),
+    notes="miniLZO 2.10, the lzo1x subset vendored byte-identically in "
+          "UltraVNC (minilzo.c 213674 bytes), built from the minilzo-2.10 "
+          "tarball. Upstream is unpatched; exports are generated from the "
+          "compiled object. Built against the DLL runtime.",
+)
+
+
 RECIPES = {
+    "lzo_minilzo_2.10_msvc": _MINILZO,
     "lzo_2.10_msvc": Recipe(
         family="lzo",
         version="2.10",
