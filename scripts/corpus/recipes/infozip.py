@@ -64,7 +64,7 @@ evidence. The nearest real state is the newest beta, 3.1c, built here as
 SourceForge lists for the file). It is a beta, labelled as one in the
 provenance notes, and not the same code as 3.0: 109 of 185 (x64) and 118 of
 189 (x86) PicHashes of the 3.0 zip.exe's 10+ instruction functions are also in
-3.1c. 3.1a and 3.1b were not built. unzip's 6.1 betas (unzip610a/b.zip) exist
+3.1c. 3.1a and 3.1b are built too (below). unzip's 6.1 betas (unzip610a/b.zip) exist
 too and are not what the issue asks for.
 
 3.1c's win32/makefile.gcc is not 3.0's. The assembler fast paths are ON unless
@@ -104,6 +104,34 @@ Measured zip 3.1c, glue baseline applied (kept + removed = image):
 
     zip.exe 3.1c   x86  247 + 209 = 456    x64  321 + 205 = 526
 
+zip 3.1a and 3.1b (second pass for #23, so that every published 3.1 state is
+in the corpus): `infozip_zip_3.1a` / `infozip_zip_3.1b` from SourceForge's
+unreleased Betas/Zip betas/zip31a.zip (sha256 b68a8d1b..., 1380316 bytes) and
+zip31b.zip (sha256 44e931c1..., 1473394 bytes); both digests equal the ones
+SourceForge's file listing gives for those files. ftp.info-zip.org was tried
+again and is unreachable from the build host (CONNECT answered HTTP 502, the
+ftp host does not resolve), and no other mirror was used, so SourceForge is the
+only source checked. win32/makefile.gcc of both has the same NOASM/NOASMATCH/
+NOASMCRC switches and the same object lists as 3.1c's, so the recipe shape and
+the overrides (NOASM=1, LDFLAGS='-o$@', LOCAL_ZIP='-include windows.h') are
+the 3.1c ones unchanged; no source patch. 3.1b and 3.1c ship a zipfile1.c that no makefile lists
+(3.1a has none); it is not compiled in any of the three builds.
+
+Measured zip 3.1a / 3.1b, glue baseline applied (kept + removed = image):
+
+    zip.exe 3.1a   x86  245 + 210 = 455    x64  317 + 204 = 521
+    zip.exe 3.1b   x86  245 + 210 = 455    x64  318 + 205 = 523
+
+PicHash overlap, 10+ instruction functions, MinGW (x86 / x64; the diagonal is
+the number of such PicHashes in the image):
+
+    3.0 189 / 185   3.1a 191 / 187   3.1b 191 / 187   3.1c 193 / 189
+    3.0 vs 3.1a 127 / 118   3.0 vs 3.1b 122 / 112   3.0 vs 3.1c 118 / 109
+    3.1a vs 3.1b 181 / 177  3.1a vs 3.1c 171 / 167   3.1b vs 3.1c 180 / 176
+
+The 3.1 betas are one code line: 3.1b shares 181 of 191 (x86) with 3.1a and
+3.1c shares 180 with 3.1b, while each shares only 109 to 127 with 3.0.
+
 Both build with upstream's own makefile (win32/makefile.gcc for zip,
 win32/Makefile.gcc for unzip), with command-line overrides and no source
 patch. Four settings are needed and the first is not obvious:
@@ -131,16 +159,31 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 
 _NOTE_LICENSE = "Info-ZIP"
 
-_NOTE_BETA = ("Version 3.1c is Info-ZIP's last public beta (Jun 22nd 2010); "
-              "a final zip 3.1 was never released, so this is the nearest "
-              "real state of the 3.1 line. ")
+_BETAS = {"3.1a": "Sep 21st 2008", "3.1b": "Apr 9th 2009",
+          "3.1c": "Jun 22nd 2010"}
+
+
+def _note_beta(version):
+    if version == "3.1c":
+        return ("Version 3.1c is Info-ZIP's last public beta (Jun 22nd 2010); "
+                "a final zip 3.1 was never released, so this is the nearest "
+                "real state of the 3.1 line. ")
+    return ("Version %s is an earlier public beta of the 3.1 line (%s BETA, "
+            "%s); a final zip 3.1 was never released, so this is a state of "
+            "the 3.1 line, not a release. "
+            % (version, version.upper(), _BETAS[version]))
+
 
 _INCLUDE = "-include windows.h"
 
 
 _ZIP30_URL = "https://downloads.sourceforge.net/infozip/zip30.tar.gz"
-_ZIP31C_URL = ("https://downloads.sourceforge.net/project/infozip/"
-               "unreleased%20Betas/Zip%20betas/zip31c.zip")
+
+def _beta_url(version):
+    return ("https://downloads.sourceforge.net/project/infozip/"
+            "unreleased%%20Betas/Zip%%20betas/zip%s.zip"
+            % version.replace(".", ""))
+
 
 _NO_ZLIB = ("USE_ZLIB (USEZLIB=1 in win32/makefile.gcc) is NOT set, so "
             "deflate.c and trees.c are compiled and the image carries "
@@ -173,7 +216,7 @@ def _zip(version, sha256, url=_ZIP30_URL, beta=False):
         toolchains=["mingw_x86", "mingw_x64"],
         build_flags=("-O3 (win32/makefile.gcc default), NOASM=1" if beta else
                      "-O2 (win32/makefile.gcc default), NO_ASM"),
-        notes=_NO_ZLIB + (_NOTE_BETA if beta else "") +
+        notes=_NO_ZLIB + (_note_beta(version) if beta else "") +
               "zip.exe only: zipcloak, zipnote and zipsplit link the same "
               "zipfile/fileio/util/crc32 objects again, built with -DUTIL, so "
               "they would duplicate zip.exe's functions under a second "
@@ -211,9 +254,15 @@ def _unzip(version, sha256):
 RECIPES = {
     "infozip_zip_3.0": _zip(
         "3.0", "f0e8bb1f9b7eb0b01285495a2699df3a4b766784c1765a8f1aeedf63c0806369"),
+    "infozip_zip_3.1a": _zip(
+        "3.1a", "b68a8d1b3c759622cf9f9c01fa9823b041ed18a89c2e78eafc37991ab5428acf",
+        url=_beta_url("3.1a"), beta=True),
+    "infozip_zip_3.1b": _zip(
+        "3.1b", "44e931c10b1748cb43e4ea4fb7d58f134551a478f5f8afaf0f2cfb613adc25bb",
+        url=_beta_url("3.1b"), beta=True),
     "infozip_zip_3.1c": _zip(
         "3.1c", "fda6d0532c201597ea13ccdbcdc6f39b4a4ce666df0048e19f6b0f969aff398b",
-        url=_ZIP31C_URL, beta=True),
+        url=_beta_url("3.1c"), beta=True),
     "infozip_unzip_6.0": _unzip(
         "6.0", "036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37"),
 }
