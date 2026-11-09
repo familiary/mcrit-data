@@ -89,6 +89,22 @@ tdefl_get_prev_return_status and, on x64,
 tdefl_write_image_to_png_file_in_memory.
 So the pair really is complementary: an MSVC-built sample gets no help from
 the MinGW reference and needs this one.
+
+The trimmed build, added for r0ny123/mcrit-data#81 (miniz.py has the full
+account): `miniz_3.1.0_trim_msvc` is the same recipe with AdaptixC2's
+MINIZ_TRIM_FLAGS added through CMAKE_C_FLAGS in cl's spelling (/DMINIZ_NO_STDIO
+/DMINIZ_NO_ARCHIVE_APIS /DMINIZ_NO_ARCHIVE_WRITING_APIS /DMINIZ_NO_TIME
+/DMINIZ_NO_ASSERT), filed under version 3.1.0-trim. Built on run 42680903937
+(cl 19.44, wide-stdio glue baseline), kept + removed = image: x86 60 + 128 =
+188, x64 59 + 133 = 192 (the default MSVC build is 190 + 138 = 328 and 189 +
+145 = 334). All kept functions are named; the zip reader and writer are gone
+(the only name with "zip" left is tdefl_create_comp_flags_from_zip_params, a
+compressor helper) and no glue is among the kept ones at any size. PicHash
+overlap of the 10+ instruction functions: 44 of 44 (x86) and 36 of 42 (x64) of
+the trimmed image's are in the default MSVC image (the x64 six differ because
+NO_ASSERT and NO_STDIO change the code around them), and 0 of 44 / 0 of 42
+against the trimmed MinGW image, so the MSVC and MinGW trimmed pair is as
+disjoint as the default pair.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -104,16 +120,27 @@ _CMAKE = ('cmake -S . -B build-{arch} -G "NMake Makefiles" '
           '%s %s' % (_CFLAGS, _LDFLAGS))
 
 
-def _miniz_msvc(version, git_ref):
+# AdaptixC2's MINIZ_TRIM_FLAGS, as issue #81 lists them, in cl's /D spelling
+# (see miniz.py for what each macro removes). Added through CMAKE_C_FLAGS, to
+# which upstream appends "/W3 /Zi /permissive-" itself.
+_TRIM_FLAGS = ("/DMINIZ_NO_STDIO /DMINIZ_NO_ARCHIVE_APIS "
+               "/DMINIZ_NO_ARCHIVE_WRITING_APIS /DMINIZ_NO_TIME "
+               "/DMINIZ_NO_ASSERT")
+
+
+def _miniz_msvc(version, git_ref, trimmed=False):
+    cmake = _CMAKE
+    if trimmed:
+        cmake += ' "-DCMAKE_C_FLAGS=%s"' % _TRIM_FLAGS
     return Recipe(
         family="miniz",
-        version=version,
+        version=version + ("-trim" if trimmed else ""),
         upstream="https://github.com/richgel999/miniz",
         license="MIT",
         source=Source(git_url="https://github.com/richgel999/miniz.git",
                       git_ref=git_ref),
         build=[
-            BuildStep(_CMAKE),
+            BuildStep(cmake),
             BuildStep("cmake --build build-{arch} --target miniz"),
             # NMake hides the cl and link command lines in response files,
             # so the flags that were actually used are read back from the
@@ -129,9 +156,10 @@ def _miniz_msvc(version, git_ref):
         artifacts=[Artifact(path="bin/miniz.dll", component="miniz.dll",
                             pdb="bin/miniz.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
-        build_flags="/MD /O2 /Ob2 /Zi /W3 /permissive- (CMake Release, /Zi "
-                    "from upstream); /DEBUG /Brepro /OPT:NOREF /OPT:NOICF "
-                    "at link",
+        build_flags=("/MD /O2 /Ob2 /Zi /W3 /permissive- (CMake Release, /Zi "
+                     "from upstream)" + (" plus " + _TRIM_FLAGS if trimmed
+                                         else "") +
+                     "; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF at link"),
         notes="Shared build of upstream CMake, same tag as the MinGW recipe: "
               "miniz.c, miniz_zip.c, miniz_tinfl.c and miniz_tdef.c, whole "
               "API exported. Named miniz.dll rather than libminiz.dll "
@@ -144,4 +172,7 @@ def _miniz_msvc(version, git_ref):
 
 RECIPES = {
     "miniz_3.1.0_msvc": _miniz_msvc("3.1.0", "3.1.0"),
+    # AdaptixC2's trimmed build (issue #81), filed under version 3.1.0-trim as
+    # in miniz.py.
+    "miniz_3.1.0_trim_msvc": _miniz_msvc("3.1.0", "3.1.0", trimmed=True),
 }
