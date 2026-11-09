@@ -1,4 +1,5 @@
-"""Info-ZIP zip 3.0 and unzip 6.0 built with MSVC, beside the MinGW builds.
+"""Info-ZIP zip 3.0 / 3.1c and unzip 6.0 / funzip 6.0 built with MSVC, beside the
+MinGW builds.
 
 The same two tarballs, the same two sha256 values and the same two EXEs as
 infozip.py (zip.exe, unzip.exe; zipcloak/zipnote/zipsplit, funzip, unzipsfx
@@ -89,6 +90,38 @@ CRT startup routine ``__scrt_common_main_seh`` (99 instructions on x64,
 PicHash 11855707620856894801), which the x64 images carried before the
 wide-stdio glue baseline, is removed by it in zip.exe and unzip.exe. No
 unnamed function reaches ten instructions in any of the four images.
+
+Added for r0ny123/mcrit-data#23: zip 3.1c and funzip. zip 3.1 was never
+released (see infozip.py for the evidence); `infozip_zip_3.1c_msvc` builds the
+last public beta, SourceForge's zip31c.zip (sha256 fda6d053..., "3.1c BETA",
+22 June 2010), over the 3.0 translation units plus zbz2err.c (which 3.1c's
+makefiles list; an empty stub without BZIP2_SUPPORT), with /DNO_ASM
+/DNO_ASM_CRC as its makefile.w32 passes. USE_ZLIB is not defined (neither is
+USEZLIB, which would replace deflate.c), so the image carries Info-ZIP's own
+deflate. funzip.exe is a second artefact of `infozip_unzip_6.0_msvc`: win32/
+Makefile's OBJF list (funzip crc32 crypt globals inflate ttyio win32
+win32i64), compiled with /DFUNZIP into its own object directory so nothing
+overwrites unzip.exe's objects, same flags. unzip.exe is rebuilt by that recipe
+unchanged (run 42680903937: identical function names, PicHashes and instruction
+counts, 236 + 197 and 227 + 200 as before), so its committed images are kept.
+
+Measured on run 42680903937 (cl 19.44, wide-stdio glue baseline, kept +
+removed = image):
+
+    zip.exe 3.1c   x86  347 + 212 = 559    x64  346 + 218 = 564
+    funzip.exe 6.0 x86   28 + 166 = 194    x64   28 + 168 = 196
+
+(MinGW: zip 3.1c 247 + 209 = 456 / 321 + 205 = 526, funzip 22 + 134 = 156 /
+42 + 130 = 172.) No unnamed function in any of the four images, and none of
+the kept functions is glue at ten instructions or more. PicHash overlap, 10+
+instruction functions, MinGW / MSVC / shared: zip 3.1c x86 193 / 222 / 0, x64
+189 / 218 / 0; funzip x86 16 / 17 / 0, x64 18 / 17 / 0, so the MSVC images are
+new data against the MinGW ones, as for the other programs. MSVC zip 3.0
+against MSVC 3.1c: 194 of 222 (x86) and 177 of 218 (x64) shared. funzip against
+unzip.exe 6.0 (both MSVC): 8 of 17 on each architecture (inflate.c, crc32).
+Against every libzlib and every 7-Zip image of the same architecture: zip 3.1c
+x64 shares one hash, bi_reverse (11 instructions, deflate's trees.c routine
+that zlib inherited), and nothing else; funzip and the x86 images share none.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -120,7 +153,34 @@ _UNZIP_SOURCES = ("unzip.c crc32.c crypt.c envargs.c explode.c extract.c "
                   "win32\\win32.c win32\\win32i64.c win32\\nt.c").split()
 
 
-def _recipe(version, url, sha256, name, sources, defs, upstream, notes):
+# zip 3.1c adds zbz2err.c to the translation units (an empty stub without
+# BZIP2_SUPPORT; makefile.gcc and makefile.w32 both list it) and its
+# makefile.w32 passes -DNO_ASM_CRC beside -DNO_ASM.
+_ZIP31_SOURCES = _ZIP_SOURCES + ["zbz2err.c"]
+
+# funzip, from win32/Makefile's OBJF list: funzip.c plus the same sources
+# crc32, crypt, globals, inflate, ttyio and the two win32 files compiled with
+# -DFUNZIP (the nmake file names those objects crc32f, cryptf, globalsf,
+# inflatef, ttyiof, win32f, win32i64f). They go into their own object
+# directory so they cannot overwrite unzip.exe's objects of the same name.
+_FUNZIP_SOURCES = ("funzip.c crc32.c crypt.c globals.c inflate.c ttyio.c "
+                   "win32\\win32.c win32\\win32i64.c").split()
+
+
+def _funzip_steps(defs):
+    objs = " ".join("funzip_obj\\" + s.split("\\")[-1].replace(".c", ".obj")
+                    for s in _FUNZIP_SOURCES)
+    return [
+        BuildStep("if not exist funzip_obj mkdir funzip_obj"),
+        BuildStep("cl /nologo /c /O2 /MD /Zi /I. %s /DFUNZIP /Fofunzip_obj\\ "
+                  "/Fdfunzip.pdb %s" % (defs, " ".join(_FUNZIP_SOURCES))),
+        BuildStep(_LINK % ("funzip", "funzip", objs)),
+    ]
+
+
+def _recipe(version, url, sha256, name, sources, defs, upstream, notes,
+            funzip=False):
+    extra = _funzip_steps(defs) if funzip else []
     return Recipe(
         family="Info-ZIP",
         version=version,
@@ -130,10 +190,13 @@ def _recipe(version, url, sha256, name, sources, defs, upstream, notes):
         build=[
             BuildStep(_CL % (defs, name, " ".join(sources))),
             BuildStep(_LINK % (name, name, _objs(sources))),
+        ] + extra + [
             BuildStep("dir", allow_failure=True),
         ],
         artifacts=[Artifact(path=name + ".exe", component=name + ".exe",
-                            pdb=name + ".pdb")],
+                            pdb=name + ".pdb")] + (
+            [Artifact(path="funzip.exe", component="funzip.exe",
+                      pdb="funzip.pdb")] if funzip else []),
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags="/O2 /MD /Zi, %s; /DEBUG /Brepro /INCREMENTAL:NO "
                     "/OPT:NOREF /OPT:NOICF at link" % defs,
@@ -150,12 +213,26 @@ RECIPES = {
         "zip.exe only, over the translation units the MinGW recipe links. "
         "Upstream's win32/makefile.w32 is not used: it defaults to a static "
         "CRT and this corpus builds /MD. Assembler fast paths disabled."),
+    # Info-ZIP's last public zip beta; a final 3.1 was never released (see
+    # infozip.py). Source is SourceForge's zip31c.zip.
+    "infozip_zip_3.1c_msvc": _recipe(
+        "3.1c", "https://downloads.sourceforge.net/project/infozip/"
+                "unreleased%20Betas/Zip%20betas/zip31c.zip",
+        "fda6d0532c201597ea13ccdbcdc6f39b4a4ce666df0048e19f6b0f969aff398b",
+        "zip", _ZIP31_SOURCES, _DEFS + " /DNO_ASM /DNO_ASM_CRC",
+        "https://infozip.sourceforge.net/Zip.html",
+        "zip.exe only (3.1c BETA, 22 June 2010: no final 3.1 exists), over the "
+        "translation units the MinGW recipe links. Upstream's "
+        "win32/makefile.w32 is not used: it defaults to a static CRT and this "
+        "corpus builds /MD. USE_ZLIB is not set, so the image carries "
+        "Info-ZIP's own deflate. Assembler fast paths disabled."),
     "infozip_unzip_6.0_msvc": _recipe(
         "6.0", "https://downloads.sourceforge.net/infozip/unzip60.tar.gz",
         "036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37",
         "unzip", _UNZIP_SOURCES, _DEFS + " /DIZ_CRCOPTIM_UNFOLDTBL",
         "https://infozip.sourceforge.net/UnZip.html",
-        "unzip.exe only, over the translation units the MinGW recipe links. "
-        "Upstream's win32/Makefile is not used: it defaults to a static CRT "
-        "and this corpus builds /MD. Assembler CRC disabled."),
+        "unzip.exe and funzip.exe, over the translation units the MinGW "
+        "recipe links. Upstream's win32/Makefile is not used: it defaults to "
+        "a static CRT and this corpus builds /MD. Assembler CRC disabled.",
+        funzip=True),
 }
