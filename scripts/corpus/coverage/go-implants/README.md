@@ -58,7 +58,17 @@ Primitive/anonymous array equality/hash helpers survive the current Go filter an
 | [Sliver](https://github.com/r0ny123/mcrit-data/issues/37) | Two pinned source revisions, each with four analysis images | The newer source has an unexpanded `func {{.}} ()` wrapper: `main.go:38:6: expected 'IDENT', found '{'` and `main.go:38:12: missing parameter name`. Generated exports, explicit init and configuration-selected startup differ from releases. A future static reference must identify those differences and its authentic input provenance. |
 | Go compiler-generated helpers | Full survivor names, sizes and PicHashes recorded in recipes | A separate shared-tooling change to `baseline.is_go_runtime_symbol` must recognize primitive/anonymous array helpers while retaining project-defined named types, with regression cases for both. Recheck all affected exports and preserve removed counts. No such filter patch is included here. |
 | Sliver dependency attribution | Counts and project-only novelty reported separately | [Function exclusion support](https://github.com/familiary/mcrit-data/pull/94) can support a reviewed first-party namespace policy after integration; [vendored-library support](https://github.com/familiary/mcrit-data/pull/110) removes only exact symbol/PicHash matches against existing dependency families. Neither automatically identifies all 74723 dependency functions. Unknown and generated bodies need an explicit retention policy before refiltering. |
-| Go 1.27 runtime family | Name-based runtime removal is already applied to Sliver | Go 1.27 runtime reference data was not added to `Golang`. That is a separate runtime-family expansion, not another Sliver source build; coordinate with [the Go group](https://github.com/familiary/mcrit-data/pull/76) rather than duplicating its ownership. |
+| Go 1.27 runtime family | [PR 118](https://github.com/familiary/mcrit-data/pull/118) supplies four Go 1.27.3 PE/ELF x86/x64 report/export pairs, with 81997 retained functions and four excluded driver functions | The runtime-data build gap is closed separately. Review and integration remain pending; these sixteen implant exports have not been refiltered. |
+
+The stock Pantegana server was probed on Linux amd64 with Go 1.24.13 using
+the same pinned v0.1.0 module ZIP. Direct compilation of `./main/server`
+with `-mod=readonly -trimpath` fails in its imported client package with
+`client/client.go:47:17: undefined: Asset`. The server's own handler also
+references missing generated certificate/key assets. No other server axis
+was attempted, no replacement assets were created, and no server report
+was produced. The exact failure is preserved in the investigated-targets
+table. Stock Sliver still requires expansion of release/configuration
+templates; no operator configuration or payload generator was run.
 
 The surviving Pantegana module ZIP is pinned by SHA-256 rather than an invented Git SHA. Sliver is pinned by exact commits. Full pins and compiler banners are in provenance. All original errors, compatibility adaptations and overlap evidence remain in [the recipe contract](../../README.md#targets-investigated-but-not-built) and recipe docstrings.
 
