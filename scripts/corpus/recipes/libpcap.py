@@ -133,6 +133,62 @@ distributions are closest to) and 1.11.0 (new BPF/pcapng work) are each at
 most about half shared with their neighbour. On x86 the overlap between any
 two versions is lower still (3-16%) because 32-bit PIC bodies reach the GOT
 through a per-image delta - see README, "The Linux half".
+
+Old releases, added for the comment on issue #42 (libpcap 1.1.1 for an x64 set,
+libpcap 0.7.x or a 2001-era release for an x86 set; the versions statically
+linked into Penquin-family Linux samples). Linux ELF only, x86 and x64:
+
+  * libpcap 0.6.2 (tarball dated 2001-02-06, the 2001-era release), 0.7.2
+    (2003-02-26, the newest 0.7.x) and 1.1.1 (2010-04-06). 0.7.2 and 1.1.1
+    verified against tcpdump.org's old DSA signing key 464D3CEB89E917F3
+    (https://www.tcpdump.org/release/signing-key-DSA-464D3CEB89E917F3.asc;
+    "Good signature from tcpdump.org (SIGNING KEY)"). tcpdump.org serves no
+    signature for 0.6.2, so it is pinned by the sha256 of the download only.
+    0.7.1 (2002-01-23, also unsigned) was built and dropped: 108 of 115 x64
+    PicHashes (94%) are the same as 0.7.2's, the same near-duplicate call made
+    for 1.10.1 above.
+  * Before 0.9 the Makefile has only `all: libpcap.a`, no shared target, so
+    libpcap.a is built in the source tree and linked with
+    `$CC -shared -o libpcap.so $(ar t libpcap.a)` (the archive's own members).
+    1.1.1 does have `make libpcap.so` and uses it out of tree like the later
+    versions, with Bluetooth, CAN and libnl off (its only optional switches;
+    usbmon capture, pcap-usb-linux.c, is always compiled in).
+  * One define is needed on every one of them and no source is patched:
+    `make CCOPT='-O2 -fPIC -fvisibility=hidden -DSIOCGSTAMP=0x8906'`. glibc's
+    headers no longer provide SIOCGSTAMP, and every release stops at
+    pcap-linux.c with
+
+        error: 'SIOCGSTAMP' undeclared (first use in this function); did you
+        mean 'SIOCGRARP'?    (1.1.1, pcap-linux.c:1555; 0.7.2 :594; 0.6.2 :435)
+
+    0x8906 is the old x86 value the kernel still answers with the same struct
+    timeval these releases pass.
+  * These releases predate pcap's export macros, so -fvisibility=hidden hides
+    every symbol: `nm -D --defined-only` lists no function in any of the six
+    images, glibc is the only NEEDED entry, and the names are in .symtab.
+    That is the shape of a statically linked copy.
+
+Measured (kept + removed = total):
+
+                x86                  x64
+    0.6.2    269 + 5 = 274        254 + 4 = 258
+    0.7.2    279 + 5 = 284        265 + 4 = 269
+    1.1.1    464 + 8 = 472        437 + 4 = 441
+
+PicHash overlap of functions with 10 or more instructions between the x64
+images (the 32-bit PIC deltas make x86 overlap low everywhere, see the README):
+0.6.2 : 0.7.2 80 shared (73% / 70%), 0.7.2 : 1.1.1 49 (43% of 0.7.2, 23% of
+1.1.1), 1.1.1 : 1.8.1 26 (12% / 10%), 1.1.1 : 1.9.1 19 (9% / 7%), 0.7.2 : 1.9.1
+14. The 1.1.1 image adds pcap-usb-linux.c, pcap-common.c, sf-pcap-ng.c and
+fad-getad.c to the 0.7 set of bpf_*, gencode, grammar, optimize, pcap-linux,
+pcap, savefile, scanner, inet, etherent and nametoaddr.
+
+Windows axis of the old releases: not built. Their Windows backend is
+WinPcap's (pcap-win32.c, fad-win32.c against WinPcap's Packet32.h and
+Packet.lib); the tarballs build it from a Visual C++ 6 project
+(Win32/Prj/libpcap.dsp), configure has no MinGW path and there is no CMake
+build before 1.9, so a MinGW build would be a hand-written one. It was not
+attempted; no build error exists to quote.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -226,7 +282,72 @@ def _libpcap_pe(version, sha256, remote):
     )
 
 
+# Releases that predate the shared-library target (everything before 0.9 has
+# only `all: libpcap.a`) and the out-of-tree configure. Built in the source
+# tree (the pipeline unpacks one tree per architecture), compiled with
+# -fPIC -fvisibility=hidden through CCOPT, then linked into a shared object
+# from the archive's own members. No source is patched.
+_CONFIGURE_OLD = "./configure"
+# SIOCGSTAMP is gone from <asm/sockios.h> in current glibc/kernel headers
+# (moved to <linux/sockios.h> as SIOCGSTAMP_OLD = 0x8906 on x86, with the
+# struct timeval these releases pass it), so pcap-linux.c stops with
+# "error: 'SIOCGSTAMP' undeclared". The value is supplied on the command line;
+# no source is touched.
+_CCOPT_OLD = "-O2 -fPIC -fvisibility=hidden -DSIOCGSTAMP=0x8906"
+# 1.1.1 has no dbus/rdma/netmap/usb switches (usbmon capture is always
+# compiled on Linux); Bluetooth, CAN and libnl are the optional ones it has.
+_CONFIGURE_111 = ("mkdir -p build-{arch} && cd build-{arch} && "
+                  "{source_root}/configure --disable-bluetooth --disable-can "
+                  "--without-libnl")
+_LINK_OLD = ("$CC -shared -o libpcap.so $(ar t libpcap.a)")
+
+
+def _libpcap_old(version, sha256, signed, configure=_CONFIGURE_OLD,
+                 shared_target=False):
+    sig = ("Pinned by sha256 of a tarball whose GPG signature verified "
+           "against tcpdump.org's DSA signing key 464D3CEB89E917F3."
+           if signed else
+           "tcpdump.org serves no signature for this release; pinned by "
+           "sha256 of the download only.")
+    if shared_target:
+        steps = [BuildStep(_CONFIGURE_111),
+                 BuildStep("make -j$(nproc) libpcap.so CCOPT='%s' " % _CCOPT_OLD, cwd="build-{arch}")]
+        path = "build-{arch}/libpcap.so.%s" % version
+    else:
+        steps = [BuildStep(configure),
+                 BuildStep("make -j$(nproc) libpcap.a CCOPT='%s'" % _CCOPT_OLD),
+                 BuildStep(_LINK_OLD)]
+        path = "libpcap.so"
+    return Recipe(
+        family="libpcap",
+        version=version,
+        upstream="https://www.tcpdump.org/",
+        license="BSD-3-Clause",
+        source=Source(url="https://www.tcpdump.org/release/libpcap-%s.tar.gz" % version,
+                      sha256=sha256),
+        build=steps,
+        artifacts=[Artifact(path=path, component="libpcap.so")],
+        toolchains=["linux_x86", "linux_x64"],
+        requires=["flex", "bison"],
+        build_flags="-O2 -fPIC -fvisibility=hidden -DSIOCGSTAMP=0x8906 (CCOPT override), default "
+                    "Linux PF_PACKET backend",
+        notes="The Linux build of an old libpcap release, as suggested in "
+              "issue #42 for the Penquin-era samples. " + sig + " Needs flex "
+              "and bison.",
+    )
+
+
+
 RECIPES = {
+    "libpcap_1.1.1_linux": _libpcap_old(
+        "1.1.1", "508cca15547e55d1318498b838456a21770c450beb2dc7d7d4a96d90816e5a85",
+        signed=True, shared_target=True),
+    "libpcap_0.7.2_linux": _libpcap_old(
+        "0.7.2", "be38914f9f297e24b89c283390d872bce61c2be08f6fd989cb5acbd20330130d",
+        signed=True),
+    "libpcap_0.6.2_linux": _libpcap_old(
+        "0.6.2", "a551ea7368b1b58e329535e2d4cea9f6a65ed79e1b5bdd8b5c07cb108bbae6e5",
+        signed=False),
     "libpcap_1.8.1_linux": _libpcap(
         "1.8.1", "673dbc69fdc3f5a86fb5759ab19899039a8e5e6c631749e48dcd9c6f0c83541e"),
     "libpcap_1.9.1_linux": _libpcap(

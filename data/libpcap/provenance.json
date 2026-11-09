@@ -1,4 +1,196 @@
 {
+  "libpcap_0.6.2_gcc13_x64_libpcap.so": {
+    "architecture": "x64",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden -DSIOCGSTAMP=0x8906 (CCOPT override), default Linux PF_PACKET backend",
+    "built_artifact": "libpcap.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x64/mcrit/libpcap_0.6.2_gcc13_x64_libpcap.so.mcrit",
+    "notes": "The Linux build of an old libpcap release, as suggested in issue #42 for the Penquin-era samples. tcpdump.org serves no signature for this release; pinned by sha256 of the download only. Needs flex and bison.",
+    "num_functions": 254,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "ea983fbd77b369e111bd7dbb3f89f4f3a740df2bdbc82eb8be7082fe814cdfc5",
+    "smda": "data/libpcap/x64/smda/libpcap_0.6.2_gcc13_x64_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-0.6.2.tar.gz",
+      "sha256": "a551ea7368b1b58e329535e2d4cea9f6a65ed79e1b5bdd8b5c07cb108bbae6e5",
+      "url": "https://www.tcpdump.org/release/libpcap-0.6.2.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "0.6.2"
+  },
+  "libpcap_0.6.2_gcc13_x86_libpcap.so": {
+    "architecture": "x86",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden -DSIOCGSTAMP=0x8906 (CCOPT override), default Linux PF_PACKET backend",
+    "built_artifact": "libpcap.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x86/mcrit/libpcap_0.6.2_gcc13_x86_libpcap.so.mcrit",
+    "notes": "The Linux build of an old libpcap release, as suggested in issue #42 for the Penquin-era samples. tcpdump.org serves no signature for this release; pinned by sha256 of the download only. Needs flex and bison.",
+    "num_functions": 269,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "465a2050bbb674df7ff3647b2380bfd7018d36d1410d2e5664e2e47a68a3209f",
+    "smda": "data/libpcap/x86/smda/libpcap_0.6.2_gcc13_x86_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-0.6.2.tar.gz",
+      "sha256": "a551ea7368b1b58e329535e2d4cea9f6a65ed79e1b5bdd8b5c07cb108bbae6e5",
+      "url": "https://www.tcpdump.org/release/libpcap-0.6.2.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "0.6.2"
+  },
+  "libpcap_0.7.2_gcc13_x64_libpcap.so": {
+    "architecture": "x64",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden -DSIOCGSTAMP=0x8906 (CCOPT override), default Linux PF_PACKET backend",
+    "built_artifact": "libpcap.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x64/mcrit/libpcap_0.7.2_gcc13_x64_libpcap.so.mcrit",
+    "notes": "The Linux build of an old libpcap release, as suggested in issue #42 for the Penquin-era samples. Pinned by sha256 of a tarball whose GPG signature verified against tcpdump.org's DSA signing key 464D3CEB89E917F3. Needs flex and bison.",
+    "num_functions": 265,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "cb4461edafb24cdef7a4dc6b047ff15cfb4c3516bdc79ca1d9f9d76cf3dab068",
+    "smda": "data/libpcap/x64/smda/libpcap_0.7.2_gcc13_x64_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-0.7.2.tar.gz",
+      "sha256": "be38914f9f297e24b89c283390d872bce61c2be08f6fd989cb5acbd20330130d",
+      "url": "https://www.tcpdump.org/release/libpcap-0.7.2.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "0.7.2"
+  },
+  "libpcap_0.7.2_gcc13_x86_libpcap.so": {
+    "architecture": "x86",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden -DSIOCGSTAMP=0x8906 (CCOPT override), default Linux PF_PACKET backend",
+    "built_artifact": "libpcap.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x86/mcrit/libpcap_0.7.2_gcc13_x86_libpcap.so.mcrit",
+    "notes": "The Linux build of an old libpcap release, as suggested in issue #42 for the Penquin-era samples. Pinned by sha256 of a tarball whose GPG signature verified against tcpdump.org's DSA signing key 464D3CEB89E917F3. Needs flex and bison.",
+    "num_functions": 279,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "06a79a395ecbaaf5c781d6fd4bfdc179abfee0f986cf0a1f419f9ab35987f7b3",
+    "smda": "data/libpcap/x86/smda/libpcap_0.7.2_gcc13_x86_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-0.7.2.tar.gz",
+      "sha256": "be38914f9f297e24b89c283390d872bce61c2be08f6fd989cb5acbd20330130d",
+      "url": "https://www.tcpdump.org/release/libpcap-0.7.2.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "0.7.2"
+  },
+  "libpcap_1.1.1_gcc13_x64_libpcap.so": {
+    "architecture": "x64",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden -DSIOCGSTAMP=0x8906 (CCOPT override), default Linux PF_PACKET backend",
+    "built_artifact": "build-x64/libpcap.so.1.1.1",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x64/mcrit/libpcap_1.1.1_gcc13_x64_libpcap.so.mcrit",
+    "notes": "The Linux build of an old libpcap release, as suggested in issue #42 for the Penquin-era samples. Pinned by sha256 of a tarball whose GPG signature verified against tcpdump.org's DSA signing key 464D3CEB89E917F3. Needs flex and bison.",
+    "num_functions": 437,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "4e4b60359a4fc10f1f994c56d09924b05a7710d457e3a764fde2a8af190fb6b5",
+    "smda": "data/libpcap/x64/smda/libpcap_1.1.1_gcc13_x64_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-1.1.1.tar.gz",
+      "sha256": "508cca15547e55d1318498b838456a21770c450beb2dc7d7d4a96d90816e5a85",
+      "url": "https://www.tcpdump.org/release/libpcap-1.1.1.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "1.1.1"
+  },
+  "libpcap_1.1.1_gcc13_x86_libpcap.so": {
+    "architecture": "x86",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden -DSIOCGSTAMP=0x8906 (CCOPT override), default Linux PF_PACKET backend",
+    "built_artifact": "build-x86/libpcap.so.1.1.1",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libpcap.so",
+    "family": "libpcap",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/libpcap/x86/mcrit/libpcap_1.1.1_gcc13_x86_libpcap.so.mcrit",
+    "notes": "The Linux build of an old libpcap release, as suggested in issue #42 for the Penquin-era samples. Pinned by sha256 of a tarball whose GPG signature verified against tcpdump.org's DSA signing key 464D3CEB89E917F3. Needs flex and bison.",
+    "num_functions": 464,
+    "removed_runtime_functions": [
+      "__divdi3",
+      "__udivdi3",
+      "__udivmoddi4",
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "f603aaf30da86ae92d643034b207c34a393dacb8c36690fa59b0457e25ff8853",
+    "smda": "data/libpcap/x86/smda/libpcap_1.1.1_gcc13_x86_libpcap.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libpcap-1.1.1.tar.gz",
+      "sha256": "508cca15547e55d1318498b838456a21770c450beb2dc7d7d4a96d90816e5a85",
+      "url": "https://www.tcpdump.org/release/libpcap-1.1.1.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://www.tcpdump.org/",
+    "version": "1.1.1"
+  },
   "libpcap_1.10.5_gcc13_x64_libpcap.so": {
     "architecture": "x64",
     "build_flags": "-O2 -fPIC -fvisibility=hidden (set by upstream configure), default Linux PF_PACKET backend; libnl, D-Bus, Bluetooth, RDMA, netmap and usbmon disabled",
