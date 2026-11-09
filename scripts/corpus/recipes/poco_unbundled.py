@@ -62,6 +62,52 @@ type is UNKNOWN, no PCRE2_STATIC is set, and Foundation takes the
 reads the import library under any name. Nothing in the Poco tree changes.
 
 Final link: as poco.py, plus the five import libraries from the prefix.
+
+Measured (scoped scratch run 42678836328, MinGW-w64 GCC 13.2.0-6ubuntu1+26.1
+on ubuntu-24.04, the same packages as the host that built the bundled
+poco.dll; the first attempt, run 42674927927, failed on the pcre2 type
+detection above). Kept + removed by the MinGW glue baseline = image:
+
+    x64  15702 + 164 = 15866   (bundled 1.15.4: 17630 + 170 = 17800)
+    x86  30223 + 173 = 30396   (bundled 1.15.4: 30140 + 180 = 30320)
+
+Against the bundled image, by recovered name: there are 14178 C++-named
+functions in both on x64 (16445 bundled, 17209 unbundled on x86, which the bundled
+x86 image's 10681 unnamed bodies make hard to compare); functions with a
+plain C name fall from 2771 to 805 on x64 and from 2788 to 818 on x86, and
+what is left of them is Poco's own static initialisers and long mangled
+names SMDA did not demangle, plus 93 one-instruction import thunks into the
+five dependency DLLs. No sqlite3, pcre2, expat, zlib or utf8proc body of 10
+or more instructions remains (the one sqlite3-named function of 589/708
+instructions is Poco's Poco::AnyCast<sqlite3*&>); pcre2_ucd.c and
+pcre2_tables.c contribute tables, not functions. double-conversion stays:
+120 functions on x64, 144 on x86.
+
+PicHash overlap, distinct hashes of functions with 10+ instructions:
+
+    unbundled against bundled   x64 7177 of 7421 (96.7%; bundled has 9136)
+                                x86 8659 of 9501 (91.1%; bundled has 10970)
+    bundled-only functions      x64 1745 plain-C (the vendored libraries)
+                                    + 351 C++; x86 1787 + 575 + 99 unnamed
+    unbundled-only functions    x64 352 C++ + 2 unnamed; x86 948 C++ + 3
+                                    plain-C + 65 unnamed
+
+The C++ functions that differ are Poco code whose call sites into the
+dependencies became import calls; their bodies are otherwise the same
+source.
+
+Against the existing families (all MinGW versions in data/, x64 | x86):
+
+    data/libzlib (247 | 247 hashes)    bundled 36 | 38    unbundled 1 | 3
+    data/pcre2   (425 | 441)           bundled 61 | 65    unbundled 1 | 2
+    data/sqlite3 (3911 | 4009)         bundled 217 | 236  unbundled 1 | 3
+
+So the unbundled image is Poco's own code (plus double-conversion and
+tessil) and shares essentially nothing with the zlib, pcre2 and sqlite3
+families, while the bundled one files 314 (x64) and 339 (x86) of their
+hashes under Poco. expat has no family here; the roughly 115 (x64) / 130
+(x86) bundled-only functions of 10+ instructions whose names are expat's
+leave the unbundled image as well.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
