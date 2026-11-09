@@ -3,15 +3,49 @@
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import shlex
 import subprocess
 from pathlib import Path
 
 
+# Both snapshots seed their pseudo-random generator from __TIME__
+# (include/advobfuscator/random.h and Lib/MetaRandom.h: hh:mm:ss, seconds
+# included), so every unpinned build differs from the last by the key schedule
+# of every obfuscated literal and by a few percent of its functions. The seed is
+# pinned through SOURCE_DATE_EPOCH, which GCC (7 and later) and cl honour for
+# __TIME__ and __DATE__: 1700000000 is 2023-11-14 22:13:20 UTC, so __TIME__ is
+# "22:13:20". A probe translation unit is compiled first and the pinned string
+# must be in the object, so a compiler that ignores the variable fails the
+# build instead of producing an image that only looks pinned.
+PINNED_EPOCH = "1700000000"
+PINNED_TIME = b"22:13:20"
+
+
+def _pinned_env() -> dict:
+    env = dict(os.environ)
+    env["SOURCE_DATE_EPOCH"] = PINNED_EPOCH
+    env["TZ"] = "UTC"
+    return env
+
+
+def _check_pinned(probe_command: list[str], obj: Path, root: Path) -> None:
+    probe = root / "build" / "time_probe.cpp"
+    probe.write_text("extern const char corpus_time[];\n"
+                     "const char corpus_time[] = __TIME__;\n")
+    subprocess.run(probe_command + [str(probe)], cwd=root, check=True,
+                   env=_pinned_env())
+    if PINNED_TIME not in obj.read_bytes():
+        raise SystemExit("SOURCE_DATE_EPOCH=%s was not honoured for __TIME__ "
+                         "by %s; the build would not be reproducible"
+                         % (PINNED_EPOCH, probe_command[0]))
+    print("pinned __TIME__ = %s" % PINNED_TIME.decode(), flush=True)
+
+
 def _run(command: list[str], root: Path) -> None:
     print("+ " + subprocess.list2cmdline(command), flush=True)
-    subprocess.run(command, cwd=root, check=True)
+    subprocess.run(command, cwd=root, check=True, env=_pinned_env())
 
 
 # GCC 13 cannot deduce the class-type template parameter of the C++20
@@ -81,6 +115,10 @@ def build(args: argparse.Namespace) -> Path:
                                     (args.mode, args.arch))
         linker_pdb = build_dir / ("advobfuscator-%s-%s.pdb" %
                                   (args.mode, args.arch))
+        probe_obj = build_dir / "time_probe.obj"
+        _check_pinned([args.cxx, "/nologo", "/TP", "/c", "/Fo" + str(probe_obj),
+                       "/Fd" + str(build_dir / "time_probe.pdb")], probe_obj,
+                      root)
         optimization = ["/Od", "/Ob0"] if not legacy else ["/O2", "/Ob0"]
         command = [args.cxx, "/nologo", "/TP", "/c", standard,
                    *optimization, "/MD", "/Zi", "/GL-", "/W3",
@@ -112,6 +150,9 @@ def build(args: argparse.Namespace) -> Path:
         include = (_patched_include(root) if args.flavor == "mingw"
                    else root / "include")
         command.append("-I" + str(include))
+    probe_obj = build_dir / "time_probe.o"
+    _check_pinned(compiler + bitness_flag + ["-c", "-o", str(probe_obj)],
+                  probe_obj, root)
     command += ["-o", str(output), str(source)]
     _run(command, root)
     return output
