@@ -1,0 +1,11 @@
+; Exports for the Tor-style MSVC build of ed25519-donna (ED25519_SUFFIX=_donna),
+; outside the upstream tree. Same public API as ed25519_donna.def with the
+; suffix every ED25519_FN() name carries; the randombytes hook is the stub of
+; ed25519_donna_rng.c compiled under -DED25519_RNG_NAME.
+EXPORTS
+    ed25519_publickey_donna
+    ed25519_sign_donna
+    ed25519_sign_open_donna
+    ed25519_sign_open_batch_donna
+    ed25519_randombytes_unsafe_donna
+    curved25519_scalarmult_basepoint_donna

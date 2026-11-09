@@ -169,6 +169,11 @@ _CV_COMMIT = "28772f37a4b8a57ab9439b9e79b19f9abee686da"
 _RNG = "{repo}/scripts/corpus/exercisers/ed25519_donna_rng.c"
 _ED_DEF = "{repo}/scripts/corpus/exercisers/ed25519_donna.def"
 _CV_DEF = "{repo}/scripts/corpus/exercisers/curve25519_donna.def"
+_TOR_DEF = "{repo}/scripts/corpus/exercisers/ed25519_donna_tor.def"
+_TOR_HASH = "{repo}/scripts/corpus/exercisers/ed25519_donna_tor_hash.h"
+_TOR_DEFINES = ("/DED25519_CUSTOMHASH /DED25519_CUSTOMRANDOM "
+                "/DED25519_SUFFIX=_donna "
+                "/DED25519_RNG_NAME=ed25519_randombytes_unsafe_donna")
 
 # The compile and link lines every recipe in the corpus uses for a lone
 # translation unit; see sqlite3_msvc.py for the reasoning behind each flag
@@ -193,6 +198,22 @@ def _ed_steps(name, objdir, defines):
     ]
 
 
+def _tor_steps():
+    # The Tor-style component: CUSTOMHASH instead of REFHASH, the _donna suffix,
+    # and the digest wrapper forced in with /FI (ed25519_donna_tor_hash.h; see
+    # donna.py). Not _ed_steps(): that hard-codes /DED25519_REFHASH.
+    name = "ed25519-donna-tor"
+    return [
+        BuildStep("if not exist obj-tor mkdir obj-tor"),
+        BuildStep("%s /Fd%s.pdb %s /FI%s /I{repo}/scripts/corpus/exercisers "
+                  "/I. /Foobj-tor\\ ed25519.c %s"
+                  % (_CL, name, _TOR_DEFINES, _TOR_HASH, _RNG)),
+        BuildStep("%s /DEF:%s /PDB:%s.pdb /OUT:%s.dll "
+                  "obj-tor\\ed25519.obj obj-tor\\ed25519_donna_rng.obj"
+                  % (_LINK, _TOR_DEF, name, name)),
+    ]
+
+
 def _ed25519():
     return Recipe(
         family="ed25519-donna",
@@ -204,7 +225,8 @@ def _ed25519():
                       git_ref=_ED_COMMIT),
         build=(_ed_steps("ed25519-donna", "obj-generic", "")
                + _ed_steps("ed25519-donna-sse2", "obj-sse2",
-                           "/DED25519_SSE2 ")),
+                           "/DED25519_SSE2 ")
+               + _tor_steps()),
         artifacts=[
             Artifact(path="ed25519-donna.dll", component="ed25519-donna.dll",
                      pdb="ed25519-donna.pdb"),
@@ -215,6 +237,14 @@ def _ed25519():
                                  "-DED25519_REFHASH -DED25519_CUSTOMRANDOM; "
                                  "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF "
                                  "/OPT:NOICF at link"),
+            Artifact(path="ed25519-donna-tor.dll",
+                     component="ed25519-donna-tor.dll",
+                     pdb="ed25519-donna-tor.pdb",
+                     build_flags="/O2 /MD /Zi -DED25519_CUSTOMHASH "
+                                 "-DED25519_CUSTOMRANDOM "
+                                 "-DED25519_SUFFIX=_donna; /DEBUG /Brepro "
+                                 "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at "
+                                 "link"),
         ],
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags="/O2 /MD /Zi -DED25519_REFHASH -DED25519_CUSTOMRANDOM; "
