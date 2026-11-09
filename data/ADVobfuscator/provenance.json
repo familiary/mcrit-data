@@ -10,7 +10,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x64/mcrit/ADVobfuscator_2020-06-26_gcc14_x64_advobfuscator-legacy.so.mcrit",
-    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies.",
+    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies. Built before __TIME__ was pinned, so this image is not reproducible: rebuilding it with the current advobfuscator_build.py pins SOURCE_DATE_EPOCH to 1700000000.",
     "num_functions": 82,
     "removed_runtime_functions": [
       "__do_global_dtors_aux",
@@ -43,7 +43,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x86/mcrit/ADVobfuscator_2020-06-26_gcc14_x86_advobfuscator-legacy.so.mcrit",
-    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies.",
+    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies. Built before __TIME__ was pinned, so this image is not reproducible: rebuilding it with the current advobfuscator_build.py pins SOURCE_DATE_EPOCH to 1700000000.",
     "num_functions": 134,
     "removed_runtime_functions": [
       "__x86.get_pc_thunk.bx",
@@ -64,16 +64,16 @@
   },
   "ADVobfuscator_2020-06-26_mingw13_x64_advobfuscator-legacy.dll": {
     "architecture": "x64",
-    "build_flags": "-O2 -fno-inline -std=c++14; -shared; no inserted PE timestamp",
+    "build_flags": "-O2 -fno-inline -std=c++14; -shared; no inserted PE timestamp; SOURCE_DATE_EPOCH=1700000000 (__TIME__ 22:13:20)",
     "built_artifact": "build/advobfuscator-legacy-x64.dll",
-    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-posix",
+    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "advobfuscator-legacy.dll",
     "family": "ADVobfuscator",
-    "generated": "2026-11-06",
+    "generated": "2026-11-09",
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x64/mcrit/ADVobfuscator_2020-06-26_mingw13_x64_advobfuscator-legacy.dll.mcrit",
-    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies.",
+    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies. __TIME__ (the generator's seed) is pinned with SOURCE_DATE_EPOCH=1700000000, so this image is reproducible; the optimisation levels are measured in the module docstring.",
     "num_functions": 61,
     "removed_runtime_functions": [
       "DllEntryPoint",
@@ -102,6 +102,7 @@
       "__mingw_GetSectionForAddress",
       "__mingw_TLScallback",
       "__mingw_enum_import_library_names",
+      "__mingwthr_run_key_dtors.part.0",
       "__report_error",
       "__tlregdtor",
       "_amsg_exit",
@@ -118,6 +119,7 @@
       "calloc",
       "free",
       "fwrite",
+      "mark_section_writable",
       "pre_c_init",
       "realloc",
       "register_frame_ctor",
@@ -125,7 +127,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "3d26414dac8d91a1b3e8633ce6f3882f19594d46b7310e66bd0b9e72ab7aac99",
+    "sha256": "663a2eedeb1477c6a55d28a2d2e83564ffd8074bef12331ff430db0eba5ff6f6",
     "smda": "data/ADVobfuscator/x64/smda/ADVobfuscator_2020-06-26_mingw13_x64_advobfuscator-legacy.dll.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -139,16 +141,16 @@
   },
   "ADVobfuscator_2020-06-26_mingw13_x86_advobfuscator-legacy.dll": {
     "architecture": "x86",
-    "build_flags": "-O2 -fno-inline -std=c++14; -shared; no inserted PE timestamp",
+    "build_flags": "-O2 -fno-inline -std=c++14; -shared; no inserted PE timestamp; SOURCE_DATE_EPOCH=1700000000 (__TIME__ 22:13:20)",
     "built_artifact": "build/advobfuscator-legacy-x86.dll",
-    "compiler": "i686-w64-mingw32-gcc (GCC) 13-posix",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "advobfuscator-legacy.dll",
     "family": "ADVobfuscator",
-    "generated": "2026-11-06",
+    "generated": "2026-11-09",
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x86/mcrit/ADVobfuscator_2020-06-26_mingw13_x86_advobfuscator-legacy.dll.mcrit",
-    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies.",
+    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies. __TIME__ (the generator's seed) is pinned with SOURCE_DATE_EPOCH=1700000000, so this image is reproducible; the optimisation levels are measured in the module docstring.",
     "num_functions": 53,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
@@ -193,6 +195,7 @@
       "_calloc",
       "_free",
       "_fwrite",
+      "_mark_section_writable",
       "_pre_c_init",
       "_realloc",
       "_register_frame_ctor",
@@ -200,7 +203,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "f25f53e49528b84a2d4c748ff6f5c5e26846f94c5c9b7e6d7cef4f6e7700ee76",
+    "sha256": "e42d5e26b6df3585ff93f5f4aba427732bdbcb7b5726bd286c75ab5391586830",
     "smda": "data/ADVobfuscator/x86/smda/ADVobfuscator_2020-06-26_mingw13_x86_advobfuscator-legacy.dll.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -223,7 +226,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x64/mcrit/ADVobfuscator_2020-06-26_msvc143_x64_advobfuscator-legacy.dll.mcrit",
-    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies.",
+    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies. __TIME__ (the generator's seed) cannot be pinned with cl (SOURCE_DATE_EPOCH is ignored, redefining the macro gives warning C4117), so this image is not reproducible.",
     "num_functions": 88,
     "removed_runtime_functions": [
       "DisableThreadLibraryCalls",
@@ -383,7 +386,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x86/mcrit/ADVobfuscator_2020-06-26_msvc143_x86_advobfuscator-legacy.dll.mcrit",
-    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies.",
+    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies. __TIME__ (the generator's seed) cannot be pinned with cl (SOURCE_DATE_EPOCH is ignored, redefining the macro gives warning C4117), so this image is not reproducible.",
     "num_functions": 88,
     "removed_runtime_functions": [
       "DllMain",
@@ -537,7 +540,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x64/mcrit/ADVobfuscator_2026-10-27_gcc14_x64_advobfuscator-current.so.mcrit",
-    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies.",
+    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies. Built before __TIME__ was pinned, so this image is not reproducible: rebuilding it with the current advobfuscator_build.py pins SOURCE_DATE_EPOCH to 1700000000.",
     "num_functions": 506,
     "removed_runtime_functions": [
       "__do_global_dtors_aux",
@@ -569,7 +572,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x86/mcrit/ADVobfuscator_2026-10-27_gcc14_x86_advobfuscator-current.so.mcrit",
-    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies.",
+    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies. Built before __TIME__ was pinned, so this image is not reproducible: rebuilding it with the current advobfuscator_build.py pins SOURCE_DATE_EPOCH to 1700000000.",
     "num_functions": 765,
     "removed_runtime_functions": [
       "__x86.get_pc_thunk.ax",
@@ -591,16 +594,16 @@
   },
   "ADVobfuscator_2026-10-27_mingw13_x64_advobfuscator-current.dll": {
     "architecture": "x64",
-    "build_flags": "-O0 -std=c++20; -shared; no inserted PE timestamp; patched include copy (literal operators)",
+    "build_flags": "-O0 -std=c++20; -shared; no inserted PE timestamp; patched include copy (literal operators); SOURCE_DATE_EPOCH=1700000000 (__TIME__ 22:13:20)",
     "built_artifact": "build/advobfuscator-current-x64.dll",
     "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
     "component": "advobfuscator-current.dll",
     "family": "ADVobfuscator",
-    "generated": "2026-11-07",
+    "generated": "2026-11-09",
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x64/mcrit/ADVobfuscator_2026-10-27_mingw13_x64_advobfuscator-current.dll.mcrit",
-    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string. PATCHED BUILD: GCC 13 cannot deduce the class-type template parameter of the _obf and _obf_bytes literal operators, so the build compiles a patched copy of include/advobfuscator/{bytes,string}.h in which the two operators take a char-array wrapper and construct the unchanged ObfuscatedBytes/ObfuscatedString from it (diff in the module docstring). The image is NOT byte-identical to a build of unmodified upstream. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies.",
+    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string. PATCHED BUILD: GCC 13 cannot deduce the class-type template parameter of the _obf and _obf_bytes literal operators, so the build compiles a patched copy of include/advobfuscator/{bytes,string}.h in which the two operators take a char-array wrapper and construct the unchanged ObfuscatedBytes/ObfuscatedString from it (diff in the module docstring). The image is NOT byte-identical to a build of unmodified upstream. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies. __TIME__ (the generator's seed) is pinned with SOURCE_DATE_EPOCH=1700000000, so this image is reproducible; the optimisation levels are measured in the module docstring.",
     "num_functions": 273,
     "removed_runtime_functions": [
       "DllEntryPoint",
@@ -655,7 +658,7 @@
       "strncmp",
       "vfprintf"
     ],
-    "sha256": "9fc9a5765b21ce36fd2f0f6b7dd510ce7a36e5353c2cdfd9cdd696ba96156899",
+    "sha256": "7b88300ea2134d6cd5eb1a0cee96a8cf303096d9ef0c5470b09c4abc0fe162de",
     "smda": "data/ADVobfuscator/x64/smda/ADVobfuscator_2026-10-27_mingw13_x64_advobfuscator-current.dll.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -669,16 +672,16 @@
   },
   "ADVobfuscator_2026-10-27_mingw13_x86_advobfuscator-current.dll": {
     "architecture": "x86",
-    "build_flags": "-O0 -std=c++20; -shared; no inserted PE timestamp; patched include copy (literal operators)",
+    "build_flags": "-O0 -std=c++20; -shared; no inserted PE timestamp; patched include copy (literal operators); SOURCE_DATE_EPOCH=1700000000 (__TIME__ 22:13:20)",
     "built_artifact": "build/advobfuscator-current-x86.dll",
     "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
     "component": "advobfuscator-current.dll",
     "family": "ADVobfuscator",
-    "generated": "2026-11-07",
+    "generated": "2026-11-09",
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x86/mcrit/ADVobfuscator_2026-10-27_mingw13_x86_advobfuscator-current.dll.mcrit",
-    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string. PATCHED BUILD: GCC 13 cannot deduce the class-type template parameter of the _obf and _obf_bytes literal operators, so the build compiles a patched copy of include/advobfuscator/{bytes,string}.h in which the two operators take a char-array wrapper and construct the unchanged ObfuscatedBytes/ObfuscatedString from it (diff in the module docstring). The image is NOT byte-identical to a build of unmodified upstream. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies.",
+    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string. PATCHED BUILD: GCC 13 cannot deduce the class-type template parameter of the _obf and _obf_bytes literal operators, so the build compiles a patched copy of include/advobfuscator/{bytes,string}.h in which the two operators take a char-array wrapper and construct the unchanged ObfuscatedBytes/ObfuscatedString from it (diff in the module docstring). The image is NOT byte-identical to a build of unmodified upstream. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies. __TIME__ (the generator's seed) is pinned with SOURCE_DATE_EPOCH=1700000000, so this image is reproducible; the optimisation levels are measured in the module docstring.",
     "num_functions": 266,
     "removed_runtime_functions": [
       "_DllEntryPoint@12",
@@ -731,7 +734,7 @@
       "_strncmp",
       "_vfprintf"
     ],
-    "sha256": "5bb470c8fe021864d6d2635211c1aef46a540316d6115f9fafb0a3775bf08639",
+    "sha256": "5a683bcc114bc9e3f3c276f42e6310ae89791d9fc70ebce12af40293d21a07aa",
     "smda": "data/ADVobfuscator/x86/smda/ADVobfuscator_2026-10-27_mingw13_x86_advobfuscator-current.dll.7z",
     "smda_version": "5.0.2",
     "source": {
@@ -754,7 +757,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x64/mcrit/ADVobfuscator_2026-10-27_msvc143_x64_advobfuscator-current.dll.mcrit",
-    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies.",
+    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies. __TIME__ (the generator's seed) cannot be pinned with cl (SOURCE_DATE_EPOCH is ignored, redefining the macro gives warning C4117), so this image is not reproducible.",
     "num_functions": 616,
     "removed_runtime_functions": [
       "DisableThreadLibraryCalls",
@@ -921,7 +924,7 @@
     "is_blob": false,
     "license": "See upstream source",
     "mcrit": "data/ADVobfuscator/x86/mcrit/ADVobfuscator_2026-10-27_msvc143_x86_advobfuscator-current.dll.mcrit",
-    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies.",
+    "notes": "Header-only string obfuscation code instantiated through a 16-literal corpus harness. The harness consumes every decoded string, and upstream sources are unchanged. Current uses C++20; legacy uses C++14 and disables inlining to retain meaningful template bodies. __TIME__ (the generator's seed) cannot be pinned with cl (SOURCE_DATE_EPOCH is ignored, redefining the macro gives warning C4117), so this image is not reproducible.",
     "num_functions": 616,
     "removed_runtime_functions": [
       "DllMain",

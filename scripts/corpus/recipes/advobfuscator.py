@@ -11,8 +11,8 @@ The final current images retain 506 Linux x64 functions (5 removed; 172
 functions / 47 distinct PicHashes at >=10 instructions), 765 Linux x86 (4
 removed; 239/231), 616 MSVC x64 (140 removed; 323/60) and 616 MSVC x86 (134
 removed; 402/66). Legacy retains 82 Linux x64 (6 removed; 27/18), 134 Linux
-x86 (3 removed; 38/33), 61 MinGW x64 (48 removed; 20/20), 53 MinGW x86 (48
-removed; 25/20), 88 MSVC x64 (133 removed; 54/42) and 88 MSVC x86 (127
+x86 (3 removed; 38/33), 61 MinGW x64 (50 removed; 25/18), 53 MinGW x86 (49
+removed; 28/19), 88 MSVC x64 (133 removed; 54/42) and 88 MSVC x86 (127
 removed; 40/35). Kept + removed equals the image total in every case.
 Current MinGW x64 retains 273 functions (51 removed, 324 total; 227
 functions / 61 distinct PicHashes at >=10 instructions) and current MinGW x86
@@ -56,11 +56,72 @@ harness literals. Surviving libstdc++/libgcc import thunks, all PicHash
 ``___register_frame_info``, ``___deregister_frame_info`` (x86).
 
 Among all built pairs, the >=10-instruction PicHash overlaps are: legacy
-Linux/MinGW x86, 3682465956104202752 (32 Linux-only and 19 MinGW-only
+Linux/MinGW x86, 3682465956104202752 (32 Linux-only and 18 MinGW-only
 hashes); legacy versus current MinGW, one unnamed 15-instruction function per
 architecture (x64 12578432865501340970, x86 16132965489037543538). The
 current MinGW images share no PicHash with current Linux, current MSVC or any
 other legacy axis; every other pair shares none.
+
+Optimisation level and reproducibility (tracker issue 28). Both snapshots seed
+their pseudo-random generator from ``__TIME__`` (``include/advobfuscator/
+random.h`` and ``Lib/MetaRandom.h``: hh:mm:ss, seconds included), so an unpinned
+build is different from the next one by the key schedule of every literal.
+Measured, current at -O0 on Linux x64 built three times: pinned to
+1700000000 (22:13:20) twice, byte-identical; pinned to 1700003661 (23:14:21)
+or unpinned, 763 functions against 749 and 198 against 186 of ten instructions
+or more, with 65 of the 71 PicHashes of the first image shared. The MinGW
+images rebuilt with the pin against the unpinned ones they replace: current x64
+and x86 keep the same 273 and 266 functions and 227 and 201 at ten instructions
+or more, but share 59 of 61 and 64 of 66 distinct PicHashes; legacy x64
+changes from 20 to 25 (20 to 18 distinct, 11 shared) and x86 from 25 to 28 (20
+to 19 distinct, 12 shared), and its removed count from 48 to 50 and 49. So the
+pin is not cosmetic. ``advobfuscator_build.py`` sets ``SOURCE_DATE_EPOCH=
+1700000000`` and ``TZ=UTC``, which GCC (7 and later) honours for ``__TIME__``,
+and compiles a probe translation unit first: the build fails if the pinned
+string 22:13:20 is not in the probe object. The seed value is arbitrary; it was
+not chosen for the outcome (legacy -O2 -fno-inline leaves between 3 and 6
+literal fragments in plaintext in the MinGW x64 image whichever of seven seeds
+was tried, 1 on MinGW x86 in all seven, 1 or 2 on Linux x64).
+
+cl does not honour ``SOURCE_DATE_EPOCH`` and cannot be made to: on the
+windows-2022 runner (MSVC 19.44) the probe finds no pinned string, ``/D__TIME__=
+"22:13:20"`` gives ``warning C4117: macro name '__TIME__' is reserved,
+'#define' ignored`` and a forced-include header with ``#undef __TIME__`` /
+``#define __TIME__`` gives the same warning for both directives (run
+42683708448, scratch/partials-a3). Pinning cl would need a patch to
+``random.h``/``MetaRandom.h``, which was not applied, so the four MSVC images
+are NOT reproducible and carry whatever seed their build second gave. The
+builder logs ``NOT PINNED`` for cl and goes on. The Linux images were built
+before the pin existed (GCC 14, which the current snapshot needs: GCC 13
+cannot deduce its literal-operator parameter, see the MinGW patch above) and
+are unpinned too; they are reproducible only once rebuilt with this script. So
+in the committed corpus only the four MinGW images are pinned.
+
+Optimisation level, measured with GCC 13 (current built from the patched
+include copy, so it compiles; seed pinned), counts being kept + removed =
+total, then functions of ten instructions or more / distinct PicHashes, and
+how many of the 16 harness literals are visible to ``strings -a``:
+
+* current, Linux x64: -O0 749 + 5 = 754, 186/71, 0 literals; -O1 56 + 6 = 62,
+  18/18; -O2 69 + 6 = 75, 31/18; -Os 125 + 6 = 131, 49/23 (none shows a
+  literal). MinGW x64: -O0 273 + 51 = 324, 227/61; -O1 43 + 51, 30/18; -O2
+  39 + 50, 26/17; -Os 66 + 49, 51/26. Linux x86: -O0 758 + 4, 229/229; -O1 72
+  + 3, 33/33; -O2 73 + 4, 35/35; -Os 131 + 3, 57/56. Only -O0 keeps the
+  AES and string-class machinery as functions; every optimised level folds
+  it into 18 to 57 functions. So current stays at -O0 (the choice already
+  made on the x64 probe, now confirmed on three targets).
+* legacy, no -fno-inline: Linux x64 -O0 150 + 6 = 156, 43/26 with all 16
+  literals in plaintext; -O1 6 + 5, 2/2; -O2 5 + 6, 1/1; -Os 6 + 6, 1/1.
+  MinGW x64: -O0 61 + 50, 44/27, 16 literals; -O1 13 + 50, 3/3; -O2 12 +
+  50, 2/2; -Os 13 + 50, 2/2. Linux x86: -O0 156 + 4, 47/47, 16 literals;
+  -O1 12 + 3, 6/6; -O2 11 + 3, 5/5; -Os 12 + 3, 6/6. With -fno-inline (Linux
+  x64): -O1 150 + 6, 30/23, no literal; -O2 126 + 6, 24/17, one literal
+  fragment; -Os 126 + 6, 17/15, none. -O0 exposes the literals and the
+  optimised levels without -fno-inline leave one to six functions, so legacy
+  stays at -O2 -fno-inline, which the build flags already say. -O1 -fno-
+  inline had more functions (30 against 24) and fewer plaintext fragments
+  than -O2 in this measurement and was not adopted: it changes 4 images
+  that are already built and the difference is small.
 
 GCC x86 startup glue survives with these names and PicHashes. Current:
 ``_init`` 1007249484536421600, ``deregister_tm_clones`` 569991583881770807,
@@ -126,6 +187,7 @@ def _recipe(mode, flavor, toolchains):
     elif flavor == "mingw":
         flags += "; -shared; no inserted PE timestamp"
     patched = mode == "current" and flavor == "mingw"
+    pinned = flavor == "mingw"
     notes = ("Header-only string obfuscation code instantiated through a "
              "16-literal corpus harness. The harness consumes every "
              "decoded string"
@@ -139,9 +201,23 @@ def _recipe(mode, flavor, toolchains):
                 "in the module docstring). The image is NOT byte-identical "
                 "to a build of unmodified upstream. ")
              + "Current uses C++20; legacy uses C++14 and disables inlining "
-             "to retain meaningful template bodies.")
+             "to retain meaningful template bodies. "
+             + {"mingw": "__TIME__ (the generator's seed) is pinned with "
+                         "SOURCE_DATE_EPOCH=1700000000, so this image is "
+                         "reproducible; the optimisation levels are "
+                         "measured in the module docstring.",
+                "linux": "Built before __TIME__ was pinned, so this image is "
+                         "not reproducible: rebuilding it with the current "
+                         "advobfuscator_build.py pins SOURCE_DATE_EPOCH to "
+                         "1700000000.",
+                "msvc": "__TIME__ (the generator's seed) cannot be pinned "
+                        "with cl (SOURCE_DATE_EPOCH is ignored, redefining "
+                        "the macro gives warning C4117), so this image is "
+                        "not reproducible."}[flavor])
     if patched:
         flags += "; patched include copy (literal operators)"
+    if pinned:
+        flags += "; SOURCE_DATE_EPOCH=1700000000 (__TIME__ 22:13:20)"
     return Recipe(
         family="ADVobfuscator",
         version=version,
