@@ -29,6 +29,14 @@ line or in a forced props file (no source file is edited):
   the output directory, TreatWarningAsError off. Everything else -
   /O2, /Gz (StdCall), /GS- for the application, /sdl for the plugins,
   /arch:SSE on x86, subsystem 5.01/5.02 - is upstream's.
+* /Zc:inline- on x64 only (RemoveUnreferencedCodeData=false).
+  ProcessHacker.def exports PhIsExecutingInWow64, which phconfig.h defines
+  as a FORCEINLINE function on _WIN64 (global.c defines it only for x86).
+  Upstream's /GL build leaves that to link-time code generation; without
+  /GL the v143 default /Zc:inline drops the unreferenced inline body from
+  every object, and the x64 link failed with "ProcessHacker.def : error
+  LNK2001: unresolved external symbol PhIsExecutingInWow64" and LNK1120
+  (scratch run 42674927927). /Zc:inline- keeps the compiler emitting it.
 * The generated fpshim.c of kphlib_msvc.py: phlib\\format.c calls the
   UCRT-internal __acrt_fp_format, which ucrt.lib does not export, so the
   same generated object (one function, __acrt_fp_format via the exported
@@ -73,6 +81,7 @@ _PROPS_XML = (
     "<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>"
     "<ProgramDataBaseFileName>$(IntDir)$(ProjectName).compiler.pdb</ProgramDataBaseFileName>"
     "<TreatWarningAsError>false</TreatWarningAsError>"
+    "<RemoveUnreferencedCodeData Condition=\"'$(Platform)'=='x64'\">false</RemoveUnreferencedCodeData>"
     "<AdditionalOptions>/GL- %(AdditionalOptions)</AdditionalOptions>"
     "</ClCompile><Link>"
     "<GenerateDebugInformation>true</GenerateDebugInformation>"
@@ -167,6 +176,8 @@ def _plugin_steps():
 
 
 _FLAGS = ("v2.39 Release, v143 toolset (projects name v140), SDK 10.0; "
+          "/Zc:inline- on x64 (keeps the inline PhIsExecutingInWow64 that "
+          "ProcessHacker.def exports); "
           "upstream's /O2 /Gz /GS- (application) or /sdl (plugins), "
           "/arch:SSE on x86; /MD instead of upstream's /MT; /Zi; no /GL, no "
           "/LTCG; link /DEBUG /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO; "
