@@ -16,11 +16,19 @@ row for the PicHash overlap.
 
 v0.58.1 (go 1.22, the last release of the 0.58 series): the newest release
 of the band the issue's evidence sits in. pkg/msg changed between minor
-versions, so each is a narrow band; v0.52.3 (go 1.20) is the older one the
-issue names and builds the same way, but one version is already 8 artefacts
-and 140 MB of reference data (10,000 functions per frps image, nearly all of
-them dependencies), so it is left for a decision on size. Releases from
-v0.65 need go 1.24.0 in go.mod and would build here too.
+versions, so each is a narrow band; v0.52.3 (go 1.20, the last release of the
+0.52 series, the older pin the issue names) builds the same way and was added
+afterwards (the first pass had left it for a decision on size: one version is
+8 artefacts and 140 MB of reference data, 10,000 functions per frps image,
+nearly all of them dependencies). Measured on the artefacts (PicHash, functions
+of 10 or more instructions, frpc and frps together): 75% of v0.52.3's hashes
+are in v0.58.1 on x64 (4,536 of 6,042 on Linux, 4,425 of 5,917 on MinGW) and
+24% on x86 (2,165 of 8,915 and 2,126 of 8,765); Linux x64 against MinGW x64 of
+the same version 92-97% per program. Counts, kept + removed = image total
+(removed is the Go glue filter): v0.52.3 frpc x64 Linux 5,438 + 11,141, frps
+8,683 + 11,645; x86 Linux 5,303 + 11,189 and 8,591 + 11,689; MinGW x64 5,148 +
+11,021 and 8,312 + 11,518; MinGW x86 5,176 + 11,297 and 8,440 + 11,793. Releases from v0.65 need go 1.24.0 in
+go.mod and would build here too.
 
 frps embeds its dashboard from assets/frps/static, which upstream does not
 commit (`make file` copies in a separately npm-built tree); `go:embed
@@ -67,6 +75,14 @@ def _frp(version, git_ref, go_directive, notes_extra):
 
 
 RECIPES = {
+    "frp_0.52.3": _frp(
+        "0.52.3", "v0.52.3",
+        "go 1.20; armon/go-socks5 v0.0.0-20160902184237-e75332964ef5, "
+        "hashicorp/yamux v0.1.1 replaced by fatedier/yamux "
+        "v0.0.0-20230628132301-7aca4898904d, golang.org/x/net v0.12.0, "
+        "quic-go v0.37.4",
+        "Commit 44985f574dd3924e9cb48a969fddbd72b3afe2b3; go.sum sha256 "
+        "f07603dc26c5f80dd138a7f3bedba270ca500fa87fa5040964286e8720c31f19."),
     "frp_0.58.1": _frp(
         "0.58.1", "v0.58.1",
         "go 1.22; armon/go-socks5 v0.0.0-20160902184237-e75332964ef5, "
