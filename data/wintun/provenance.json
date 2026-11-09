@@ -1,0 +1,52 @@
+{
+  "wintun_0.14.1_msvc142_x64_wintun.dll": {
+    "architecture": "x64",
+    "build_flags": "MSVC v142 (as distributed by WireGuard LLC: PE linker 14.29, Rich build 30136, static CRT); exact flags not published",
+    "built_artifact": "wintun.dll",
+    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "wintun.dll",
+    "family": "wintun",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "Prebuilt Binaries License (WireGuard LLC), the LICENSE.txt inside wintun-0.14.1.zip: a non-exclusive right to use, with reverse engineering, decompiling, disassembling and redistributing the DLLs prohibited. The Wintun source is GPLv2, Copyright (c) 2018-2021 WireGuard LLC; the prebuilt binaries are not under it",
+    "mcrit": "data/wintun/x64/mcrit/wintun_0.14.1_msvc142_x64_wintun.dll.mcrit",
+    "notes": "Harvested, not rebuilt: the wintun.dll that wintun.net publishes in wintun-0.14.1.zip, pinned by the sha256 that tailscale v1.102.5 itself pins in tsconst/wintun/wintun.go, so this is the Wintun the Tailscale Windows client is built and tested against (tracker issue #44 names wintun.dll as a sibling harvest of the tailscale family). The producer is read off the PE headers (linker 14.29, Rich build 30136: MSVC v142), not inferred from the Linux host that unpacked it. The PDB the DLLs name is not published, so only the fourteen exported Wintun* functions are named; the MSVC C runtime is linked statically and its unnamed bodies stay in the image. The kernel driver embedded in the DLL's resources is data to SMDA and is not disassembled. The arm and arm64 DLLs of the same zip are not taken. Measured: x86 811 kept + 0 removed = 811, x64 654 + 0 = 654, 606 and 459 of ten instructions or more; no PicHash shared between the two architectures or with the tailscale family.",
+    "num_functions": 654,
+    "sha256": "e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce",
+    "smda": "data/wintun/x64/smda/wintun_0.14.1_msvc142_x64_wintun.dll.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "wintun-0.14.1.zip",
+      "sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51",
+      "url": "https://www.wintun.net/builds/wintun-0.14.1.zip"
+    },
+    "toolchain": "mingw13_x64",
+    "upstream": "https://git.zx2c4.com/wintun",
+    "version": "0.14.1"
+  },
+  "wintun_0.14.1_msvc142_x86_wintun.dll": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by WireGuard LLC: PE linker 14.29, Rich build 30136, static CRT); exact flags not published",
+    "built_artifact": "wintun.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "wintun.dll",
+    "family": "wintun",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "Prebuilt Binaries License (WireGuard LLC), the LICENSE.txt inside wintun-0.14.1.zip: a non-exclusive right to use, with reverse engineering, decompiling, disassembling and redistributing the DLLs prohibited. The Wintun source is GPLv2, Copyright (c) 2018-2021 WireGuard LLC; the prebuilt binaries are not under it",
+    "mcrit": "data/wintun/x86/mcrit/wintun_0.14.1_msvc142_x86_wintun.dll.mcrit",
+    "notes": "Harvested, not rebuilt: the wintun.dll that wintun.net publishes in wintun-0.14.1.zip, pinned by the sha256 that tailscale v1.102.5 itself pins in tsconst/wintun/wintun.go, so this is the Wintun the Tailscale Windows client is built and tested against (tracker issue #44 names wintun.dll as a sibling harvest of the tailscale family). The producer is read off the PE headers (linker 14.29, Rich build 30136: MSVC v142), not inferred from the Linux host that unpacked it. The PDB the DLLs name is not published, so only the fourteen exported Wintun* functions are named; the MSVC C runtime is linked statically and its unnamed bodies stay in the image. The kernel driver embedded in the DLL's resources is data to SMDA and is not disassembled. The arm and arm64 DLLs of the same zip are not taken. Measured: x86 811 kept + 0 removed = 811, x64 654 + 0 = 654, 606 and 459 of ten instructions or more; no PicHash shared between the two architectures or with the tailscale family.",
+    "num_functions": 811,
+    "sha256": "d694fa46ab4cfebcb2632d094c7aa97278eef2f8052438621766d863ae98a931",
+    "smda": "data/wintun/x86/smda/wintun_0.14.1_msvc142_x86_wintun.dll.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "wintun-0.14.1.zip",
+      "sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51",
+      "url": "https://www.wintun.net/builds/wintun-0.14.1.zip"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://git.zx2c4.com/wintun",
+    "version": "0.14.1"
+  }
+}

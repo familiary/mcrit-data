@@ -96,6 +96,7 @@ String obfuscation
 Go applications
 * [tailcat](#tailcat)
 * [tailscale](#tailscale)
+* [wintun](#wintun)
 
 ## Compilers
 
@@ -1087,4 +1088,16 @@ Generated with `scripts/build_corpus.py`; see `data/tailscale/provenance.json` f
 | tailscale | 1.102.5 | GCC 13 (Linux, glibc) | [x86 ELF](data/tailscale/x86/mcrit/tailscale_1.102.5_gcc13_x86_tailscaled.mcrit) / [x64 ELF](data/tailscale/x64/mcrit/tailscale_1.102.5_gcc13_x64_tailscaled.mcrit) | [x86 ELF](data/tailscale/x86/smda/tailscale_1.102.5_gcc13_x86_tailscaled.7z) / [x64 ELF](data/tailscale/x64/smda/tailscale_1.102.5_gcc13_x64_tailscaled.7z) |
 | tailscale | 1.102.5 | MinGW-w64 GCC 13 | [x86 PE](data/tailscale/x86/mcrit/tailscale_1.102.5_mingw13_x86_tailscale.mcrit) / [x64 PE](data/tailscale/x64/mcrit/tailscale_1.102.5_mingw13_x64_tailscale.mcrit) | [x86 PE](data/tailscale/x86/smda/tailscale_1.102.5_mingw13_x86_tailscale.7z) / [x64 PE](data/tailscale/x64/smda/tailscale_1.102.5_mingw13_x64_tailscale.7z) |
 | tailscale | 1.102.5 | MinGW-w64 GCC 13 | [x86 PE](data/tailscale/x86/mcrit/tailscale_1.102.5_mingw13_x86_tailscaled.mcrit) / [x64 PE](data/tailscale/x64/mcrit/tailscale_1.102.5_mingw13_x64_tailscaled.mcrit) | [x86 PE](data/tailscale/x86/smda/tailscale_1.102.5_mingw13_x86_tailscaled.7z) / [x64 PE](data/tailscale/x64/smda/tailscale_1.102.5_mingw13_x64_tailscaled.7z) |
+<!-- /generated -->
+
+### Wintun<a id='wintun'></a>
+
+The `wintun.dll` that ships beside `tailscaled.exe`, `tailscale.exe` and `tailscale-ipn.exe` in the older Tailscale folders tracker issue #44 describes: WireGuard LLC's layer-3 TUN driver for Windows, whose user-mode DLL carries the signed kernel driver in its resources. Harvested, not rebuilt: version 0.14.1 from `wintun.net/builds/wintun-0.14.1.zip`, pinned by the sha256 `07c256185d6e...` that tailscale v1.102.5 itself pins in `tsconst/wintun/wintun.go`, so this is the Wintun the Tailscale Windows client is built and tested against. What compiled it is read off the PE headers rather than the Linux host that unpacked it - linker 14.29, Rich-header build 30136, MSVC v142 - and the C runtime is linked statically. The PDB both DLLs name is not published, so only the fourteen exported `Wintun*` functions and the entry point are named; kept + removed = total is 811 + 0 = 811 on x86 and 654 + 0 = 654 on x64, the unnamed static CRT included. No PicHash of ten or more instructions is shared between the two architectures or with the tailscale images. The prebuilt binaries are not under the source's GPLv2 but under WireGuard LLC's "Prebuilt Binaries License", which prohibits disassembling and redistributing the DLLs; neither DLL is committed here, only the reports derived from them, and the provenance licence field says so. `tailscale-ipn.exe` is not built: its source is not in the open tailscale tree.  
+
+Generated with `scripts/build_corpus.py`; see `data/wintun/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: wintun -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| wintun | 0.14.1 | MSVC v142 (Visual Studio 2019), as distributed upstream | [x86 PE](data/wintun/x86/mcrit/wintun_0.14.1_msvc142_x86_wintun.dll.mcrit) / [x64 PE](data/wintun/x64/mcrit/wintun_0.14.1_msvc142_x64_wintun.dll.mcrit) | [x86 PE](data/wintun/x86/smda/wintun_0.14.1_msvc142_x86_wintun.dll.7z) / [x64 PE](data/wintun/x64/smda/wintun_0.14.1_msvc142_x64_wintun.dll.7z) |
 <!-- /generated -->
