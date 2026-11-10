@@ -540,6 +540,10 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| GnuTLS, other releases; GnuTLS with p11-kit, libidn2, zlib, brotli, zstd, TPM, guile, C++ and DANE support; GnuTLS tools (`gnutls-cli`, `certtool`) | #26 | not built: this pass builds the library 3.8.13 only, with `--without-p11-kit --disable-doc --disable-tests --disable-tools` and the optional compression, IDN and TPM back ends off, so none of that code is in the images; nothing measured |
+| GnuTLS, unnamed GMP assembly | #26 | the 14 (x86) and 9 (x64) functions of the MinGW images that share a PicHash with GMP code have no symbol name in the PE (assembly blocks of GMP's fat build), so the by-name exclusion cannot remove them; they stay in the image and in the overlap count |
+| GMP, MSVC with assembly, `--enable-fat`, libgmpxx | #26 | not built: cl cannot assemble GMP's GNU-as/m4 `.asm` files, so the MSVC images are the portable C of `mpn/generic` (see `recipes/gmp_msvc.py`); a plain link of that C stops with `mpn_add.obj : error LNK2005: __gmpn_add already defined in mpf_add.obj` (and nine more of the same kind, then `libgmp-10.dll : fatal error LNK1169: one or more multiply defined symbols found`), which `/FORCE:MULTIPLE` works around, recorded in the recipe, the provenance and the README row |
+| GMP 6.2.1, 6.1.2 and libgmpxx | #26 | not built (scope of this pass is 6.3.0, the latest); nothing measured |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |
