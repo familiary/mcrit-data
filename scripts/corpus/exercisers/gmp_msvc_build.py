@@ -332,7 +332,11 @@ mkdir -p "$CFG" "$OBJ" && cd "$CFG"
 # 1" (its test programs are K&R C); -std=gnu17 is the dialect the MinGW legs'
 # GCC 13 defaults to, and -fpermissive turns GCC 14's new default errors
 # (implicit declarations, int conversions) back into the warnings GCC 13 gave.
-"$SRC/configure" --build=$TRIPLE --host=$TRIPLE --enable-shared --disable-static $FAT_OPTION CC="gcc -std=gnu17 -fpermissive" > configure.out 2>&1 || {
+# configure is run by a relative path: srcdir is then relative, and the
+# native (non-MSYS) gcc can open the #include "$srcdir/gmp-h.in" of its
+# tests, which an MSYS path (/d/a/...) would hide from it ("checking size of
+# mp_limb_t... 0", "Oops, mp_limb_t doesn't seem to work").
+"$SRC_REL/configure" --build=$TRIPLE --host=$TRIPLE --enable-shared --disable-static $FAT_OPTION CC="gcc -std=gnu17 -fpermissive" > configure.out 2>&1 || {
   echo "=== configure failed (exit $?)"; cat configure.out
   grep -n -B60 "doesn't seem to work\|could not find a working" config.log | grep -v "^[0-9]*-#define" | tail -n 80
   tail -n 40 config.log; exit 91; }
@@ -355,6 +359,7 @@ def _bash_env(arch, src, cfg, obj, fat, stems):
     env = dict(os.environ)
     env.update({
         "SRC_WIN": src, "CFG_WIN": cfg, "OBJ_WIN": obj,
+        "SRC_REL": os.path.relpath(src, cfg).replace("\\", "/"),
         "TRIPLE": "x86_64-w64-mingw32" if x64 else "i686-w64-mingw32",
         "GCC_PKG": "mingw-w64-x86_64-gcc" if x64 else "mingw-w64-i686-gcc",
         "MINGW_PREFIX_DIR": "/mingw64" if x64 else "/mingw32",
