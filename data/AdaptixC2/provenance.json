@@ -1,0 +1,52 @@
+{
+  "AdaptixC2_2026-03-04_mingw_x64_stub_x64": {
+    "architecture": "x64",
+    "build_flags": "MinGW GCC, flags not published (committed upstream)",
+    "built_artifact": "AdaptixServer/extenders/beacon_agent/src_beacon/files/stub.x64.bin",
+    "compiler": "MSVC (upstream, exact version unknown)",
+    "component": "stub_x64",
+    "family": "AdaptixC2",
+    "generated": "2026-11-08",
+    "is_blob": true,
+    "license": "GPL-3.0",
+    "mcrit": "data/AdaptixC2/x64/mcrit/AdaptixC2_2026-03-04_mingw_x64_stub_x64.mcrit",
+    "notes": "The loader shellcode upstream commits and its Go teamserver prepends to every built beacon DLL, taken as committed. The beacon agent itself is not built: src_beacon/Makefile has no link rule, the link needs a generated operator payload configuration, and upstream's link line strips symbols. Nothing is executed and no payload is configured.",
+    "num_functions": 7,
+    "sha256": "26b689749bc57991cbae2aab8ab6cf5acab6c64db4829ba2b1ced6c60d99a7a8",
+    "smda": "data/AdaptixC2/x64/smda/AdaptixC2_2026-03-04_mingw_x64_stub_x64.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "a4b80bf370f704d6843e69433bfb5c06274f57df",
+      "git_ref": "a4b80bf370f704d6843e69433bfb5c06274f57df",
+      "git_url": "https://github.com/Adaptix-Framework/AdaptixC2.git"
+    },
+    "toolchain": null,
+    "upstream": "https://github.com/Adaptix-Framework/AdaptixC2",
+    "version": "2026-03-04"
+  },
+  "AdaptixC2_2026-03-04_mingw_x86_stub_x86": {
+    "architecture": "x86",
+    "build_flags": "MinGW GCC, flags not published (committed upstream)",
+    "built_artifact": "AdaptixServer/extenders/beacon_agent/src_beacon/files/stub.x86.bin",
+    "compiler": "MSVC (upstream, exact version unknown)",
+    "component": "stub_x86",
+    "family": "AdaptixC2",
+    "generated": "2026-11-08",
+    "is_blob": true,
+    "license": "GPL-3.0",
+    "mcrit": "data/AdaptixC2/x86/mcrit/AdaptixC2_2026-03-04_mingw_x86_stub_x86.mcrit",
+    "notes": "The loader shellcode upstream commits and its Go teamserver prepends to every built beacon DLL, taken as committed. The beacon agent itself is not built: src_beacon/Makefile has no link rule, the link needs a generated operator payload configuration, and upstream's link line strips symbols. Nothing is executed and no payload is configured.",
+    "num_functions": 7,
+    "sha256": "d8979f8aa2498450376a0b56a05a9f5798f583f781d02cccc8f270757d45a256",
+    "smda": "data/AdaptixC2/x86/smda/AdaptixC2_2026-03-04_mingw_x86_stub_x86.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "a4b80bf370f704d6843e69433bfb5c06274f57df",
+      "git_ref": "a4b80bf370f704d6843e69433bfb5c06274f57df",
+      "git_url": "https://github.com/Adaptix-Framework/AdaptixC2.git"
+    },
+    "toolchain": null,
+    "upstream": "https://github.com/Adaptix-Framework/AdaptixC2",
+    "version": "2026-03-04"
+  }
+}
