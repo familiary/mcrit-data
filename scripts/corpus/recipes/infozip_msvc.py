@@ -282,3 +282,182 @@ RECIPES = {
         "a static CRT and this corpus builds /MD. Assembler CRC disabled.",
         funzip=True),
 }
+
+
+# --- The other programs upstream's nmake files build, and the x86 assembler
+# fast paths: the MSVC counterparts of the "<v>-utils", "6.0-sfxdll" and
+# "<v>-asm" recipes in infozip.py. Translation units and per-object defines
+# are those of win32/makefile.w32 (zip) and win32/Makefile (unzip); the
+# makefiles themselves are not used for the reason given above (static CRT
+# by default). Separate versions so the shipped images are unchanged.
+#
+# zip utilities, makefile.w32 OBJU/OBJN/OBJC/OBJS: zipfile, fileio, util,
+# crc32, crypt and win32/win32 again with -DUTIL (the *_.obj objects);
+# globals, ttyio and win32/win32i64 as for zip.exe; each utility's own main.
+_UTIL_SRC = "zipfile.c fileio.c util.c crc32.c crypt.c win32\\win32.c"
+_UTIL_MAIN = ("globals.c ttyio.c win32\\win32i64.c zipcloak.c zipnote.c "
+              "zipsplit.c")
+_OBJU = ("u\\zipfile.obj u\\fileio.obj u\\util.obj u\\crc32.obj "
+         "m\\globals.obj u\\win32.obj m\\win32i64.obj")
+_UTIL_LINKS = {
+    "zipnote": "m\\zipnote.obj " + _OBJU,
+    "zipcloak": "m\\zipcloak.obj u\\crypt.obj m\\ttyio.obj " + _OBJU,
+    "zipsplit": "m\\zipsplit.obj " + _OBJU,
+}
+
+
+def _zip_utils_msvc(base):
+    import dataclasses
+    recipe = RECIPES[base]
+    defs = recipe.build_flags.split(", ", 1)[1].split(";")[0]
+    steps = [
+        BuildStep("if not exist u mkdir u"),
+        BuildStep("if not exist m mkdir m"),
+        BuildStep("cl /nologo /c /O2 /MD /Zi /I. %s /DUTIL /Fou\\ "
+                  "/Fdutils.pdb %s" % (defs, _UTIL_SRC)),
+        BuildStep("cl /nologo /c /O2 /MD /Zi /I. %s /Fom\\ /Fdutils.pdb %s"
+                  % (defs, _UTIL_MAIN)),
+    ]
+    for name, objs in _UTIL_LINKS.items():
+        steps.append(BuildStep(_LINK % (name, name, objs)))
+    steps.append(BuildStep("dir", allow_failure=True))
+    return dataclasses.replace(
+        recipe, version=recipe.version + "-utils", build=steps,
+        artifacts=[Artifact(path=n + ".exe", component=n + ".exe",
+                            pdb=n + ".pdb")
+                   for n in ("zipcloak", "zipnote", "zipsplit")],
+        notes="zipcloak.exe, zipnote.exe and zipsplit.exe over the "
+              "translation units of win32/makefile.w32's OBJC, OBJN and OBJS "
+              "(zipfile, fileio, util, crc32, crypt and win32/win32 compiled "
+              "with -DUTIL; globals, ttyio and win32/win32i64 as for "
+              "zip.exe), with the zip.exe recipe's flags. The makefile is "
+              "not used because it defaults to a static CRT. USE_ZLIB is not "
+              "set. Assembler fast paths disabled.")
+
+
+for _base in ("infozip_zip_3.0_msvc", "infozip_zip_3.1a_msvc",
+              "infozip_zip_3.1b_msvc", "infozip_zip_3.1c_msvc"):
+    RECIPES[_base.replace("_msvc", "-utils_msvc")] = _zip_utils_msvc(_base)
+
+
+# unzipsfx (win32/Makefile OBJX, -DSFX) and unzip32.dll (OBJD, -DWINDLL
+# -DDLL, exports from upstream's windll/windll32.def).
+_SFX_SRC = ("unzip.c crc32.c crypt.c extract.c fileio.c globals.c inflate.c "
+            "match.c process.c ttyio.c ubz2err.c win32\\win32.c "
+            "win32\\win32i64.c win32\\nt.c").split()
+_DLL_SRC = ("api.c crc32.c crypt.c explode.c extract.c fileio.c globals.c "
+            "inflate.c list.c match.c process.c ubz2err.c unreduce.c "
+            "unshrink.c zipinfo.c win32\\win32.c win32\\win32i64.c "
+            "win32\\nt.c windll\\windll.c").split()
+_UNZIP_DEFS = _DEFS + " /DIZ_CRCOPTIM_UNFOLDTBL"
+
+
+def _in(directory, sources):
+    return " ".join(directory + "\\" + s.split("\\")[-1].replace(".c", ".obj")
+                    for s in sources)
+
+
+RECIPES["infozip_unzip_6.0-sfxdll_msvc"] = Recipe(
+    family="Info-ZIP",
+    version="6.0-sfxdll",
+    upstream="https://infozip.sourceforge.net/UnZip.html",
+    license="Info-ZIP",
+    source=RECIPES["infozip_unzip_6.0_msvc"].source,
+    build=[
+        BuildStep("if not exist sfx mkdir sfx"),
+        BuildStep("cl /nologo /c /O2 /MD /Zi /I. %s /DSFX /Fosfx\\ "
+                  "/Fdunzipsfx.pdb %s" % (_UNZIP_DEFS, " ".join(_SFX_SRC))),
+        BuildStep(_LINK % ("unzipsfx", "unzipsfx", _in("sfx", _SFX_SRC))),
+        BuildStep("if not exist dll mkdir dll"),
+        BuildStep("cl /nologo /c /O2 /MD /Zi /I. %s /DWINDLL /DDLL "
+                  "/Fodll\\ /Fdunzip32.pdb %s"
+                  % (_UNZIP_DEFS, " ".join(_DLL_SRC))),
+        BuildStep("link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO "
+                  "/OPT:NOREF /OPT:NOICF /DEF:windll\\windll32.def "
+                  "/PDB:unzip32.pdb /OUT:unzip32.dll %s user32.lib "
+                  "advapi32.lib" % _in("dll", _DLL_SRC)),
+        BuildStep("dir", allow_failure=True),
+    ],
+    artifacts=[Artifact(path="unzipsfx.exe", component="unzipsfx.exe",
+                        pdb="unzipsfx.pdb"),
+               Artifact(path="unzip32.dll", component="unzip32.dll",
+                        pdb="unzip32.pdb")],
+    toolchains=["msvc_x86", "msvc_x64"],
+    build_flags="/O2 /MD /Zi, %s, /DSFX (unzipsfx) or /DWINDLL /DDLL "
+                "(unzip32.dll, exports from windll/windll32.def); /DEBUG "
+                "/Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link"
+                % _UNZIP_DEFS,
+    notes="unzipsfx.exe and unzip32.dll over the translation units of "
+          "win32/Makefile's OBJX and OBJD with its per-target defines, from "
+          "the unzip 6.0 tarball. The makefile is not used because it "
+          "defaults to a static CRT. unzip does not use zlib. Assembler CRC "
+          "disabled.",
+)
+
+
+# x86 assembler fast paths, upstream's x86 default: crc32 from
+# win32/crc_i386.c (inline assembly, ASM_CRC) and, for zip, longest_match
+# from win32/match32.asm (ASMV, which win32/osdep.h defines when NO_ASM is
+# not), assembled with makefile.w32's own "ml -nologo -c -coff -Cx".
+def _zip_asm_msvc(base, sources):
+    import dataclasses
+    recipe = RECIPES[base]
+    defs = _DEFS + " /DASMV /DASM_CRC"
+    srcs = [s for s in sources] + ["win32\\crc_i386.c"]
+    return dataclasses.replace(
+        recipe, version=recipe.version + "-asm",
+        build=[BuildStep("ml /nologo /c /coff /Cx win32\\match32.asm"),
+               BuildStep(_CL % (defs, "zip", " ".join(srcs))),
+               BuildStep(_LINK % ("zip", "zip", _objs(srcs) + " match32.obj")),
+               BuildStep("dir", allow_failure=True)],
+        toolchains=["msvc_x86"],
+        build_flags="/O2 /MD /Zi, %s, "
+                    "win32/crc_i386.c, win32/match32.asm assembled with ml "
+                    "/c /coff /Cx; /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF "
+                    "/OPT:NOICF at link" % defs,
+        notes="zip.exe with upstream's default x86 assembler fast paths "
+              "(win32/makefile.w32 without NOASM): crc32 from the inline "
+              "assembly in win32/crc_i386.c and longest_match from "
+              "win32/match32.asm, over the translation units of the C-only "
+              "MSVC recipe. x86 only. USE_ZLIB is not set.")
+
+
+RECIPES["infozip_zip_3.0-asm_msvc"] = _zip_asm_msvc(
+    "infozip_zip_3.0_msvc", _ZIP_SOURCES)
+for _b in ("3.1a", "3.1b", "3.1c"):
+    RECIPES["infozip_zip_%s-asm_msvc" % _b] = _zip_asm_msvc(
+        "infozip_zip_%s_msvc" % _b, _ZIP31_SOURCES)
+
+_UNZIP_ASM_DEFS = _UNZIP_DEFS + " /DASM_CRC"
+_UNZIP_ASM_SRC = _UNZIP_SOURCES + ["win32\\crc_i386.c"]
+_FUNZIP_ASM_SRC = _FUNZIP_SOURCES + ["win32\\crc_i386.c"]
+RECIPES["infozip_unzip_6.0-asm_msvc"] = Recipe(
+    family="Info-ZIP",
+    version="6.0-asm",
+    upstream="https://infozip.sourceforge.net/UnZip.html",
+    license="Info-ZIP",
+    source=RECIPES["infozip_unzip_6.0_msvc"].source,
+    build=[
+        BuildStep(_CL % (_UNZIP_ASM_DEFS, "unzip", " ".join(_UNZIP_ASM_SRC))),
+        BuildStep(_LINK % ("unzip", "unzip", _objs(_UNZIP_ASM_SRC))),
+        BuildStep("if not exist funzip_obj mkdir funzip_obj"),
+        BuildStep("cl /nologo /c /O2 /MD /Zi /I. %s /DFUNZIP /Fofunzip_obj\\ "
+                  "/Fdfunzip.pdb %s"
+                  % (_UNZIP_ASM_DEFS, " ".join(_FUNZIP_ASM_SRC))),
+        BuildStep(_LINK % ("funzip", "funzip", _in("funzip_obj",
+                                                   _FUNZIP_ASM_SRC))),
+        BuildStep("dir", allow_failure=True),
+    ],
+    artifacts=[Artifact(path="unzip.exe", component="unzip.exe",
+                        pdb="unzip.pdb"),
+               Artifact(path="funzip.exe", component="funzip.exe",
+                        pdb="funzip.pdb")],
+    toolchains=["msvc_x86"],
+    build_flags="/O2 /MD /Zi, %s, win32/crc_i386.c; /DEBUG /Brepro "
+                "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link"
+                % _UNZIP_ASM_DEFS,
+    notes="unzip.exe and funzip.exe with upstream's default x86 assembler "
+          "CRC (win32/Makefile's APPLY_ASMCRC default: the inline assembly "
+          "in win32/crc_i386.c, -DASM_CRC). x86 only. unzip does not use "
+          "zlib.",
+)
