@@ -33,14 +33,20 @@ def _run(command: list[str], root: Path) -> None:
 
 def build(args: argparse.Namespace) -> Path:
     root = Path.cwd()
+    # --root is where the Equi-X tree (src/, include/, hashx/) sits: Tor
+    # vendors it as src/ext/equix, upstream tevador/equix is that tree itself.
+    prefix = args.root.rstrip("/")
+    sources = [s.replace("src/ext/equix", prefix, 1).lstrip("./")
+               if prefix != "." else s[len("src/ext/equix/"):] for s in SOURCES]
     build_dir = root / "build_equix"
     object_dir = build_dir / ("obj-%s" % args.arch)
     object_dir.mkdir(parents=True, exist_ok=True)
-    include_dirs = [root / "src/ext/equix/hashx/include",
-                    root / "src/ext/equix/hashx/src",
-                    root / "src/ext/equix/include",
-                    root / "src/ext/equix/src"]
-    for source in SOURCES:
+    base = root / prefix
+    include_dirs = [base / "hashx/include",
+                    base / "hashx/src",
+                    base / "include",
+                    base / "src"]
+    for source in sources:
         if not (root / source).is_file():
             raise FileNotFoundError(root / source)
 
@@ -63,7 +69,7 @@ def build(args: argparse.Namespace) -> Path:
             "#endif\n",
             encoding="ascii",
         )
-        for index, source_name in enumerate(SOURCES):
+        for index, source_name in enumerate(sources):
             source = root / source_name
             obj = object_dir / ("%02d-%s.obj" % (index, source.stem))
             compiler_pdb = object_dir / ("%02d-%s.pdb" % (index, source.stem))
@@ -90,7 +96,7 @@ def build(args: argparse.Namespace) -> Path:
 
     compiler = shlex.split(args.cc)
     bitness = ["-m%d" % args.bitness] if args.flavor == "linux" else []
-    for index, source_name in enumerate(SOURCES):
+    for index, source_name in enumerate(sources):
         source = root / source_name
         obj = object_dir / ("%02d-%s.o" % (index, source.stem))
         command = (compiler + bitness + ["-O2", "-g", "-fPIC", "-std=gnu11"] +
@@ -113,6 +119,9 @@ def main() -> None:
     parser.add_argument("--arch", choices=("x86", "x64"), required=True)
     parser.add_argument("--bitness", type=int, choices=(32, 64), required=True)
     parser.add_argument("--cc", required=True)
+    parser.add_argument("--root", default="src/ext/equix",
+                        help="the Equi-X tree: src/ext/equix in a Tor tree "
+                             "(default), . for tevador/equix")
     args = parser.parse_args()
     result = build(args)
     print("built %s" % result.relative_to(Path.cwd()), flush=True)

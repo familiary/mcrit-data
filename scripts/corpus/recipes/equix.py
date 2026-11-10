@@ -91,3 +91,44 @@ RECIPES = {
     "EquiX_tor-0.4.8.25_msvc": _recipe(
         "msvc", ["msvc_x86", "msvc_x64"]),
 }
+
+
+# The final sweep: the pins of the tracker issue (r0ny123/mcrit-data#49).
+#
+# * tevador/equix with its HashX submodule at bba97f9: upstream's own tree,
+#   at fb00f156a6020675f2fbc43fb108261df8ff6a47 (the newest commit, "deprecation
+#   note"; every commit from c0b0d2b on carries hashx bba97f9cbfee). Upstream's
+#   CMakeLists.txt also builds with HASHX_SIZE=8, so the defines are the
+#   same; the code is not: 28 of the .c/.h files differ from Tor's vendored
+#   copy (equix.c's solution check, for one, uses & where Tor uses &&).
+# * Tor commit 8dbbbe6e86a6ca0d058ec3c6a4e937859857d7bb (main, 2026-10-07,
+#   0.5.0.0-alpha-dev): its src/ext/equix C and header files are byte for
+#   byte the ones of tor-0.4.8.25 (checked with cmp; the git tree only adds
+#   CMake/Cargo files, tests and benchmarks), so a build of it would be the
+#   images above again. It is recorded, not built.
+_TEVADOR_REF = "fb00f156a6020675f2fbc43fb108261df8ff6a47"
+
+
+def _tevador(flavor, toolchains):
+    recipe = _recipe(flavor, toolchains)
+    recipe.version = "tevador-fb00f15"
+    recipe.source = Source(git_url="https://github.com/tevador/equix.git",
+                           git_ref=_TEVADOR_REF)
+    recipe.build = [BuildStep(recipe.build[0].command + " --root .")]
+    recipe.notes = ("Compiled from upstream tevador/equix at fb00f156 with the "
+                    "HashX submodule at bba97f9 (the pins of the tracker "
+                    "issue), the same 14 translation units and HASHX_SIZE=8 as "
+                    "upstream's CMakeLists.txt and Tor use; upstream source is "
+                    "unchanged."
+                    + (" MSVC's intrinsics header is force-included with "
+                       "corrected architecture-test macros for program_exec.c."
+                       if flavor == "msvc" else ""))
+    return recipe
+
+
+RECIPES.update({
+    "EquiX_tevador-fb00f15_linux": _tevador("linux", ["linux_x86", "linux_x64"]),
+    "EquiX_tevador-fb00f15_mingw": _tevador("mingw", ["mingw_x86", "mingw_x64"]),
+    "EquiX_tevador-fb00f15_msvc": _tevador("msvc", ["msvc_x86", "msvc_x64"]),
+})
+
