@@ -135,9 +135,33 @@ def _resolve(index, family, slug, entry):
         wanted = _toolchain_of(slug, family, version)
         if any(a.is_blob for _, recipe in candidates for a in recipe.artifacts):
             wanted = None
+        # A harvested prebuilt can carry the same producer alias as a
+        # source-build recipe of the family (msvc142 vs msvc_x64), so the
+        # recipes that declare the entry's component come first.
+        entry_component = entry.get("component", "")
+        declaring = [(name, recipe) for name, recipe in candidates
+                     if any(a.component == entry_component
+                            for a in recipe.artifacts)]
+        if declaring:
+            candidates = declaring
         narrowed = [(name, recipe) for name, recipe in candidates
                     if wanted in {canonical_alias(t)
                                   for t in recipe.toolchains}]
+        if len(narrowed) != 1:
+            # A harvested prebuilt's producer is the upstream compiler
+            # (msvc142, go1.26.6), which names no toolchain alias, or names
+            # the alias of a sibling source-build recipe. The artefact's own
+            # component and the architecture in the slug still identify a
+            # recipe whose toolchain list is a single architecture.
+            component = entry.get("component", "")
+            arch = re.search(r"_(x86|x64)_", slug[len(family) + len(version or "") + 2:] + "_")
+            by_component = [
+                (name, recipe) for name, recipe in candidates
+                if any(a.component == component for a in recipe.artifacts)
+                and arch and all(canonical_alias(t).endswith("_" + arch.group(1))
+                                 for t in recipe.toolchains)]
+            if len(by_component) == 1:
+                narrowed = by_component
         if len(narrowed) == 1:
             candidates = narrowed
         else:

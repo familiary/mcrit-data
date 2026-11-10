@@ -54,6 +54,7 @@ Libraries
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [libstdc++](#libstdcxx)
+* [MuPDF / SumatraPDF](#mupdf)
 
 Runtimes
 * [Lua](#lua)
@@ -673,6 +674,19 @@ Generated with `scripts/build_corpus.py`; see `data/libstdc++/provenance.json` f
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libstdc++ | 13.2-mingw-w64 | MinGW-w64 GCC 13 | [x86 PE](data/libstdc++/x86/mcrit/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.mcrit) | [x86 PE](data/libstdc++/x86/smda/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.7z) |
+<!-- /generated -->
+
+### MuPDF / SumatraPDF<a id='mupdf'></a>
+
+SumatraPDF 3.3.3's unmodified `libmupdf.dll`, built with MSVC for x86 and x64. The DLL includes MuPDF and its bundled font, codec and archive libraries. Accepting that vendoring depth remains the maintainer decision recorded in tracker issue #67; the recipe records measured overlap with existing zlib, bzip2 and LZMA data. The threat report establishes the DLL/version structurally and does not identify modified upstream functions.
+
+The same version as upstream ships it: the `libmupdf.dll` inside the SumatraPDF 3.3.3 installers, filed beside the source build as the unmodified reference for the *modified* `libmupdf.dll` of issue #67 (UNC2970 BURNBOOK; the issue gives that DLL's MD5 as `57e8a7ef21e7586d008d4116d70062a6`). **The modification itself is not reproduced**: no image here is that DLL, which functions it touched is unknown, and the shipped DLLs' MD5s differ from it (x64 `ece8e9908233891c003d6ed498852541`, x86 `e1d7de37980056757b630db08d0f6e7c`). Harvested from `SumatraPDF-3.3.3-64-install.exe` (sha256 `cb1d73323d3d...b58a`) and `SumatraPDF-3.3.3-install.exe` (sha256 `e4801235defd...5180b`) at `files.sumatrapdfreader.org/software/sumatrapdf/rel/3.3.3/`; the DLL is the installer's appended LzSA payload (x86 BCJ + LZMA1), decoded by `scripts/corpus/extract_lzsa.py` with each file checked against its stored CRC-32, nothing executed. The portable 3.3.3 executables link MuPDF into SumatraPDF.exe, so the installers are where the DLL exists. Compiled with MSVC v142 (PE linker 14.29, Rich build 30132, VS2019 16.10); its PDB is not published, so only the 816 exported functions are named. Kept + removed = total (verified against `provenance.json`): x64 8,547 + 0 = 8,547; x86 9,230 + 0 = 9,230; none excluded. PicHash overlap (10+ instructions) with the v143 source build: x64 2,021, x86 3,791; between the two shipped DLLs 2.
+
+<!-- generated: MuPDF -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| MuPDF | SumatraPDF-3.3.3 | MSVC v142 (Visual Studio 2019), as distributed upstream | [x86 PE](data/MuPDF/x86/mcrit/MuPDF_SumatraPDF-3.3.3_msvc142_x86_libmupdf_bin.mcrit) / [x64 PE](data/MuPDF/x64/mcrit/MuPDF_SumatraPDF-3.3.3_msvc142_x64_libmupdf_bin.mcrit) | [x86 PE](data/MuPDF/x86/smda/MuPDF_SumatraPDF-3.3.3_msvc142_x86_libmupdf_bin.7z) / [x64 PE](data/MuPDF/x64/smda/MuPDF_SumatraPDF-3.3.3_msvc142_x64_libmupdf_bin.7z) |
+| MuPDF | SumatraPDF-3.3.3 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/MuPDF/x86/mcrit/MuPDF_SumatraPDF-3.3.3_msvc143_x86_libmupdf.mcrit) / [x64 PE](data/MuPDF/x64/mcrit/MuPDF_SumatraPDF-3.3.3_msvc143_x64_libmupdf.mcrit) | [x86 PE](data/MuPDF/x86/smda/MuPDF_SumatraPDF-3.3.3_msvc143_x86_libmupdf.7z) / [x64 PE](data/MuPDF/x64/smda/MuPDF_SumatraPDF-3.3.3_msvc143_x64_libmupdf.7z) |
 <!-- /generated -->
 
 ## Runtimes
