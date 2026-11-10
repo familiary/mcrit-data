@@ -180,3 +180,75 @@ RECIPES = {
                     "src/opt.c (Makefile default)",
     ),
 }
+
+
+# --- The two builds the first revision measured and left out, as separate
+# versions so the committed images are unchanged.
+#
+# ref.c instead of opt.c: OPTTARGET=none, for which the Makefile's own
+# OPTTEST (does src/opt.c compile with -march=$(OPTTARGET)?) fails, so it
+# selects src/ref.c and adds no -march: upstream's portable
+# reference fill (54 of 56 x86 and 51 of 53 x64 hashes of ten instructions
+# or more shared with the opt.c image; fill_block and fill_segment differ).
+RECIPES["argon2_20190702-ref"] = Recipe(
+    family="argon2",
+    version="20190702-ref",
+    upstream="https://github.com/P-H-C/phc-winner-argon2",
+    license="CC0-1.0 OR Apache-2.0",
+    source=Source(git_url="https://github.com/P-H-C/phc-winner-argon2.git",
+                  git_ref="20190702"),
+    build=[BuildStep("rm -f libargon2.dll src/*.o src/blake2/*.o",
+                     allow_failure=True),
+           BuildStep(_MAKE.replace("{opttarget}", "none"))],
+    artifacts=[Artifact(path="libargon2.dll", component="libargon2.dll")],
+    toolchains=["mingw_x86", "mingw_x64"],
+    build_flags="-O3 -std=c89 -g, src/ref.c (OPTTARGET=none: the Makefile's opt.c test fails and it selects ref.c, no -march)",
+    notes="Reference Argon2 at the same tag, built with "
+          "OPTTARGET=none, for which the Makefile's own opt.c test fails, "
+          "so it compiles the portable src/ref.c fill instead of the SSE2 "
+          "src/opt.c and passes no -march. Nothing patched.",
+)
+
+# RandomX's vendored Argon2d subset: tevador/RandomX at 6fe0e39
+# (v2.0.1-23-g6fe0e39) carries src/argon2_core.c, argon2_ref.c,
+# argon2_ssse3.c, argon2_avx2.c and blake2/blake2b.c, derived from this
+# reference with the public names prefixed randomx_. The five files are
+# self-contained (they link into a DLL with no unresolved symbol) and are
+# compiled here exactly, with RandomX's CMake flags for them: -O3 (Release
+# in this corpus's convention) with -mssse3 on argon2_ssse3.c and -mavx2 on
+# argon2_avx2.c, and the SSE2 baselines of the reference build (x86-64,
+# pentium4). Filed under argon2 because it is Argon2's code, as RandomX
+# carries it; nothing patched.
+_RX_COMMIT = "6fe0e390acc28a50bfe7f59603c2a6effae4a7cd"
+_RX_BUILD = (
+    "if [ {bitness} = 64 ]; then M=x86-64; else M=pentium4; fi; "
+    "{cc} -O3 -march=$M -c src/argon2_core.c src/argon2_ref.c "
+    "src/blake2/blake2b.c && "
+    "{cc} -O3 -march=$M -mssse3 -c src/argon2_ssse3.c && "
+    "{cc} -O3 -march=$M -mavx2 -c src/argon2_avx2.c && "
+    "{cc} -shared -o randomx-argon2.dll argon2_core.o argon2_ref.o "
+    "blake2b.o argon2_ssse3.o argon2_avx2.o")
+RECIPES["argon2_randomx-6fe0e39"] = Recipe(
+    family="argon2",
+    version="randomx-6fe0e39",
+    upstream="https://github.com/tevador/RandomX",
+    license="BSD-3-Clause (RandomX); the Argon2 code is CC0-1.0 OR "
+            "Apache-2.0 upstream",
+    source=Source(git_url="https://github.com/tevador/RandomX.git",
+                  git_ref=_RX_COMMIT),
+    build=[BuildStep(_RX_BUILD)],
+    artifacts=[Artifact(path="randomx-argon2.dll",
+                        component="randomx-argon2.dll")],
+    toolchains=["mingw_x86", "mingw_x64"],
+    build_flags="-O3 -march=x86-64 (x64) / -march=pentium4 (x86); -mssse3 "
+                "on argon2_ssse3.c, -mavx2 on argon2_avx2.c; the five Argon2 "
+                "files of RandomX linked into one DLL",
+    notes="The Argon2d subset tevador/RandomX vendors (commit 6fe0e39, "
+          "v2.0.1-23-g6fe0e39): src/argon2_core.c, argon2_ref.c, "
+          "argon2_ssse3.c, argon2_avx2.c and blake2/blake2b.c, public names "
+          "prefixed randomx_ (randomx_argon2_fill_segment_ref/ssse3/avx2, "
+          "randomx_blake2b_*), compiled with RandomX's per-file SIMD flags "
+          "and linked into one DLL; the five files need nothing else from "
+          "RandomX. Filed under argon2 as Argon2's code in the form RandomX "
+          "and XMRig carry it. Nothing patched.",
+)
