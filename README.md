@@ -32,6 +32,8 @@ Libraries
 * [cJSON](#cjson)
 * [libcurl](#libcurl)
 * [libevent](#libevent)
+* [libgcrypt](#libgcrypt)
+* [libgpg-error](#libgpg-error)
 * [liblzma](#liblzma)
 * [libsodium](#libsodium)
 * [libtomcrypt](#libtomcrypt)
@@ -351,6 +353,37 @@ Generated with `scripts/build_corpus.py`; see `data/libevent/provenance.json` fo
 | libevent | 2.1.12 | MinGW-w64 GCC 13 | [x86 PE](data/libevent/x86/mcrit/libevent_2.1.12_mingw13_x86_libevent_extra.dll.mcrit) / [x64 PE](data/libevent/x64/mcrit/libevent_2.1.12_mingw13_x64_libevent_extra.dll.mcrit) | [x86 PE](data/libevent/x86/smda/libevent_2.1.12_mingw13_x86_libevent_extra.dll.7z) / [x64 PE](data/libevent/x64/smda/libevent_2.1.12_mingw13_x64_libevent_extra.dll.7z) |
 | libevent | 2.1.12 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libevent/x86/mcrit/libevent_2.1.12_msvc143_x86_event_core.dll.mcrit) / [x64 PE](data/libevent/x64/mcrit/libevent_2.1.12_msvc143_x64_event_core.dll.mcrit) | [x86 PE](data/libevent/x86/smda/libevent_2.1.12_msvc143_x86_event_core.dll.7z) / [x64 PE](data/libevent/x64/smda/libevent_2.1.12_msvc143_x64_event_core.dll.7z) |
 | libevent | 2.1.12 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/libevent/x86/mcrit/libevent_2.1.12_msvc143_x86_event_extra.dll.mcrit) / [x64 PE](data/libevent/x64/mcrit/libevent_2.1.12_msvc143_x64_event_extra.dll.mcrit) | [x86 PE](data/libevent/x86/smda/libevent_2.1.12_msvc143_x86_event_extra.dll.7z) / [x64 PE](data/libevent/x64/smda/libevent_2.1.12_msvc143_x64_event_extra.dll.7z) |
+<!-- /generated -->
+
+### libgcrypt<a id='libgcrypt'></a>
+
+libgcrypt is the crypto library of GnuPG 2.x, shipped as libgcrypt-20.dll by Gpg4win and as libgcrypt.so.20 by Linux distributions. Three versions: 1.8.14 (older line), 1.10.4 (long-term-support line) and 1.11.3 (current). Each is built as a shared library for MinGW-w64 and for Linux (ELF, glibc), x86 and x64, with upstream's assembler modules on, and links the paired libgpg-error rather than containing it. No MSVC build: upstream is autotools-only and cl does not complete it, see `scripts/corpus/README.md`.  
+Generated with `scripts/build_corpus.py`; see `data/libgcrypt/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: libgcrypt -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| libgcrypt | 1.8.14 | GCC 13 (Linux, glibc) | [x86 ELF](data/libgcrypt/x86/mcrit/libgcrypt_1.8.14_gcc13_x86_libgcrypt.so.mcrit) / [x64 ELF](data/libgcrypt/x64/mcrit/libgcrypt_1.8.14_gcc13_x64_libgcrypt.so.mcrit) | [x86 ELF](data/libgcrypt/x86/smda/libgcrypt_1.8.14_gcc13_x86_libgcrypt.so.7z) / [x64 ELF](data/libgcrypt/x64/smda/libgcrypt_1.8.14_gcc13_x64_libgcrypt.so.7z) |
+| libgcrypt | 1.8.14 | MinGW-w64 GCC 13 | [x86 PE](data/libgcrypt/x86/mcrit/libgcrypt_1.8.14_mingw13_x86_libgcrypt-20.dll.mcrit) / [x64 PE](data/libgcrypt/x64/mcrit/libgcrypt_1.8.14_mingw13_x64_libgcrypt-20.dll.mcrit) | [x86 PE](data/libgcrypt/x86/smda/libgcrypt_1.8.14_mingw13_x86_libgcrypt-20.dll.7z) / [x64 PE](data/libgcrypt/x64/smda/libgcrypt_1.8.14_mingw13_x64_libgcrypt-20.dll.7z) |
+| libgcrypt | 1.10.4 | GCC 13 (Linux, glibc) | [x86 ELF](data/libgcrypt/x86/mcrit/libgcrypt_1.10.4_gcc13_x86_libgcrypt.so.mcrit) / [x64 ELF](data/libgcrypt/x64/mcrit/libgcrypt_1.10.4_gcc13_x64_libgcrypt.so.mcrit) | [x86 ELF](data/libgcrypt/x86/smda/libgcrypt_1.10.4_gcc13_x86_libgcrypt.so.7z) / [x64 ELF](data/libgcrypt/x64/smda/libgcrypt_1.10.4_gcc13_x64_libgcrypt.so.7z) |
+| libgcrypt | 1.10.4 | MinGW-w64 GCC 13 | [x86 PE](data/libgcrypt/x86/mcrit/libgcrypt_1.10.4_mingw13_x86_libgcrypt-20.dll.mcrit) / [x64 PE](data/libgcrypt/x64/mcrit/libgcrypt_1.10.4_mingw13_x64_libgcrypt-20.dll.mcrit) | [x86 PE](data/libgcrypt/x86/smda/libgcrypt_1.10.4_mingw13_x86_libgcrypt-20.dll.7z) / [x64 PE](data/libgcrypt/x64/smda/libgcrypt_1.10.4_mingw13_x64_libgcrypt-20.dll.7z) |
+| libgcrypt | 1.11.3 | GCC 13 (Linux, glibc) | [x86 ELF](data/libgcrypt/x86/mcrit/libgcrypt_1.11.3_gcc13_x86_libgcrypt.so.mcrit) / [x64 ELF](data/libgcrypt/x64/mcrit/libgcrypt_1.11.3_gcc13_x64_libgcrypt.so.mcrit) | [x86 ELF](data/libgcrypt/x86/smda/libgcrypt_1.11.3_gcc13_x86_libgcrypt.so.7z) / [x64 ELF](data/libgcrypt/x64/smda/libgcrypt_1.11.3_gcc13_x64_libgcrypt.so.7z) |
+| libgcrypt | 1.11.3 | MinGW-w64 GCC 13 | [x86 PE](data/libgcrypt/x86/mcrit/libgcrypt_1.11.3_mingw13_x86_libgcrypt-20.dll.mcrit) / [x64 PE](data/libgcrypt/x64/mcrit/libgcrypt_1.11.3_mingw13_x64_libgcrypt-20.dll.mcrit) | [x86 PE](data/libgcrypt/x86/smda/libgcrypt_1.11.3_mingw13_x86_libgcrypt-20.dll.7z) / [x64 PE](data/libgcrypt/x64/smda/libgcrypt_1.11.3_mingw13_x64_libgcrypt-20.dll.7z) |
+<!-- /generated -->
+
+### libgpg-error<a id='libgpg-error'></a>
+
+libgpg-error provides the GnuPG error codes and the gpgrt runtime, and is imported by libgcrypt, GnuPG, libassuan and gpgme. Two versions, 1.35 and 1.61, shared library for MinGW-w64 and Linux (ELF, glibc), x86 and x64. The libgcrypt family links these builds of it.  
+Generated with `scripts/build_corpus.py`; see `data/libgpg-error/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: libgpg-error -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| libgpg-error | 1.35 | GCC 13 (Linux, glibc) | [x86 ELF](data/libgpg-error/x86/mcrit/libgpg-error_1.35_gcc13_x86_libgpg-error.so.mcrit) / [x64 ELF](data/libgpg-error/x64/mcrit/libgpg-error_1.35_gcc13_x64_libgpg-error.so.mcrit) | [x86 ELF](data/libgpg-error/x86/smda/libgpg-error_1.35_gcc13_x86_libgpg-error.so.7z) / [x64 ELF](data/libgpg-error/x64/smda/libgpg-error_1.35_gcc13_x64_libgpg-error.so.7z) |
+| libgpg-error | 1.35 | MinGW-w64 GCC 13 | [x86 PE](data/libgpg-error/x86/mcrit/libgpg-error_1.35_mingw13_x86_libgpg-error-0.dll.mcrit) / [x64 PE](data/libgpg-error/x64/mcrit/libgpg-error_1.35_mingw13_x64_libgpg-error-0.dll.mcrit) | [x86 PE](data/libgpg-error/x86/smda/libgpg-error_1.35_mingw13_x86_libgpg-error-0.dll.7z) / [x64 PE](data/libgpg-error/x64/smda/libgpg-error_1.35_mingw13_x64_libgpg-error-0.dll.7z) |
+| libgpg-error | 1.47 | MinGW-w64 GCC 13 | [x86 PE](data/libgpg-error/x86/mcrit/libgpg-error_1.47_mingw13_x86_libgpg-error-0.dll.mcrit) / [x64 PE](data/libgpg-error/x64/mcrit/libgpg-error_1.47_mingw13_x64_libgpg-error-0.dll.mcrit) | [x86 PE](data/libgpg-error/x86/smda/libgpg-error_1.47_mingw13_x86_libgpg-error-0.dll.7z) / [x64 PE](data/libgpg-error/x64/smda/libgpg-error_1.47_mingw13_x64_libgpg-error-0.dll.7z) |
+| libgpg-error | 1.61 | GCC 13 (Linux, glibc) | [x86 ELF](data/libgpg-error/x86/mcrit/libgpg-error_1.61_gcc13_x86_libgpg-error.so.mcrit) / [x64 ELF](data/libgpg-error/x64/mcrit/libgpg-error_1.61_gcc13_x64_libgpg-error.so.mcrit) | [x86 ELF](data/libgpg-error/x86/smda/libgpg-error_1.61_gcc13_x86_libgpg-error.so.7z) / [x64 ELF](data/libgpg-error/x64/smda/libgpg-error_1.61_gcc13_x64_libgpg-error.so.7z) |
+| libgpg-error | 1.61 | MinGW-w64 GCC 13 | [x86 PE](data/libgpg-error/x86/mcrit/libgpg-error_1.61_mingw13_x86_libgpg-error-0.dll.mcrit) / [x64 PE](data/libgpg-error/x64/mcrit/libgpg-error_1.61_mingw13_x64_libgpg-error-0.dll.mcrit) | [x86 PE](data/libgpg-error/x86/smda/libgpg-error_1.61_mingw13_x86_libgpg-error-0.dll.7z) / [x64 PE](data/libgpg-error/x64/smda/libgpg-error_1.61_mingw13_x64_libgpg-error-0.dll.7z) |
 <!-- /generated -->
 
 ### liblzma<a id='liblzma'></a>
