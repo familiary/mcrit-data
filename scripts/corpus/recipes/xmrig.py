@@ -388,6 +388,16 @@ _NOTES_STOCK = (
 )
 
 
+# The vendored ghostrider archive calls hwloc_bitmap_* and comes after the
+# hwloc import library on CMake's link line, which GNU ld resolves left to
+# right ("undefined reference to `hwloc_bitmap_isset'"), so the import library
+# is repeated at the end through the link wrapper, as libuv's already is.
+_STOCK_WRAPPER_ENV = dict(
+    deps.MINGW_WRAPPER_ENV,
+    XM_LINK_EXTRA=deps.MINGW_WRAPPER_ENV["XM_LINK_EXTRA"]
+    + " {source_root}/deps-{arch}/hwloc/hwloc/.libs/libhwloc.dll.a")
+
+
 def _mingw_stock():
     recipe = _mingw()
     import dataclasses
@@ -404,9 +414,9 @@ def _mingw_stock():
                 "-DCMAKE_FIND_ROOT_PATH=/usr/{host} "
                 + _CONFIG_STOCK + " " + deps.mingw_dep_options() + " "
                 + deps.mingw_hwloc_options() + " " + deps.MINGW_SHIM_FLAGS,
-                env=dict(deps.MINGW_WRAPPER_ENV, CFLAGS="", CXXFLAGS="")),
+                env=dict(_STOCK_WRAPPER_ENV, CFLAGS="", CXXFLAGS="")),
             BuildStep("cmake --build build-{arch} -j$(nproc)",
-                      env=dict(deps.MINGW_WRAPPER_ENV)),
+                      env=dict(_STOCK_WRAPPER_ENV)),
         ]),
         build_flags=recipe.build_flags + "; WITH_HWLOC=ON WITH_OPENCL=ON "
                     "WITH_CUDA=ON (stock), hwloc 2.12.1 DLL",
