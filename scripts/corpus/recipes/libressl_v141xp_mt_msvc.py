@@ -28,6 +28,31 @@ _DROP_SLEEP = (
     "print('posix_win.c after',hashlib.sha256(n).hexdigest(),len(n))"
     '"' % _POSIX_WIN_SHA256)
 
+_CRYPTO_CMAKE_SHA256 = "2655c6b64e263ee2f975dbc5b87a154d65c67fd3a7011c4ea7b4c20ae4fb8fd9"
+
+# The export that goes with it. crypto/CMakeLists.txt appends sleep to the
+# list the DLL's .def file is written from (EXTRA_EXPORT), so with the
+# function gone the link stops at "crypto_p.def : error LNK2001: unresolved
+# external symbol sleep" (run 42767147671). The static library the issue
+# describes has no .def file; this line only matters because the image here
+# is a DLL.
+_DROP_SLEEP_EXPORT = (
+    'python -c "'
+    "import hashlib;"
+    "p='crypto/CMakeLists.txt';"
+    "b=open(p,'rb').read();"
+    "h=hashlib.sha256(b).hexdigest();"
+    "print('crypto/CMakeLists.txt before',h,len(b));"
+    "assert h=='%s',h;"
+    "l=b.split(b'\\n');"
+    "d=[x for x in l if x.rstrip().endswith(b' sleep)')];"
+    "print('removing',d);"
+    "assert len(d)==1 and b'EXTRA_EXPORT' in d[0],d;"
+    "n=b'\\n'.join(x for x in l if x is not d[0]);"
+    "open(p,'wb').write(n);"
+    "print('crypto/CMakeLists.txt after',hashlib.sha256(n).hexdigest(),len(n))"
+    '"' % _CRYPTO_CMAKE_SHA256)
+
 _COMMON = ('-T v141_xp -DCMAKE_GENERATOR_INSTANCE=C:/BT/vs15 '
            '-DBUILD_SHARED_LIBS=ON -DLIBRESSL_APPS=OFF -DLIBRESSL_TESTS=OFF '
            '-DLIBRESSL_SKIP_INSTALL=ON -DENABLE_ASM=ON '
@@ -53,6 +78,7 @@ RECIPES = {
         build=[
             BuildStep(_CHECK),
             BuildStep(_DROP_SLEEP),
+            BuildStep(_DROP_SLEEP_EXPORT),
             BuildStep('if "{arch}"=="x64" ' + _CMAKE_X64),
             BuildStep('if "{arch}"=="x86" ' + _CMAKE_X86),
             BuildStep("cmake --build build-{arch} --config Release "
