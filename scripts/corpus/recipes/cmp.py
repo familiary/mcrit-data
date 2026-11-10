@@ -150,66 +150,21 @@ RECIPES = {
 }
 
 
-# --- cmp as c-toxcore's own build compiles it (the gap cmp-O3.dll left
-# open: that DLL reproduces the flags by hand). c-toxcore v0.2.24
-# (third_party/cmp = TokTok/cmp 52bfcfa) is configured and built with its
-# own CMake Release exactly as the c-toxcore family's recipe on
-# claude/corpus-toxcore does (libsodium 1.0.20 from the pinned tarball,
-# toxav, DHT_bootstrap, tox-bootstrapd and the tests off, shared library
-# only), and the object that build compiled from cmp.c,
-# CMakeFiles/toxcore_shared.dir/third_party/cmp/cmp.c.obj, is linked on its
-# own into cmp.dll: the same split that recipe makes so that libtoxcore.dll
-# imports cmp instead of carrying it under the c-toxcore name. So the code is
-# byte for byte the object c-toxcore links, with every compile option its
-# CMake gives the toxcore_shared target; only the position in the image
-# differs from libtoxcore.dll. Keeping cmp's functions inside libtoxcore.dll
-# itself would need Recipe.exclude_functions to set c-toxcore's own code
-# aside, which this branch's pipeline does not have.
-_SODIUM = Source(
-    url="https://download.libsodium.org/libsodium/releases/libsodium-1.0.20.tar.gz",
-    sha256="ebb65ef6ca439333c2bb41a0c1990587288da07f6c7fd07cb3a18cc18d30ce19")
-_SODIUM_BUILD = ("mkdir -p sodium-src-{arch} && tar xf {libsodium_src} -C "
-                 "sodium-src-{arch} --strip-components=1 && cd sodium-src-{arch} "
-                 "&& ./configure --host={host} --prefix=$PWD/../sodium-{arch} "
-                 "--enable-shared --disable-static && make -j$(nproc) && "
-                 "make install")
-_TOX_CMAKE = ("PKG_CONFIG_PATH=$PWD/sodium-{arch}/lib/pkgconfig cmake -S . "
-              "-B build-{arch} -DCMAKE_SYSTEM_NAME=Windows "
-              "-DCMAKE_C_COMPILER={cc} -DCMAKE_CXX_COMPILER={cxx} "
-              "-DCMAKE_RC_COMPILER={windres} -DCMAKE_FIND_ROOT_PATH=/usr/{host} "
-              "-DCMAKE_BUILD_TYPE=Release -DBUILD_TOXAV=OFF -DENABLE_STATIC=OFF "
-              "-DENABLE_SHARED=ON -DUNITTEST=OFF -DAUTOTEST=OFF "
-              "-DDHT_BOOTSTRAP=OFF -DBOOTSTRAP_DAEMON=OFF -DBUILD_MISC_TESTS=OFF "
-              "-DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_VERBOSE_MAKEFILE=ON")
-_TOX_CMP = ("cd build-{arch} && {cc} -shared -o cmp.dll "
-            "CMakeFiles/toxcore_shared.dir/third_party/cmp/cmp.c.obj")
-
-RECIPES["cmp_toktok_52bfcfa-toxcore"] = Recipe(
-    family="cmp",
-    version="toktok-52bfcfa-toxcore-0.2.24",
-    upstream="https://github.com/TokTok/cmp",
-    license="MIT (cmp, built from c-toxcore's submodule; c-toxcore itself "
-            "is GPL-3.0-or-later and none of its code is in the image)",
-    source=Source(git_url="https://github.com/TokTok/c-toxcore.git",
-                  git_ref="v0.2.24"),
-    extra_sources={"libsodium_src": _SODIUM},
-    build=[BuildStep(_SODIUM_BUILD), BuildStep(_TOX_CMAKE),
-           BuildStep("cmake --build build-{arch} -j$(nproc) "
-                     "--target toxcore_shared"),
-           BuildStep(_TOX_CMP),
-           BuildStep("ls -l build-{arch}", allow_failure=True)],
-    artifacts=[Artifact(path="build-{arch}/cmp.dll", component="cmp.dll")],
-    toolchains=["mingw_x86", "mingw_x64"],
-    build_flags="cmp.c as compiled by c-toxcore v0.2.24's own CMake Release "
-                "for the toxcore_shared target (-O3 -DNDEBUG after the "
-                "toolchain's -O2, -std=c11, -DCMP_NO_FLOAT=1 and the target's "
-                "compile options), the object linked alone into cmp.dll",
-    notes="The cmp.c object c-toxcore v0.2.24's own CMake Release build "
-          "compiles from its third_party/cmp submodule (TokTok/cmp 52bfcfa) "
-          "for libtoxcore, linked on its own into a DLL, as the c-toxcore "
-          "family's recipe splits it out of libtoxcore.dll. No c-toxcore "
-          "code is in the image. Nothing patched.",
-)
+# --- cmp as c-toxcore's own build compiles it was built and measured and is
+# not a recipe: c-toxcore v0.2.24 configured and built with its own CMake
+# Release exactly as the c-toxcore family's recipe on claude/corpus-toxcore
+# does (libsodium 1.0.20 from the pinned tarball, toxav, DHT_bootstrap,
+# tox-bootstrapd and the tests off), and the object that build compiled from
+# third_party/cmp/cmp.c (CMakeFiles/toxcore_shared.dir/third_party/cmp/
+# cmp.c.obj) linked on its own into cmp.dll, the split that recipe makes.
+# The result is PicHash-identical, every function at every size, to the
+# committed cmp-O3.dll on both architectures (x86 165 + 49 = 214, x64 174 +
+# 50 = 224, the same counts), so c-toxcore's Release compile of cmp.c is
+# exactly what cmp-O3.dll already records and it would add nothing. Keeping
+# cmp's functions inside libtoxcore.dll itself, at their positions in that
+# image, would need Recipe.exclude_functions to set c-toxcore's own code
+# aside, which this branch's pipeline does not have; that image is the
+# c-toxcore family's, which links cmp separately.
 
 
 # The tags the first revision built only to measure and did not commit (v1,
