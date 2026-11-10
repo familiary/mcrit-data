@@ -368,7 +368,7 @@ make -k -j"$JOBS" -C lib CPPFLAGS="$CPPFLAGS -I$SHIM -FImsvc_shim.h" > make-lib.
 echo "=== make -C lib (exit $?)"; cat make-lib.log
 echo "=== lib errors:"; grep -nE "error C[0-9]+|fatal error|\*\*\*|Error [0-9]" make-lib.log | head -600
 ls -l lib/.libs | head -20
-test -f lib/.libs/libgnutls.a -o -f lib/.libs/libgnutls.lib || { echo "=== libgnutls static archive was not built"; exit 93; }
+test -f lib/.libs/gnutls.lib -o -f lib/.libs/libgnutls.a -o -f lib/.libs/libgnutls.lib || { echo "=== libgnutls static archive was not built"; exit 93; }
 echo "=== libgnutls static archive built"
 '''
 
@@ -406,8 +406,9 @@ def members(path):
 
 
 def link_dll(arch, prefix_lib):
-    found = glob.glob(os.path.join("build", "lib", ".libs", "libgnutls.a")) \
-        + glob.glob(os.path.join("build", "lib", ".libs", "libgnutls.lib"))
+    # libtool names a static library for cl without the "lib" prefix.
+    found = [path for name in ("gnutls.lib", "libgnutls.lib", "libgnutls.a")
+             for path in glob.glob(os.path.join("build", "lib", ".libs", name))]
     if not found:
         raise SystemExit("libtool left no libgnutls archive in build/lib/.libs")
     archive_path = os.path.abspath(found[0])
