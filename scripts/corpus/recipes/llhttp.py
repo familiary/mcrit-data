@@ -84,3 +84,11 @@ def _llhttp(version, git_ref):
 RECIPES = {
     "llhttp_9.3.0": _llhttp("9.3.0", "release/v9.3.0"),
 }
+
+# The neighbouring releases the first revision built only to measure and
+# deleted: 9.2.1 (34/41 x86 and 23/29 x64 hashes of ten instructions or more
+# shared with 9.3.0) and 9.4.3 (42/44 and 28/30). 9.3.1 is not added: it
+# shares 44/44 and 30/30 with 9.3.0, and an image PicHash-identical to one
+# already committed adds nothing.
+RECIPES["llhttp_9.2.1"] = _llhttp("9.2.1", "release/v9.2.1")
+RECIPES["llhttp_9.4.3"] = _llhttp("9.4.3", "release/v9.4.3")
