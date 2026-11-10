@@ -91,10 +91,35 @@ __report_, __castguard_ or DllMain name survives in any of the twelve new
 images); as in the 0.4.9.2 artefacts every kept function is an exported pb_*
 routine or a nanopb static.
 
-Limitation, as in nanopb.py: the option set is not varied and embedded code
-is often built size-optimised (-Os / /O1 /Os), which changes the code far
-more than any of the PB_* options, so a real nanopb sample is more likely to
-match by MinHash than by PicHash.
+The size-optimised build. Embedded code is often built for size, which
+changes the code far more than any of the PB_* options, so every version has
+a fifth DLL, ``protobuf-nanopb-O1.dll``: the default runtime (three files, no
+defines, no driver, the same fixed .def) compiled with /O1 in place of /O2,
+the cl counterpart of the MinGW recipe's -Os DLL (/O1 is cl's "minimise
+size" set, /Os among it). Counted on the runner (run 42770123676, windows-2022, cl
+19.44.35229, v143, one scoped dispatch, both jobs green), kept + removed =
+image total, x86 / x64, with the /O2 default beside it:
+
+              /O1                                 /O2
+  0.3.9.10    80 + 125 = 205 / 80 + 129 = 209     83 + 125 = 208 / 80 + 129 = 209
+  0.4.5       77 + 125 = 202 / 77 + 129 = 206     79 + 125 = 204 / 77 + 129 = 206
+  0.4.9.2     78 + 125 = 203 / 78 + 129 = 207     79 + 125 = 204 / 78 + 129 = 207
+
+The removed lists are the /O2 images' lists name for name. The x86 /O1 images
+are one to three functions smaller because the interior entry points the PDB
+labels in the /O2 build (decode_static_field$+0x1fd and the like) do not
+occur. No kept function is unnamed and none is MSVC glue. PicHash overlap,
+functions of 10+ instructions, x86 / x64, as shared of distinct /O1 and /O2
+hashes: 0.3.9.10 2 of 64 / 72 and 2 of 64 / 71; 0.4.5 3 of 67 / 69 and 3 of
+65 / 67; 0.4.9.2 3 of 65 / 68 and 5 of 63 / 67. Against the MinGW -Os DLL of
+the same version and arch the overlap is 0 in all six pairs (MinGW 41 to 55
+distinct hashes). That run rebuilt the /O2 artefacts as well; their kept and
+removed counts were unchanged and they are not re-imported.
+
+Limitation, as in nanopb.py: only the default configuration is built at /O1;
+the -all, -small and -big define sets are /O2 only and the option set is not
+varied further, so a size-optimised sample with other PB_* options is still
+more likely to match by MinHash than by PicHash.
 
 Read back from the runner (windows-2022, MSVC 19.44, v143), not assumed: the
 cl line the build log prints is the one in _COMPILE; link.exe took the .def
