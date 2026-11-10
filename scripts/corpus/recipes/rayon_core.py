@@ -74,6 +74,13 @@ in the container for ELF and MinGW, and the windows-2022 runner's
 instructions): MinGW x64 against MSVC x64 35 of 163/199, the two LLVM PE
 code generators; every other pair of the six artefacts shares none, x86
 against x64 included.
+
+**debug = true variant** (1.12.1-debug, runs 42776325676 and 42776329518):
+kept + glue + excluded = total, x86 / x64: ELF 190+3+976=1169 /
+192+6+814=1012, MinGW 303+75+3203=3581 / 227+65+2438=2730, MSVC
+840+176+3774=4790 / 661+168+2905=3734. Shared distinct PicHashes (10+
+instructions) with the release image: ELF 10 of 187 / 146 of 154, MinGW 208
+of 216 / 147 of 160, MSVC 191 of 363 / 190 of 381; none identical.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

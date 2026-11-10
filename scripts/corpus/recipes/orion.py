@@ -135,6 +135,34 @@ instructions; kept functions only):
     appear under orion and nothing in it repeats them.
 
 The same counts are in each recipe's notes.
+
+**debug = true and safe_api variants** (added later; ELF and MinGW on an
+ubuntu-24.04 runner, runs 42776325676 and 42788780021 on
+scratch/s4-orion-linux, MSVC on windows-2022, runs 42776329518 and
+42788785212 on scratch/s4-orion-msvc; every leg pins its rustc with rustup,
+1.97.0 for ELF and MinGW and 1.99.1 for MSVC):
+
+  * <v>-debug: every recipe above with CARGO_PROFILE_RELEASE_DEBUG=true (the
+    issue's "also build with debug = true"). Kept + glue + excluded = total,
+    x86 / x64: 0.17.11 ELF 177+3+86=266 / 176+6+86=268, MinGW 504+73+823=1400
+    / 390+63+685=1138, MSVC 499+129+886=1514 / 494+121+808=1423; 0.18.1 ELF
+    175+3+98=276 / 175+6+97=278, MinGW 606+73+875=1554 / 541+63+741=1345,
+    MSVC 612+130+933=1675 / 611+121+857=1589. None is PicHash-identical to
+    its release image: distinct PicHashes (10+ instructions) shared with the
+    release build, x86 / x64, 0.17.11 ELF 19 of 149 / 116 of 137, MinGW 307
+    of 335 / 217 of 271, MSVC 287 of 324 / 287 of 328; 0.18.1 ELF 21 of 161
+    / 114 of 143, MinGW 432 of 477 / 371 of 415, MSVC 402 of 467 / 378 of
+    462.
+  * <v>-safe_api: the high-level API (orion::aead with streaming, auth,
+    hash, kdf, pwhash, plus kex on 0.17 or kem, hpke and signer on 0.18) from
+    a std cdylib driver, orion's namespace kept, std and the rest excluded.
+    x86 / x64: 0.17.11 ELF 69+3+655=727 / 68+6+523=597, MinGW 607+75+2769=3451
+    / 472+66+2190=2728, MSVC 559+176+2924=3659 / 554+168+2395=3117; 0.18.1
+    ELF 158+3+659=820 / 150+6+539=695, MinGW 739+75+2839=3653 /
+    651+65+2262=2978, MSVC 683+175+3030=3888 / 675+167+2505=3347. Shared with
+    the no_std hazardous image of the same version and axis, x86 / x64:
+    0.17.11 ELF 9 / 38, MinGW 316 / 198, MSVC 279 / 283; 0.18.1 ELF 12 / 40,
+    MinGW 427 / 342, MSVC 376 / 352.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
