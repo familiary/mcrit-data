@@ -140,6 +140,14 @@ def _compiler_label(entry):
         # the same compiler. The target is named because that is the whole
         # difference between this row and a MinGW one.
         version = compiler.split()[-1].split(".")[0] if compiler else "?"
+        # musl.cc's banner is "x86_64-linux-musl-gcc (GCC) 11.2.1 20211120":
+        # the last field is a date, so the version is the one after "(GCC)",
+        # as for MinGW above. The row says static because that is the other
+        # half of the difference from the glibc one.
+        if "musl" in (entry.get("toolchain") or ""):
+            if "(GCC)" in compiler:
+                version = compiler.split("(GCC)")[-1].split()[0].split(".")[0]
+            return "GCC %s (Linux, musl, static)" % version
         return "GCC %s (Linux, glibc)" % version
     # cl.exe announces itself as "Microsoft (R) C/C++ Optimizing Compiler
     # Version 19.44.35228 for x64". Printing that verbatim would be wrong as

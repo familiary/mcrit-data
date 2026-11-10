@@ -50,6 +50,16 @@ on this side rather than static executables:
 Nothing of glibc itself is in either list, which answers the question a
 glibc probe set would have been for: there is no glibc body in a dynamically
 linked .so to measure or to remove.
+
+The musl toolchains are the exception to all of that, and the reason they have
+a block of their own: a static executable does carry libc, libgcc, libstdc++
+and libatomic. There the probes are static executables too - the two Linux
+usage probes, and a ``--whole-archive`` link of each archive, which holds every
+function the archive can contribute - the baseline is 6,955 names on x64 and
+7,096 on x86, every alias of a function is recorded, and a function also
+matches by name and opcode hash, because a 32-bit PIC function's PicHash
+follows the layout of the image. scripts/corpus/README.md, "The musl half",
+has the measurement.
 """
 
 import functools
@@ -883,6 +893,49 @@ int main(int argc, char **argv)
     return argc - argc;
 }
 """
+
+
+# musl, linked statically. The two usage probes are the Linux ones unchanged:
+# what a C and a C++ program that touches a broad runtime surface links in. They
+# are kept because they are the method the other baselines use, and they
+# measure the one thing a whole-archive link cannot - the header templates
+# the probe's own translation unit instantiates (21 on glibc x64).
+#
+# The whole-archive probes below are the point of this block. A static link
+# pulls archive members in on demand, so a usage probe finds only the members
+# the probe happened to call, and the next miner calls getaddrinfo, pthread
+# or the wide-character locale machinery that the probe did not. Linking an
+# archive with --whole-archive instead puts every member in the executable,
+# and its functions are then by construction every function that archive can
+# contribute to an image - the name and the PicHash each has in any program
+# that pulls it in, because an archive member is compiled once and its bytes
+# are the same wherever it lands (the PicHash does not read addresses). One
+# archive per executable, because libgcc.a and libgcc_eh.a on x86, and
+# libstdc++.a and libsupc++.a on both, define the same symbols and cannot be
+# whole-archived together. The sizes of the symbol tables are in the README.
+_PROBE_MUSL_WHOLE_C = """\
+int main(void)
+{
+    return 0;
+}
+"""
+
+_PROBE_MUSL_WHOLE_CXX = """\
+int main()
+{
+    return 0;
+}
+"""
+
+# One entry per archive: (compiler kind, label, link flags).
+_MUSL_WHOLE_ARCHIVES = (
+    ("cc", "libc", "-lc"),
+    ("cc", "libgcc", "-lgcc"),
+    ("cc", "libgcc_eh", "-lgcc_eh"),
+    ("cc", "libatomic", "-latomic"),
+    ("cxx", "libstdc++", "-lstdc++"),
+    ("cxx", "libsupc++", "-lsupc++"),
+)
 
 
 # MSVC only, and only because two families here need ATL. A DLL that merely
@@ -2881,7 +2934,53 @@ def _msvc_probes(toolchain):
 # in by crt_glue and read by probe_failures below. A dict rather than a return
 # value because crt_glue is lru_cached: the second caller gets the memoised
 # glue set and would otherwise see no failures at all.
+def _elf_alias_names(path):
+    """Every name an ELF image's symbol table gives each function address.
+
+    SMDA keeps one name per address, and which one it keeps is whichever the
+    symbol table lists last. musl spells dozens of libc functions twice
+    (``fgets`` and ``fgets_unlocked``, and the same across the stdio and
+    locale families), and the table's order follows the link, not the
+    archive: the same function is ``fgets_unlocked`` in a probe that links
+    every member and ``fgets`` in a program that pulls one. A glue filter that
+    matches on the one name SMDA happened to keep would then miss the same
+    bytes under the other. The baseline therefore records the function under
+    every alias, and is_glue still needs the PicHash to match as well.
+    """
+    import lief
+
+    from smda.common.labelprovider.ElfSymbolProvider import ElfSymbolProvider
+
+    lief.logging.disable()
+    binary = lief.parse(path)
+    aliases = {}
+    if binary is None:
+        return aliases
+    for table in (binary.symtab_symbols, binary.dynamic_symbols):
+        for symbol in table:
+            if (symbol is None or not symbol.is_function or not symbol.value
+                    or not ElfSymbolProvider._isDefinedSymbol(symbol)):
+                continue
+            name = ElfSymbolProvider._formatSymbolName(symbol)
+            if name:
+                aliases.setdefault(symbol.value, set()).add(name)
+    return aliases
+
+
 _PROBE_FAILURES = {}
+
+# musl only: name -> OpcHashes, measured beside the PicHashes by crt_glue. A
+# 32-bit position-independent function addresses its data through the GOT:
+# ``call __x86.get_pc_thunk.bx; add ebx, <delta>`` and ``lea eax, [ebx+<disp>]``,
+# and both numbers are distances inside the image that was linked, so the same
+# libstdc++ or libc function has a different PicHash in every static-pie
+# image. On the glibc side that left a handful of link-glue functions (README,
+# "The Linux half"); here, where libc and libstdc++ are linked in whole, it
+# left 3,046 of the 3,459 archive functions of an x86 XMRig. The opcode hash
+# ignores operands, so it is the same in all of them. A function is glue on
+# musl when its name matches and either hash does; the name still has to match,
+# which is what stops a project's own ``strlen`` from being deleted.
+_OPC_GLUE = {}
 
 
 def probe_failures():
@@ -2912,7 +3011,24 @@ def crt_glue(toolchain_id):
     from .smdaify import disassemble
 
     toolchain = get_toolchain(toolchain_id)
-    if toolchain.kind == "linux":
+    if toolchain.kind == "musl":
+        # Static executables only; see _PROBE_MUSL_WHOLE_C. -lm is on the C
+        # usage probe for the reason it is on the glibc one (it takes the
+        # address of sin, cos and twenty more), although musl's libm.a is an
+        # empty archive and the functions come out of libc.a.
+        probes = [
+            (toolchain.cc, "probe_musl.c", _PROBE_LINUX_C_EXE, ["-lm"]),
+            (toolchain.cxx, "probe_musl.cpp", _PROBE_LINUX_CXX_EXE, []),
+        ]
+        for compiler, label, flag in _MUSL_WHOLE_ARCHIVES:
+            plusplus = compiler == "cxx"
+            probes.append((
+                toolchain.cxx if plusplus else toolchain.cc,
+                "probe_musl_whole_%s.%s" % (label.replace("+", "p"),
+                                           "cpp" if plusplus else "c"),
+                _PROBE_MUSL_WHOLE_CXX if plusplus else _PROBE_MUSL_WHOLE_C,
+                ["-Wl,--whole-archive", flag, "-Wl,--no-whole-archive"]))
+    elif toolchain.kind == "linux":
         # A separate list rather than the four below plus extras: every one
         # of those four is #include <windows.h> with a __declspec entry point
         # and MSVCRT-only calls, so under this toolchain all four would fail
@@ -3000,6 +3116,7 @@ def crt_glue(toolchain_id):
                  ["-shared", "-D__USE_MINGW_ANSI_STDIO=0"]),
             ]
     glue = {}
+    opcodes = {}
     # Set before the loop, so that a toolchain whose probes all built is
     # recorded as measured-and-clean rather than as never measured.
     _PROBE_FAILURES.setdefault(toolchain_id, [])
@@ -3041,10 +3158,18 @@ def crt_glue(toolchain_id):
                 _PROBE_FAILURES.setdefault(toolchain_id, []).append(filename)
                 continue
             probe = disassemble(target, pdb_path=toolchain.probe_pdb(target))
+            # musl only; see _elf_alias_names. The other baselines are
+            # measured constants this change is not allowed to move.
+            aliases = _elf_alias_names(target) if toolchain.kind == "musl" else {}
             for function in probe.getFunctions():
                 if not function.function_name:
                     continue
+                for name in aliases.get(function.offset, ()):
+                    glue.setdefault(name, set()).add(function.pic_hash)
                 glue.setdefault(function.function_name, set()).add(function.pic_hash)
+                if toolchain.kind == "musl":
+                    for name in set(aliases.get(function.offset, ())) | {function.function_name}:
+                        opcodes.setdefault(name, set()).add(function.getOpcHash())
     # The probe's own function is the one thing here that is not runtime code.
     #
     # The names the four shared probes contribute are still listed one by one
@@ -3089,6 +3214,11 @@ def crt_glue(toolchain_id):
                                      "ProbeInterface", "ProbeImplementation",
                                      "ProbeArray", "ProbeEh"))]:
         glue.pop(name, None)
+    if toolchain.kind == "musl":
+        for name in [name for name in opcodes if name not in glue]:
+            # a name the prefix rules above removed from the PicHash side
+            opcodes.pop(name)
+        _OPC_GLUE[toolchain_id] = opcodes
     return glue
 
 
@@ -3096,4 +3226,9 @@ def is_glue(function, toolchain_id):
     glue = crt_glue(toolchain_id)
     if not function.function_name:
         return False
-    return function.pic_hash in glue.get(function.function_name, ())
+    if function.pic_hash in glue.get(function.function_name, ()):
+        return True
+    # Looked up by name first: the opcode hash is the expensive one, and
+    # almost every function of a static image is not named like glue at all.
+    candidates = _OPC_GLUE.get(toolchain_id, {}).get(function.function_name)
+    return bool(candidates) and function.getOpcHash() in candidates

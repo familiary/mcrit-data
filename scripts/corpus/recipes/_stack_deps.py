@@ -1,0 +1,347 @@
+"""Shared dependency steps for the cryptominer recipes (XMRig, xmrig-proxy,
+xmr-stak).
+
+Not a recipe module: the registry skips names that start with an underscore.
+
+Why the dependencies are built at all. XMRig's CMake does not carry libuv or
+OpenSSL; it expects them from the system or from the `xmrig-deps` tree its
+README points at. Both of them are families in this corpus already
+(data/libuv, data/OpenSSL), so the miner is built against them as *shared*
+libraries - an ELF `.so` or a MinGW `.dll` with an import library - and the
+image that is disassembled holds the miner's own code and nothing of theirs.
+Linked statically, which is what XMRig's own FindUV.cmake prefers (its
+`find_library` list starts with `libuv.a`) and what the release binaries do,
+about 540 `uv_*` functions and the whole of libcrypto would be filed under the
+miner's name and duplicate those two families.
+
+Both are pinned: libuv by tag, as data/libuv is, and OpenSSL by SHA-256, at the
+versions data/libuv and data/OpenSSL already carry (1.52.1 and 3.5.8), so the
+recorded provenance and the existing families describe the same source.
+"""
+
+from ..recipe import BuildStep, Source
+
+
+LIBUV_TAG = "v1.52.1"
+OPENSSL_VERSION = "3.5.8"
+OPENSSL_SHA256 = "a8f84a39918ec6415ce765d9b429d313ba97b8143169c172e734b9514464f5b2"
+
+EXTRA_SOURCES = {
+    "uv": Source(git_url="https://github.com/libuv/libuv.git",
+                 git_ref=LIBUV_TAG),
+    "ssl": Source(
+        url="https://github.com/openssl/openssl/releases/download/"
+            "openssl-3.5.8/openssl-3.5.8.tar.gz",
+        sha256=OPENSSL_SHA256),
+}
+
+OPENSSL_ONLY = {"ssl": EXTRA_SOURCES["ssl"]}
+
+# OpenSSL's own parallel make has a dependency-file race that can lose a
+# .d.tmp rename (see openssl.py); a second invocation completes cleanly.
+_SSL_MAKE = ("make -j$(nproc) build_libs || make -j$(nproc) build_libs")
+
+
+def _untar_openssl():
+    """Unpack OpenSSL into deps-<arch>/ssl.
+
+    MCRIT_DEPS_CACHE is optional and unset in CI. When a host sets it, the
+    tree lives in that directory, keyed by the target triple, and a second
+    recipe for the same target finds a finished build instead of repeating a
+    twenty-minute compile of an identical pinned source; the unpack, the
+    Configure and make steps below each skip what is already there. Without
+    it every recipe builds its own copy from a fresh tree, as the MSVC ones do.
+    """
+    return ("mkdir -p deps-{arch} && if [ -n \"$MCRIT_DEPS_CACHE\" ]; then "
+            "mkdir -p \"$MCRIT_DEPS_CACHE/ssl-{host}\" && rm -rf deps-{arch}/ssl "
+            "&& ln -s \"$MCRIT_DEPS_CACHE/ssl-{host}\" deps-{arch}/ssl; else "
+            "rm -rf deps-{arch}/ssl && mkdir deps-{arch}/ssl; fi; "
+            "[ -f deps-{arch}/ssl/Configure ] || "
+            "tar xf {ssl} -C deps-{arch}/ssl --strip-components=1")
+
+
+def linux_openssl():
+    """OpenSSL as shared libcrypto.so/libssl.so, under deps-<arch>/ssl."""
+    return [
+        BuildStep(_untar_openssl()),
+        # linux-x86 already carries -m32; no-tests and no-docs only trim what
+        # is never linked.
+        BuildStep("[ -f Makefile ] || ./Configure $([ {bitness} = 64 ] && echo linux-x86_64 || "
+                  "echo linux-x86) shared no-tests no-docs",
+                  cwd="deps-{arch}/ssl", env={"CFLAGS": "", "CXXFLAGS": ""}),
+        BuildStep(_SSL_MAKE, cwd="deps-{arch}/ssl",
+                  env={"CFLAGS": "", "CXXFLAGS": ""}),
+    ]
+
+
+def linux_libuv():
+    """libuv as a shared libuv.so, under deps-<arch>/uv."""
+    return [
+        BuildStep("cmake -S {uv} -B deps-{arch}/uv -DCMAKE_BUILD_TYPE=Release "
+                  "-DLIBUV_BUILD_TESTS=OFF -DLIBUV_BUILD_SHARED=ON "
+                  "-DBUILD_SHARED_LIBS=ON",
+                  env={"CFLAGS": "", "CXXFLAGS": ""}),
+        BuildStep("cmake --build deps-{arch}/uv --target uv -j$(nproc)"),
+    ]
+
+
+def musl_openssl():
+    """OpenSSL as static libcrypto.a/libssl.a, under deps-<arch>/ssl.
+
+    The only axis where the dependencies are linked statically: a static musl
+    ELF cannot load a shared library, so the image holds libuv and OpenSSL
+    whatever the recipe wants. The recipes deal with that by name, in
+    Recipe.exclude_functions, and record what it removed; see xmrig.py.
+    CC, AR and RANLIB come from the toolchain's environment (the musl.cc
+    driver and its gcc-ar wrappers); Configure's linux-x86 target supplies
+    -m32 itself, which the i686 cross compiler accepts.
+    """
+    env = {"CFLAGS": "", "CXXFLAGS": ""}
+    return [
+        BuildStep(_untar_openssl()),
+        BuildStep("[ -f Makefile ] || ./Configure {openssl_target} no-shared "
+                  "no-tests no-docs", cwd="deps-{arch}/ssl", env=env),
+        BuildStep(_SSL_MAKE, cwd="deps-{arch}/ssl", env=env),
+    ]
+
+
+def musl_libuv():
+    """libuv as a static libuv.a, under deps-<arch>/uv."""
+    return [
+        BuildStep("cmake -S {uv} -B deps-{arch}/uv -DCMAKE_BUILD_TYPE=Release "
+                  "-DCMAKE_C_COMPILER={cc} -DLIBUV_BUILD_TESTS=OFF "
+                  "-DLIBUV_BUILD_SHARED=OFF -DBUILD_SHARED_LIBS=OFF",
+                  env={"CFLAGS": "", "CXXFLAGS": ""}),
+        BuildStep("cmake --build deps-{arch}/uv --target uv_a -j$(nproc)"),
+    ]
+
+
+def musl_dep_options(uv=True):
+    """The -D options for the static archives; BUILD_STATIC is XMRig's own
+    switch (it adds -static and sets OPENSSL_USE_STATIC_LIBS)."""
+    ssl = ("-DOPENSSL_ROOT_DIR=$PWD/deps-{arch}/ssl "
+           "-DOPENSSL_INCLUDE_DIR=$PWD/deps-{arch}/ssl/include "
+           "-DOPENSSL_SSL_LIBRARY=$PWD/deps-{arch}/ssl/libssl.a "
+           "-DOPENSSL_CRYPTO_LIBRARY=$PWD/deps-{arch}/ssl/libcrypto.a")
+    libuv = ("-DUV_INCLUDE_DIR={uv}/include "
+             "-DUV_LIBRARY=$PWD/deps-{arch}/uv/libuv.a")
+    return ssl + (" " + libuv if uv else "")
+
+
+def mingw_openssl():
+    """OpenSSL as libcrypto/libssl DLLs plus their import libraries."""
+    env = {"CC": "gcc", "CXX": "g++", "AR": "ar", "RANLIB": "ranlib",
+           "WINDRES": "windres", "CFLAGS": "", "CXXFLAGS": ""}
+    return [
+        BuildStep(_untar_openssl()),
+        # Same Configure line as openssl.py. --cross-compile-prefix prepends
+        # the triple itself, so the tools are named bare.
+        BuildStep("[ -f Makefile ] || ./Configure {openssl_target} --cross-compile-prefix={prefix} "
+                  "shared no-tests no-docs", cwd="deps-{arch}/ssl", env=env),
+        BuildStep(_SSL_MAKE, cwd="deps-{arch}/ssl", env=env),
+    ]
+
+
+def mingw_libuv():
+    """libuv as libuv.dll with its import library, under deps-<arch>/uv."""
+    return [
+        BuildStep("cmake -S {uv} -B deps-{arch}/uv -DCMAKE_SYSTEM_NAME=Windows "
+                  "-DCMAKE_C_COMPILER={cc} -DCMAKE_RC_COMPILER={windres} "
+                  "-DCMAKE_FIND_ROOT_PATH=/usr/{host} "
+                  "-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON "
+                  "-DLIBUV_BUILD_TESTS=OFF -DLIBUV_BUILD_SHARED=ON",
+                  env={"CFLAGS": "", "CXXFLAGS": ""}),
+        BuildStep("cmake --build deps-{arch}/uv --target uv -j$(nproc)"),
+    ]
+
+
+def mingw_header_shim():
+    """Lower-case aliases for the four Windows headers XMRig spells with capitals.
+
+    src/base/tools/Chrono.cpp includes <Windows.h> (and App_win.cpp and
+    VirtualMemory_win.cpp <Shobjidl.h>, <Objbase.h> and <BaseTsd.h>), which a
+    case-sensitive cross-build cannot resolve: mingw-w64's files are
+    windows.h, shobjidl.h, objbase.h and basetsd.h. Changing the include
+    would be patching upstream. Symlinks in a directory of their own, passed
+    with -isystem, change nothing in the tree and nothing in the output - the
+    header that is read is the same file.
+    """
+    return BuildStep(
+        "rm -rf deps-{arch}/winhdr && mkdir -p deps-{arch}/winhdr && "
+        "for h in Windows.h Shobjidl.h Objbase.h BaseTsd.h; do "
+        "ln -s /usr/{host}/include/$(echo $h | tr A-Z a-z) "
+        "deps-{arch}/winhdr/$h; done")
+
+
+# The wrapper that takes -static out of a MinGW miner link (see the script),
+# and the environment it reads. {source_root} is a build.py placeholder, so
+# the import library is an absolute path.
+MINGW_WRAPPER = ("-DCMAKE_CXX_COMPILER={repo}/scripts/corpus/exercisers/"
+                 "link_dynamic_cxx.sh -DCMAKE_AR=$(command -v {ar}) "
+                 "-DCMAKE_RANLIB=$(command -v {ranlib})")
+MINGW_WRAPPER_ENV = {
+    "XM_REAL_CXX": "{cxx}",
+    "XM_LINK_EXTRA": "-shared-libgcc {source_root}/deps-{arch}/uv/libuv.dll.a",
+}
+
+MINGW_SHIM_FLAGS = ('-DCMAKE_C_FLAGS="-isystem $PWD/deps-{arch}/winhdr" '
+                    '-DCMAKE_CXX_FLAGS="-isystem $PWD/deps-{arch}/winhdr"')
+
+
+# The two -D options a build that links these needs, in the spelling of
+# FindOpenSSL and of XMRig's FindUV. Spelled as absolute paths because the
+# build tree is a sibling of deps-<arch>, and because XMRig's FindUV would
+# otherwise find the system libuv.a first.
+def linux_dep_options(uv=True):
+    ssl = ("-DOPENSSL_ROOT_DIR=$PWD/deps-{arch}/ssl "
+           "-DOPENSSL_INCLUDE_DIR=$PWD/deps-{arch}/ssl/include "
+           "-DOPENSSL_SSL_LIBRARY=$PWD/deps-{arch}/ssl/libssl.so "
+           "-DOPENSSL_CRYPTO_LIBRARY=$PWD/deps-{arch}/ssl/libcrypto.so")
+    libuv = ("-DUV_INCLUDE_DIR={uv}/include "
+             "-DUV_LIBRARY=$PWD/deps-{arch}/uv/libuv.so")
+    return ssl + (" " + libuv if uv else "")
+
+
+def mingw_dep_options(uv=True):
+    # FindOpenSSL's MinGW branch reads LIB_EAY and SSL_EAY, not OPENSSL_*_LIBRARY, and
+    # XMRig forces OPENSSL_USE_STATIC_LIBS on Windows, so without these two
+    # presets it picks the libcrypto.a / libssl.a that OpenSSL's build also
+    # leaves beside the import libraries - and OpenSSL is then linked in.
+    ssl = ("-DOPENSSL_ROOT_DIR=$PWD/deps-{arch}/ssl "
+           "-DOPENSSL_INCLUDE_DIR=$PWD/deps-{arch}/ssl/include "
+           "-DSSL_EAY=$PWD/deps-{arch}/ssl/libssl.dll.a "
+           "-DLIB_EAY=$PWD/deps-{arch}/ssl/libcrypto.dll.a")
+    libuv = ("-DUV_INCLUDE_DIR={uv}/include "
+             "-DUV_LIBRARY=$PWD/deps-{arch}/uv/libuv.dll.a")
+    return ssl + (" " + libuv if uv else "")
+
+
+# ---------------------------------------------------------------------------
+# MSVC. cmd.exe steps, run in a Visual Studio developer environment.
+
+_MSVC_UNTAR = (
+    'python -c "'
+    "import sys,tarfile;t=tarfile.open(sys.argv[1]);"
+    "m=[x for x in t.getmembers() if '/' in x.name];"
+    "[setattr(x,'name',x.name.split('/',1)[1]) for x in m];"
+    "t.extractall(sys.argv[2],members=m)"
+    '" "{ssl}" deps-{arch}\\ssl')
+
+# Restated in full for the reason openssl_msvc.py gives: LDFLAGS replaces the
+# target's own "/nologo /debug" rather than adding to it.
+_MSVC_SSL_LDFLAGS = ('"LDFLAGS=/nologo /debug /Brepro /INCREMENTAL:NO '
+                     '/OPT:NOREF /OPT:NOICF"')
+_MSVC_SSL_CONFIGURE = "shared no-tests no-asm no-makedepend " + _MSVC_SSL_LDFLAGS
+
+
+def msvc_openssl():
+    """OpenSSL's DLLs and import libraries, built no-asm as openssl_msvc.py
+    does, under deps-<arch>\\ssl. Only the import libraries are linked."""
+    return [
+        BuildStep(_MSVC_UNTAR),
+        BuildStep('if "{arch}"=="x64" perl Configure VC-WIN64A '
+                  + _MSVC_SSL_CONFIGURE, cwd="deps-{arch}/ssl"),
+        BuildStep('if "{arch}"=="x86" perl Configure VC-WIN32 '
+                  + _MSVC_SSL_CONFIGURE, cwd="deps-{arch}/ssl"),
+        BuildStep("nmake build_libs", cwd="deps-{arch}/ssl"),
+    ]
+
+
+def msvc_libuv():
+    """libuv as uv.dll and its import library uv.lib, under deps-<arch>\\uv."""
+    return [
+        BuildStep('cmake -S {uv} -B deps-{arch}\\uv -G "NMake Makefiles" '
+                  "-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON "
+                  "-DLIBUV_BUILD_SHARED=ON -DLIBUV_BUILD_TESTS=OFF"),
+        BuildStep("cmake --build deps-{arch}\\uv --target uv"),
+    ]
+
+
+def msvc_dep_options(uv=True):
+    """FindOpenSSL's MSVC branch reads LIB_EAY_RELEASE and SSL_EAY_RELEASE
+    rather than OPENSSL_SSL_LIBRARY, and XMRig forces it into static-library
+    naming (OPENSSL_USE_STATIC_LIBS), which would look for libcrypto_static.lib
+    - the static archive, not the import library. Presetting the two cache
+    entries makes find_library return at once."""
+    ssl = ("-DOPENSSL_INCLUDE_DIR=%CD%/deps-{arch}/ssl/include "
+           "-DLIB_EAY_RELEASE=%CD%/deps-{arch}/ssl/libcrypto.lib "
+           "-DSSL_EAY_RELEASE=%CD%/deps-{arch}/ssl/libssl.lib")
+    libuv = ("-DUV_INCLUDE_DIR={uv}/include "
+             "-DUV_LIBRARY=%CD%/deps-{arch}/uv/uv.lib")
+    return ssl + (" " + libuv if uv else "")
+
+
+# What every MSVC link in this corpus carries (see libuv_msvc.py for why each).
+MSVC_LINK = "/INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF /OPT:NOICF"
+
+
+# ---------------------------------------------------------------------------
+# musl: the static ELF axis.
+
+MUSL_PIN_TEXT = (
+    "Toolchains from musl.cc, pinned: x64 "
+    "https://musl.cc/x86_64-linux-musl-native.tgz sha256 "
+    "eb1db6f0f3c2bdbdbfb993d7ef7e2eeef82ac1259f6a6e1757c33a97dbcef3ad, x86 "
+    "https://musl.cc/i686-linux-musl-cross.tgz sha256 "
+    "93bd5504d5d0349258c43d7a668b506acbd627d31c0843a96e4b4c47b27a0180 "
+    "(GCC 11.2.1 20211120, musl 1.2.2-git-50-gb76f37fd)."
+)
+
+MUSL_EXCLUDE_TEXT = (
+    "libuv.a and OpenSSL libcrypto.a/libssl.a are linked statically (a static "
+    "musl ELF cannot load a shared library), so their functions are in the "
+    "image; they are removed by name with Recipe.exclude_functions, from the "
+    "function names of those pinned archives (_musl_dep_symbols.py, generated "
+    "by exercisers/musl_dep_symbols.py) and counted in excluded_function_count "
+    "so kept + removed + excluded is the image total. Not removed, and so "
+    "still in the image under the miner's name: unnamed functions (SMDA's "
+    ".cold partitions and tail fragments), 32 OpenSSL helper names the miner "
+    "also defines (fe_*, ge_*, load_3, ...), and the few libc/libstdc++ "
+    "functions whose bytes differ from the baseline's copy (README, \"The "
+    "musl half\")."
+)
+
+
+# ---------------------------------------------------------------------------
+# hwloc, for the XMRig builds with WITH_HWLOC=ON. The same pinned release as
+# the hwloc family (recipes/hwloc.py), built the same way, as a shared
+# library under deps-<arch>/hwloc that the miner imports.
+
+def _hwloc_source():
+    from .hwloc import SOURCE
+    return SOURCE
+
+
+def hwloc_extra_sources():
+    return dict(EXTRA_SOURCES, hwloc=_hwloc_source())
+
+
+def _hwloc_configure(host_option):
+    from .hwloc import CONFIGURE_OPTIONS
+    return [
+        BuildStep("rm -rf deps-{arch}/hwloc && mkdir -p deps-{arch}/hwloc && "
+                  "tar xjf {hwloc} -C deps-{arch}/hwloc --strip-components=1"),
+        BuildStep("./configure %s%s" % (host_option, CONFIGURE_OPTIONS),
+                  cwd="deps-{arch}/hwloc", env={"CFLAGS": "", "CXXFLAGS": ""}),
+        BuildStep("make -j$(nproc) -C hwloc", cwd="deps-{arch}/hwloc"),
+    ]
+
+
+def linux_hwloc():
+    """hwloc as a shared libhwloc.so, under deps-<arch>/hwloc."""
+    return _hwloc_configure("")
+
+
+def mingw_hwloc():
+    """hwloc as libhwloc-15.dll with its import library."""
+    return _hwloc_configure("--host={host} ")
+
+
+def linux_hwloc_options():
+    return ("-DHWLOC_INCLUDE_DIR=$PWD/deps-{arch}/hwloc/include "
+            "-DHWLOC_LIBRARY=$PWD/deps-{arch}/hwloc/hwloc/.libs/libhwloc.so")
+
+
+def mingw_hwloc_options():
+    return ("-DHWLOC_INCLUDE_DIR=$PWD/deps-{arch}/hwloc/include "
+            "-DHWLOC_LIBRARY=$PWD/deps-{arch}/hwloc/hwloc/.libs/libhwloc.dll.a")

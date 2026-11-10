@@ -520,6 +520,113 @@ The filter matches on symbol *and* PicHash deliberately, which is what stops
 it deleting a project's own `strlen`, so these stay. The x64 artefacts have
 no such problem and their glue is removed in full.
 
+## The musl half
+
+A static ELF is the one image the glibc toolchain above cannot give this
+corpus, and the one that most miners are distributed as: it carries its libc,
+its libgcc and libstdc++, and any libraries it links, in the file. The
+`musl_x86` and `musl_x64` toolchains (`musl11_x86` and `musl11_x64` as ids,
+`musl11` in file names) build that, with GCC 11.2.1 20211120 from musl.cc
+against musl 1.2.2-git-50-gb76f37fd. They are pinned by URL and SHA-256 in
+`corpus.toolchain.MUSL_PINS` and fetched by
+`exercisers/fetch_musl_toolchain.sh <dir>`, which refuses a tarball that does
+not match:
+
+| toolchain | tarball | SHA-256 |
+| --- | --- | --- |
+| x64 | `https://musl.cc/x86_64-linux-musl-native.tgz` | `eb1db6f0f3c2bdbdbfb993d7ef7e2eeef82ac1259f6a6e1757c33a97dbcef3ad` |
+| x86 | `https://musl.cc/i686-linux-musl-cross.tgz` | `93bd5504d5d0349258c43d7a668b506acbd627d31c0843a96e4b4c47b27a0180` |
+
+They register themselves when `x86_64-linux-musl-gcc` / `i686-linux-musl-gcc`
+are on `PATH`, so put the two `bin` directories at the **end** of `PATH`: the
+native x64 toolchain ships a plain `gcc` and `g++` there, which at the front
+would replace the host compiler under the glibc `linux_x64` toolchain. Both
+produce a static-pie by default (`-static` is enough), which is what the
+recipes' own links give. The README row says "GCC 11 (Linux, musl, static)".
+
+**The baseline.** Linking statically puts libc, libgcc, libgcc_eh, libatomic,
+libstdc++ and libsupc++ bodies into the image, where the glibc probes found
+28 symbols because everything else stayed in a shared object. Measured with
+the same method as the others - build probes with the same toolchain, let
+SMDA recover their functions, call a function glue when its name and PicHash
+match - the musl baseline is, in `corpus.baseline.crt_glue("musl_x64")`:
+6,955 names and 7,508 name/PicHash pairs on x64, 7,096 names and 11,571 pairs
+on x86 (against 2,893 for MinGW x64). Eight probes, all static executables:
+the glibc C and C++ usage probes unchanged (what a program that formats,
+parses, allocates, locks, reads files and throws links in, and the header
+templates the probe instantiates), and one `--whole-archive` link per
+archive - `libc.a`, `libgcc.a`, `libgcc_eh.a`, `libatomic.a`, `libstdc++.a`,
+`libsupc++.a`. A usage probe finds only the members it happens to call and the
+next program calls `getaddrinfo` or `pthread_create`; a whole-archive link
+holds every function the archive can contribute, with the bytes it has in any
+program that pulls it in. One archive per link because libgcc.a and
+libgcc_eh.a (x86) and libstdc++.a and libsupc++.a (both) define the same
+symbols. Tests: `tests/test_musl_baseline.py`; the half that builds with the
+real compilers is skipped where they are not on `PATH`.
+
+Two things the other baselines do not need:
+
+* **Aliases.** musl spells many functions twice (`fgets` and
+  `fgets_unlocked`) and SMDA keeps whichever name the symbol table lists last,
+  which follows the link: `fgets_unlocked` in the whole-archive probe, `fgets`
+  in a program that pulls one. The baseline records a function under every
+  symbol at its address (`_elf_alias_names`); without it a program's `fgets`
+  survived the filter.
+* **x86 PicHash.** A 32-bit position-independent function reaches data with
+  `call __x86.get_pc_thunk.bx; add ebx, <delta>`, and the delta is that
+  image's own layout, so the same libc function has a different PicHash in
+  every image. Measured on an x86 XMRig (below), that left 3,067 of the 4,187
+  libc and libstdc++ functions in the file. For `musl` the filter therefore
+  accepts a function when its name matches and either its PicHash or its
+  opcode hash does (SMDA's `getOpcHash`, which ignores operands); the name
+  still has to match. The x64 numbers are identical with and without it
+  (the PicHash is stable there), 7,505 opcode-hash pairs on x64 and 7,603 on
+  x86.
+
+**Checked against the linker, not against itself.** The baseline was measured
+on four static images, XMRig 6.25.0 and xmrig-proxy 6.26.0 on both
+architectures (`data/XMRig`, `data/xmrig-proxy`), by relinking each with
+`-Wl,-Map` (the link is byte-identical) and attributing every SMDA function to
+the archive member whose input section contains it. Functions the linker took
+from `libc.a`, `libgcc.a`, `libgcc_eh.a` and `libstdc++.a`, as (removed, kept):
+
+| image | libc.a | libgcc.a | libgcc_eh.a | libstdc++.a |
+| --- | --- | --- | --- | --- |
+| XMRig x64 | 715, 4 | 2, 0 | 50, 2 | 3,280, 70 |
+| XMRig x86 | 712, 11 | 61, 1 | - | 3,445, 19 |
+| xmrig-proxy x64 | 682, 6 | 1, 0 | 50, 2 | 3,190, 76 |
+| xmrig-proxy x86 | 691, 11 | 60, 1 | - | 3,361, 25 |
+
+Between 97.7% and 100% of what the linker took from each archive is removed.
+What is left is of two kinds. Unnamed functions - SMDA's `.cold` partitions
+and tail fragments (2 of the 4 libc ones on XMRig x64, 20 of the 70
+libstdc++ ones) - which
+no name-and-hash filter can match, here or on any other toolchain. And
+functions with the right name and the wrong body: a symbol that several
+archive members define (`__dl_thread_cleanup` is a weak stub in
+`pthread_create.lo` and the real thing in `dlerror.lo`; the narrow and wide
+`basic_string` instantiations live in several `*-inst.o`), where a link keeps
+the member it met first and the whole-archive probe met another. 54 named
+functions of 27,689 on XMRig x64, by the same count. A probe that touched
+wide strings, locales, regexes and threads removed six more of them and
+removed 31 functions of the miner's own with them, because the header
+templates it instantiates carry names the miner's code also has; it was
+tried and left out. Header templates that the usage probes instantiate are
+glue by the same rule as on every other toolchain (13 on XMRig x64, e.g.
+`std::__cxx11::basic_string<char>::_M_construct`).
+
+The image holds more than the C runtime: a static link of a TLS client
+carries libuv and OpenSSL as well, and no baseline measured from C probes
+removes them. That is `Recipe.exclude_functions`; see the XMRig and
+xmrig-proxy recipes. The same mechanism removes, by exact name, the llhttp,
+Argon2/Blake2b, rapidjson and C++ standard library functions that XMRig,
+xmrig-proxy and xmr-stak carry in common with other families, wherever every
+function of the name is shown to be the library's: PicHash against the
+library's family, a weaker same-name opcode similarity counted separately, or
+the declaring namespace for header-only code (`recipes/_stack_vendored.py`).
+That took `validate --deep` on a tree with the llhttp, argon2 and BLAKE2 data
+from 266 leakage findings to 14.
+
 ## Adding a recipe
 
 Recipes are declarative (`corpus/recipes/*.py`) and carry no logic, so every
@@ -550,6 +657,8 @@ Recorded here so the analysis is not repeated:
 | google/tcmalloc | #10 | Bazel-only and Linux-only - it cannot produce a PE at all. Issue #10's "tcmalloc" is almost certainly gperftools |
 | gRPC | #10 | cross-building needs a full native build first to obtain `protoc` and `grpc_cpp_plugin`, plus boringssl (which needs Go); 45-90 minutes for two architectures, and its statically-linked-into-Windows-malware rate is close to zero |
 | DavidBuchanan314/monomorph | [lib2smda#1](https://github.com/familiary/lib2smda/issues/1) | Linux x86-64 ELF only. That alone is no longer the obstacle it was when this row was written - `linux_x86` and `linux_x64` exist now - but the reason that mattered does not move: its own code is four functions, `get_bit`, `decode_buf`, `inflate_buf` and `main`, 679 bytes between them, against a floor of eight. The committed artefact carries 1397 function symbols, but 1393 of them are statically linked glibc and zlib, and with no glibc baseline to subtract them they would enter under monomorph's name and duplicate `data/libzlib`. What is distinctive about the project is the 4 MB array of MD5 collision blocks, which is data rather than code; upstream points at a collision detector for identifying it |
+| XMRig: GPU backends and hwloc on the static musl axis | #8 | the GPU backends and hwloc are built (`XMRig_6.25.0-gpu-hwloc` on Linux, MinGW and MSVC, XMRig's stock `WITH_HWLOC`/`WITH_OPENCL`/`WITH_CUDA`=ON; none needs an SDK, the runtimes are loaded at run time), and hwloc 2.12.1 is its own family (`hwloc`). Not built: the same variant as a static musl ELF, where XMRig's own CMake turns OpenCL off for static builds (`opencl.cmake`: "OpenCL backend is not compatible with static build") and hwloc would have to be linked as a static archive and excluded by name; the default 6.25.0 musl images cover that axis |
+| RandomX v1.2.2, v1.2.3, v2.0, Linux x64 and v1.2.3 Linux x86 | #18 | not filed: the shared objects are byte-identical (same sha256) to v1.2.1's (x64 of v1.2.2, v1.2.3), v2.0.1's (x64 of v2.0) and v1.2.2's (x86 of v1.2.3), and `validate` refuses a duplicate sample; the code is the same as the filed versions (`recipes/randomx.py`) |
 
 VX-API (#4), BlackBone (#8) and SysWhispers v1 (#9) were on this list and are
 not any more: they need ATL, the DIA SDK or MASM, none of which exists for
