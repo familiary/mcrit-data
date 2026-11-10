@@ -111,11 +111,11 @@ def prepare(sodium_dir, pth_dir, out_dir, legacy, pc=False):
                      'if "%~1"=="--version" (echo 0.29.2& exit /b 0)',
                      'echo %* | findstr /C:"libsodium" >nul || exit /b 1',
                      'if "%~1"=="--modversion" (echo 1.0.20& exit /b 0)',
-                     'if "%~1"=="--cflags-only-I" (echo -I%s& exit /b 0)' % cm(sodium_inc),
-                     'if "%~1"=="--libs-only-L" (echo -L%s& exit /b 0)' % cm(os.path.dirname(sodium_lib)),
+                     'if "%%~1"=="--cflags-only-I" (echo -I%s& exit /b 0)' % cm(sodium_inc),
+                     'if "%%~1"=="--libs-only-L" (echo -L%s& exit /b 0)' % cm(os.path.dirname(sodium_lib)),
                      'if "%~1"=="--libs-only-l" (echo -llibsodium& exit /b 0)',
-                     'if "%~1"=="--variable=includedir" (echo %s& exit /b 0)' % cm(sodium_inc),
-                     'if "%~1"=="--variable=libdir" (echo %s& exit /b 0)' % cm(os.path.dirname(sodium_lib)),
+                     'if "%%~1"=="--variable=includedir" (echo %s& exit /b 0)' % cm(sodium_inc),
+                     'if "%%~1"=="--variable=libdir" (echo %s& exit /b 0)' % cm(os.path.dirname(sodium_lib)),
                      'exit /b 0']
             out.write("\r\n".join(lines) + "\r\n")
     if legacy:
