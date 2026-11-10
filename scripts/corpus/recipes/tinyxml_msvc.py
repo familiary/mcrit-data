@@ -233,3 +233,76 @@ RECIPES = {
     "TinyXML2_11.0.0_msvc": _tinyxml2("11.0.0"),
     "TinyXML2_2.0.2_msvc": _tinyxml2("2.0.2"),
 }
+
+
+# --- Every other TinyXML release, and TinyXML2 8.0.0 and 10.0.0: the MSVC
+# counterparts of the recipes added to tinyxml.py (see there for the list
+# and the sha256 values). The same command lines as the 2.6.2 recipe, with
+# the per-object .def; 1.2.4 has no tinystr.cpp and no TIXML_USE_STL. Old
+# sources that call strchr/strstr without <string.h> (1.2.4) get
+# /FIstring.h, and the 2.1.x STL builds that use std::istream with only
+# forward declarations get /FIiostream, the cl spellings of the MinGW
+# recipes' -include; nothing is patched.
+from .tinyxml import (TINYXML_RELEASES, tinyxml_has_stl, tinyxml_source,
+                      tinyxml_sources)
+
+
+def _old_fi(version, stl):
+    if version == "1.2.4":
+        return "/FIstring.h"
+    if version.startswith("2.1.") and stl:
+        return "/FIiostream"
+    return ""
+
+
+def _tinyxml_old_msvc(version):
+    srcs = " ".join(tinyxml_sources(version))
+    objs = srcs.replace(".cpp", ".obj")
+    fi = _old_fi(version, False)
+    steps = [
+        BuildStep("cl %s %s /Fdtinyxml.pdb %s" % (_COMMON, fi, srcs)),
+        BuildStep(_V1_DEF),
+        BuildStep("link %s /DEF:tinyxml.def /PDB:tinyxml.pdb "
+                  "/OUT:tinyxml.dll %s" % (_LINK_FLAGS, objs)),
+    ]
+    artifacts = [Artifact(path="tinyxml.dll", component="tinyxml.dll",
+                          pdb="tinyxml.pdb",
+                          build_flags=_FLAGS + (", " + fi if fi else "") +
+                          ", exports from a generated .def")]
+    if tinyxml_has_stl(version):
+        fis = _old_fi(version, True)
+        steps += [
+            BuildStep("mkdir stl"),
+            BuildStep("cl %s /DTIXML_USE_STL %s /Fostl\\ /Fdtinyxml_stl.pdb %s"
+                      % (_COMMON, fis, srcs)),
+            BuildStep(_V1_STL_DEF),
+            BuildStep(_V1_STL_LINK),
+        ]
+        artifacts.append(Artifact(
+            path="tinyxml_stl.dll", component="tinyxml_stl.dll",
+            pdb="tinyxml_stl.pdb",
+            build_flags=_FLAGS + ", -DTIXML_USE_STL" +
+            (", " + fis if fis else "") + ", exports from a generated .def"))
+    steps.append(BuildStep("dir", allow_failure=True))
+    return Recipe(
+        family="TinyXML",
+        version=version,
+        upstream="https://sourceforge.net/projects/tinyxml/",
+        license="Zlib",
+        source=tinyxml_source(version),
+        build=steps,
+        artifacts=artifacts,
+        toolchains=["msvc_x86", "msvc_x64"],
+        build_flags=_FLAGS + ", exports from a generated .def",
+        notes="SourceForge release %s, the same library sources as the "
+              "MinGW recipe (%s), built by a direct cl with the 2.6.2 MSVC "
+              "recipe's command lines; the .def is generated from the "
+              "objects at build time; nothing in the tree is patched."
+              % (version, srcs),
+    )
+
+
+for _v in TINYXML_RELEASES:
+    RECIPES["TinyXML_%s_msvc" % _v] = _tinyxml_old_msvc(_v)
+RECIPES["TinyXML2_8.0.0_msvc"] = _tinyxml2("8.0.0")
+RECIPES["TinyXML2_10.0.0_msvc"] = _tinyxml2("10.0.0")
