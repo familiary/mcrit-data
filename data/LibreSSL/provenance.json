@@ -2195,6 +2195,198 @@
     "upstream": "https://www.libressl.org/",
     "version": "2.8.3"
   },
+  "LibreSSL_3.1.0_gcc13_x64_libcrypto": {
+    "architecture": "x64",
+    "build_flags": "-O2 (upstream configure default), -Wl,-Bsymbolic-functions; upstream hardening and assembly defaults, shared objects",
+    "built_artifact": "build-x64/libcrypto.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libcrypto",
+    "family": "LibreSSL",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "ISC (new code) over OpenSSL/SSLeay-licensed code, see COPYING",
+    "mcrit": "data/LibreSSL/x64/mcrit/LibreSSL_3.1.0_gcc13_x64_libcrypto.mcrit",
+    "notes": "Upstream autotools, unpatched, --host set so the 32-bit leg does not select x86-64 assembly. -Bsymbolic-functions removes the .plt stubs for libcrypto's calls to itself (link-only, no code change). libtls is not carried: the symbol-coverage gate refuses it at 45 per cent named.",
+    "num_functions": 5129,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "0a5bc213b8f72f4989124dad746672bc006a30c0f24215a17ff496f54cba045b",
+    "smda": "data/LibreSSL/x64/smda/LibreSSL_3.1.0_gcc13_x64_libcrypto.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libressl-3.1.0.tar.gz",
+      "sha256": "f91aad0c8fb9cbc67c910ad6dcffb401a819b4fd122007ea7f978638db044cf6",
+      "url": "https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.1.0.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://www.libressl.org/",
+    "version": "3.1.0"
+  },
+  "LibreSSL_3.1.0_gcc13_x64_libssl": {
+    "architecture": "x64",
+    "build_flags": "-O2 (upstream configure default), -Wl,-Bsymbolic-functions; upstream hardening and assembly defaults, shared objects",
+    "built_artifact": "build-x64/libssl.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libssl",
+    "family": "LibreSSL",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "ISC (new code) over OpenSSL/SSLeay-licensed code, see COPYING",
+    "mcrit": "data/LibreSSL/x64/mcrit/LibreSSL_3.1.0_gcc13_x64_libssl.mcrit",
+    "notes": "Upstream autotools, unpatched, --host set so the 32-bit leg does not select x86-64 assembly. -Bsymbolic-functions removes the .plt stubs for libcrypto's calls to itself (link-only, no code change). libtls is not carried: the symbol-coverage gate refuses it at 45 per cent named.",
+    "num_functions": 1576,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "53ece4cec07c702a4adbd4889ab57941921cd5d7de7a5bf9cbf51bca6096de12",
+    "smda": "data/LibreSSL/x64/smda/LibreSSL_3.1.0_gcc13_x64_libssl.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libressl-3.1.0.tar.gz",
+      "sha256": "f91aad0c8fb9cbc67c910ad6dcffb401a819b4fd122007ea7f978638db044cf6",
+      "url": "https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.1.0.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://www.libressl.org/",
+    "version": "3.1.0"
+  },
+  "LibreSSL_3.1.0_gcc13_x64_libtls": {
+    "architecture": "x64",
+    "build_flags": "-O2 (upstream configure default), -Wl,-Bsymbolic-functions; upstream hardening and assembly defaults, shared objects",
+    "built_artifact": "build-x64/libtls.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libtls",
+    "family": "LibreSSL",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "ISC (new code) over OpenSSL/SSLeay-licensed code, see COPYING",
+    "mcrit": "data/LibreSSL/x64/mcrit/LibreSSL_3.1.0_gcc13_x64_libtls.mcrit",
+    "notes": "Upstream autotools, unpatched, as the Linux recipe of this version, then tls/ is made. libtls links libcrypto.so and libssl.so, so its unnamed functions are mostly .plt stubs into them (min_named_ratio is set to the measured share).",
+    "num_functions": 504,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "6a5fc4c5ff7dc64897d493bd5ba5a5d0dc9068ffa5025fbaf48f935e1a6c4da4",
+    "smda": "data/LibreSSL/x64/smda/LibreSSL_3.1.0_gcc13_x64_libtls.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libressl-3.1.0.tar.gz",
+      "sha256": "f91aad0c8fb9cbc67c910ad6dcffb401a819b4fd122007ea7f978638db044cf6",
+      "url": "https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.1.0.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://www.libressl.org/",
+    "version": "3.1.0"
+  },
+  "LibreSSL_3.1.0_gcc13_x86_libcrypto": {
+    "architecture": "x86",
+    "build_flags": "-O2 (upstream configure default), -Wl,-Bsymbolic-functions; upstream hardening and assembly defaults, shared objects",
+    "built_artifact": "build-x86/libcrypto.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libcrypto",
+    "family": "LibreSSL",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "ISC (new code) over OpenSSL/SSLeay-licensed code, see COPYING",
+    "mcrit": "data/LibreSSL/x86/mcrit/LibreSSL_3.1.0_gcc13_x86_libcrypto.mcrit",
+    "notes": "Upstream autotools, unpatched, --host set so the 32-bit leg does not select x86-64 assembly. -Bsymbolic-functions removes the .plt stubs for libcrypto's calls to itself (link-only, no code change). libtls is not carried: the symbol-coverage gate refuses it at 45 per cent named.",
+    "num_functions": 5141,
+    "removed_runtime_functions": [
+      "__umoddi3",
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "2eb06bf0ea83278315f54a7ae973e9e92d32173217146cdc82be98cd6a17ee90",
+    "smda": "data/LibreSSL/x86/smda/LibreSSL_3.1.0_gcc13_x86_libcrypto.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libressl-3.1.0.tar.gz",
+      "sha256": "f91aad0c8fb9cbc67c910ad6dcffb401a819b4fd122007ea7f978638db044cf6",
+      "url": "https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.1.0.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://www.libressl.org/",
+    "version": "3.1.0"
+  },
+  "LibreSSL_3.1.0_gcc13_x86_libssl": {
+    "architecture": "x86",
+    "build_flags": "-O2 (upstream configure default), -Wl,-Bsymbolic-functions; upstream hardening and assembly defaults, shared objects",
+    "built_artifact": "build-x86/libssl.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libssl",
+    "family": "LibreSSL",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "ISC (new code) over OpenSSL/SSLeay-licensed code, see COPYING",
+    "mcrit": "data/LibreSSL/x86/mcrit/LibreSSL_3.1.0_gcc13_x86_libssl.mcrit",
+    "notes": "Upstream autotools, unpatched, --host set so the 32-bit leg does not select x86-64 assembly. -Bsymbolic-functions removes the .plt stubs for libcrypto's calls to itself (link-only, no code change). libtls is not carried: the symbol-coverage gate refuses it at 45 per cent named.",
+    "num_functions": 1579,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "6c8abdd8c288119688c2b97fe28bebbb40d810df9707e99f45e80266ff25b91d",
+    "smda": "data/LibreSSL/x86/smda/LibreSSL_3.1.0_gcc13_x86_libssl.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libressl-3.1.0.tar.gz",
+      "sha256": "f91aad0c8fb9cbc67c910ad6dcffb401a819b4fd122007ea7f978638db044cf6",
+      "url": "https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.1.0.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://www.libressl.org/",
+    "version": "3.1.0"
+  },
+  "LibreSSL_3.1.0_gcc13_x86_libtls": {
+    "architecture": "x86",
+    "build_flags": "-O2 (upstream configure default), -Wl,-Bsymbolic-functions; upstream hardening and assembly defaults, shared objects",
+    "built_artifact": "build-x86/libtls.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libtls",
+    "family": "LibreSSL",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "ISC (new code) over OpenSSL/SSLeay-licensed code, see COPYING",
+    "mcrit": "data/LibreSSL/x86/mcrit/LibreSSL_3.1.0_gcc13_x86_libtls.mcrit",
+    "notes": "Upstream autotools, unpatched, as the Linux recipe of this version, then tls/ is made. libtls links libcrypto.so and libssl.so, so its unnamed functions are mostly .plt stubs into them (min_named_ratio is set to the measured share).",
+    "num_functions": 511,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "0478cddf5a03f00d6161cc11195df52c0da5958ac8ae89ecc7be255df1475869",
+    "smda": "data/LibreSSL/x86/smda/LibreSSL_3.1.0_gcc13_x86_libtls.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "libressl-3.1.0.tar.gz",
+      "sha256": "f91aad0c8fb9cbc67c910ad6dcffb401a819b4fd122007ea7f978638db044cf6",
+      "url": "https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-3.1.0.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://www.libressl.org/",
+    "version": "3.1.0"
+  },
   "LibreSSL_3.1.0_mingw13_x64_libcrypto": {
     "architecture": "x64",
     "build_flags": "-O2 (upstream configure default), -D__MINGW_USE_VC2005_COMPAT on x86 as README.mingw.md says; upstream hardening and assembly defaults, shared libraries",

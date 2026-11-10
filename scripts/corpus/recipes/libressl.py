@@ -64,7 +64,14 @@ not carried at all: measured on 4.4.0 x64 the symbol-coverage gate refuses
 it at 183 of 409 functions (45%). The unnamed remainder was not inspected
 function by function; in libssl, the same kind of library, every unnamed
 function left is a 2- or 3-instruction .plt stub for an import, and no flag
-removes those short of linking libcrypto in. Upstream's libssl and libtls DLLs link
+removes those short of linking libcrypto in. The exception is 3.1.0 (added
+for tracker #61): its Linux libtls passes the gate at the recipe's
+min_named_ratio and is carried. It is not whole-linking, so _NO_LIBTLS does
+not apply: 504 functions on x64 (511 x86), 2 of its 101 distinct hashes of
+ten instructions or more in the same version's libcrypto and 1 in libssl,
+against 6345 in 3.3.6's MinGW DLL and 330 in 2.8.3's (3.1.0 MinGW: 332).
+156 of the 504 are named (152 in tls_), 348 are unnamed .plt stubs of three
+instructions or fewer. Upstream's libssl and libtls DLLs link
 libcompat in, so strlcpy, getentropy and the like appear under each.
 
 Linux. -Wl,-Bsymbolic-functions is the one flag added. Without it a call
@@ -82,6 +89,13 @@ Counts, kept + removed = image, summed over components (x86 | x64):
            3.9.2  6592+463=7055 | 6850+442=7292   4.4.0  6626+464=7090 | 6845+446=7291
     Linux  2.8.3  6243+11=6254  | 6229+9=6238     3.3.6  6879+11=6890  | 6861+9=6870
            3.9.2  6691+15=6706  | 6767+9=6776     4.4.0  6695+15=6710  | 6752+10=6762
+           3.1.0  6720+11=6731  | 6705+9=6714   (libcrypto + libssl)
+           3.1.0 libtls  511+5=516 | 504+5=509
+
+3.1.0 Linux against the other Linux versions (distinct PicHashes of 10+
+instructions, x64): libcrypto 2446 of 2680 shared with 3.3.6, 2141 with
+2.8.3; libssl 181 and 158 of 586. x86: libcrypto 396 and 249 of 3934, libssl
+32 and 34 of 687. Against 3.1.0 MinGW: libcrypto 29 (x64) and 188 (x86).
 
 MinGW against Linux (libcrypto + libssl, 10+ instructions): x64 shares 0-29
 hashes (under 1%), x86 222-276 (7-8%, mostly the identical C compat bodies),
