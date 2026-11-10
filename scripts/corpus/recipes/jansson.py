@@ -181,4 +181,9 @@ RECIPES = {
     "Jansson_2.15.1": _jansson("2.15.1", "v2.15.1"),
     "Jansson_2.13.1_linux": _jansson_linux("2.13.1", "v2.13.1"),
     "Jansson_2.15.1_linux": _jansson_linux("2.15.1", "v2.15.1"),
+    # 2.14 was built as a candidate in the first revision and dropped for
+    # overlapping 2.15.1 by about 80%; an overlap below 100% is committed.
+    # It is the last release before the vendored dtoa.c of 2.15.0.
+    "Jansson_2.14": _jansson("2.14", "v2.14"),
+    "Jansson_2.14_linux": _jansson_linux("2.14", "v2.14"),
 }
