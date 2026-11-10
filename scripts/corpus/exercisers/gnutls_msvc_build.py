@@ -281,7 +281,6 @@ export PATH="$(cygpath -u "$MSVC_BIN"):$PATH"
 SRC="$(cygpath -u "$SRC_WIN")"
 D="$(cygpath -u "$DEPS_WIN")"
 SHIM="$(cygpath -u "$SHIM_WIN")"
-SHIM_M="$(cygpath -m "$SHIM_WIN")"
 echo "bash: $(command -v bash)  cl: $(command -v cl)  link: $(command -v link)"
 if ! command -v make >/dev/null 2>&1 || ! command -v m4 >/dev/null 2>&1; then
   echo "installing make and m4 with pacman"
@@ -308,11 +307,11 @@ mkdir -p build && cd build
   exit 91
 }
 JOBS="$(nproc 2>/dev/null || echo 2)"
-make -k -j"$JOBS" -C gl CPPFLAGS="$CPPFLAGS -I$SHIM -FI$SHIM_M/msvc_shim.h" > make-gl.log 2>&1
+make -k -j"$JOBS" -C gl CPPFLAGS="$CPPFLAGS -I$SHIM -FImsvc_shim.h" > make-gl.log 2>&1
 echo "=== make -C gl (exit $?)"; cat make-gl.log
 echo "=== gl errors:"; grep -nE "error C[0-9]+|fatal error|\*\*\*|Error [0-9]" make-gl.log | head -300
 test -f gl/libgnu.la && echo "=== gl/libgnu.la built" || echo "=== gl/libgnu.la was NOT built; lib is built anyway to collect its errors"
-make -k -j"$JOBS" -C lib CPPFLAGS="$CPPFLAGS -I$SHIM -FI$SHIM_M/msvc_shim.h" > make-lib.log 2>&1
+make -k -j"$JOBS" -C lib CPPFLAGS="$CPPFLAGS -I$SHIM -FImsvc_shim.h" > make-lib.log 2>&1
 echo "=== make -C lib (exit $?)"; cat make-lib.log
 echo "=== lib errors:"; grep -nE "error C[0-9]+|fatal error|\*\*\*|Error [0-9]" make-lib.log | head -600
 ls -l lib/.libs | head -20
@@ -411,6 +410,21 @@ def link_dll(arch, prefix_lib):
     result = subprocess.run(command, capture_output=True, text=True)
     print(result.stdout[-300000:] + result.stderr[-300000:], flush=True)
     if result.returncode != 0:
+        codes = set(re.findall(r"error (LNK\d+)", result.stdout + result.stderr))
+        if codes and codes <= {"LNK2005", "LNK1169"}:
+            # Only multiply defined symbols: say so, and let the first
+            # definition win, as the GMP leg does for gmp.h's inline functions.
+            print("only LNK2005/LNK1169; linking again with /FORCE:MULTIPLE",
+                  flush=True)
+            command.insert(1, "/FORCE:MULTIPLE")
+            print("> " + " ".join(command), flush=True)
+            result = subprocess.run(command, capture_output=True, text=True)
+            print(result.stdout[-300000:] + result.stderr[-300000:], flush=True)
+    if result.returncode != 0:
+        unresolved = sorted(set(re.findall(r"unresolved external symbol (\S+)",
+                                           result.stdout + result.stderr)))
+        print("UNRESOLVED (%d): %s" % (len(unresolved), " ".join(unresolved)),
+              flush=True)
         raise SystemExit("link of libgnutls-30.dll failed")
 
 
