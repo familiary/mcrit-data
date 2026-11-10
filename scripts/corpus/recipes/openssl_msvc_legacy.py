@@ -155,3 +155,39 @@ RECIPES["OpenSSL_1.0.0t_msvc"] = _msvc_1_0(
     "1.0.0t", "5ab6e348c6c2a95d457e7a00e0aa653bfc7eb4df7b24e7c9ab63163ac0299097",
     "https://www.openssl.org/source/old/1.0.0/openssl-1.0.0t.tar.gz")
 
+
+# 0.9.x for MSVC: the releases' own ms\do_ms.bat sequence (and
+# ms\do_win64a.bat for 0.9.8zh x64, the only 0.9.x with a 64-bit Windows
+# target), dll no-asm, with the corpus link flags given through MLFLAGS as
+# for 1.0.x. 0.9.6 and 0.9.7e have no 64-bit Windows target: x86 only.
+def _msvc_09(version, sha256, x64):
+    recipe = _msvc_1_0(version, sha256,
+                       "https://www.openssl.org/source/old/0.9.x/openssl-%s.tar.gz"
+                       % version)
+    steps = [BuildStep(_IF86 + "perl Configure VC-WIN32 no-asm"),
+             BuildStep("perl util\\mkfiles.pl >MINFO"),
+             BuildStep(_IF86 + "perl util\\mk1mf.pl dll no-asm VC-WIN32 >ms\\ntdll.mak")]
+    if x64:
+        steps[1:1] = [BuildStep(_IF64 + "perl Configure VC-WIN64A no-asm")]
+        steps += [BuildStep(_IF64 + "perl ms\\uplink.pl win64a >ms\\uptable.asm"),
+                  BuildStep(_IF64 + "ml64 -c -Foms\\uptable.obj ms\\uptable.asm"),
+                  BuildStep(_IF64 + "perl util\\mk1mf.pl dll no-asm VC-WIN64A >ms\\ntdll.mak")]
+    steps += [BuildStep("perl util\\mkdef.pl 32 libeay >ms\\libeay32.def"),
+              BuildStep("perl util\\mkdef.pl 32 ssleay >ms\\ssleay32.def"),
+              BuildStep("nmake /nologo /f ms\\ntdll.mak " + _MLFLAGS),
+              BuildStep("dir out32dll", allow_failure=True)]
+    recipe.build = steps
+    recipe.toolchains = ["msvc_x86", "msvc_x64"] if x64 else ["msvc_x86"]
+    recipe.notes = recipe.notes.replace("1.0.x MSVC", "0.9.x MSVC").replace(
+        "as the release's own appveyor.yml does", "as the release's own "
+        "ms\\do_ms.bat does")
+    return recipe
+
+
+RECIPES["OpenSSL_0.9.8zh_msvc"] = _msvc_09(
+    "0.9.8zh", "f1d9f3ed1b85a82ecf80d0e2d389e1fda3fca9a4dba0bf07adbf231e1a5e2fd6", True)
+RECIPES["OpenSSL_0.9.7e_msvc"] = _msvc_09(
+    "0.9.7e", "25121b5dbd2b830929519325e033086ce45861cff2d0000d928f48261b1e0b7c", False)
+RECIPES["OpenSSL_0.9.6_msvc"] = _msvc_09(
+    "0.9.6", "5215b670c2674df9a642565ea68a67e6d955d8efcca1aa1b4e6a5b4fd2744ee8", False)
+

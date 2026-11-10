@@ -160,3 +160,59 @@ RECIPES["OpenSSL_1.0.0t"] = _openssl_1_0_wrapped(
     "1.0.0t", "5ab6e348c6c2a95d457e7a00e0aa653bfc7eb4df7b24e7c9ab63163ac0299097",
     "https://www.openssl.org/source/old/1.0.0/openssl-1.0.0t.tar.gz")
 
+
+# The final sweep: 0.9.x for MinGW x86, built and wrapped the way
+# openssl_linux.py's _static wraps the 0.9.x ELF builds. Configure's own
+# MinGW target (Mingw32 in 0.9.6, mingw in 0.9.7e and 0.9.8zh) with no-asm
+# no-shared, the Unix Makefile driven with the cross tools on the make line
+# (0.9.x Configure has no --cross-compile-prefix), the CFLAG Configure wrote
+# passed back without -mno-cygwin and -m486, which GCC 13 rejects; then
+# libcrypto.a linked whole into libeay32.dll (every symbol exported, import
+# library written) and libssl.a whole into ssleay32.dll against it. No
+# release has a 64-bit MinGW target (0.9.8zh's 64-bit Windows targets are
+# VC-WIN64A/VC-WIN64I), so there is no x64 leg here.
+_CF09 = ("CF=\"$(sed -n 's/^CFLAG= *//p' Makefile | sed 's/-mno-cygwin//; "
+         "s/ -m486//')\" && ")
+_MAKE09 = ("make -k CC={cc} AR=\"{prefix}ar r\" RANLIB={prefix}ranlib "
+           "CFLAG=\"$CF\" build_crypto build_ssl || true; "
+           "test -f libcrypto.a && test -f libssl.a")
+_DLL09 = ("{cc} -shared -o libeay32.dll -Wl,--whole-archive libcrypto.a "
+          "-Wl,--no-whole-archive -Wl,--export-all-symbols "
+          "-Wl,--out-implib,libeay32.dll.a -lws2_32 -lgdi32 && "
+          "{cc} -shared -o ssleay32.dll -Wl,--whole-archive libssl.a "
+          "-Wl,--no-whole-archive -Wl,--export-all-symbols libeay32.dll.a "
+          "-lws2_32 -lgdi32")
+
+
+def _openssl_09_mingw(version, sha256, target):
+    return Recipe(
+        family="OpenSSL",
+        version=version,
+        upstream="https://github.com/openssl/openssl",
+        license="OpenSSL / SSLeay",
+        source=Source(url="https://www.openssl.org/source/old/0.9.x/"
+                          "openssl-%s.tar.gz" % version, sha256=sha256),
+        build=[BuildStep("./Configure %s no-asm no-shared" % target, env=_ENV),
+               BuildStep(_CF09 + _MAKE09, env=_ENV),
+               BuildStep(_DLL09)],
+        artifacts=[Artifact(path="libeay32.dll", component="libcrypto"),
+                   Artifact(path="ssleay32.dll", component="libssl")],
+        toolchains=["mingw_x86"],
+        requires=["perl"],
+        build_flags="-O3 (Configure's %s target), no-asm, no-shared, "
+                    "-mno-cygwin and -m486 dropped from CFLAG; libcrypto.a / "
+                    "libssl.a linked whole into libeay32.dll / ssleay32.dll "
+                    "with --export-all-symbols" % target,
+        notes="0.9.x for MinGW x86: the release's own %s target, the static "
+              "archives wrapped into the two DLLs (the 0.9.x Unix Makefile "
+              "builds no MinGW DLL). No source is edited." % target,
+    )
+
+
+RECIPES["OpenSSL_0.9.8zh"] = _openssl_09_mingw(
+    "0.9.8zh", "f1d9f3ed1b85a82ecf80d0e2d389e1fda3fca9a4dba0bf07adbf231e1a5e2fd6", "mingw")
+RECIPES["OpenSSL_0.9.7e"] = _openssl_09_mingw(
+    "0.9.7e", "25121b5dbd2b830929519325e033086ce45861cff2d0000d928f48261b1e0b7c", "mingw")
+RECIPES["OpenSSL_0.9.6"] = _openssl_09_mingw(
+    "0.9.6", "5215b670c2674df9a642565ea68a67e6d955d8efcca1aa1b4e6a5b4fd2744ee8", "Mingw32")
+
