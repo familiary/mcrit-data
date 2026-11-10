@@ -24,9 +24,15 @@ _VERSIONS = {
 # Nettle and GMP by exact name.  Both lists come from `nm` over the static
 # libraries and over GnuTLS's own objects of the same build tree: a name is
 # excluded only when a helper library defines it and no GnuTLS object does.
-_NAMESPACES = (r"^_?_?(?:nettle_(?!tls1[02]_prf$|write_be32$)|gmp)"
-               r"|^_?_?mp[nzqf]_(?!get_base256$|set_base256$|seed_sizeinbase_256_u$)"
-               r"|^ecc_")
+# The 32-bit PE ABI prefixes every C symbol with one more underscore, so the
+# MinGW recipe allows up to three leading underscores (___gmpz_add) where the
+# ELF recipes allow two.
+_NAMESPACES_ELF = (r"^_?_?(?:nettle_(?!tls1[02]_prf$|write_be32$)|gmp)"
+                   r"|^_?_?mp[nzqf]_(?!get_base256$|set_base256$|seed_sizeinbase_256_u$)"
+                   r"|^ecc_")
+_NAMESPACES_PE = (r"^_{0,3}(?:nettle_(?!tls1[02]_prf$|write_be32$)|gmp)"
+                  r"|^_{0,3}mp[nzqf]_(?!get_base256$|set_base256$|seed_sizeinbase_256_u$)"
+                  r"|^_{0,3}ecc_")
 _STATICS = (
     '.rc',
     'LPSX',
@@ -158,7 +164,7 @@ _STATICS = (
     'umac_kdf',
     'unget',
 )
-_EXCLUDE = [_NAMESPACES, "^_?(?:%s)$" % "|".join(re.escape(n) for n in _STATICS)]
+_STATIC_RE = "^_?(?:%s)$" % "|".join(re.escape(n) for n in _STATICS)
 
 # Helper libraries, static and position independent, installed under
 # deps-{arch} of the build tree.
@@ -229,7 +235,7 @@ def _recipe(version, linux):
             component="libgnutls.so" if linux else "libgnutls.dll")],
         toolchains=["linux_x86", "linux_x64"] if linux else ["mingw_x86", "mingw_x64"],
         requires=["m4", "pkg-config"],
-        exclude_functions=_EXCLUDE,
+        exclude_functions=[_NAMESPACES_ELF if linux else _NAMESPACES_PE, _STATIC_RE],
         build_flags=_FLAGS,
         notes=_NOTES,
     )
