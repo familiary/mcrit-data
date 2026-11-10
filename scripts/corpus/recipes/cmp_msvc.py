@@ -104,6 +104,15 @@ removed, 163 of 163 distinct PicHashes of 10+ instructions shared; x64 183 +
 129, 152 of 152). The duplicate is not committed and its build step is not
 kept in this recipe; the toktok-52bfcfa image above is the c-toxcore MSVC
 Release compile of cmp.c.
+
+Second pass (scoped run 42779526841): v1, v3, v5, v17, v18 and v19 with the
+same recipe (kept + removed = total, no exclusions; ten-instruction
+PicHashes in brackets), x86 / x64: v1 141 + 123 = 264 (125) / 132 + 129 = 261
+(120); v3 142 + 123 = 265 (127) / 132 + 129 = 261 (120); v5 194 + 123 = 317
+(154) / 173 + 129 = 302 (148); v17 and v18 211 + 123 = 334 (172) / 185 + 129 =
+314 (157); v19 212 + 123 = 335 (174) / 186 + 129 = 315 (159). v17 and v18
+share all their ten-instruction hashes but are not PicHash-identical at every
+size, so both are committed.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
