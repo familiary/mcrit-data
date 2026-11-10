@@ -200,6 +200,20 @@ and the whole of agl's curve25519-donna.
 
 Not covered: the 64-bit curve25519-donna (above), the -O3 and -Os builds,
 Mach-O, and a stripped sample. These artefacts carry names from a PDB.
+
+Second pass, separate versions so the images above are unchanged (kept +
+removed = total, no exclusions; ten-instruction PicHashes in brackets).
+``2015-03-16-force32bit`` (scoped run 42776648255), x64 only: 80 + 131 = 211
+(71); it shares 13 of its hashes with the default x64 component's 73.
+``2026-10-07-tor-openssl`` (scoped run 42786829399): Tor's ed25519_tor.c with
+Tor's own digest code over the pinned OpenSSL 3.0.15, x86 184 + 132 = 316
+(136), SSE2 195 + 132 = 327 (144); x64 185 + 138 = 323 (136), SSE2 195 + 138 =
+333 (144). Against the stand-in-digest 2026-10-07-tor MSVC components 79 of
+136 (x86) and 78 of 136 (x64) are shared, 87 and 86 for SSE2. Two runs failed
+on the way and are recorded in the recipe comment: 42779106687 (cl rejects
+keccak-tiny.h's __attribute__((aligned(8)))) and 42781512715 (cl's /D cannot
+define a function-like macro); 42784530085 then stopped at link on
+"unresolved external symbol log_fn_", which the shim now supplies.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
