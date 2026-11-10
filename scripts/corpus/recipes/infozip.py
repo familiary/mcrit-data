@@ -280,6 +280,11 @@ RECIPES = {
 # so the shipped images are unchanged. The "-asm" versions are x86 only:
 # upstream's default x86 build with match.S and crc_i386.S assembled in,
 # which the shipped C-only recipes leave out for like-for-like x86/x64.
+# The makefiles assemble match.S and crc_i386.S with $(CC) and ASFLAGS that
+# include LOC/LOCFLAGS, so the -include windows.h the C files need reached
+# the assembler ("vadefs.h:24: Error: no such instruction: `typedef
+# __builtin_va_list __gnuc_va_list'"); ASFLAGS=-c on the command line keeps
+# it to the C files (ASDEFS is empty without USE_ZLIB).
 _UTILS = ["zipcloak.exe", "zipnote.exe", "zipsplit.exe"]
 _ZIP30_UTILS_MAKE = _ZIP30_MAKE.replace(" zip.exe", " " + " ".join(_UTILS))
 _ZIP31_UTILS_MAKE = _ZIP31_MAKE.replace(" zip.exe", " " + " ".join(_UTILS))
@@ -316,7 +321,16 @@ RECIPES["infozip_unzip_6.0-sfxdll"] = Recipe(
     source=RECIPES["infozip_unzip_6.0"].source,
     build=[
         BuildStep("make -f win32/Makefile.gcc clean", allow_failure=True),
-        BuildStep("make -f win32/Makefile.gcc CC={cc} RC={windres} NOASM=1 "
+        # unzip32.dll is linked by a bare `dllwrap`, which then runs bare
+        # dlltool, as and ld; the first attempt failed with "make: ***
+        # [win32/Makefile.gcc:272: unzip32.dll] Error 127" (no dllwrap on
+        # PATH), then "dllwrap: posix_spawnp: No such file or directory".
+        # The cross tools are put on PATH under those names in .bin/, in the
+        # build tree, not the source.
+        BuildStep("mkdir -p .bin && for t in dllwrap dlltool as ld; do "
+                  "ln -sf $(command -v {host}-$t) .bin/$t; done && "
+                  "PATH=$PWD/.bin:$PATH make -f win32/Makefile.gcc CC={cc} "
+                  "RC={windres} NOASM=1 "
                   "CC_CPU_OPT= LD_RELEASE_OPT= LOCAL_UNZIP='%s' "
                   "unzipsfx.exe unzip32.dll" % _INCLUDE),
     ],
@@ -343,7 +357,8 @@ RECIPES["infozip_zip_3.0-asm"] = Recipe(
     source=RECIPES["infozip_zip_3.0"].source,
     build=[BuildStep("make -f win32/makefile.gcc clean", allow_failure=True),
            BuildStep("make -f win32/makefile.gcc CC={cc} RC={windres} "
-                     "LDFLAGS='-o$@' LOCAL_ZIP='%s' zip.exe" % _INCLUDE)],
+                     "LDFLAGS='-o$@' LOCAL_ZIP='%s' ASFLAGS=-c zip.exe"
+                     % _INCLUDE)],
     artifacts=[Artifact(path="zip.exe", component="zip.exe")],
     toolchains=["mingw_x86"],
     build_flags="-O2 (win32/makefile.gcc default), assembler match.S and "
@@ -361,7 +376,8 @@ RECIPES["infozip_zip_3.1c-asm"] = Recipe(
     source=RECIPES["infozip_zip_3.1c"].source,
     build=[BuildStep("make -f win32/makefile.gcc clean", allow_failure=True),
            BuildStep("make -f win32/makefile.gcc CC={cc} RC={windres} "
-                     "LDFLAGS='-o$@' LOCAL_ZIP='%s' zip.exe" % _INCLUDE)],
+                     "LDFLAGS='-o$@' LOCAL_ZIP='%s' ASFLAGS=-c zip.exe"
+                     % _INCLUDE)],
     artifacts=[Artifact(path="zip.exe", component="zip.exe")],
     toolchains=["mingw_x86"],
     build_flags="-O3 (win32/makefile.gcc default), assembler match.S and "
@@ -377,7 +393,7 @@ RECIPES["infozip_unzip_6.0-asm"] = Recipe(
     source=RECIPES["infozip_unzip_6.0"].source,
     build=[BuildStep("make -f win32/Makefile.gcc clean", allow_failure=True),
            BuildStep("make -f win32/Makefile.gcc CC={cc} RC={windres} "
-                     "CC_CPU_OPT= LD_RELEASE_OPT= LOCAL_UNZIP='%s' "
+                     "CC_CPU_OPT= LD_RELEASE_OPT= LOCAL_UNZIP='%s' ASFLAGS=-c "
                      "unzip.exe funzip.exe" % _INCLUDE)],
     artifacts=[Artifact(path="unzip.exe", component="unzip.exe"),
                Artifact(path="funzip.exe", component="funzip.exe")],
