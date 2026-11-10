@@ -39,6 +39,21 @@ Zycore, so the two share those functions by design; two families are below
 the three a cross-family finding of validate --deep needs. Here its functions
 are the Zyan* names (144 to 176 of an x64 image).
 
+3.1.0-nolibc is tag v3.1.0 configured with -DZYAN_NO_LIBC=ON, the same flag
+the MSVC 3.1.0-nolibc recipe passes and the configuration Hidden compiles
+with; nothing else changes. Kept + removed = total: x86 229 + 49 = 278, x64
+232 + 50 = 282 (the ordinary build removes 114 and 109: without the C
+library less MinGW runtime is linked in). Distinct PicHashes of ten
+instructions or more: 199 (x86) and 179 (x64); 130 and 118 of them are in
+the ordinary 3.1.0 MinGW image (65% and 66%), 113 and 103 in the
+3.1.0-6a17c48 MinGW image, and 0 and 4 in the 3.1.0-nolibc MSVC image, so it
+is a reference of its own on every axis. By name it is the ordinary build
+less the 32 (x86) / 33 (x64) functions ZYAN_NO_LIBC compiles out; unlike
+MSVC, GCC adds no ZYAN_MEMCPY-style functions of its own. Survivors outside
+the Zydis and Zyan names: ZycoreGetVersion (2-3 instructions), the unnamed
+15-instruction ___chkstk_ms stack probe, and on x64 eight one-instruction
+import thunks with PicHash 1253497258561142223.
+
 How it is built. Zydis's CMake builds libZydis and libZycore as static
 archives, and SMDA cannot read an archive, so one DLL is linked from both with
 the whole of each archive included (--whole-archive, /WHOLEARCHIVE), the route
@@ -102,7 +117,7 @@ _LINK = ("{cc} -shared -o zydis.dll -Wl,--whole-archive "
          "-Wl,--no-whole-archive")
 
 
-def _zydis(version, tag, notes):
+def _zydis(version, tag, notes, extra=""):
     return Recipe(
         family="Zydis",
         version=version,
@@ -110,13 +125,14 @@ def _zydis(version, tag, notes):
         license="MIT, Copyright (c) Florian Bernd, Joel Hoener",
         source=Source(git_url="https://github.com/zyantific/zydis.git",
                       git_ref=tag),
-        build=[BuildStep(_CMAKE),
+        build=[BuildStep(_CMAKE + extra),
                BuildStep("cmake --build build-{arch} -j$(nproc)"),
                BuildStep(_LINK)],
         artifacts=[Artifact(path="zydis.dll", component="zydis.dll")],
         toolchains=["mingw_x86", "mingw_x64"],
-        build_flags="-O3 (CMake Release) static archives, linked into one "
-                    "DLL with --whole-archive",
+        build_flags="-O3 (CMake Release)%s static archives, linked into "
+                    "one DLL with --whole-archive"
+                    % (", -DZYAN_NO_LIBC=ON," if extra else ""),
         notes=notes,
     )
 
@@ -158,3 +174,18 @@ RECIPES["Zydis_3.1.0-6a17c48"] = _zydis(
     "of them ten instructions or more; 164 of 198 distinct x64 hashes are "
     "shared with the v3.1.0 build. 3 Hidden.sys functions have the PicHash "
     "of their namesake here, all three also matched in the MSVC builds.")
+
+# The MinGW counterpart of Zydis_3.1.0-nolibc_msvc: the same tag and Zycore
+# commit, configured with ZYAN_NO_LIBC, the configuration Hidden uses.
+RECIPES["Zydis_3.1.0-nolibc"] = _zydis(
+    "3.1.0-nolibc", "v3.1.0",
+    _COMMON + "Tag v3.1.0 with the Zycore commit it pins, 3435866, "
+    "configured with -DZYAN_NO_LIBC=ON (the 3.1.0 row is the ordinary "
+    "build). Measured: x86 229 functions kept of 278, x64 232 of 282, 199 "
+    "and 179 distinct PicHashes of ten instructions or more; 130 and 118 of "
+    "them shared with the ordinary 3.1.0 MinGW build and 0 and 4 with the "
+    "3.1.0-nolibc MSVC build. The 32 (x86) and 33 (x64) Zycore functions "
+    "that need the C library drop out (the default allocator, critical "
+    "sections, TLS, virtual memory, terminal, ZyanArgParse and the "
+    "allocator-taking Init/Duplicate/Concat forms); no function is added.",
+    extra=" -DZYAN_NO_LIBC=ON")
