@@ -57,6 +57,44 @@ Flags only, upstream untouched:
 The DLL is websockets.dll, not libwebsockets.dll: the target's OUTPUT_NAME is
 "websockets" and MSVC has no "lib" prefix. The component records the name the
 build produces, as libevent_msvc.py does.
+
+Measured on the committed artefacts (MSVC 19.44, CMake 3.31.6 on the runner;
+kept + removed = image total, nothing excluded):
+x86 4.0.21 909 + 175 = 1084, 4.3.10 1110 + 185 = 1295, 4.5.8 1594 + 187 =
+1781, 5.1.0 3228 + 194 = 3422; x64 4.0.21 904 + 179 = 1083, 4.3.10 1103 + 188
+= 1291, 4.5.8 1587 + 189 = 1776, 5.1.0 3189 + 195 = 3384. Every kept function
+is named from the PDB except one on x86 4.3.10.
+
+TLS was OpenSSL on every leg: the configure logs print the staged 1.1.1w
+include directory and libssl.lib/libcrypto.lib, and lws_config.h has
+LWS_OPENSSL_SUPPORT and LWS_WITH_TLS defined, with LWS_WITH_SCHANNEL undefined
+on 5.1.0. None of OpenSSL's code is in the images. Against the MSVC
+OpenSSL 1.1.1w libssl + libcrypto images in data/OpenSSL, the shared
+10+ instruction PicHashes number 0 (4.0.21 both arches, 4.3.10 x64, 4.5.8 x64),
+1 (rol64 on x86 4.3.10 and 4.5.8; lhp_sc_rd32 on x64 5.1.0) and 2 (x86 5.1.0).
+These are lws's own small static helpers, named from websockets.pdb (rol64
+is lib/misc/prng.c's), which compile to the same bytes as unrelated OpenSSL
+routines. The only function whose name OpenSSL also uses is lws's static
+clamp() from lib/misc/jpeg.c (4.5.8, 5.1.0).
+
+The feature set matches the MinGW recipe. Every lws* function named in the
+MinGW image of a version is also named in the MSVC image, except GCC's
+.cold splits (lws_ssl_get_error_string.cold at 4.0.21,
+lws_plat_service_tsi.cold at 5.1.0). The MSVC images name 43-292 more lws*
+functions: static helpers that GCC -O3 inlined and /O2 /Ob2 keeps as
+functions.
+
+PicHash overlap (10+ instructions, distinct hashes) with the MinGW image of
+the same version and architecture is 0 at every version on x86, and 0, 0, 1,
+1 on x64. So the MSVC axis is new reference data and no image duplicates an
+existing one. Between MSVC versions, as a share of the smaller: x64
+4.0.21/4.3.10 20%, 4.3.10/4.5.8 36%, 4.5.8/5.1.0 19%; x86 24%, 37%, 20%.
+The generations differ as much under MSVC as under GCC.
+
+Glue that survives the baseline: no CRT- or SDK-named function. The non-lws
+names among the 3-9 instruction functions are lws's own static helpers
+(rops_*, dec, alphasort, interface_to_sa, getMaxHuffCodes, imul_b*, ...)
+and its Windows fork()/kill() stubs from lib/plat/windows.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
