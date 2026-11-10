@@ -157,3 +157,59 @@ RECIPES = {
     "Duktape_2.7.0_msvc": _duktape_msvc(
         "2.7.0", "90f8d2fa8b5567c6899830ddef2c03f3c27960b11aca222fa17aa7ac613c2890"),
 }
+
+
+# The final sweep: MeshAgent's vendored Duktape 2.6.0 with cl, the MSVC
+# counterpart of Duktape_2.6.0_meshagent (duktape.py says why and how): the
+# defines the MeshAgent MSVC recipe compiles the engine with, and the agent's
+# exec-timeout callback imported from MeshAgent.exe through an import library
+# lib.exe makes from a two-line .def, so no stub code is in the image.
+from .duktape import MESHAGENT_REF  # noqa: E402
+
+_MESH_DEFS = ("/DDUK_USE_DEBUGGER_SUPPORT /DDUK_USE_INTERRUPT_COUNTER "
+              "/DDUK_USE_DEBUGGER_INSPECT /DDUK_USE_DEBUGGER_PAUSE_UNCAUGHT "
+              "/DDUK_USE_DEBUGGER_DUMPHEAP")
+
+
+def _meshagent_vendored_msvc():
+    host_def = ('python -c "open(\'corpus-host.def\',\'w\').write('
+                '\'LIBRARY MeshAgent.exe\\nEXPORTS\\n'
+                'ILibDuktape_EXEC_TIMEOUT_CHECK\\n\')"')
+    return Recipe(
+        family="Duktape",
+        version="2.6.0-meshagent",
+        upstream="https://github.com/Ylianst/MeshAgent (vendored "
+                 "https://github.com/svaarala/duktape 2.6.0)",
+        license="MIT (Duktape); MeshAgent is Apache-2.0",
+        source=Source(git_url="https://github.com/Ylianst/MeshAgent.git",
+                      git_ref=MESHAGENT_REF),
+        build=[
+            BuildStep(host_def, cwd="microscript"),
+            BuildStep('if "{arch}"=="x64" lib /nologo /DEF:corpus-host.def '
+                      '/MACHINE:X64 /OUT:corpus-host.lib', cwd="microscript"),
+            BuildStep('if "{arch}"=="x86" lib /nologo /DEF:corpus-host.def '
+                      '/MACHINE:X86 /OUT:corpus-host.lib', cwd="microscript"),
+            BuildStep(_COMPILE.replace("/Zi ", "/Zi " + _MESH_DEFS + " "),
+                      cwd="microscript"),
+            BuildStep(_DEF, cwd="microscript"),
+            BuildStep(_LINK + " corpus-host.lib", cwd="microscript"),
+            BuildStep("dir", cwd="microscript", allow_failure=True),
+        ],
+        artifacts=[Artifact(path="microscript/duktape.dll", component="duktape.dll",
+                            pdb="microscript/duktape.pdb")],
+        toolchains=["msvc_x86", "msvc_x64"],
+        build_flags="/O2 /MD /Zi " + _MESH_DEFS + " (MeshAgent's microscript/"
+                    "duktape.c and its customised headers); /DEBUG /Brepro "
+                    "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link; exports from "
+                    "the object; ILibDuktape_EXEC_TIMEOUT_CHECK imported from "
+                    "MeshAgent.exe through a generated import library",
+        notes="MeshAgent's vendored Duktape 2.6.0 at the MeshAgent commit the "
+              "MeshAgent recipes pin, compiled on its own as a DLL with cl. The "
+              "agent's exec-timeout callback is imported from the host "
+              "executable, as MeshAgent's own per-executable Duktape DLL does; "
+              "no source is edited. Built against the DLL runtime.",
+    )
+
+
+RECIPES["Duktape_2.6.0_meshagent_msvc"] = _meshagent_vendored_msvc()
+
