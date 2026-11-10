@@ -39,6 +39,7 @@ Libraries
 * [libxml2](#libxml2)
 * [lz4](#lz4)
 * [LZO](#lzo)
+* [miniLZO](#minilzo)
 * [mbedTLS](#mbedtls)
 * [pcre2](#pcre2)
 * [sqlite3](#sqlite3)
@@ -447,6 +448,17 @@ Generated with `scripts/build_corpus.py`; see `data/lzo/provenance.json` for sou
 | lzo | 2.10 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/lzo/x86/mcrit/lzo_2.10_msvc143_x86_lzo2.dll.mcrit) / [x64 PE](data/lzo/x64/mcrit/lzo_2.10_msvc143_x64_lzo2.dll.mcrit) | [x86 PE](data/lzo/x86/smda/lzo_2.10_msvc143_x86_lzo2.dll.7z) / [x64 PE](data/lzo/x64/smda/lzo_2.10_msvc143_x64_lzo2.dll.7z) |
 | lzo | minilzo-2.10 | MinGW-w64 GCC 13 | [x86 PE](data/lzo/x86/mcrit/lzo_minilzo-2.10_mingw13_x86_minilzo.dll.mcrit) / [x64 PE](data/lzo/x64/mcrit/lzo_minilzo-2.10_mingw13_x64_minilzo.dll.mcrit) | [x86 PE](data/lzo/x86/smda/lzo_minilzo-2.10_mingw13_x86_minilzo.dll.7z) / [x64 PE](data/lzo/x64/smda/lzo_minilzo-2.10_mingw13_x64_minilzo.dll.7z) |
 | lzo | minilzo-2.10 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/lzo/x86/mcrit/lzo_minilzo-2.10_msvc143_x86_minilzo.dll.mcrit) / [x64 PE](data/lzo/x64/mcrit/lzo_minilzo-2.10_msvc143_x64_minilzo.dll.mcrit) | [x86 PE](data/lzo/x86/smda/lzo_minilzo-2.10_msvc143_x86_minilzo.dll.7z) / [x64 PE](data/lzo/x64/smda/lzo_minilzo-2.10_msvc143_x64_minilzo.dll.7z) |
+<!-- /generated -->
+
+### miniLZO<a id='minilzo'></a>
+
+miniLZO 2.10 as a family of its own (tracker #59 asks for miniLZO and liblzo2 as two families). The LZO family above keeps both its artefacts unchanged; the miniLZO PE builds are PicHash-identical to its `minilzo-2.10` artefacts and are not repeated here, so this family holds the Linux ELF build of the same `minilzo.c`, the axis the LZO family does not have. GPL-2.0-or-later.  
+Generated with `scripts/build_corpus.py`; see `data/miniLZO/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: miniLZO -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| miniLZO | 2.10 | GCC 13 (Linux, glibc) | [x86 ELF](data/miniLZO/x86/mcrit/miniLZO_2.10_gcc13_x86_libminilzo.so.mcrit) / [x64 ELF](data/miniLZO/x64/mcrit/miniLZO_2.10_gcc13_x64_libminilzo.so.mcrit) | [x86 ELF](data/miniLZO/x86/smda/miniLZO_2.10_gcc13_x86_libminilzo.so.7z) / [x64 ELF](data/miniLZO/x64/smda/miniLZO_2.10_gcc13_x64_libminilzo.so.7z) |
 <!-- /generated -->
 
 ### mbedTLS<a id='mbedtls'></a>
