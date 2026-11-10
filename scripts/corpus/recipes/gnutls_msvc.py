@@ -17,6 +17,10 @@ from .gnutls import (_GMP_SHA256, _GMP_VERSION, _NAMESPACES_PE,
 # itself defines. cl does not decorate statics (no .isra/.part/.constprop
 # suffixes) and 32-bit cl prefixes one underscore, which the pattern allows.
 _STATICS = (
+    # header-only dirent shim of the build tree (gnutls_msvc_build.py)
+    'closedir',
+    'opendir',
+    'readdir',
     'DO_mpn_addlsh_n',
     'DO_mpn_sublsh_n',
     'DesSmallFipsDecrypt',

@@ -181,6 +181,80 @@ def statics(path):
     return sorted(names)
 
 
+DIRENT_H = r"""/* Header-only dirent for the one place GnuTLS needs it (lib/x509/verify-high2.c
+   loads a directory of CA files with opendir/readdir/closedir); the Windows
+   SDK has none and the GnuTLS gl/ tree does not carry gnulib's dirent module.
+   Written by gnutls_msvc_build.py into the build tree, not part of GnuTLS. */
+#ifndef MCRIT_SHIM_DIRENT_H
+#define MCRIT_SHIM_DIRENT_H
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include <windows.h>
+struct dirent { char d_name[MAX_PATH]; };
+typedef struct mcrit_shim_dir {
+  HANDLE handle; WIN32_FIND_DATAA data; int first; struct dirent entry;
+} DIR;
+static __inline DIR *opendir(const char *name)
+{
+  char pattern[MAX_PATH + 3];
+  size_t n = strlen(name);
+  DIR *dir;
+  if (n + 3 > sizeof(pattern)) return NULL;
+  memcpy(pattern, name, n);
+  if (n && name[n - 1] != '/' && name[n - 1] != '\\') pattern[n++] = '\\';
+  pattern[n++] = '*';
+  pattern[n] = 0;
+  dir = (DIR *)malloc(sizeof(*dir));
+  if (!dir) return NULL;
+  dir->handle = FindFirstFileA(pattern, &dir->data);
+  if (dir->handle == INVALID_HANDLE_VALUE) { free(dir); return NULL; }
+  dir->first = 1;
+  return dir;
+}
+static __inline struct dirent *readdir(DIR *dir)
+{
+  if (dir->first) dir->first = 0;
+  else if (!FindNextFileA(dir->handle, &dir->data)) return NULL;
+  lstrcpynA(dir->entry.d_name, dir->data.cFileName, MAX_PATH);
+  return &dir->entry;
+}
+static __inline int closedir(DIR *dir)
+{
+  FindClose(dir->handle);
+  free(dir);
+  return 0;
+}
+#endif
+"""
+
+# Force-included (cl -FI) for the make phase only. GnuTLS 3.8.13 has MSVC
+# branches for most GNU-isms and misses three: audit.c uses _Thread_local
+# without including gthreads.h (which would define it), global.c puts
+# __attribute__((constructor)) on its init functions unconditionally, and
+# crau.h leaves CRAU_MAYBE_UNUSED undefined for compilers that are neither GCC
+# nor C23. The definitions below are exactly what the tree's own MSVC branches
+# and non-GCC fallbacks use elsewhere; no upstream file is modified.
+SHIM_H = """/* Written by gnutls_msvc_build.py; force-included with cl -FI. */
+#ifndef MCRIT_SHIM_MSVC_H
+#define MCRIT_SHIM_MSVC_H
+#define _Thread_local __declspec(thread)
+#define __attribute__(x)
+#define CRAU_MAYBE_UNUSED
+#endif
+"""
+
+
+def write_shims(deps):
+    directory = os.path.join(deps, "shim")
+    os.makedirs(directory, exist_ok=True)
+    with open(os.path.join(directory, "dirent.h"), "w") as handle:
+        handle.write(DIRENT_H)
+    with open(os.path.join(directory, "msvc_shim.h"), "w") as handle:
+        handle.write(SHIM_H)
+    return directory
+
+
 def find_bash():
     for candidate in (r"C:\msys64\usr\bin\bash.exe",
                       r"C:\Program Files\Git\bin\bash.exe",
@@ -206,6 +280,8 @@ set -u
 export PATH="$(cygpath -u "$MSVC_BIN"):$PATH"
 SRC="$(cygpath -u "$SRC_WIN")"
 D="$(cygpath -u "$DEPS_WIN")"
+SHIM="$(cygpath -u "$SHIM_WIN")"
+SHIM_M="$(cygpath -m "$SHIM_WIN")"
 echo "bash: $(command -v bash)  cl: $(command -v cl)  link: $(command -v link)"
 if ! command -v make >/dev/null 2>&1 || ! command -v m4 >/dev/null 2>&1; then
   echo "installing make and m4 with pacman"
@@ -232,11 +308,11 @@ mkdir -p build && cd build
   exit 91
 }
 JOBS="$(nproc 2>/dev/null || echo 2)"
-make -k -j"$JOBS" -C gl > make-gl.log 2>&1
+make -k -j"$JOBS" -C gl CPPFLAGS="$CPPFLAGS -I$SHIM -FI$SHIM_M/msvc_shim.h" > make-gl.log 2>&1
 echo "=== make -C gl (exit $?)"; cat make-gl.log
 echo "=== gl errors:"; grep -nE "error C[0-9]+|fatal error|\*\*\*|Error [0-9]" make-gl.log | head -300
 test -f gl/libgnu.la && echo "=== gl/libgnu.la built" || echo "=== gl/libgnu.la was NOT built; lib is built anyway to collect its errors"
-make -k -j"$JOBS" -C lib > make-lib.log 2>&1
+make -k -j"$JOBS" -C lib CPPFLAGS="$CPPFLAGS -I$SHIM -FI$SHIM_M/msvc_shim.h" > make-lib.log 2>&1
 echo "=== make -C lib (exit $?)"; cat make-lib.log
 echo "=== lib errors:"; grep -nE "error C[0-9]+|fatal error|\*\*\*|Error [0-9]" make-lib.log | head -600
 ls -l lib/.libs | head -20
@@ -255,6 +331,7 @@ def configure_and_make(source, deps, arch):
         "MSVC_BIN": os.path.dirname(cl),
         "SRC_WIN": source,
         "DEPS_WIN": os.path.abspath(os.path.join(deps, "prefix")),
+        "SHIM_WIN": write_shims(deps),
         "TRIPLE": triple,
         "MSYSTEM": "MSYS",
         "MSYS2_PATH_TYPE": "inherit",
@@ -270,6 +347,12 @@ def configure_and_make(source, deps, arch):
                          % result.returncode)
 
 
+def members(path):
+    out = subprocess.check_output(["lib", "/nologo", "/LIST", path]).decode(
+        "utf-8", "replace")
+    return [line for line in out.splitlines() if line.strip()]
+
+
 def link_dll(arch, prefix_lib):
     found = glob.glob(os.path.join("build", "lib", ".libs", "libgnutls.a")) \
         + glob.glob(os.path.join("build", "lib", ".libs", "libgnutls.lib"))
@@ -277,6 +360,25 @@ def link_dll(arch, prefix_lib):
         raise SystemExit("libtool left no libgnutls archive in build/lib/.libs")
     archive_path = os.path.abspath(found[0])
     shutil.copyfile(archive_path, "libgnutls_static.lib")
+    whole = ["libgnutls_static.lib"]
+    # libtool merges the convenience libraries into a static library; check
+    # that it did, and link the ones it did not as whole archives too.
+    merged = len(members("libgnutls_static.lib"))
+    others = [path for path in
+              glob.glob(os.path.join("build", "**", ".libs", "*.a"), recursive=True)
+              + glob.glob(os.path.join("build", "**", ".libs", "*.lib"), recursive=True)
+              if os.path.abspath(path) != archive_path]
+    counts = {path: len(members(path)) for path in others}
+    print("libgnutls archive: %d members; convenience libraries: %s"
+          % (merged, ", ".join("%s=%d" % (os.path.relpath(p, "build"), n)
+                                for p, n in sorted(counts.items()))), flush=True)
+    if merged < sum(counts.values()):
+        print("the archive does not hold the convenience libraries: linking "
+              "them whole as well", flush=True)
+        for index, path in enumerate(sorted(others)):
+            copy = "conv%d.lib" % index
+            shutil.copyfile(path, copy)
+            whole.append(copy)
     names = set()
     out = subprocess.check_output(["dumpbin", "/SYMBOLS",
                                    "libgnutls_static.lib"]).decode(
@@ -303,11 +405,11 @@ def link_dll(arch, prefix_lib):
                "/OPT:NOREF", "/OPT:NOICF", "/DEF:libgnutls-30.def",
                "/PDB:libgnutls-30.pdb", "/OUT:libgnutls-30.dll",
                "/LIBPATH:" + prefix_lib,
-               "/WHOLEARCHIVE:libgnutls_static.lib", "libgnutls_static.lib",
+               ] + ["/WHOLEARCHIVE:" + name for name in whole] + whole + [
                "hogweed.lib", "nettle.lib", "gmp.lib"] + system
     print("> " + " ".join(command), flush=True)
     result = subprocess.run(command, capture_output=True, text=True)
-    print(result.stdout[-20000:] + result.stderr[-20000:], flush=True)
+    print(result.stdout[-300000:] + result.stderr[-300000:], flush=True)
     if result.returncode != 0:
         raise SystemExit("link of libgnutls-30.dll failed")
 

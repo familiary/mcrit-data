@@ -393,6 +393,22 @@ def main():
         result = subprocess.run(command, capture_output=True, text=True)
         print(result.stdout + result.stderr, flush=True)
         if result.returncode != 0:
+            # gmp.h gives cl `__inline` for its extern-inline functions
+            # (mpn_add, mpz_neg, ...). Each object that calls one and does not
+            # inline it carries a COMDAT copy, and the object that defines the
+            # function out of line (the __GMP_FORCE_ file) carries a plain
+            # one: LNK2005, for a function with a single definition in
+            # meaning. If that is all that went wrong, link again letting the
+            # first definition win.
+            codes = set(re.findall(r"error (LNK\d+)", result.stdout + result.stderr))
+            if codes and codes <= {"LNK2005", "LNK1169"}:
+                print("only LNK2005/LNK1169 (the extern-inline functions of "
+                      "gmp.h); linking again with /FORCE:MULTIPLE", flush=True)
+                command.insert(1, "/FORCE:MULTIPLE")
+                print("> " + " ".join(command), flush=True)
+                result = subprocess.run(command, capture_output=True, text=True)
+                print(result.stdout + result.stderr, flush=True)
+        if result.returncode != 0:
             raise SystemExit("link of libgmp-10.dll failed")
         print("gmp %s: libgmp-10.dll" % version)
 
