@@ -363,9 +363,9 @@ RECIPES.update({
     "c-toxcore_0.2.12_msvc": _msvc("0.2.12", "v0.2.12", cmp=False, legacy=True),
 })
 
-# Added in the final sweep: every other v0.2.x tag between the three first
-# built (v0.2.20 was built and dropped as a near neighbour; v0.2.13-v0.2.17,
-# v0.2.19 and v0.2.21-v0.2.23 were not built). Same recipes; cmp is vendored
+# Added in the final sweep, MSVC only: every other v0.2.x tag between the
+# three first built (v0.2.20 was built and dropped as a near neighbour;
+# v0.2.13-v0.2.17, v0.2.19 and v0.2.21-v0.2.23 were not built). Same recipe; cmp is vendored
 # as a submodule from v0.2.18, and only releases up to v0.2.17 look for
 # libsodium/pthreads4w in the legacy third_party layout (their
 # cmake/Dependencies.cmake names Pre-built.2), as v0.2.18 does.
@@ -373,8 +373,7 @@ for _v in ("0.2.13", "0.2.14", "0.2.15", "0.2.16", "0.2.17", "0.2.19",
            "0.2.20", "0.2.21", "0.2.22", "0.2.23"):
     _cmp = _v not in ("0.2.13", "0.2.14", "0.2.15", "0.2.16", "0.2.17")
     _mp = _v in ("0.2.16", "0.2.17")
-    RECIPES["c-toxcore_%s" % _v] = _mingw(_v, "v" + _v, cmp=_cmp, msgpack=_mp)
-    RECIPES["c-toxcore_%s_linux" % _v] = _elf(_v, "v" + _v, cmp=_cmp, msgpack=_mp)
+    # MSVC only: the MinGW and ELF legs of these tags were not built.
     # v0.2.19 and v0.2.20 require libsodium through pkg-config before their
     # MSVC find_package ("None of the required 'libsodium' found" in run
     # 42780737122), so the helper's pkg-config stub answers for libsodium.
