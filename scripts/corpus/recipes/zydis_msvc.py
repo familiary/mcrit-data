@@ -57,8 +57,9 @@ ZydisStringAppendHexU64; 63 to 567 instructions) have the same instruction
 count and the same mnemonic sequence as the -wdk function, operand for
 operand, except for branch targets, RIP-relative offsets and table
 displacements relative to the image base, which are layout and which PicHash
-does not mask. hidden.py takes the 94 out of Hidden.sys by exact name and
-says why the 9 stay.
+does not mask. hidden.py takes the 94 out of Hidden.sys by exact name (tier
+P) and the 9 by the same name and identical opcode sequence (tier W-opcode,
+labelled as such there).
 
 Zycore is not a family of its own. It cannot be built into a PE by itself
 without becoming a second copy of the same functions: a Zycore DLL and a Zydis

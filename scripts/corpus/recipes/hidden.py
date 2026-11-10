@@ -130,30 +130,43 @@ _stack_vendored.py and SoftEther's _softether_vendored.py use:
   W  a same-named function at least 80% similar in opcode sequence - but
      only for an identifier that another function in the same recipe already
      shows to be P. Every Zydis identifier occurs once in this recipe (one
-     x64 driver; HiddenCLI.exe carries none), so W can never apply here.
+     x64 driver; HiddenCLI.exe carries none), so the strict W tier can never
+     apply here, because there is no second same-named function in the
+     recipe to be the P witness.
+  W-opcode  the same name, the same instruction count and an identical
+     opcode (mnemonic) sequence as the namesake in the matching-commit
+     image, with PicHash differing only through relative offsets, for an
+     identifier family that is already P-confirmed in the same image. This is
+     the maintainer's explicitly labelled substitute for the strict W tier
+     where the witness is the library's own family rather than a sibling in
+     the recipe: the matching-commit image is data/Zydis 3.1.0-6a17c48-wdk
+     (x64, compiled as a WDM driver with Hidden's defines), and the P
+     confirmation is the 94 siblings of the same Zydis identifier family
+     that match it by PicHash. It is a weaker claim than P and is kept
+     separate in the code (_ZYDIS_W_OPCODE) so it can be told apart.
   N  by namespace, only where no corpus family carries the library. Zydis
      has a family, so N does not apply either.
 
-The other 9 stay filed under Hidden: ZydisCheckErrorConditions (230
-instructions), ZydisDecodeInstruction (567), ZydisDecodeOperandMemory (179),
+The 9 W-opcode functions are ZydisCheckErrorConditions (230 instructions),
+ZydisDecodeInstruction (567), ZydisDecodeOperandMemory (179),
 ZydisDecodeOperands (509), ZydisFormatterBasePrintPrefixes (339),
 ZydisRegisterGetLargestEnclosing (63), ZydisSetAVXInformation (406),
-ZydisSetAttributes (255) and ZydisStringAppendHexU64 (105). Each has the
-instruction count and the mnemonic sequence of its namesake in the -wdk
-image (difflib ratio 1.0), and the operands differ only in branch and call
-targets, RIP-relative offsets and table displacements taken relative to the
-image base (lea r, [rip - X] then [r + rax*8 + RVA]) - layout, which
-PicHash masks for absolute addresses but not for these RVAs. That is
-strong evidence that they are the same code, but it is the W tier's
-evidence, and W needs a P sibling of the same name that this recipe cannot
-have, so the rule keeps them here.
+ZydisSetAttributes (255) and ZydisStringAppendHexU64 (105). Re-checked from
+the committed archives (Hidden.sys against the -wdk image): each has the same
+instruction count and the same mnemonic sequence as its namesake, and every
+differing operand is a branch or call target or a numeric operand of the same
+shape (RIP-relative offsets and table displacements taken relative to the
+image base: lea r, [rip - X] then [r + rax*8 + RVA]) - layout, which PicHash
+masks for absolute addresses but not for these RVAs. None has a PicHash equal
+to any function of any data/Zydis image, which is why they are W-opcode and
+not P.
 
 The image was re-derived from its committed .7z archive, not rebuilt: the
-94 are removed from the report and the export, and provenance carries
-exclude_functions, excluded_function_count (94) and
-num_functions_before_exclusion (507, the count after the runtime filter), so
-kept + removed as runtime + excluded is still the image total: 413 + 19 + 94
-= 526.
+94 P and 9 W-opcode functions (103) are removed from the report and the
+export, and provenance carries exclude_functions, excluded_function_count
+(103) and num_functions_before_exclusion (507, the count after the runtime
+filter), so kept + removed as runtime + excluded is still the image total:
+404 + 19 + 103 = 526.
 
 x64 only, and not because the project says so. All five projects declare
 Debug|Win32, Debug|x64, Release|Win32 and Release|x64, and nothing in the
@@ -238,8 +251,9 @@ Open risks, in the order they would bite. Round 3 has not run yet.
      today, so there is nothing for it to collide with yet - but adding a
      Zydis family later would light this up, and the notes say so.
      Since settled: data/Zydis exists, the 94 functions it proves by
-     PicHash are excluded from Hidden.sys (above), and the 9 that remain
-     match no data/Zydis PicHash, so they collide with nothing.
+     PicHash (tier P) and the 9 it proves by identical opcode sequence
+     (tier W-opcode) are excluded from Hidden.sys (above), so nothing of
+     Hidden.sys's Zydis is left to collide with it.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -492,7 +506,24 @@ _ZYDIS_P = (
     "ZydisStringAppendHexU",
     "ZydisStringAppendShortCase",
 )
-_EXCLUDE = [r"^(?:%s)$" % "|".join(_ZYDIS_P)]
+
+# The nine Zydis functions that match no PicHash but are the namesake of a
+# -wdk image function in everything except image-relative offsets (tier
+# W-opcode, see the module docstring): same name, same instruction count,
+# identical opcode sequence, in an image whose other 94 Zydis functions are
+# tier P. Labelled separately so the weaker evidence is never read as P.
+_ZYDIS_W_OPCODE = (
+    "ZydisCheckErrorConditions",
+    "ZydisDecodeInstruction",
+    "ZydisDecodeOperandMemory",
+    "ZydisDecodeOperands",
+    "ZydisFormatterBasePrintPrefixes",
+    "ZydisRegisterGetLargestEnclosing",
+    "ZydisSetAVXInformation",
+    "ZydisSetAttributes",
+    "ZydisStringAppendHexU64",
+)
+_EXCLUDE = [r"^(?:%s)$" % "|".join(_ZYDIS_P + _ZYDIS_W_OPCODE)]
 
 RECIPES = {
     "Hidden_2022-07-14": Recipe(
@@ -610,12 +641,13 @@ RECIPES = {
               "including once with the WDK the way this driver compiles it. "
               "94 of the 103 Zydis-named functions here have the PicHash of "
               "a same-named data/Zydis function (82 of the 91 of ten "
-              "instructions or more, 84 of the 94 in the WDK build only) and "
-              "are excluded by exact name, so Hidden.sys keeps 413 of its "
-              "507; the other 9 have the same mnemonic sequence as the WDK "
-              "build's and differ only in image-relative offsets, but have "
-              "no PicHash match and remain filed "
-              "under this family. The image also "
+              "instructions or more, 84 of the 94 in the WDK build only; "
+              "tier P), and the other 9 have the instruction count and the "
+              "opcode sequence of their WDK-build namesakes and differ only "
+              "in image-relative offsets (tier W-opcode, the same identifier "
+              "family as the 94). All 103 are excluded by exact name, so "
+              "Hidden.sys keeps 404 of its 507 "
+              "(404 kept + 19 removed as runtime + 103 excluded = 526). The image also "
               "carries whatever kernel-mode runtime the WDK links in, which "
               "the compiler-runtime filter cannot recognise because the "
               "baseline it measures against is a user-mode ucrt/vcruntime "
