@@ -112,6 +112,15 @@ ELF and PE images share nothing because the SysV and Windows calling
 conventions change every prologue. Between the two ELF versions: 81 shared of
 118/141 on x64, 21 of 125/148 on x86 (32-bit PIC reaches the GOT through a
 per-image delta, see the README).
+
+Jansson 2.14 (tag v2.14), built in a second pass with the same two recipes
+(kept + removed = total, no exclusions; ten-instruction PicHashes in
+brackets): MinGW x86 150 + 104 = 254 (123), x64 170 + 102 = 272 (116); Linux
+ELF x86 213 + 5 = 218 (130), x64 207 + 5 = 212 (122). Shared with 2.13.1 /
+2.15.1 on the same target: MinGW x86 96 / 99, x64 89 / 91, ELF x64 95 / 97,
+ELF x86 22 / 21 (32-bit PIC moves the hashes of bodies that touch global
+data). It is the last release before 2.15.0's vendored dtoa.c, and is no
+duplicate of either neighbour.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
