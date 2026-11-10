@@ -155,6 +155,8 @@ _PE_FLAGS = ("upstream CMake Release: -O3 (CMake Release) after the toolchain's 
              "BUILD_TOXAV, DHT_BOOTSTRAP, BOOTSTRAP_DAEMON, UNITTEST, AUTOTEST "
              "off; shared library only; unstripped; cmp.c.o relinked out")
 
+_MP_NOTE = "; msgpack-c 3.3.0 (C library) built shared from the pinned tarball and imported"
+
 _ELF_FLAGS = ("upstream CMake Release: -O3 -fPIC (CMake Release) after the "
               "toolchain's -O2, -DNDEBUG, -DCMP_NO_FLOAT=1; STRICT_ABI=ON "
               "(version script exporting tox_* only); BUILD_TOXAV, DHT_BOOTSTRAP, "
@@ -187,14 +189,44 @@ _SPLIT_PE = ("cd build-{arch} && D=CMakeFiles/toxcore_shared.dir && "
              "sh -c \"$(tail -n 1 $D/link.txt) libcmp.dll.a\"")
 
 
-def _mingw(version, ref, cmp=True):
+# msgpack-c, which v0.2.16 and v0.2.17 require (cmake/Dependencies.cmake:
+# pkg_use_module(MSGPACK msgpack); events_alloc.h includes <msgpack.h>, and the
+# first MSVC attempt stopped with "C1083: Cannot open include file:
+# 'msgpack.h'" in run 42780737122). Built from the pinned release as a shared
+# library (C part only), so none of its code is in the toxcore image; before
+# v0.2.16 msgpack was only for tox-spectest, from v0.2.18 cmp replaces it.
+_MSGPACK = Source(
+    url="https://github.com/msgpack/msgpack-c/releases/download/cpp-3.3.0/"
+        "msgpack-3.3.0.tar.gz",
+    sha256="6e114d12a5ddb8cb11f669f83f32246e484a8addd0ce93f274996f1941c1f07b")
+_MSGPACK_OPTS = ("-DCMAKE_BUILD_TYPE=Release -DMSGPACK_ENABLE_CXX=OFF "
+                 "-DMSGPACK_BUILD_TESTS=OFF -DMSGPACK_BUILD_EXAMPLES=OFF "
+                 "-DMSGPACK_ENABLE_SHARED=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5 "
+                 "-DCMAKE_INSTALL_LIBDIR=lib")
+_MSGPACK_PE = ("mkdir -p mp-src-{arch} && tar xf {msgpack_src} -C mp-src-{arch} "
+               "--strip-components=1 && cmake -S mp-src-{arch} -B mp-build-{arch} "
+               "-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER={cc} "
+               "-DCMAKE_CXX_COMPILER={cxx} -DCMAKE_RC_COMPILER={windres} "
+               "-DCMAKE_FIND_ROOT_PATH=/usr/{host} -DCMAKE_INSTALL_PREFIX=$PWD/sodium-{arch} "
+               + _MSGPACK_OPTS + " && cmake --build mp-build-{arch} -j$(nproc) "
+               "--target msgpackc && cmake --install mp-build-{arch}")
+_MSGPACK_ELF = ("mkdir -p mp-src-{arch} && tar xf {msgpack_src} -C mp-src-{arch} "
+                "--strip-components=1 && cmake -S mp-src-{arch} -B mp-build-{arch} "
+                "-DCMAKE_INSTALL_PREFIX=$PWD/sodium-{arch} " + _MSGPACK_OPTS +
+                " && cmake --build mp-build-{arch} -j$(nproc) --target msgpackc "
+                "&& cmake --install mp-build-{arch}")
+
+
+def _mingw(version, ref, cmp=True, msgpack=False):
     return Recipe(
         family="c-toxcore", version=version,
         upstream="https://github.com/TokTok/c-toxcore", license="GPL-3.0-or-later",
         source=Source(git_url="https://github.com/TokTok/c-toxcore.git", git_ref=ref),
-        extra_sources={"libsodium_src": _SODIUM},
-        build_flags=_PE_FLAGS, notes=_NOTES,
-        build=[BuildStep(_SODIUM_BUILD), BuildStep(_CMAKE_PE),
+        extra_sources=dict({"libsodium_src": _SODIUM},
+                           **({"msgpack_src": _MSGPACK} if msgpack else {})),
+        build_flags=_PE_FLAGS + (_MP_NOTE if msgpack else ""), notes=_NOTES,
+        build=[BuildStep(_SODIUM_BUILD),
+               *([BuildStep(_MSGPACK_PE)] if msgpack else []), BuildStep(_CMAKE_PE),
                BuildStep("cmake --build build-{arch} -j$(nproc) --target toxcore_shared"),
                *([BuildStep(_SPLIT_PE)] if cmp else []),
                BuildStep("find build-{arch} -name '*.dll'", allow_failure=True)],
@@ -217,14 +249,16 @@ _SPLIT_ELF = ("cd build-{arch} && D=CMakeFiles/toxcore_shared.dir && "
               "sed 's# '$D'/third_party/cmp/cmp.c.o##') -L. -lcmp\"")
 
 
-def _elf(version, ref, cmp=True):
+def _elf(version, ref, cmp=True, msgpack=False):
     return Recipe(
         family="c-toxcore", version=version,
         upstream="https://github.com/TokTok/c-toxcore", license="GPL-3.0-or-later",
         source=Source(git_url="https://github.com/TokTok/c-toxcore.git", git_ref=ref),
-        extra_sources={"libsodium_src": _SODIUM},
-        build_flags=_ELF_FLAGS, notes=_NOTES,
-        build=[BuildStep(_SODIUM_ELF), BuildStep(_CMAKE_ELF),
+        extra_sources=dict({"libsodium_src": _SODIUM},
+                           **({"msgpack_src": _MSGPACK} if msgpack else {})),
+        build_flags=_ELF_FLAGS + (_MP_NOTE if msgpack else ""), notes=_NOTES,
+        build=[BuildStep(_SODIUM_ELF),
+               *([BuildStep(_MSGPACK_ELF)] if msgpack else []), BuildStep(_CMAKE_ELF),
                BuildStep("cmake --build build-{arch} -j$(nproc) --target toxcore_shared"),
                *([BuildStep(_SPLIT_ELF)] if cmp else []),
                BuildStep("ls -l build-{arch}", allow_failure=True)],
@@ -270,7 +304,7 @@ _LDFLAGS = ('-DCMAKE_SHARED_LINKER_FLAGS_RELEASE='
             '"/INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF /OPT:NOICF"')
 
 
-def _msvc(version, ref, cmp=True, legacy=False):
+def _msvc(version, ref, cmp=True, legacy=False, pc=False):
     cmake = ('cmake -S . -B build-{arch} -G "NMake Makefiles" '
              '-DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON '
              '"-DCMAKE_PREFIX_PATH=%CD%\\tox-deps" '
@@ -295,7 +329,7 @@ def _msvc(version, ref, cmp=True, legacy=False):
                       '/m /v:minimal'),
             BuildStep("nmake /nologo /E VC", cwd="pth"),
             BuildStep(_HELPER + " prepare sodium pth tox-deps"
-                      + (" legacy" if legacy else "")),
+                      + (" legacy" if legacy else "") + (" pc" if pc else "")),
             BuildStep(cmake),
             BuildStep("type build-{arch}\\CMakeFiles\\toxcore_shared.dir\\flags.make",
                       allow_failure=True),
@@ -324,8 +358,12 @@ RECIPES.update({
 for _v in ("0.2.13", "0.2.14", "0.2.15", "0.2.16", "0.2.17", "0.2.19",
            "0.2.20", "0.2.21", "0.2.22", "0.2.23"):
     _cmp = _v not in ("0.2.13", "0.2.14", "0.2.15", "0.2.16", "0.2.17")
-    RECIPES["c-toxcore_%s" % _v] = _mingw(_v, "v" + _v, cmp=_cmp)
-    RECIPES["c-toxcore_%s_linux" % _v] = _elf(_v, "v" + _v, cmp=_cmp)
+    _mp = _v in ("0.2.16", "0.2.17")
+    RECIPES["c-toxcore_%s" % _v] = _mingw(_v, "v" + _v, cmp=_cmp, msgpack=_mp)
+    RECIPES["c-toxcore_%s_linux" % _v] = _elf(_v, "v" + _v, cmp=_cmp, msgpack=_mp)
+    # v0.2.19 and v0.2.20 require libsodium through pkg-config before their
+    # MSVC find_package ("None of the required 'libsodium' found" in run
+    # 42780737122), so the helper's pkg-config stub answers for libsodium.
     RECIPES["c-toxcore_%s_msvc" % _v] = _msvc(
-        _v, "v" + _v, cmp=_cmp, legacy=not _cmp)
+        _v, "v" + _v, cmp=_cmp, legacy=not _cmp, pc=_v in ("0.2.19", "0.2.20"))
 

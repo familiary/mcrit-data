@@ -4,7 +4,7 @@ Two jobs, both because c-toxcore's CMake build assumes things a bare
 windows-2022 runner does not provide, and neither can be solved by a CMake
 flag alone. Nothing here touches the upstream tree.
 
-prepare <libsodium-dir> <pthreads4w-dir> <out-dir> [legacy]
+prepare <libsodium-dir> <pthreads4w-dir> <out-dir> [legacy|pc]
     Writes, under <out-dir>:
       * unofficial-sodium/unofficial-sodium-config.cmake, an imported target
         pointing at the libsodium this recipe built from the pinned release
@@ -56,7 +56,7 @@ def _find_one(pattern):
     return found[0]
 
 
-def prepare(sodium_dir, pth_dir, out_dir, legacy):
+def prepare(sodium_dir, pth_dir, out_dir, legacy, pc=False):
     sodium_dir = os.path.abspath(sodium_dir)
     pth_dir = os.path.abspath(pth_dir)
     out_dir = os.path.abspath(out_dir)
@@ -98,7 +98,26 @@ def prepare(sodium_dir, pth_dir, out_dir, legacy):
                   % (cm(pth_dll), cm(pth_lib), cm(pth_dir), cm(pth_dir),
                      cm(pth_lib)))
     with open(os.path.join(out_dir, "pkg-config.bat"), "w") as out:
-        out.write('@if "%1"=="--version" (echo 0.29.2& exit /b 0)\r\n@exit /b 1\r\n')
+        if not pc:
+            out.write('@if "%1"=="--version" (echo 0.29.2& exit /b 0)\r\n@exit /b 1\r\n')
+        else:
+            # "pc" (v0.2.19 and v0.2.20 only): those releases require
+            # libsodium through pkg_search_module(... REQUIRED) on every
+            # platform before their MSVC find_package, so the stub answers
+            # for the module libsodium alone, with the pinned build's include
+            # directory and import library, and still reports every other
+            # module (opus, vpx, libconfig) as absent.
+            lines = ['@echo off',
+                     'if "%~1"=="--version" (echo 0.29.2& exit /b 0)',
+                     'echo %* | findstr /C:"libsodium" >nul || exit /b 1',
+                     'if "%~1"=="--modversion" (echo 1.0.20& exit /b 0)',
+                     'if "%~1"=="--cflags-only-I" (echo -I%s& exit /b 0)' % cm(sodium_inc),
+                     'if "%~1"=="--libs-only-L" (echo -L%s& exit /b 0)' % cm(os.path.dirname(sodium_lib)),
+                     'if "%~1"=="--libs-only-l" (echo -llibsodium& exit /b 0)',
+                     'if "%~1"=="--variable=includedir" (echo %s& exit /b 0)' % cm(sodium_inc),
+                     'if "%~1"=="--variable=libdir" (echo %s& exit /b 0)' % cm(os.path.dirname(sodium_lib)),
+                     'exit /b 0']
+            out.write("\r\n".join(lines) + "\r\n")
     if legacy:
         plat = "x64" if os.path.basename(os.path.dirname(os.path.dirname(
             os.path.dirname(os.path.dirname(sodium_dll))))) == "x64" else "Win32"
@@ -194,7 +213,8 @@ def link(build_dir, out_dir, sodium_dir, pth_dir, arch):
 
 if __name__ == "__main__":
     if len(sys.argv) in (5, 6) and sys.argv[1] == "prepare":
-        prepare(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5:] == ["legacy"])
+        prepare(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5:] == ["legacy"],
+                sys.argv[5:] == ["pc"])
     elif len(sys.argv) == 7 and sys.argv[1] == "link":
         link(*sys.argv[2:])
     else:
