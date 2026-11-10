@@ -80,12 +80,7 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 
 _BASE = "https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/libressl-%s.tar.gz"
 
-_SHA256 = {
-    "2.8.3": "9b640b13047182761a99ce3e4f000be9687566e0828b4a72709e9e6a3ef98477",
-    "3.3.6": "3f28849365e1190db2baf9014ff9686012c25b1ca6df8b3a085f789e24fe4b9a",
-    "3.9.2": "7b031dac64a59eb6ee3304f7ffb75dad33ab8c9d279c847f92c89fb846068f97",
-    "4.4.0": "7d02522ad5070b9adb32eb253ecabce181184a3750cf65abac0675ee908687c1",
-}
+from .libressl import _SHA256  # noqa: E402  (one digest table for all legs)
 
 # 2.8.3 and 3.3.6 add -Drestrict for WIN32 in their CMakeLists.txt, and the
 # UCRT's corecrt_malloc.h spells __declspec(restrict), which becomes
@@ -172,4 +167,7 @@ def _msvc(version):
     )
 
 
-RECIPES = {"LibreSSL_%s_msvc" % v: _msvc(v) for v in _SHA256}
+# 3.1.0 is the v141_xp recipes' (libressl_v141xp_msvc.py): a v143 build of it
+# would declare the same toolchain alias and components, which
+# refresh_provenance.py cannot tell apart from them.
+RECIPES = {"LibreSSL_%s_msvc" % v: _msvc(v) for v in _SHA256 if v != "3.1.0"}

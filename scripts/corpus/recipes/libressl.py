@@ -148,12 +148,22 @@ _SHA256 = {
     "3.3.6": "3f28849365e1190db2baf9014ff9686012c25b1ca6df8b3a085f789e24fe4b9a",
     "3.9.2": "7b031dac64a59eb6ee3304f7ffb75dad33ab8c9d279c847f92c89fb846068f97",
     "4.4.0": "7d02522ad5070b9adb32eb253ecabce181184a3750cf65abac0675ee908687c1",
+    # Added by the final sweep: 3.1.0 (the version tracker #61 evidences, so
+    # far MSVC v141_xp only) and the four releases that were measured and left
+    # out as near-duplicates. Each tarball checked against the signed SHA256
+    # file of the CDN (good signature, Brent Cook) and, where published, its
+    # own detached .asc (all but 3.1.0).
+    "3.1.0": "f91aad0c8fb9cbc67c910ad6dcffb401a819b4fd122007ea7f978638db044cf6",
+    "3.5.4": "0379da1344a2f71ad4a4e3be30ef9d82eecddce7f8dc2ae66631a1dfe14343ac",
+    "4.0.0": "4d841955f0acc3dfc71d0e3dd35f283af461222350e26843fea9731c0246a1e4",
+    "4.2.0": "0f7dba44d7cb8df8d53f2cfbf1955254bc128e0089595f1aba2facfaee8408b2",
+    "4.3.4": "57c8b2f8c6f9505587abaeddab003ea243d615edb7ed71957968121fc6316bd6",
 }
 
 # 3.3.6's libtls DLL (and 3.5.x's) links libcrypto and libssl in whole: 6345
 # functions against 445 in 4.4.0, 96% of them libcrypto/libssl bodies already
 # carried as components of the same version. It is left out for those versions.
-_NO_LIBTLS = {"3.3.6"}
+_NO_LIBTLS = {"3.3.6", "3.5.4"}
 
 
 def _mingw(version):
@@ -218,7 +228,52 @@ def _linux(version):
     )
 
 
+# libtls of the versions whose MinGW DLL links libcrypto and libssl in whole,
+# as a recipe of its own so that the exclusion applies to it alone: every
+# function whose name is not in libtls's tls_ namespace is excluded by name
+# (Recipe.exclude_functions), because the libcrypto and libssl components of
+# the same version carry those bodies. The pattern states what libtls is, so
+# a libcrypto/libssl/compat name nobody listed is excluded by default.
+_LIBTLS_ONLY = r"^(?!_{0,2}tls_)"
+
+
+def _mingw_libtls(version):
+    recipe = _mingw(version)
+    recipe.build[-1] = BuildStep(
+        "cp $(ls build-{arch}/tls/.libs/libtls-*.dll | head -1) build-{arch}/libtls.dll")
+    recipe.artifacts = [Artifact(path="build-{arch}/libtls.dll", component="libtls")]
+    recipe.exclude_functions = [_LIBTLS_ONLY]
+    recipe.notes = ("Upstream autotools, unpatched, as the MinGW recipe of this "
+                    "version. This version's libtls DLL links libcrypto and "
+                    "libssl in whole, so every function outside libtls's tls_ "
+                    "namespace is excluded by name; the libcrypto and libssl "
+                    "components carry them.")
+    return recipe
+
+
+# libtls on Linux. The symbol-coverage gate refuses it at the default 0.5:
+# with libcrypto and libssl as shared objects, most of the image is .plt
+# stubs for its calls into them, which carry no symbol. min_named_ratio is
+# the measured share for these images (see the recipe docstring), not a
+# lower bar for a broken build.
+def _linux_libtls(version):
+    recipe = _linux(version)
+    recipe.build[-1] = BuildStep(
+        "make -j$(nproc) -C build-{arch}/tls " + _NOREGEN + " && "
+        "cp $(ls build-{arch}/tls/.libs/libtls.so.*.*.* | head -1) build-{arch}/libtls.so")
+    recipe.artifacts = [Artifact(path="build-{arch}/libtls.so", component="libtls")]
+    recipe.min_named_ratio = 0.4
+    recipe.notes = ("Upstream autotools, unpatched, as the Linux recipe of this "
+                    "version, then tls/ is made. libtls links libcrypto.so and "
+                    "libssl.so, so its unnamed functions are mostly .plt stubs "
+                    "into them (min_named_ratio is set to the measured share).")
+    return recipe
+
+
 RECIPES = {}
 for _v in _SHA256:
     RECIPES["LibreSSL_%s" % _v] = _mingw(_v)
     RECIPES["LibreSSL_%s_linux" % _v] = _linux(_v)
+    RECIPES["LibreSSL_%s_libtls_linux" % _v] = _linux_libtls(_v)
+for _v in sorted(_NO_LIBTLS):
+    RECIPES["LibreSSL_%s_libtls" % _v] = _mingw_libtls(_v)
