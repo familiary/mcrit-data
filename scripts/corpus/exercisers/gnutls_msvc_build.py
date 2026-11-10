@@ -302,11 +302,11 @@ SHIM_H = """/* Written by gnutls_msvc_build.py; force-included with cl -FI. */
 # (`sockets.c(95): error C2065: 'SSIZE_MAX': undeclared identifier`). The
 # shim gives every translation unit the SDK's own SSIZE_T as ssize_t (and
 # configure is told ac_cv_type_ssize_t=yes so config.h does not redefine it)
-# and MAXSSIZE_T as SSIZE_MAX.
+# and the largest SSIZE_T as SSIZE_MAX.
 SHIM_SSIZE_H = """#include <basetsd.h>
 typedef SSIZE_T ssize_t;
 #ifndef SSIZE_MAX
-#define SSIZE_MAX MAXSSIZE_T
+#define SSIZE_MAX ((SSIZE_T)(((SIZE_T)-1) >> 1))
 #endif
 """
 
