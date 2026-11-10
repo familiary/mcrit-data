@@ -224,3 +224,43 @@ RECIPES = {
         "https://github.com/openssl/openssl/releases/download/openssl-3.5.8/openssl-3.5.8.tar.gz",
         "3", "3"),
 }
+
+
+# The final sweep.
+# * 1.0.0t, shared, as 1.0.1u and 1.0.2u (it was skipped because nothing cites
+#   it; the corpus commits any image that is not PicHash-identical).
+RECIPES["OpenSSL_1.0.0t_linux"] = _shared(
+    "1.0.0t", "5ab6e348c6c2a95d457e7a00e0aa653bfc7eb4df7b24e7c9ab63163ac0299097",
+    _URL_OLD + "1.0.0/openssl-1.0.0t.tar.gz", "1.0", "1.0.0")
+
+
+# * 0.9.7e and 0.9.8zh on x64: the same static no-asm build as their x86
+#   recipes through Configure's linux-x86_64 target (both releases have it;
+#   0.9.6 has none, see the README row), wrapped into a shared object the
+#   same way, without -m32.
+def _static_x64(version, sha256, url):
+    recipe = _static(version, sha256, url)
+    recipe.build = [
+        BuildStep("./Configure linux-x86_64 no-asm no-shared", env=_NO_CFLAGS),
+        BuildStep("CF=\"$(sed -n 's/^CFLAG= *//p' Makefile | sed 's/-fPIC//')\" && "
+                  "make CC=\"$CC\" CFLAG=\"$CF -fPIC\"", env=_NO_CFLAGS),
+        BuildStep(_WRAP.replace("gcc -m32 ", "gcc ")),
+    ]
+    recipe.toolchains = ["linux_x64"]
+    recipe.build_flags = ("-O3 (linux-x86_64), no-asm, no-shared, -fPIC (a "
+                          "64-bit shared object needs it); libcrypto.a / "
+                          "libssl.a wrapped with -shared -Wl,--whole-archive")
+    recipe.notes = ("Static x64 OpenSSL as an ELF file: the no-shared archives "
+                    "linked whole into a shared object, as the x86 recipe of "
+                    "this release does, so glibc is not filed under this "
+                    "family. Configure's linux-x86_64 target, no-asm.")
+    return recipe
+
+
+RECIPES["OpenSSL_0.9.7e_linux64"] = _static_x64(
+    "0.9.7e", "25121b5dbd2b830929519325e033086ce45861cff2d0000d928f48261b1e0b7c",
+    _URL_OLD + "0.9.x/openssl-0.9.7e.tar.gz")
+RECIPES["OpenSSL_0.9.8zh_linux64"] = _static_x64(
+    "0.9.8zh", "f1d9f3ed1b85a82ecf80d0e2d389e1fda3fca9a4dba0bf07adbf231e1a5e2fd6",
+    _URL_OLD + "0.9.x/openssl-0.9.8zh.tar.gz")
+

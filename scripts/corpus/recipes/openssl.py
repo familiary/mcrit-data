@@ -113,3 +113,50 @@ RECIPES = {
         "1.0.2u", "ecd0c6ffb493dd06707d38b14bb4d8c2288bb7033735606569d8f90f89669d16",
         "https://www.openssl.org/source/old/1.0.2/openssl-1.0.2u.tar.gz"),
 }
+
+
+# The final sweep: 1.0.1u (and 1.0.0t) for MinGW. Both releases' mingw targets
+# carry -mno-cygwin, which GCC 13 rejects, and their Makefile.shared links the
+# cygwin-shared flavour with -Wl,-s,-Bsymbolic, which strips the DLLs (1.0.2u
+# dropped both). Neither needs a source edit: a compiler wrapper in the build
+# tree passes every argument through to the toolchain's gcc except those two,
+# -mno-cygwin dropped and -Wl,-s,-Bsymbolic given as -Wl,-Bsymbolic, so the
+# code is what upstream's link produces and the COFF symbol table stays. The
+# wrapper changes link and driver options only.
+_WRAPPER = (
+    "printf '%s\\n' '#!/bin/bash' 'a=()' "
+    "'for x in \"$@\"; do case \"$x\" in -mno-cygwin) ;; "
+    "-Wl,-s,-Bsymbolic) a+=(-Wl,-Bsymbolic) ;; *) a+=(\"$x\") ;; esac; done' "
+    "'exec {cc} \"${a[@]}\"' > corpus-cc && chmod +x corpus-cc")
+
+
+def _openssl_1_0_wrapped(version, sha256, url):
+    recipe = _openssl_1_0(version, sha256, url)
+    recipe.build = [
+        BuildStep(_WRAPPER),
+        BuildStep("./Configure {openssl_target} "
+                  "--cross-compile-prefix={prefix} shared", env=_ENV),
+        BuildStep("make -j$(nproc) CC=$PWD/corpus-cc build_libs || "
+                  "make CC=$PWD/corpus-cc build_libs", env=_ENV),
+    ]
+    recipe.build_flags = ("-O3 (upstream default), shared, asm; built through "
+                          "a gcc wrapper that drops -mno-cygwin and links "
+                          "-Wl,-Bsymbolic instead of upstream's -Wl,-s,-Bsymbolic "
+                          "(no strip)")
+    recipe.notes = ("1.0.x MinGW: libeay32.dll and ssleay32.dll. The release's "
+                    "mingw targets pass -mno-cygwin (rejected by GCC 13) and "
+                    "its Makefile.shared strips the DLLs with -Wl,-s; a "
+                    "compiler wrapper in the build tree drops the first and "
+                    "the strip, so the DLLs keep their symbol table. No source "
+                    "file is edited; the image differs from an upstream build "
+                    "in its symbol table only.")
+    return recipe
+
+
+RECIPES["OpenSSL_1.0.1u"] = _openssl_1_0_wrapped(
+    "1.0.1u", "4312b4ca1215b6f2c97007503d80db80d5157f76f8f7d3febbe6b4c56ff26739",
+    "https://www.openssl.org/source/old/1.0.1/openssl-1.0.1u.tar.gz")
+RECIPES["OpenSSL_1.0.0t"] = _openssl_1_0_wrapped(
+    "1.0.0t", "5ab6e348c6c2a95d457e7a00e0aa653bfc7eb4df7b24e7c9ab63163ac0299097",
+    "https://www.openssl.org/source/old/1.0.0/openssl-1.0.0t.tar.gz")
+

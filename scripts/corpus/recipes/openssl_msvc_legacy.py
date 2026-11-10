@@ -143,3 +143,15 @@ RECIPES = {
         "3.5.8", "a8f84a39918ec6415ce765d9b429d313ba97b8143169c172e734b9514464f5b2",
         "https://github.com/openssl/openssl/releases/download/openssl-3.5.8/openssl-3.5.8.tar.gz"),
 }
+
+
+# The final sweep: 1.0.1u (skipped for want of Windows evidence; 64% PicHash
+# overlap with 1.0.2u on ELF) and 1.0.0t (skipped because nothing cites it),
+# through the same mk1mf route as 1.0.2u.
+RECIPES["OpenSSL_1.0.1u_msvc"] = _msvc_1_0(
+    "1.0.1u", "4312b4ca1215b6f2c97007503d80db80d5157f76f8f7d3febbe6b4c56ff26739",
+    "https://www.openssl.org/source/old/1.0.1/openssl-1.0.1u.tar.gz")
+RECIPES["OpenSSL_1.0.0t_msvc"] = _msvc_1_0(
+    "1.0.0t", "5ab6e348c6c2a95d457e7a00e0aa653bfc7eb4df7b24e7c9ab63163ac0299097",
+    "https://www.openssl.org/source/old/1.0.0/openssl-1.0.0t.tar.gz")
+
