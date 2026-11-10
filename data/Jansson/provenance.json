@@ -1,4 +1,69 @@
 {
+  "Jansson_2.13.1_gcc13_x64_libjansson.so": {
+    "architecture": "x64",
+    "build_flags": "-O3 -DNDEBUG (CMake Release), -fPIC (CMake shared default), -fvisibility=hidden",
+    "built_artifact": "build-x64/lib/libjansson.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libjansson.so",
+    "family": "Jansson",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "MIT",
+    "mcrit": "data/Jansson/x64/mcrit/Jansson_2.13.1_gcc13_x64_libjansson.so.mcrit",
+    "notes": "The native GCC build of the same tag and options as the MinGW DLL, shared object only: glibc is NEEDED, not linked in, so no libc body is filed under this family.",
+    "num_functions": 201,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_fini",
+      "_init",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "c927b76ec52f20d03d5c61efe6c6eaf25c5dfbca76057f3f1fab93759a34eb2b",
+    "smda": "data/Jansson/x64/smda/Jansson_2.13.1_gcc13_x64_libjansson.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "e9ebfa7e77a6bee77df44e096b100e7131044059",
+      "git_ref": "v2.13.1",
+      "git_url": "https://github.com/akheron/jansson.git"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://github.com/akheron/jansson",
+    "version": "2.13.1"
+  },
+  "Jansson_2.13.1_gcc13_x86_libjansson.so": {
+    "architecture": "x86",
+    "build_flags": "-O3 -DNDEBUG (CMake Release), -fPIC (CMake shared default), -fvisibility=hidden",
+    "built_artifact": "build-x86/lib/libjansson.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libjansson.so",
+    "family": "Jansson",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "MIT",
+    "mcrit": "data/Jansson/x86/mcrit/Jansson_2.13.1_gcc13_x86_libjansson.so.mcrit",
+    "notes": "The native GCC build of the same tag and options as the MinGW DLL, shared object only: glibc is NEEDED, not linked in, so no libc body is filed under this family.",
+    "num_functions": 207,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "dafd04c1eb54e20b36d42c3f396ec71312b60bdaf242f1d417a8a920ca891682",
+    "smda": "data/Jansson/x86/smda/Jansson_2.13.1_gcc13_x86_libjansson.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "e9ebfa7e77a6bee77df44e096b100e7131044059",
+      "git_ref": "v2.13.1",
+      "git_url": "https://github.com/akheron/jansson.git"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://github.com/akheron/jansson",
+    "version": "2.13.1"
+  },
   "Jansson_2.13.1_mingw13_x64_libjansson.dll": {
     "architecture": "x64",
     "build_flags": "-O3 -DNDEBUG (CMake Release), plus the toolchain's -O2 and upstream's -Wno-format-truncation; -O3 wins",
@@ -617,6 +682,73 @@
     "toolchain": "msvc143_x86",
     "upstream": "https://github.com/akheron/jansson",
     "version": "2.13.1"
+  },
+  "Jansson_2.15.1_gcc13_x64_libjansson.so": {
+    "architecture": "x64",
+    "build_flags": "-O3 -DNDEBUG (CMake Release), -fPIC (CMake shared default), -fvisibility=hidden",
+    "built_artifact": "build-x64/lib/libjansson.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libjansson.so",
+    "family": "Jansson",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "MIT",
+    "mcrit": "data/Jansson/x64/mcrit/Jansson_2.15.1_gcc13_x64_libjansson.so.mcrit",
+    "notes": "The native GCC build of the same tag and options as the MinGW DLL, shared object only: glibc is NEEDED, not linked in, so no libc body is filed under this family.",
+    "num_functions": 228,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_fini",
+      "_init",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "c704207beb0b4e72c2247932e4427c1cda238828bf6ae238fde9edd52b80ca45",
+    "smda": "data/Jansson/x64/smda/Jansson_2.15.1_gcc13_x64_libjansson.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "dbb5fb3636e155fccfce4cd215de752779bd6971",
+      "git_ref": "v2.15.1",
+      "git_url": "https://github.com/akheron/jansson.git"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://github.com/akheron/jansson",
+    "version": "2.15.1"
+  },
+  "Jansson_2.15.1_gcc13_x86_libjansson.so": {
+    "architecture": "x86",
+    "build_flags": "-O3 -DNDEBUG (CMake Release), -fPIC (CMake shared default), -fvisibility=hidden",
+    "built_artifact": "build-x86/lib/libjansson.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libjansson.so",
+    "family": "Jansson",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "MIT",
+    "mcrit": "data/Jansson/x86/mcrit/Jansson_2.15.1_gcc13_x86_libjansson.so.mcrit",
+    "notes": "The native GCC build of the same tag and options as the MinGW DLL, shared object only: glibc is NEEDED, not linked in, so no libc body is filed under this family.",
+    "num_functions": 232,
+    "removed_runtime_functions": [
+      "__divdi3",
+      "__udivdi3",
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "21611048dfdebaad1157e306a12bfebc6bba4724ec23fe2de652a03bc1a18d5b",
+    "smda": "data/Jansson/x86/smda/Jansson_2.15.1_gcc13_x86_libjansson.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "dbb5fb3636e155fccfce4cd215de752779bd6971",
+      "git_ref": "v2.15.1",
+      "git_url": "https://github.com/akheron/jansson.git"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://github.com/akheron/jansson",
+    "version": "2.15.1"
   },
   "Jansson_2.15.1_mingw13_x64_libjansson.dll": {
     "architecture": "x64",
