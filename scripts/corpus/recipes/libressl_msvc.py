@@ -124,6 +124,14 @@ _NORMALISE = (
     '"')
 
 
+# 3.5.4's MSVC libtls DLL links libcrypto and libssl in whole (6,756
+# functions on x64 against 329 for 3.3.6 and 440-451 for 3.9.2-4.4.0), the
+# same reason libressl.py leaves libtls out of 3.3.6 and 3.5.4 on MinGW: the
+# image would file libcrypto/libssl bodies a second time under libtls. It is
+# left out for that version.
+_MSVC_NO_LIBTLS = {"3.5.4"}
+
+
 def _msvc(version):
     return Recipe(
         family="LibreSSL",
@@ -144,9 +152,10 @@ def _msvc(version):
                      pdb="build-{arch}/libcrypto.pdb"),
             Artifact(path="build-{arch}/libssl.dll", component="libssl",
                      pdb="build-{arch}/libssl.pdb"),
+        ] + ([] if version in _MSVC_NO_LIBTLS else [
             Artifact(path="build-{arch}/libtls.dll", component="libtls",
                      pdb="build-{arch}/libtls.pdb"),
-        ],
+        ]),
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags="/MD /O2 /Ob2 /Zi (CMake Release, /Zi added), /W4 /GS "
                     "from upstream; /INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF "
