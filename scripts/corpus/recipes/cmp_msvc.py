@@ -295,3 +295,8 @@ RECIPES["cmp_toktok_52bfcfa-toxcore_msvc"] = Recipe(
           "recipe splits it out of toxcore.dll. No c-toxcore code is in the "
           "image. Nothing patched.",
 )
+
+
+# The tags the MinGW recipe adds beside v10 and v20 (see cmp.py).
+for _tag in ("1", "3", "5", "17", "18", "19"):
+    RECIPES["cmp_%s_msvc" % _tag] = _cmp_msvc(_tag, "v" + _tag)
