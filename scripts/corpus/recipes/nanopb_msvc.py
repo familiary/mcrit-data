@@ -201,6 +201,17 @@ _COMPILE = ('cl /nologo /LD /O2 /MD /Zi /I. /Fobuild-{arch}\\ '
             '/OPT:NOREF /OPT:NOICF '
             '/PDB:build-{arch}\\protobuf-nanopb.pdb')
 
+# The default runtime again at /O1 (minimise size), the cl counterpart of the
+# MinGW recipe's -Os DLL. Same three files and the same .def; its own object
+# directory so the /O2 objects are not overwritten.
+_COMPILE_O1 = ('cl /nologo /LD /O1 /MD /Zi /I. /Fobuild-O1-{arch}\\ '
+               '/Fdbuild-O1-{arch}\\protobuf-nanopb-O1.pdb '
+               '/Febuild-O1-{arch}\\protobuf-nanopb-O1.dll '
+               'pb_common.c pb_decode.c pb_encode.c '
+               '/link /DEF:..\\nanopb-{arch}.def /DEBUG /Brepro '
+               '/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF '
+               '/PDB:build-O1-{arch}\\protobuf-nanopb-O1.pdb')
+
 
 # --- Generated-code configurations (backlog #38), 0.4.9.2 only. The same
 # artefacts as nanopb.py adds on the MinGW side: runtime plus the generated
@@ -358,11 +369,21 @@ def _nanopb_msvc(version, generated=False):
         BuildStep("if not exist build-{arch} mkdir build-{arch}"),
         _def_step(version),
         BuildStep(_COMPILE),
+        BuildStep("if not exist build-O1-{arch} mkdir build-O1-{arch}"),
+        BuildStep(_COMPILE_O1),
         BuildStep("dir build-{arch}", allow_failure=True),
     ]
     artifacts = [Artifact(path="build-{arch}/protobuf-nanopb.dll",
                           component="protobuf-nanopb.dll",
-                          pdb="build-{arch}/protobuf-nanopb.pdb")]
+                          pdb="build-{arch}/protobuf-nanopb.pdb"),
+                 Artifact(path="build-O1-{arch}/protobuf-nanopb-O1.dll",
+                          component="protobuf-nanopb-O1.dll",
+                          pdb="build-O1-{arch}/protobuf-nanopb-O1.pdb",
+                          build_flags="/O1 /MD /Zi, no PB_* defines (upstream "
+                                      "default), cl directly over pb_common.c "
+                                      "pb_decode.c pb_encode.c; /DLL via "
+                                      ".def, /DEBUG /Brepro /INCREMENTAL:NO "
+                                      "/OPT:NOREF /OPT:NOICF at link")]
     notes = ("Same tag as the MinGW recipe, same three files. Built against "
              "the DLL runtime so the MSVC C runtime stays attributed to "
              "data/MSVC. Exports come from a .def written outside the "
