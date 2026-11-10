@@ -88,11 +88,14 @@ def render_family(family):
     # Group the per-architecture artefacts of one build onto a single row.
     grouped = {}
     for entry in entries.values():
-        # A blob records no toolchain at all - it was compiled upstream, and
-        # the host that ran the extraction is not what produced the code - so
-        # the grouping key falls back to the producer its filename names.
-        toolchain = entry.get("toolchain") or "msvc"
-        key = (entry["version"], toolchain.rsplit("_", 1)[0],
+        # Grouped by the producer in the filename rather than by the
+        # toolchain that ran, because those are not always the same thing: a
+        # blob records no toolchain at all, and a harvested prebuilt records
+        # the host that unpacked it. For everything compiled here the two are
+        # identical, so no existing row moves. Without this, a family holding
+        # both a locally built and a harvested artefact of one version would
+        # collapse them onto a single row under one compiler label.
+        key = (entry["version"], _producer_of(entry),
                _component_key(entry["component"]))
         grouped.setdefault(key, {})[entry["architecture"]] = entry
 
@@ -124,9 +127,19 @@ def render_family(family):
 def _compiler_label(entry):
     """Human readable compiler column, e.g. "MinGW-w64 GCC 13"."""
     compiler = entry.get("compiler", "")
+    # An artefact this pipeline did not compile: a blob committed upstream, or
+    # a prebuilt harvested from where upstream publishes it. `compiler` then
+    # describes the host that ran the extraction, so the column has to come
+    # off the producer instead. Everything built here agrees with its own
+    # toolchain and falls through to the branches below unchanged.
+    producer = _producer_of(entry)
+    if producer and producer != (entry.get("toolchain") or "").rsplit("_", 1)[0]:
+        return _producer_label(producer, bool(entry.get("is_blob")))
     if entry.get("is_blob"):
-        # The blob was compiled by whoever committed it, not by the toolchain
-        # that happened to run the extraction.
+        # Only reachable when the stem did not parse, since a blob's producer
+        # differs from its (absent) toolchain by construction. Kept so an
+        # unreadable filename degrades to the previous default rather than to
+        # a label claiming the producer is unknown.
         return "MSVC (as committed upstream)"
     if "mingw" in (entry.get("toolchain") or ""):
         version = compiler.split("(GCC)")[-1].strip().split("-")[0] if "(GCC)" in compiler else "?"
@@ -167,6 +180,57 @@ def _compiler_label(entry):
                            else "142" if minor >= 20 else "141"]
         return "MSVC %d.%d%s" % (major, minor, year)
     return compiler or entry.get("toolchain", "")
+
+
+def _producer_of(entry):
+    """The producer segment of this entry's filename.
+
+    Read off the filename rather than from a field of its own, exactly as
+    validate._producer does and for the same reason: the provenance records
+    written before Artifact.producer existed carry no such field, and the stem
+    has always carried it.
+    """
+    from .validate import _producer
+
+    return _producer(entry.get("mcrit") or entry.get("smda") or "") or ""
+
+
+def _producer_label(producer, is_blob):
+    """Compiler column for an artefact this pipeline did not compile.
+
+    The note matters as much as the name: a reader needs to know the row is
+    upstream's own build rather than a reproduction of it, because that is the
+    difference between a match being evidence about a shipped binary and
+    evidence about a recompilation.
+
+    A producer with no version digits is a deliberate statement that the
+    compiler family is known and the version is not - AdaptixC2's committed
+    stubs, placed by their GCC-style padding and upstream's MinGW-only
+    Makefile without pinning a release - so no version is invented for it.
+    """
+    note = "as committed upstream" if is_blob else "as distributed upstream"
+    match = re.match(r"^msvc(\d+)$", producer)
+    if match:
+        toolset = {"143": "Visual Studio 2022", "142": "Visual Studio 2019",
+                   "141": "Visual Studio 2017", "140": "Visual Studio 2015",
+                   "120": "Visual Studio 2013"}.get(match.group(1))
+        name = "MSVC v%s" % match.group(1)
+        if toolset:
+            name = "%s (%s)" % (name, toolset)
+        return "%s, %s" % (name, note)
+    if producer == "msvc":
+        return "MSVC (%s)" % note
+    match = re.match(r"^mingw(\d*)$", producer)
+    if match:
+        if match.group(1):
+            return "MinGW-w64 GCC %s (%s)" % (match.group(1), note)
+        return "MinGW-w64 GCC (%s)" % note
+    match = re.match(r"^gcc(\d*)$", producer)
+    if match:
+        if match.group(1):
+            return "GCC %s (%s)" % (match.group(1), note)
+        return "GCC (%s)" % note
+    return "%s (%s)" % (producer or "unknown", note)
 
 
 def _component_key(component):

@@ -1,4 +1,54 @@
 {
+  "MuPDF_SumatraPDF-3.3.3_msvc142_x64_libmupdf_bin": {
+    "architecture": "x64",
+    "build_flags": "MSVC v142 (as distributed by upstream: PE linker 14.29, Rich build 30132, /MD); exact flags not published",
+    "built_artifact": "payload/libmupdf.dll",
+    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "libmupdf_bin",
+    "family": "MuPDF",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "GPL-3.0 / AGPL-3.0 and bundled dependencies",
+    "mcrit": "data/MuPDF/x64/mcrit/MuPDF_SumatraPDF-3.3.3_msvc142_x64_libmupdf_bin.mcrit",
+    "notes": "Harvested, not rebuilt: libmupdf.dll from the SumatraPDF 3.3.3 installer SumatraPDF-3.3.3-64-install.exe (sha256 cb1d73323d3d80004ada185844b0d461abd9ded736d5dc690607f935b4f2b58a), unpacked with 7z and scripts/corpus/extract_lzsa.py (the installer's LzSA payload, every file checked against its stored CRC-32) and never executed. Unmodified upstream: the reference for the modified libmupdf.dll of tracker issue #67 (UNC2970 BURNBOOK), whose MD5 is 57e8a7ef21e7586d008d4116d70062a6; this image's MD5 is ece8e9908233891c003d6ed498852541. The modification itself is not reproduced and which functions it touched is unknown. Producer from the PE headers (linker 14.29, Rich build 30132: MSVC v142, VS2019 16.10); the PDB is not published, so only the 816 exported functions carry a name. Bundled dependency attribution (zlib, libjpeg-turbo, freetype, jbig2dec, openjpeg, lcms2, harfbuzz, mujs, gumbo, DjVu, WebP, unarr) and the licence remain maintainer decisions.",
+    "num_functions": 8547,
+    "sha256": "8b91ca378330527bd9b25eda95db347d3209742a1d7ac36beaab7032a9ca73e7",
+    "smda": "data/MuPDF/x64/smda/MuPDF_SumatraPDF-3.3.3_msvc142_x64_libmupdf_bin.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "SumatraPDF-3.3.3-64-install.exe",
+      "sha256": "cb1d73323d3d80004ada185844b0d461abd9ded736d5dc690607f935b4f2b58a",
+      "url": "https://files.sumatrapdfreader.org/software/sumatrapdf/rel/3.3.3/SumatraPDF-3.3.3-64-install.exe"
+    },
+    "toolchain": "mingw13_x64",
+    "upstream": "https://github.com/sumatrapdfreader/sumatrapdf",
+    "version": "SumatraPDF-3.3.3"
+  },
+  "MuPDF_SumatraPDF-3.3.3_msvc142_x86_libmupdf_bin": {
+    "architecture": "x86",
+    "build_flags": "MSVC v142 (as distributed by upstream: PE linker 14.29, Rich build 30132, /MD); exact flags not published",
+    "built_artifact": "payload/libmupdf.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "libmupdf_bin",
+    "family": "MuPDF",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "GPL-3.0 / AGPL-3.0 and bundled dependencies",
+    "mcrit": "data/MuPDF/x86/mcrit/MuPDF_SumatraPDF-3.3.3_msvc142_x86_libmupdf_bin.mcrit",
+    "notes": "Harvested, not rebuilt: libmupdf.dll from the SumatraPDF 3.3.3 installer SumatraPDF-3.3.3-install.exe (sha256 e4801235defdf5ae7c5e384d45ae867e7993bd5efc53ce26ce7df24a8065180b), unpacked with 7z and scripts/corpus/extract_lzsa.py (the installer's LzSA payload, every file checked against its stored CRC-32) and never executed. Unmodified upstream: the reference for the modified libmupdf.dll of tracker issue #67 (UNC2970 BURNBOOK), whose MD5 is 57e8a7ef21e7586d008d4116d70062a6; this image's MD5 is e1d7de37980056757b630db08d0f6e7c. The modification itself is not reproduced and which functions it touched is unknown. Producer from the PE headers (linker 14.29, Rich build 30132: MSVC v142, VS2019 16.10); the PDB is not published, so only the 816 exported functions carry a name. Bundled dependency attribution (zlib, libjpeg-turbo, freetype, jbig2dec, openjpeg, lcms2, harfbuzz, mujs, gumbo, DjVu, WebP, unarr) and the licence remain maintainer decisions.",
+    "num_functions": 9230,
+    "sha256": "f77144ed2fb651b9e546348e33b16c8a8da892a4adf5e153e6a995133f6a31cd",
+    "smda": "data/MuPDF/x86/smda/MuPDF_SumatraPDF-3.3.3_msvc142_x86_libmupdf_bin.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "SumatraPDF-3.3.3-install.exe",
+      "sha256": "e4801235defdf5ae7c5e384d45ae867e7993bd5efc53ce26ce7df24a8065180b",
+      "url": "https://files.sumatrapdfreader.org/software/sumatrapdf/rel/3.3.3/SumatraPDF-3.3.3-install.exe"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://github.com/sumatrapdfreader/sumatrapdf",
+    "version": "SumatraPDF-3.3.3"
+  },
   "MuPDF_SumatraPDF-3.3.3_msvc143_x64_libmupdf": {
     "architecture": "x64",
     "build_flags": "/Ox /MD; no /GL or /LTCG; /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO",
