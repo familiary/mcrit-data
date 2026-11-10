@@ -57,10 +57,11 @@ binary contains them: Poco vendors them under ``dependencies/`` and
 SQLite connector are compiled against those copies, not against a system
 library. That is BlackBone's situation exactly, where the vendored AsmJit and
 rewolf-wow64ext sources are recorded under the BlackBone name because any real
-BlackBone DLL carries them. The alternative, ``POCO_UNBUNDLED=ON``, needs
-mingw builds of zlib, pcre2, expat and sqlite3, and none of those is packaged
-for this toolchain. So the bundled code stays, and the count above is the
-honest statement of how much of this artefact is not Poco.
+BlackBone DLL carries them. The alternative, ``POCO_UNBUNDLED=ON``, is
+built beside this one as poco 1.15.4-unbundled (poco_unbundled.py), against
+MinGW DLLs of the five dependencies built from pinned sources. This artefact
+stays the bundled default, and the count above is the honest statement of
+how much of it is not Poco.
 
 Three groups are deliberately not built:
 
@@ -179,8 +180,8 @@ RECIPES = {
               "floor; named Poco bodies are 13317 and 15532, bundled "
               "third-party 1122 and 1136. The x86 image carries 10681 unnamed "
               "bodies against x64's 483, which is measured and not yet "
-              "explained. POCO_UNBUNDLED would "
-              "need mingw builds of all four and none is packaged. PDF and "
+              "explained. The POCO_UNBUNDLED variant is poco "
+              "1.15.4-unbundled (poco_unbundled.py). PDF and "
               "SevenZip are not built, because their bundled libharu/libpng "
               "and LZMA SDK payloads would file hundreds of functions of two "
               "existing families under this name; Crypto, NetSSL and JWT need "

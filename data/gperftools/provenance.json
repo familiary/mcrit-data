@@ -1,4 +1,69 @@
 {
+  "gperftools_2.18.1_gcc13_x64_tcmalloc_minimal.so": {
+    "architecture": "x64",
+    "build_flags": "-O3 -DNDEBUG (CMake Release), shared build, tcmalloc_minimal only",
+    "built_artifact": "build-x64/libtcmalloc_minimal.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "tcmalloc_minimal.so",
+    "family": "gperftools",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/gperftools/x64/mcrit/gperftools_2.18.1_gcc13_x64_tcmalloc_minimal.so.mcrit",
+    "notes": "The ELF counterpart of gperftools_2.18.1: the same pinned tag and the same tcmalloc_minimal library, built with the host GCC for x86 (-m32) and x86-64. Nothing is patched and no configure variable is overridden; the nanosleep workaround of the MinGW recipe is specific to mingw-w64's header layout.",
+    "num_functions": 758,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_fini",
+      "_init",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "9a3f51c4f2b4bd30de86524ab7520ff1454715c920592a46ba0f0ed6a19c05c3",
+    "smda": "data/gperftools/x64/smda/gperftools_2.18.1_gcc13_x64_tcmalloc_minimal.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "d837a42788ba591d5d791c3b686f2738e7a93562",
+      "git_ref": "gperftools-2.18.1",
+      "git_url": "https://github.com/gperftools/gperftools.git"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://github.com/gperftools/gperftools",
+    "version": "2.18.1"
+  },
+  "gperftools_2.18.1_gcc13_x86_tcmalloc_minimal.so": {
+    "architecture": "x86",
+    "build_flags": "-O3 -DNDEBUG (CMake Release), shared build, tcmalloc_minimal only",
+    "built_artifact": "build-x86/libtcmalloc_minimal.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "tcmalloc_minimal.so",
+    "family": "gperftools",
+    "generated": "2026-11-07",
+    "is_blob": false,
+    "license": "BSD-3-Clause",
+    "mcrit": "data/gperftools/x86/mcrit/gperftools_2.18.1_gcc13_x86_tcmalloc_minimal.so.mcrit",
+    "notes": "The ELF counterpart of gperftools_2.18.1: the same pinned tag and the same tcmalloc_minimal library, built with the host GCC for x86 (-m32) and x86-64. Nothing is patched and no configure variable is overridden; the nanosleep workaround of the MinGW recipe is specific to mingw-w64's header layout.",
+    "num_functions": 777,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "6315dc52da0c72267ade307275db555a514997fd75117ee905ab4e496e37a42b",
+    "smda": "data/gperftools/x86/smda/gperftools_2.18.1_gcc13_x86_tcmalloc_minimal.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "d837a42788ba591d5d791c3b686f2738e7a93562",
+      "git_ref": "gperftools-2.18.1",
+      "git_url": "https://github.com/gperftools/gperftools.git"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://github.com/gperftools/gperftools",
+    "version": "2.18.1"
+  },
   "gperftools_2.18.1_mingw13_x64_tcmalloc_minimal.dll": {
     "architecture": "x64",
     "build_flags": "-O3 -DNDEBUG (CMake Release, GNU default; gperftools sets no CMAKE_CXX_FLAGS_RELEASE of its own), shared build, -DHAVE_DECL_NANOSLEEP=1 to skip a configure probe that looks for nanosleep in the wrong header on mingw, and -lsynchronization appended last so libwinpthread's WaitOnAddress references resolve whatever order CMake emits -lpthread in",

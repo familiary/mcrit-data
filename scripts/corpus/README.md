@@ -549,6 +549,7 @@ Recorded here so the analysis is not repeated:
 | sc4cpp | #14 | upstream repository and the owning GitHub account are both gone (404); the surviving derivative needs clang-cl |
 | BlackLotus | #15 | not an open-source project: leaked bootkit source with no licence, and the UEFI half does not build from the repository as published (it references `global/` and `gnu-efi/` directories that are not there) |
 | google/tcmalloc | #10 | Bazel-only and Linux-only - it cannot produce a PE at all. Issue #10's "tcmalloc" is almost certainly gperftools |
+| Poco Data/MySQL, Data/PostgreSQL, ApacheConnector, DNSSD | r0ny123/mcrit-data#22 | not built: they need, for the target, the MySQL/MariaDB client library, libpq, Apache httpd with APR, and the Bonjour SDK or Avahi respectively; `poco_1.15.4-full` builds every other optional component (Crypto, NetSSL_OpenSSL, JWT, NetSSL_Win, Data/ODBC, FastLogger, PDF, SevenZip) |
 
 VX-API (#4), BlackBone (#8) and SysWhispers v1 (#9) were on this list and are
 not any more: they need ATL, the DIA SDK or MASM, none of which exists for
