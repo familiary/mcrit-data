@@ -1330,7 +1330,26 @@ MINGW_NAMES = {
 }
 
 
-def patterns(mingw=False, prefix="", optional_prefix="", libraries=None):
+# The MSVC (cl 19.44) build compiles blake2s.c without inlining its static
+# helpers, so they are separate named functions there. Read from the build's
+# own cedar blake2s.c.obj with dumpbin (run 42752325999, x64 and x86 agree;
+# x86 with the leading underscore), none of them defined by SoftEther's own
+# libraries. Kept apart so the Linux and MinGW patterns do not change.
+MSVC_NAMES = {
+    'BLAKE2': (
+        'blake2s_increment_counter',
+        'blake2s_is_lastblock',
+        'blake2s_set_lastblock',
+        'blake2s_set_lastnode',
+        'load32',
+        'secure_zero_memory',
+        'store16',
+        'store32',
+    ),
+}
+
+
+def patterns(mingw=False, prefix="", optional_prefix="", libraries=None, msvc=False):
     """One anchored alternation per library, for Recipe.exclude_functions.
 
     With ``mingw`` the MinGW additions are folded into their library's
@@ -1352,6 +1371,8 @@ def patterns(mingw=False, prefix="", optional_prefix="", libraries=None):
         names = list(NAMES[k])
         if mingw:
             names += [n for n in MINGW_NAMES.get(k, ()) if n not in names]
+        if msvc:
+            names += [n for n in MSVC_NAMES.get(k, ()) if n not in names]
         if names:
             out.append("^%s%s(?:%s)$" % (re.escape(prefix),
                                       "(?:%s)?" % re.escape(optional_prefix)

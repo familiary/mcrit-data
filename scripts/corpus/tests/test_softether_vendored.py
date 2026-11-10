@@ -93,7 +93,8 @@ class RecipeWiringTest(unittest.TestCase):
                 # one recipe serves x86 (C names decorated with "_") and x64
                 self.assertEqual(recipe.exclude_functions,
                                  v5.patterns(optional_prefix="_",
-                                             libraries=("BLAKE2",)))
+                                             libraries=("BLAKE2",),
+                                             msvc=True))
                 continue
             mingw = recipe.toolchains[0].startswith("mingw")
             prefix = "_" if recipe.toolchains[0] == "mingw_x86" else ""
@@ -210,7 +211,7 @@ class ProvenanceCountsTest(unittest.TestCase):
     def test_kept_plus_excluded_is_the_count_before_exclusion(self):
         seen = 0
         for key, entry in self._entries().items():
-            if "_msvc143_" not in key:
+            if "_msvc143_" not in key or key.startswith("SoftEtherVPN_5."):
                 continue
             seen += 1
             self.assertEqual(entry["num_functions_before_exclusion"],
@@ -222,9 +223,23 @@ class ProvenanceCountsTest(unittest.TestCase):
     def test_each_msvc_record_carries_the_recipes_patterns(self):
         recipe = recipes.get(RECIPE)
         for key, entry in self._entries().items():
-            if "_msvc143_" in key:
+            if "_msvc143_" in key and not key.startswith("SoftEtherVPN_5."):
                 self.assertEqual(entry["exclude_functions"],
                                  recipe.exclude_functions, key)
+
+    def test_the_5x_msvc_records_carry_the_5x_msvc_patterns(self):
+        recipe = recipes.get("softether_vpn_5.2.5189_msvc")
+        seen = 0
+        for key, entry in self._entries().items():
+            if key.startswith("SoftEtherVPN_5.") and "_msvc143_" in key:
+                seen += 1
+                self.assertEqual(entry["exclude_functions"],
+                                 recipe.exclude_functions, key)
+                self.assertEqual(entry["num_functions_before_exclusion"],
+                                 entry["num_functions"]
+                                 + entry["excluded_function_count"], key)
+                self.assertEqual(entry["excluded_function_count"], 15, key)
+        self.assertEqual(seen, 2)
 
     def test_the_linux_records_carry_no_exclusion(self):
         seen = 0

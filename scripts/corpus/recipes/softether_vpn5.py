@@ -138,40 +138,54 @@ twelve printf.constprop.0 copies (x64 63033854732689302, x86
 680774687785349816, x86 9440566005262149013), and on x86 __configthreadlocale
 and __exit; none of them is in the shared MinGW glue baseline.
 
-**MSVC v143 x86 and x64: recipe written, NOT built yet.** The recipe
+**MSVC v143 x86 and x64: built, from unmodified source.** The recipe
 softether_vpn_5.2.5189_msvc follows upstream's Windows route (CMake + vcpkg,
 src/BUILD_WINDOWS.md) with cl on the windows-2022 runner; no upstream file is
-edited, so there is no build-tree patch and the images would not need the
-"NOT byte-identical" caveat the MinGW ones carry (they would still differ
-from upstream's own release in build settings: /MD instead of /MT, cl and
-/Z7 instead of clang-cl and /Zi, the corpus link flags, dynamic vcpkg ports).
+edited, so there is no build-tree patch. The images still differ from
+upstream's own release in build settings: /MD instead of /MT, cl and /Z7
+instead of clang-cl and /Zi, the corpus link flags (no /GL or /LTCG,
+/OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO) and dynamic vcpkg ports.
 Upstream's /Qspectre, /guard:cf, /DYNAMICBASE and /CETCOMPAT stay. vcpkg is
 pinned to its 2026.01.16 release (commit 66c0373d), which fixes OpenSSL
 3.6.0#3, libsodium 1.0.21 and zlib 1.3.1 as DLLs through an overlay triplet
-(dynamic CRT, release only), so none of their code is in vpnserver.exe.
-Three scoped dispatches of windows-reference-data.yml on scratch/
-softether5-msvc, all failed, in this order:
+(dynamic CRT, release only); vpnserver.exe imports zlib1.dll, libcrypto-3
+(-x64).dll, libssl and libsodium.dll, so none of their code is in the image.
+Four scoped dispatches of windows-reference-data.yml on scratch/
+softether5-msvc; the first three failed, each fixed by a flag:
 
   * run 42748558956: vcpkg's libsodium port, "error C1083: Cannot open
     source file: '..\\..\\..\\..\\src\\libsodium\\crypto_pwhash\\
     scryptsalsa208sha256\\nosse\\pwhash_scryptsalsa208sha256_nosse.c'", a
     260-character path under the corpus work directory; vcpkg's build trees
     now go to C:/vb and C:/vp (VCPKG_INSTALL_OPTIONS);
-  * run 42749212297 (x86 and x64): "oqsprov_capabilities.c(683): warning
-    C4034: sizeof returns 0", then "fatal error C1001: Internal compiler
-    error. (compiler file 'D:\\a\\_work\\1\\s\\src\\vctools\\Compiler\\Utc\\
-    src\\p2\\main.cpp', line 258)" compiling the OQS provider; upstream's
-    own windows.yml builds with clang-cl. The recipe passes upstream's
-    -DOQS_ENABLE=OFF, so liboqs and the provider are not built and only
-    blake2s is in the exclusion table of this recipe;
-  * run 42750493661 (x86 and x64, ninja -k 0, so every source was tried):
-    one failure each, "3rdparty/BLAKE2/sse/blake2-config.h(69): fatal error
-    C1189: #error:  "This code requires at least SSE2."". cl defines none of
-    the macros the header tests; the recipe now passes /DHAVE_SSE2 for C.
+  * run 42749212297: "oqsprov_capabilities.c(683): warning C4034: sizeof
+    returns 0", then "fatal error C1001: Internal compiler error. (compiler
+    file 'D:\\a\\_work\\1\\s\\src\\vctools\\Compiler\\Utc\\src\\p2\\
+    main.cpp', line 258)" compiling the OQS provider; upstream's own
+    windows.yml builds with clang-cl. The recipe passes upstream's
+    -DOQS_ENABLE=OFF, so liboqs and the provider are not in the images;
+  * run 42750493661 (ninja -k 0): "3rdparty/BLAKE2/sse/blake2-config.h(69):
+    fatal error C1189: #error:  "This code requires at least SSE2."", cl
+    defines none of the macros the header tests; /DHAVE_SSE2 for C;
+  * run 42752325999: green on both architectures.
 
-That last change has NOT been run: the three dispatches this item may use are
-spent, so there is no vpnserver.exe, no link result and no data yet. Every
-other Mayaqua, Cedar and libhamcore source compiled in run 3.
+Vendored code: only BLAKE2's blake2s (compiled into cedar). The membership
+test of softether5_msvc.py (dumpbin on the build's own objects, minus
+SoftEther's mayaqua, cedar and libhamcore libraries, no conflicts) found the
+7 table names and 8 static helpers cl does not inline, which are MSVC_NAMES
+in _softether5_vendored.py; the run built with the 7-name table and the
+images were re-derived with the 15 names (recipe patterns recorded in
+provenance), not rebuilt. Measured, kept + removed as runtime glue +
+excluded = total:
+
+    msvc143 x64 vpnserver.exe  7241 + 231 + 15 = 7487  (5548 of 10+ instructions, 5073 distinct PicHashes)
+    msvc143 x86 vpnserver.exe  7280 + 242 + 15 = 7537  (5717 of 10+ instructions, 5209 distinct PicHashes)
+
+Every function is named (the PDB covers the whole image). PicHash overlap
+(10+ instructions): x86 and x64 share 1. The x64 image shares 4 with MinGW
+x64, 766 with the 4.44 MSVC x64 programs and none with the 5.x or 4.44 ELF
+images; the x86 image shares 1 with MinGW x86, 972 with the 4.44 MSVC x86
+programs and none with the ELF images.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -572,7 +586,8 @@ def _msvc_recipe():
         # i686 COFF decorates C names with a leading underscore (the x86
         # images name blake2s "_blake2s"); x64 names carry none.
         exclude_functions=_vendored.patterns(optional_prefix="_",
-                                             libraries=("BLAKE2",)),
+                                             libraries=("BLAKE2",),
+                                             msvc=True),
         build_flags=_MSVC_BUILD_FLAGS,
         notes=_MSVC_NOTES,
     )
