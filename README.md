@@ -93,6 +93,9 @@ String obfuscation
 * [obfstr](#obfstr)
 * [Obfuscator4g3nt47](#obfuscator4g3nt47)
 
+.NET obfuscation
+* [JIEJIE.NET](#jiejie.net)
+
 ## Compilers
 
 Reference code extracted from all files containing precompiled code found in installations for various compiler toolchains.
@@ -1039,4 +1042,25 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
+<!-- /generated -->
+
+## .NET obfuscation
+
+The corpus's only managed code. These artefacts are CIL, not x86: SMDA disassembles a .NET assembly's method bodies with its CIL backend, they are filed under `cil/` rather than by the PE header's bitness, and a CIL function only ever matches CIL. See `scripts/corpus/README.md` for what SMDA emits for managed code.
+
+### JIEJIE.NET<a id='jiejie.net'></a>
+
+[dcsoft-yyf/JIEJIE.NET](https://github.com/dcsoft-yyf/JIEJIE.NET) is an open-source .NET assembly obfuscator. It is here because FortiGuard Labs' [QuickFox write-up](https://www.fortinet.com/blog/threat-research/quickfox-supply-chain-attack-used-to-deploy-fdmtp-implant) says the generation-2 FDMTP loader `Microsoft.ServiceHosting.Tools.dll` "is obfuscated using the JieJie .NET Protector tool". That one sentence is the evidence; the write-up shows no code comparison, and nothing here was checked against that sample.  
+What this family indexes is **the obfuscator's own code** - the tool an operator runs - not what it writes into the assemblies it protects. A protected assembly does not contain this engine, so this data recognises JIEJIE.NET itself, not the QuickFox loader. The one part that may reach protected assemblies is the runtime helper namespace `__DC20211119` (`JIEJIEHelper`, `JIEJIEPerformanceCounter`), which the tool injects as IL templates and also compiles into itself: 59 of the 858 methods. Whether those match the injected copies was not measured.  
+Pinned to commit `f28e1d2` (2026-01-01), the last that touches `source/`; the newest tag, `2022-11-7`, predates most of the upstream log, and which version the attackers used is unknown. Built from `JIEJIENETForCore.Console.csproj` (netcoreapp3.1) in both of the project's configurations, because every binary upstream commits is a Debug build: against upstream's `v1.2023.11.07` Core console the Debug artefact shares 662 of 693 PicHashes of ten instructions or more, the Release one 6. The .NET Framework console is not built - its project file has been committed encrypted (an E-SafeNet header) since 2024-10-19. The .NET Framework 4.0 GUI (`JIEJIE.NET.GUI.csproj`) is built too, in both configurations (the gui_debug and gui_release rows), with the SDK's MSBuild: it refuses the form's System.Drawing bitmaps (MSB3822/MSB3823) unless resources are generated preserialized, so the recipe sets `GenerateResourceUsePreserializedResources=true`, adds a System.Resources.Extensions 5.0.0 reference through a targets file passed as `CustomAfterMicrosoftCommonTargets`, and takes the v4.0 reference assemblies from Microsoft.NETFramework.ReferenceAssemblies.net40 1.0.3 (both nuget packages pinned by sha256). No upstream file is changed, but the GUI images are NOT byte-identical to a build of unmodified upstream with full-Framework MSBuild (an added reference, preserialized resources). They are 905 methods each, nothing filtered; of the GUI Debug image's 691 distinct PicHashes of ten instructions or more 633 are in the console Debug artefact, and of the Release image's 616, 562 are in the console Release one; the rest is the form and its handlers. Both console artefacts are 858 methods: 799 in namespace `JIEJIE` (37 of them compiler-generated lambda and closure bodies of the project's own lambdas) and 59 in `__DC20211119`; no compiler-runtime method is emitted, so nothing is filtered.
+
+Generated with `scripts/build_corpus.py`; see `data/JIEJIE.NET/provenance.json` for the source commit, compiler and flags.
+
+<!-- generated: JIEJIE.NET -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| JIEJIE.NET | 2026-01-01 | dotnet SDK 8.0.133, csc 4.8.0-7.25569.25 (38896ab4) | [cil PE](data/JIEJIE.NET/cil/mcrit/JIEJIE.NET_2026-01-01_dotnet8_cil_console_debug.mcrit) | [cil PE](data/JIEJIE.NET/cil/smda/JIEJIE.NET_2026-01-01_dotnet8_cil_console_debug.7z) |
+| JIEJIE.NET | 2026-01-01 | dotnet SDK 8.0.133, csc 4.8.0-7.25569.25 (38896ab4) | [cil PE](data/JIEJIE.NET/cil/mcrit/JIEJIE.NET_2026-01-01_dotnet8_cil_console_release.mcrit) | [cil PE](data/JIEJIE.NET/cil/smda/JIEJIE.NET_2026-01-01_dotnet8_cil_console_release.7z) |
+| JIEJIE.NET | 2026-01-01 | dotnet SDK 8.0.133, csc 4.8.0-7.25569.25 (38896ab4) | [cil PE](data/JIEJIE.NET/cil/mcrit/JIEJIE.NET_2026-01-01_dotnet8_cil_gui_debug.mcrit) | [cil PE](data/JIEJIE.NET/cil/smda/JIEJIE.NET_2026-01-01_dotnet8_cil_gui_debug.7z) |
+| JIEJIE.NET | 2026-01-01 | dotnet SDK 8.0.133, csc 4.8.0-7.25569.25 (38896ab4) | [cil PE](data/JIEJIE.NET/cil/mcrit/JIEJIE.NET_2026-01-01_dotnet8_cil_gui_release.mcrit) | [cil PE](data/JIEJIE.NET/cil/smda/JIEJIE.NET_2026-01-01_dotnet8_cil_gui_release.7z) |
 <!-- /generated -->
