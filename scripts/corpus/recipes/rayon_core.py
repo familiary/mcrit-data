@@ -180,3 +180,51 @@ for _arch, _triple in (("x86", "i686-pc-windows-msvc"),
         steps_before=[BuildStep("rustup target add " + _triple)],
         env={"RUSTFLAGS": _MSVC_RUSTFLAGS},
         pdb="target/%s/release/rayon_core_driver.pdb" % _triple)
+
+
+# The `debug = true` builds the tracker issue asks for, beside the release
+# ones: CARGO_PROFILE_RELEASE_DEBUG=true switches the release profile to full
+# debug info and nothing else, under version 1.12.1-debug. Every leg pins its
+# rustc with rustup: 1.97.0 for ELF and MinGW (the container's, which built
+# the release images), 1.99.1 for MSVC (the runner's stable of the orion MSVC
+# release images; the rayon-core release run did not record its rustc).
+_MSVC_DEBUG_RUSTC = "1.99.1"
+_LOCAL_DEBUG_RUSTC = "1.97.0"
+
+
+def _debug(name, recipe):
+    import dataclasses
+    msvc = any(t.startswith("msvc") for t in recipe.toolchains)
+    rustc = _MSVC_DEBUG_RUSTC if msvc else _LOCAL_DEBUG_RUSTC
+    build = []
+    for step in recipe.build:
+        env = dict(step.env)
+        if step.command.startswith("cargo build"):
+            env["CARGO_PROFILE_RELEASE_DEBUG"] = "true"
+        env["RUSTUP_TOOLCHAIN"] = rustc
+        build.append(dataclasses.replace(step, env=env))
+    triple = recipe.artifacts[0].path.split("/")[1]
+    build.insert(0, BuildStep("rustup toolchain install %s --profile minimal "
+                              "--target %s" % (rustc, triple)))
+    head, _, compiler = recipe.notes.partition("(newest 0.18.1; see orion.py). ")
+    compiler = compiler.split(" Measured ")[0]
+    if msvc:
+        compiler = compiler.replace(
+            "with the stable rustc of the windows-2022 runner image "
+            "win22/20261101.353.",
+            "with rustc %s pinned by rustup." % rustc)
+    else:
+        compiler = compiler.rstrip(" .") + ", pinned by rustup"
+    return dataclasses.replace(
+        recipe, version=_VERSION + "-debug", build=build,
+        build_flags=recipe.build_flags.replace("debug info off",
+                                               "debug = true (full debug info)"),
+        notes=("debug = true build: identical to the %s recipe except that "
+               "CARGO_PROFILE_RELEASE_DEBUG=true turns on full debug info in "
+               "the release profile. " % name) + head
+              + "(newest 0.18.1; see orion.py). " + compiler.rstrip(" .") + ".")
+
+
+for _name in list(RECIPES):
+    RECIPES[_name.replace("1.12.1", "1.12.1-debug", 1)] = _debug(
+        _name, RECIPES[_name])

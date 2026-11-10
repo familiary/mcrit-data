@@ -293,3 +293,52 @@ def _all(version):
 RECIPES = {}
 for _v in _VERSIONS:
     RECIPES.update(_all(_v))
+
+
+# The `debug = true` builds the tracker issue asks for beside the release
+# ones: the same recipes with cargo's release profile switched to full debug
+# info (CARGO_PROFILE_RELEASE_DEBUG=true overrides the driver's `debug =
+# false`), filed as version <v>-debug so the two never share a provenance key.
+# Every leg pins with rustup the rustc its release build used (1.99.1 for
+# MSVC, the runner's; 1.97.0 for ELF and MinGW, the container's), so that
+# debug info is the only difference wherever the leg is built.
+_DEBUG_NOTE = ("debug = true build: identical to the %s recipe except that "
+               "CARGO_PROFILE_RELEASE_DEBUG=true turns on full debug info in "
+               "the release profile (opt-level, codegen units, LTO and panic "
+               "strategy unchanged). ")
+
+_MSVC_DEBUG_RUSTC = "1.99.1"
+_LOCAL_DEBUG_RUSTC = "1.97.0"
+
+
+def _debug(name, recipe):
+    import dataclasses
+    msvc = any(t.startswith("msvc") for t in recipe.toolchains)
+    rustc = _MSVC_DEBUG_RUSTC if msvc else _LOCAL_DEBUG_RUSTC
+    build = []
+    for step in recipe.build:
+        env = dict(step.env)
+        if step.command.startswith("cargo build"):
+            env["CARGO_PROFILE_RELEASE_DEBUG"] = "true"
+        env["RUSTUP_TOOLCHAIN"] = rustc
+        build.append(dataclasses.replace(step, env=env))
+    triple = recipe.artifacts[0].path.split("/")[1]
+    build.insert(0, BuildStep("rustup toolchain install %s --profile minimal "
+                              "--target %s" % (rustc, triple)))
+    compiler = recipe.notes[len(_COMMON_NOTES):].split(" Measured ")[0]
+    compiler = compiler.replace(
+        "the stable toolchain of the windows-2022 runner image" if msvc
+        else "the stable toolchain of the build container",
+        "pinned with rustup (RUSTUP_TOOLCHAIN=%s), the rustc of the "
+        "release build" % rustc)
+    return dataclasses.replace(
+        recipe, version=recipe.version + "-debug", build=build,
+        build_flags=recipe.build_flags.replace("debug info off",
+                                               "debug = true (full debug info)"),
+        notes=(_DEBUG_NOTE % name) + _COMMON_NOTES + compiler.rstrip(" ."))
+
+
+for _name in list(RECIPES):
+    _v, _, _rest = _name[len("orion_"):].partition("_")
+    RECIPES["orion_%s-debug%s" % (_v, ("_" + _rest) if _rest else "")] = \
+        _debug(_name, RECIPES[_name])
