@@ -1,0 +1,18 @@
+; Exports for the MSVC build of Tor's ed25519_tor.c (Tor commit 8dbbbe6,
+; ED25519_SUFFIX=_donna), outside the Tor tree. Tor's public API from
+; src/ext/ed25519/donna/ed25519_donna_tor.h plus the two ED25519_FN() functions
+; the file leaves extern; the shim's crypto_* and memwipe stay unexported.
+EXPORTS
+    ed25519_donna_selftest
+    ed25519_donna_seckey
+    ed25519_donna_seckey_expand
+    ed25519_donna_pubkey
+    ed25519_donna_keygen
+    ed25519_donna_open
+    ed25519_donna_sign
+    ed25519_donna_blind_secret_key
+    ed25519_donna_blind_public_key
+    ed25519_donna_pubkey_from_curve25519_pubkey
+    ed25519_donna_scalarmult_with_group_order
+    ed25519_sign_open_batch_donna
+    curved25519_scalarmult_basepoint_donna
