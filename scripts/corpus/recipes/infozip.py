@@ -152,6 +152,23 @@ patch. Four settings are needed and the first is not obvious:
   LDFLAGS / LD_RELEASE_OPT - both makefiles link with -s, which discards the
                         COFF symbol table this corpus names functions from.
   CC_CPU_OPT=         - unzip passes -mcpu=pentiumpro by default.
+
+Second pass, separate versions so the images above are unchanged (kept +
+removed = total, no exclusions; x86 / x64). Utilities ("<v>-utils"):
+zipcloak 3.0 110 + 159 = 269 / 141 + 157 = 298, zipnote 103 + 158 = 261 /
+134 + 156 = 290, zipsplit 106 + 162 = 268 / 137 + 157 = 294; 3.1a and 3.1b
+zipcloak 108 + 161 = 269 / 139 + 157 = 296, zipnote 101 + 160 = 261 / 132 +
+156 = 288, zipsplit 103 + 164 = 267 / 134 + 159 = 293; 3.1c zipcloak 111 + 161
+= 272 / 143 + 157 = 300, zipnote 104 + 160 = 264 / 136 + 156 = 292, zipsplit
+106 + 164 = 270 / 138 + 159 = 297. "6.0-sfxdll": unzipsfx.exe 100 + 148 = 248
+/ 177 + 144 = 321, unzip32.dll 144 + 139 = 283 / 228 + 134 = 362. x86
+assembler builds ("-asm"): zip.exe 3.0 246 + 208 = 454, 3.1a and 3.1b 246 +
+210 = 456, 3.1c 248 + 209 = 457 (patched build tree, see below); unzip.exe
+129 + 154 = 283, funzip.exe 21 + 134 = 155. Against the C build of the same
+version the assembler builds share 184 of 189 (3.0), 186 of 191 (3.1a, 3.1b),
+188 of 193 (3.1c), 103 of 106 (unzip) and 14 of 16 (funzip) ten-instruction
+PicHashes; each utility shares 78 to 86 of its 84 to 91 with its neighbour;
+no image is PicHash-identical to another.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
