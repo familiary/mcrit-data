@@ -529,3 +529,75 @@ RECIPES = {
     "curve25519-donna_1.3-c64": _curve25519_c64(False),
     "curve25519-donna_1.3-c64_linux": _curve25519_c64(True),
 }
+
+
+# --- Builds the first revision measured or named and left out, added as
+# separate versions so the committed images are unchanged.
+#
+# ED25519_FORCE_32BIT on x64: ed25519-donna-portable.h selects the 64-bit
+# field code (curve25519-donna-64bit.h, __int128) on x64 unless
+# ED25519_FORCE_32BIT is defined, which forces the 32-bit field code
+# (curve25519-donna-32bit.h) that x86 builds use. x64 only: on x86 the define
+# changes nothing, the 32-bit code is already the default.
+def _ed25519_force32(linux):
+    pic = _PIC if linux else ""
+    ext = "so" if linux else "dll"
+    plain = "ed25519-donna." + ext
+    flags = ("-O2 " + ("-fPIC -fvisibility=hidden " if linux else "")
+             + "-DED25519_REFHASH -DED25519_CUSTOMRANDOM -DED25519_FORCE_32BIT")
+    return Recipe(
+        family="ed25519-donna",
+        version="2015-03-16-force32bit",
+        upstream="https://github.com/floodyberry/ed25519-donna",
+        license=RECIPES["ed25519-donna_2015-03-16"].license,
+        source=Source(git_url="https://github.com/floodyberry/ed25519-donna.git",
+                      git_ref=_ED_COMMIT),
+        build=[BuildStep(_ED % (pic, "-DED25519_FORCE_32BIT", plain))],
+        artifacts=[Artifact(path=plain, component=plain)],
+        toolchains=["linux_x64"] if linux else ["mingw_x64"],
+        build_flags=flags,
+        notes="The pinned master HEAD, ed25519.c built as the plain "
+              "ed25519-donna component with -DED25519_FORCE_32BIT added: on "
+              "x64 this replaces the 64-bit field arithmetic "
+              "(curve25519-donna-64bit.h, __int128) with the 32-bit one "
+              "(curve25519-donna-32bit.h) the x86 builds use. x64 only, "
+              "because on x86 the 32-bit code is already the default. The "
+              "same reference SHA-512 and memset RNG stub as the plain "
+              "component; nothing patched.",
+    )
+
+
+# The optimisation levels the first revision measured and dropped (-O3
+# shares 11 of 30 x64 hashes with -O2, -Os, -O0 and -O1 almost none): the
+# plain component at each level, as versions "2015-03-16-O<n>".
+def _ed25519_opt(linux, level):
+    pic = _PIC if linux else ""
+    ext = "so" if linux else "dll"
+    plain = "ed25519-donna." + ext
+    cmd = (_ED % (pic, "", plain)).replace(" -O2 ", " %s " % level)
+    return Recipe(
+        family="ed25519-donna",
+        version="2015-03-16" + level,
+        upstream="https://github.com/floodyberry/ed25519-donna",
+        license=RECIPES["ed25519-donna_2015-03-16"].license,
+        source=Source(git_url="https://github.com/floodyberry/ed25519-donna.git",
+                      git_ref=_ED_COMMIT),
+        build=[BuildStep(cmd)],
+        artifacts=[Artifact(path=plain, component=plain)],
+        toolchains=(["linux_x86", "linux_x64"] if linux
+                    else ["mingw_x86", "mingw_x64"]),
+        build_flags=level + " " + ("-fPIC -fvisibility=hidden " if linux
+                                   else "")
+                    + "-DED25519_REFHASH -DED25519_CUSTOMRANDOM",
+        notes="The pinned master HEAD, the plain ed25519-donna component "
+              "(upstream's default code for the target, reference SHA-512, "
+              "memset RNG stub) at %s instead of -O2, the optimisation "
+              "level an embedding project may use; nothing patched." % level,
+    )
+
+
+RECIPES["ed25519-donna_2015-03-16-force32bit"] = _ed25519_force32(False)
+RECIPES["ed25519-donna_2015-03-16-force32bit_linux"] = _ed25519_force32(True)
+for _lvl in ("-O0", "-O1", "-O3", "-Os"):
+    RECIPES["ed25519-donna_2015-03-16%s" % _lvl] = _ed25519_opt(False, _lvl)
+    RECIPES["ed25519-donna_2015-03-16%s_linux" % _lvl] = _ed25519_opt(True, _lvl)
