@@ -54,6 +54,7 @@ Libraries
 * [nlohmann/json](#nlohmann_json)
 * [jemalloc](#jemalloc)
 * [libstdc++](#libstdcxx)
+* [EquiX](#equix)
 
 Runtimes
 * [Lua](#lua)
@@ -673,6 +674,20 @@ Generated with `scripts/build_corpus.py`; see `data/libstdc++/provenance.json` f
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | libstdc++ | 13.2-mingw-w64 | MinGW-w64 GCC 13 | [x86 PE](data/libstdc++/x86/mcrit/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.mcrit) | [x86 PE](data/libstdc++/x86/smda/libstdc++_13.2-mingw-w64_mingw13_x86_libstdcxx_exerciser.dll.7z) |
+<!-- /generated -->
+
+### EquiX<a id='equix'></a>
+
+Equi-X and HashX are Tor’s proof-of-work puzzle implementations. The reference uses the Tor 0.4.8.25 vendored sources with the same 8-byte HashX configuration; Tor’s client image disables the PoW service and is tracked separately.
+Generated with `scripts/build_corpus.py`; see `data/EquiX/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: EquiX -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| EquiX | tor-0.4.8.25 | GCC 14 (Linux, glibc) | [x86 ELF](data/EquiX/x86/mcrit/EquiX_tor-0.4.8.25_gcc14_x86_equix-hashx.so.mcrit) / [x64 ELF](data/EquiX/x64/mcrit/EquiX_tor-0.4.8.25_gcc14_x64_equix-hashx.so.mcrit) | [x86 ELF](data/EquiX/x86/smda/EquiX_tor-0.4.8.25_gcc14_x86_equix-hashx.so.7z) / [x64 ELF](data/EquiX/x64/smda/EquiX_tor-0.4.8.25_gcc14_x64_equix-hashx.so.7z) |
+| EquiX | tor-0.4.8.25 | MinGW-w64 GCC 13 | [x86 PE](data/EquiX/x86/mcrit/EquiX_tor-0.4.8.25_mingw13_x86_equix-hashx.dll.mcrit) / [x64 PE](data/EquiX/x64/mcrit/EquiX_tor-0.4.8.25_mingw13_x64_equix-hashx.dll.mcrit) | [x86 PE](data/EquiX/x86/smda/EquiX_tor-0.4.8.25_mingw13_x86_equix-hashx.dll.7z) / [x64 PE](data/EquiX/x64/smda/EquiX_tor-0.4.8.25_mingw13_x64_equix-hashx.dll.7z) |
+| EquiX | tor-0.4.8.25 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/EquiX/x86/mcrit/EquiX_tor-0.4.8.25_msvc143_x86_equix-hashx.dll.mcrit) / [x64 PE](data/EquiX/x64/mcrit/EquiX_tor-0.4.8.25_msvc143_x64_equix-hashx.dll.mcrit) | [x86 PE](data/EquiX/x86/smda/EquiX_tor-0.4.8.25_msvc143_x86_equix-hashx.dll.7z) / [x64 PE](data/EquiX/x64/smda/EquiX_tor-0.4.8.25_msvc143_x64_equix-hashx.dll.7z) |
+| EquiX | tevador-fb00f15 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/EquiX/x86/mcrit/EquiX_tevador-fb00f15_msvc143_x86_equix-hashx.dll.mcrit) / [x64 PE](data/EquiX/x64/mcrit/EquiX_tevador-fb00f15_msvc143_x64_equix-hashx.dll.mcrit) | [x86 PE](data/EquiX/x86/smda/EquiX_tevador-fb00f15_msvc143_x86_equix-hashx.dll.7z) / [x64 PE](data/EquiX/x64/smda/EquiX_tevador-fb00f15_msvc143_x64_equix-hashx.dll.7z) |
 <!-- /generated -->
 
 ## Runtimes
