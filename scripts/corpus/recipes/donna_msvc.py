@@ -480,9 +480,11 @@ RECIPES["ed25519-donna_2015-03-16-force32bit_msvc"] = Recipe(
 # GCC's __attribute__((aligned(8))), which cl rejects ("keccak-tiny.h(24):
 # error C2143: syntax error: missing ')' before '('", then C2061 at
 # crypto_digest_openssl.c(125) for every use of keccak_state; run
-# 42779106687). /D__attribute__(x)= removes the attribute on the command
-# line, the way a project compiling Tor's files with cl has to; no file is
-# edited, and the struct takes cl's natural alignment.
+# 42779106687). cl's /D cannot define a function-like macro (run
+# 42781512715 failed the same way with /D__attribute__(x)=), so
+# exercisers/ed25519_tor_shim/msvc_no_attribute.h, outside the tree, is
+# forced in with /FI and defines __attribute__(x) as nothing; no file of the
+# tree is edited, and the struct takes cl's natural alignment.
 _OSSL = Source(
     url="https://github.com/openssl/openssl/releases/download/openssl-3.0.15/"
         "openssl-3.0.15.tar.gz",
@@ -521,11 +523,11 @@ _TOR_DIGEST_OBJS = ("ed25519_tor.obj crypto_digest_openssl.obj "
 def _tor_openssl_steps(name, objdir, defines):
     return [
         BuildStep("if not exist %s mkdir %s" % (objdir, objdir)),
-        BuildStep("%s /Fd%s.pdb %s /DENABLE_OPENSSL /D__attribute__(x)= "
-                  "%s/I%s /Iossl/include "
+        BuildStep("%s /Fd%s.pdb %s /DENABLE_OPENSSL "
+                  "/FI%s/msvc_no_attribute.h %s/I%s /Iossl/include "
                   "/Isrc /Isrc/ext /Isrc/ext/ed25519/donna /Fo%s\\ %s"
-                  % (_CL, name, _TOR_GLUE_DEFINES, defines, _TOR_SHIM,
-                     objdir, _TOR_DIGEST_SRC)),
+                  % (_CL, name, _TOR_GLUE_DEFINES, _TOR_SHIM, defines,
+                     _TOR_SHIM, objdir, _TOR_DIGEST_SRC)),
         BuildStep("%s /DEF:%s /PDB:%s.pdb /OUT:%s.dll %s libcrypto.lib "
                   "bcrypt.lib"
                   % (_LINK, _TOR_GLUE_DEF, name, name,
@@ -555,14 +557,14 @@ RECIPES["ed25519-donna_2026-10-07-tor-openssl_msvc"] = Recipe(
                  pdb="ed25519_tor-sse2.pdb",
                  build_flags="/O2 /MD /Zi -DED25519_CUSTOMRANDOM "
                              "-DED25519_CUSTOMHASH -DED25519_SUFFIX=_donna "
-                             "-DENABLE_OPENSSL -D__attribute__(x)= "
+                             "-DENABLE_OPENSSL /FImsvc_no_attribute.h "
                              "-DED25519_SSE2; /DEBUG /Brepro "
                              "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link, "
                              "libcrypto.lib (import library) bcrypt.lib"),
     ],
     toolchains=["msvc_x86", "msvc_x64"],
     build_flags="/O2 /MD /Zi -DED25519_CUSTOMRANDOM -DED25519_CUSTOMHASH "
-                "-DED25519_SUFFIX=_donna -DENABLE_OPENSSL -D__attribute__(x)=; "
+                "-DED25519_SUFFIX=_donna -DENABLE_OPENSSL /FImsvc_no_attribute.h; "
                 "/DEBUG /Brepro "
                 "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link, libcrypto.lib "
                 "(import library) bcrypt.lib",
@@ -572,9 +574,11 @@ RECIPES["ed25519-donna_2026-10-07-tor-openssl_msvc"] = Recipe(
           "against the headers of the pinned OpenSSL 3.0.15 (Configure "
           "no-asm, nmake build_generated; nothing of OpenSSL compiled), "
           "importing libcrypto-3[-x64].dll through an import library made "
-          "from a .def of the 16 functions it calls. -D__attribute__(x)= "
-          "on the command line because Tor's keccak-tiny.h uses GCC's "
-          "__attribute__((aligned(8))), which cl rejects. Random source and "
+          "from a .def of the 16 functions it calls. A forced-include "
+          "header outside the tree (ed25519_tor_shim/msvc_no_attribute.h) "
+          "defines __attribute__(x) as nothing, because Tor's keccak-tiny.h "
+          "uses GCC's __attribute__((aligned(8))), which cl rejects. Random "
+          "source and "
           "assertion reporters from scripts/corpus/exercisers/"
           "ed25519_tor_shim/ed25519_tor_openssl_shim.c, never run. Exports "
           "from scripts/corpus/exercisers/ed25519_tor.def. No file of either "
