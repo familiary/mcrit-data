@@ -80,7 +80,16 @@ _CMAKE = ('cmake -S . -B build-{arch} -G "NMake Makefiles" '
           '"/INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF /OPT:NOICF"')
 
 
-def _putty_msvc(version, sha256):
+_NOTES = ("Same tarball and digest as the MinGW and Linux recipes. "
+          "Upstream's own release binaries are built with clang-cl and a "
+          "static C runtime (/MT); these are cl (v143) against the DLL "
+          "runtime (/MD), so the MSVC C runtime is imported and stays "
+          "attributed to data/MSVC, and the images are not the shape of "
+          "the official putty.exe. Six executables: putty, plink, pscp, "
+          "psftp, pageant and puttygen.")
+
+
+def _putty_msvc(version, sha256, tools=_TOOLS, notes=_NOTES):
     return Recipe(
         family="PuTTY",
         version=version,
@@ -93,13 +102,13 @@ def _putty_msvc(version, sha256):
         build=[
             BuildStep(_CMAKE),
             BuildStep("cmake --build build-{arch} --target %s"
-                      % " ".join(_TOOLS)),
+                      % " ".join(tools)),
             BuildStep("dir build-{arch}", allow_failure=True),
         ],
         artifacts=[Artifact(path="build-{arch}/%s.exe" % tool,
                             component="%s.exe" % tool,
                             pdb="build-{arch}/%s.pdb" % tool)
-                   for tool in _TOOLS],
+                   for tool in tools],
         toolchains=["msvc_x86", "msvc_x64"],
         build_flags="/MD /O2 /Ob2 /Zi (CMake Release without /DNDEBUG, which "
                     "upstream's cmake/setup.cmake removes so assertions stay "
@@ -107,13 +116,7 @@ def _putty_msvc(version, sha256):
                     "/wd4090; link /INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF "
                     "/OPT:NOICF plus upstream's /dynamicbase /nxcompat; no "
                     "/GL, no /LTCG; NMake Makefiles generator",
-        notes="Same tarball and digest as the MinGW and Linux recipes. "
-              "Upstream's own release binaries are built with clang-cl and a "
-              "static C runtime (/MT); these are cl (v143) against the DLL "
-              "runtime (/MD), so the MSVC C runtime is imported and stays "
-              "attributed to data/MSVC, and the images are not the shape of "
-              "the official putty.exe. Six executables: putty, plink, pscp, "
-              "psftp, pageant and puttygen.",
+        notes=notes,
     )
 
 
@@ -121,4 +124,16 @@ RECIPES = {
     "PuTTY_0.77_msvc": _putty_msvc(
         "0.77",
         "419a76f45238fd45f2c76b42438993056e74fa78374f136052aaa843085beae5"),
+    # puttytel and psocks, same tree, flags and toolchain, as a recipe of
+    # their own so the six committed MSVC images are not rebuilt.
+    "PuTTY_0.77_msvc_puttytel_psocks": _putty_msvc(
+        "0.77",
+        "419a76f45238fd45f2c76b42438993056e74fa78374f136052aaa843085beae5",
+        tools=("puttytel", "psocks"),
+        notes="Same tarball, digest, compiler and flags as the six-tool MSVC "
+              "recipe beside it: puttytel.exe (the Telnet/raw/serial-only "
+              "build of the PuTTY GUI) and psocks.exe (the SOCKS proxy "
+              "server built on PuTTY's port-forwarding code), cl (v143) "
+              "against the DLL runtime (/MD). A separate recipe so the six "
+              "committed images are not rebuilt."),
 }

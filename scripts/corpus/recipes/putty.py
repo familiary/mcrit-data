@@ -118,7 +118,16 @@ _CMAKE = ("cmake -S . -B build-{arch} -DCMAKE_SYSTEM_NAME=Windows "
           "-DCMAKE_FIND_ROOT_PATH=/usr/{host} -DCMAKE_BUILD_TYPE=Release")
 
 
-def _putty(version, sha256):
+_TOOLS = ("putty", "psftp", "plink", "pscp", "pageant", "puttygen")
+
+_NOTES = ("MinGW build of the unmodified 0.77 source. Upstream's own "
+          "release binaries are built with clang-cl and a static C "
+          "runtime, which is not covered here (the MSVC /MD build is "
+          "putty_msvc.py). Six executables: putty, psftp, plink, pscp, "
+          "pageant and puttygen; puttytel is not built.")
+
+
+def _putty(version, sha256, tools=_TOOLS, notes=_NOTES):
     return Recipe(
         family="PuTTY",
         version=version,
@@ -135,21 +144,16 @@ def _putty(version, sha256):
             # exactly upstream's own.
             BuildStep(_CMAKE, env={"CFLAGS": ""}),
             BuildStep("cmake --build build-{arch} -j$(nproc) "
-                      "--target putty psftp plink pscp pageant puttygen"),
+                      "--target %s" % " ".join(tools)),
         ],
         artifacts=[
             Artifact(path="build-{arch}/%s.exe" % tool, component="%s.exe" % tool)
-            for tool in ("putty", "psftp", "plink", "pscp", "pageant",
-                         "puttygen")
+            for tool in tools
         ],
         toolchains=["mingw_x86", "mingw_x64"],
         build_flags="-O3 (CMake Release; upstream's cmake/setup.cmake removes "
                     "-DNDEBUG so assertions stay enabled)",
-        notes="MinGW build of the unmodified 0.77 source. Upstream's own "
-              "release binaries are built with clang-cl and a static C "
-              "runtime, which is not covered here (the MSVC /MD build is "
-              "putty_msvc.py). Six executables: putty, psftp, plink, pscp, "
-              "pageant and puttygen; puttytel is not built.",
+        notes=notes,
     )
 
 
@@ -159,7 +163,14 @@ def _putty(version, sha256):
 _CMAKE_LINUX = "cmake -S . -B build-{arch} -DCMAKE_BUILD_TYPE=Release"
 
 
-def _putty_linux(version, sha256):
+_LINUX_NOTES = ("Console tools only; the GTK programs are not built. Same "
+                "tarball as the Windows artefacts. The glibc dependency is "
+                "dynamic, so about 280 functions per artefact are unnamed "
+                ".plt stubs.")
+
+
+def _putty_linux(version, sha256, tools=("plink", "psftp"),
+                 notes=_LINUX_NOTES):
     return Recipe(
         family="PuTTY",
         version=version,
@@ -172,20 +183,29 @@ def _putty_linux(version, sha256):
         build=[
             BuildStep(_CMAKE_LINUX, env={"CFLAGS": ""}),
             BuildStep("cmake --build build-{arch} -j$(nproc) "
-                      "--target plink psftp"),
+                      "--target %s" % " ".join(tools)),
         ],
-        artifacts=[
-            Artifact(path="build-{arch}/plink", component="plink"),
-            Artifact(path="build-{arch}/psftp", component="psftp"),
-        ],
+        artifacts=[Artifact(path="build-{arch}/%s" % tool, component=tool)
+                   for tool in tools],
         toolchains=["linux_x86", "linux_x64"],
         build_flags="-O3 (CMake Release; upstream's cmake/setup.cmake removes "
                     "-DNDEBUG so assertions stay enabled), PIE, dynamic glibc",
-        notes="Console tools only; the GTK programs are not built. Same "
-              "tarball as the Windows artefacts. The glibc dependency is "
-              "dynamic, so about 280 functions per artefact are unnamed "
-              ".plt stubs.",
+        notes=notes,
     )
+
+
+_EXTRA_NOTES = (
+    "MinGW build of the unmodified 0.77 source, same tarball, toolchain and "
+    "flags as the six-tool recipe beside it: puttytel.exe (the Telnet/raw/"
+    "serial-only build of the PuTTY GUI) and psocks.exe (the SOCKS proxy "
+    "server sharing PuTTY's port-forwarding code). A separate recipe so the "
+    "six committed images are not rebuilt.")
+
+_LINUX_EXTRA_NOTES = (
+    "Linux console tools pscp and puttygen from the same tarball and flags "
+    "as the plink/psftp recipe; a separate recipe so those two are not "
+    "rebuilt. The glibc dependency is dynamic, so the .plt stubs are "
+    "unnamed.")
 
 
 RECIPES = {
@@ -195,4 +215,18 @@ RECIPES = {
     "PuTTY_0.77_linux": _putty_linux(
         "0.77",
         "419a76f45238fd45f2c76b42438993056e74fa78374f136052aaa843085beae5"),
+    # The two Windows programs the six above leave out, from the same tree
+    # with the same flags, as a recipe of their own so that building them
+    # does not rebuild (and re-hash) the six committed images.
+    "PuTTY_0.77_puttytel_psocks": _putty(
+        "0.77",
+        "419a76f45238fd45f2c76b42438993056e74fa78374f136052aaa843085beae5",
+        tools=("puttytel", "psocks"),
+        notes=_EXTRA_NOTES),
+    # Likewise the two console tools the Linux recipe above leaves out.
+    "PuTTY_0.77_linux_pscp_puttygen": _putty_linux(
+        "0.77",
+        "419a76f45238fd45f2c76b42438993056e74fa78374f136052aaa843085beae5",
+        tools=("pscp", "puttygen"),
+        notes=_LINUX_EXTRA_NOTES),
 }
