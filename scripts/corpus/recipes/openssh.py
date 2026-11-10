@@ -287,6 +287,11 @@ _SPLIT = ["ssh", "sshd", "sshd-session", "sshd-auth", "scp", "sftp"]
 # 9.8p1 has the sshd-session split but not yet sshd-auth (10.0).
 _SPLIT_98 = ["ssh", "sshd", "sshd-session", "scp", "sftp"]
 
+# The rest of a release's Makefile TARGETS, built for 7.6p1 (added in the final
+# sweep with every program it has).
+_TOOLS = ["ssh-add", "ssh-keygen", "ssh-keyscan", "ssh-keysign",
+          "ssh-pkcs11-helper", "ssh-agent", "sftp-server"]
+
 # -fcommon and the arc4random cache variable: see the module docstring.
 _OLD = dict(cflags="-fcommon", configure_env="ac_cv_func_arc4random=no ")
 
@@ -325,6 +330,13 @@ RECIPES = {
     "OpenSSH_10.6p2": _openssh(
         "10.6p2", "9ae44872090cf2f06b3cf9ff147e7f16f309671340763ed2f99248398ae29d5b",
         "3.0.15", _SPLIT),
+    # 7.6p1 was first measured and dropped as 61% of 7.4p1; added in the final
+    # sweep with every program of its Makefile TARGETS. Tarball verified
+    # against RELEASE_KEY.asc (good signature, RSA key
+    # 59C2118ED206D927E667EBE3D3E5F56B6D920D30). Same OpenSSL line as 7.4p1.
+    "OpenSSH_7.6p1": _openssh(
+        "7.6p1", "a323caeeddfe145baaa0db16e98d784b1fbc7dd436a6bf1f479dfd5cd1d21723",
+        "1.0.2u", _CLIENTS + _TOOLS),
     # Static musl images (no dynamic NEEDED, so zlib/OpenSSL/libc are inside).
     "OpenSSH_9.6p1_musl": _openssh_musl(
         "9.6p1", "910211c07255a8c5ad654391b40ee59800710dd8119dd5362de09385aa7a777c",

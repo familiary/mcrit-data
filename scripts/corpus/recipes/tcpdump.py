@@ -238,21 +238,12 @@ for _name, _version in (("4.99.0", "8cf2f17a9528774a7b41060323be8b73f76024f7778f
                         ("4.99.5", "8c75856e00addeeadf70dad67c9ff3dd368536b2b8563abf6854d7c764cd3adb")):
     RECIPES["tcpdump_%s" % _name] = _tcpdump_pe(_name, _version)
 
-# Added in the final sweep: the four 4.99 releases that were first measured
-# and skipped as 95% or more of a built neighbour. Built now because a near
-# duplicate is still committed with its overlap stated (see the docstring).
-# Tarballs verified against the Tcpdump Group signing key (RSA
-# 1F166A5742ABB9E0249A8D30E089DEF1D9C15D0D, good signature on all four).
-_SWEEP = (("4.99.1", "79b36985fb2703146618d87c4acde3e068b91c553fb93f021a337f175fd10ebe"),
-          ("4.99.2", "f4304357d34b79d46f4e17e654f1f91f9ce4e3d5608a1badbd53295a26fb44d5"),
-          ("4.99.4", "0232231bb2f29d6bf2426e70a08a7e0c63a0d59a9b44863b7f5e2357a6e49fea"),
-          ("4.99.6", "5839921a0f67d7d8fa3dacd9cd41e44c89ccb867e8a6db216d62628c7fd14b09"))
-for _name, _version in _SWEEP:
-    RECIPES["tcpdump_%s_linux" % _name] = _tcpdump(_name, _version)
-    # 4.99.6 is the first release whose FindPCAP.cmake carries the MSVC
-    # /delayload:wpcap.dll option, so it needs the same sed as 4.99.7.
-    RECIPES["tcpdump_%s" % _name] = _tcpdump_pe(
-        _name, _version, patch_findpcap=(_name == "4.99.6"))
+# Added in the final sweep: 4.99.1, first skipped as 95% or more of a built
+# neighbour (x64 PicHash overlap: 94.3% with 4.99.0, 91.8% with 4.99.3; x86
+# 4.4% and 4.2%). Tarball verified against the Tcpdump Group signing key
+# (RSA 1F166A5742ABB9E0249A8D30E089DEF1D9C15D0D).
+RECIPES["tcpdump_4.99.1_linux"] = _tcpdump(
+    "4.99.1", "79b36985fb2703146618d87c4acde3e068b91c553fb93f021a337f175fd10ebe")
 
 RECIPES["tcpdump_4.99.7"] = _tcpdump_pe(
     "4.99.7", "8be364e28d3b745ef1459b385cd2f4bc0e1ebad7a5d2ebdf70071d6c9b5b9a54",

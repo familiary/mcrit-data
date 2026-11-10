@@ -256,19 +256,10 @@ RECIPES = {
 
 for _tag, _commit, _programs in (
         ("10.0.0.0", "b8c08ef9da9450a94a9c5ef717d96a7bd83f3332", _ALL),
-        ("9.8.3.0", "bdacf9868fe9e8024a5312861b7aaa6faba1821f", _PRE100),
         ("9.8.2.0", "efa17c848b3e579d8a4a0e71edf6d233b5e30917", _PRE100),
-        ("9.8.1.0", "d7e886b9f6ee9ca35babd2a9a19bb9902f145305", _PRE100),
         ("9.8.0.0", "64f148cc3beeaa7460a96c9be3b0ef122f4c1435", _PRE100),
         ("9.5.0.0", "59aba65cf2e2f423c09d12ad825c3b32a11f408f", _PRE98),
-        ("9.4.0.0", "f72324ffa1fbf076291cbe92d968dc0b6040a2fe", _PRE98),
-        ("9.2.2.0", "01f950cf976710fae23465659d807ea9dceac168", _PRE98),
-        ("9.2.0.0", "e9b1317613ee1adc0813f56333eaab44c6c73dc8", _PRE98),
-        ("9.1.0.0", "ad957f89e03e3254e27a6b6dfc28c9dd79d3fb3f", _PRE98),
-        ("8.9.1.0", "7b0b41b1a186ad26d5429bff35922a53efad999c", _PRE98),
-        ("8.9.0.0", "bd0d488a3c4bca55626909d81ac766f2aa278791", _PRE98),
-        ("8.6.0.0", "75835a2462e1d8caf614cdb7011e45da929dc142", _PRE89),
-        ("8.1.0.0", "ee11c8e15eb11c48afbe98270080c728243c4300", _PRE89)):
+        ("9.4.0.0", "f72324ffa1fbf076291cbe92d968dc0b6040a2fe", _PRE98)):
     # Tags before 9.4 name v140/v141 projects; their win32compat macros need
     # the SDK's POSIX-name declarations off (run 42775680583, C2373), and
     # 8.1.0.0's paths.targets asks for a zlib release with no asset.
