@@ -85,6 +85,19 @@ MinGW images of this family share only the unnamed 15-instruction MinGW
 runtime routine with the MinGW libsodium images. libsodium has 57 to 70
 Argon2-named functions per image (14 to 28 of 10 instructions or more) and no
 Argon2d.
+
+Second pass (scoped run 42776861712), two more versions beside the images
+above, which are unchanged. ``20190702-ref``: the same tag through upstream's
+vs2015/Argon2RefDll project (src/ref.c instead of src/opt.c), x86 83 + 137 =
+220, x64 83 + 139 = 222 (kept + removed = total, no exclusions); against the
+opt.c build 54 of 57 (x86) and 51 of 54 (x64) PicHashes of ten instructions or
+more are shared, fill_block and fill_segment being the difference.
+``randomx-6fe0e39``: the Argon2d subset tevador/RandomX vendors (argon2_core,
+argon2_ref, argon2_ssse3, argon2_avx2 and blake2b at commit 6fe0e39, names
+prefixed randomx_), x86 43 + 128 = 171, x64 43 + 129 = 172; it shares 8 of its
+26 (x86) and 7 of its 24 (x64) hashes with the opt.c and the ref.c images
+(BLAKE2b and index_alpha), so the RandomX shape of Argon2d is its own
+reference.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
