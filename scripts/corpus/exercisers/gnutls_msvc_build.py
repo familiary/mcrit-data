@@ -294,13 +294,39 @@ SHIM_H = """/* Written by gnutls_msvc_build.py; force-included with cl -FI. */
 """
 
 
-def write_shims(deps):
+# GnuTLS 3.7.x only (3.8.13 needs none of it): configure finds no ssize_t
+# under cl and config.h maps it with a #define, but lib/inih/ini.c includes
+# gnulib's stdio.h without config.h, where getdelim's ssize_t is then unknown
+# (`gl\stdio.h(1340): error C2061: syntax error: identifier 'getdelim'`), and
+# lib/system/sockets.c uses SSIZE_MAX, which nothing defines for cl
+# (`sockets.c(95): error C2065: 'SSIZE_MAX': undeclared identifier`). The
+# shim gives every translation unit the SDK's own SSIZE_T as ssize_t (and
+# configure is told ac_cv_type_ssize_t=yes so config.h does not redefine it)
+# and MAXSSIZE_T as SSIZE_MAX.
+SHIM_SSIZE_H = """#include <basetsd.h>
+typedef SSIZE_T ssize_t;
+#ifndef SSIZE_MAX
+#define SSIZE_MAX MAXSSIZE_T
+#endif
+"""
+
+
+def gnutls_version(source):
+    with open(os.path.join(source, "configure"), encoding="utf-8",
+              errors="replace") as handle:
+        match = re.search(r"^PACKAGE_VERSION='([^']+)'", handle.read(), re.M)
+    return match.group(1) if match else ""
+
+
+def write_shims(deps, ssize=False):
     directory = os.path.join(deps, "shim")
     os.makedirs(directory, exist_ok=True)
     with open(os.path.join(directory, "dirent.h"), "w") as handle:
         handle.write(DIRENT_H)
     with open(os.path.join(directory, "msvc_shim.h"), "w") as handle:
-        handle.write(SHIM_H)
+        handle.write(SHIM_H.replace("#define CRAU_MAYBE_UNUSED\n",
+                                    "#define CRAU_MAYBE_UNUSED\n" + SHIM_SSIZE_H)
+                     if ssize else SHIM_H)
     return directory
 
 
@@ -374,12 +400,18 @@ def configure_and_make(source, deps, arch):
     cl = shutil.which("cl")
     if not cl:
         raise SystemExit("cl is not on PATH")
+    version = gnutls_version(source)
+    old_gnulib = version.startswith("3.7.")
+    print("GnuTLS %s%s" % (version, ": ssize_t shim (3.7.x)" if old_gnulib else ""),
+          flush=True)
     env = dict(os.environ)
+    if old_gnulib:
+        env["ac_cv_type_ssize_t"] = "yes"
     env.update({
         "MSVC_BIN": os.path.dirname(cl),
         "SRC_WIN": source,
         "DEPS_WIN": os.path.abspath(os.path.join(deps, "prefix")),
-        "SHIM_WIN": write_shims(deps),
+        "SHIM_WIN": write_shims(deps, ssize=old_gnulib),
         "TRIPLE": triple,
         "MSYSTEM": "MSYS",
         "MSYS2_PATH_TYPE": "inherit",
