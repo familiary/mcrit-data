@@ -141,6 +141,35 @@ diagonal is the number of such PicHashes in the image): 3.0 222 / 218, 3.1a
 3.0 (217 of 222 on x86), where the MinGW builds share only 127 of 191 (the
 MinGW 3.1 makefile builds at -O3 and 3.0's at -O2). Against the MinGW images of
 the same program and architecture the MSVC images again share no hash.
+
+Second pass: the other programs and the x86 assembler builds (scoped run
+42775805495, windows-2022, v143), as separate versions so the images above
+are unchanged. Measured, glue baseline applied (kept + removed = total, no
+exclusions; x86 / x64):
+
+    zipcloak.exe 3.0   154 + 185 = 339 / 154 + 190 = 344   (3.1a the same counts)
+    zipnote.exe  3.0   147 + 183 = 330 / 147 + 188 = 335
+    zipsplit.exe 3.0   152 + 186 = 338 / 152 + 190 = 342
+    zipcloak.exe 3.1b  151 + 185 = 336 / 151 + 190 = 341
+    zipnote.exe  3.1b  144 + 183 = 327 / 144 + 188 = 332
+    zipsplit.exe 3.1b  149 + 186 = 335 / 149 + 190 = 339
+    zipcloak.exe 3.1c  156 + 185 = 341 / 156 + 190 = 346
+    zipnote.exe  3.1c  149 + 183 = 332 / 149 + 188 = 337
+    zipsplit.exe 3.1c  154 + 186 = 340 / 154 + 190 = 344
+    unzipsfx.exe 6.0   183 + 191 = 374 / 177 + 195 = 372
+    unzip32.dll  6.0   253 + 169 = 422 / 245 + 174 = 419
+    zip.exe -asm, x86: 3.0 and 3.1a 345 + 211 = 556, 3.1b 344 + 211 = 555,
+                       3.1c 348 + 212 = 560
+    unzip.exe -asm, x86 236 + 197 = 433; funzip.exe -asm, x86 28 + 166 = 194
+
+Overlap at ten instructions or more: the -DUTIL objects are not zip.exe's
+(zipnote 3.0 x64 shares 84 of its 99 hashes with zip.exe 3.0), unzipsfx
+shares 61 of 95 (x64) with unzip.exe and unzip32.dll 37 of 145; each utility
+shares 93 to 99 of its 97 to 103 hashes with the same utility of the
+neighbouring version, never all of them. The assembler builds differ from
+the C builds of the same version by the CRC and longest_match routines:
+zip.exe 216 of 222 (3.0, 3.1a, 3.1c) and 214 of 220 (3.1b) shared, unzip.exe
+139 of 142, funzip.exe 16 of 17. No image is PicHash-identical to another.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
