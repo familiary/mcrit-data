@@ -124,11 +124,22 @@ def _steps(version):
         objs = list(_OBJS_19)
         if version >= "1.9.20150917":
             objs.insert(4, "minissdpc")
+        if version >= "1.9.20151008":
+            # upnpdev.c (freeUPNPDevlist, which miniupnpc.def exports) joins
+            # Makefile.mingw's OBJS in 1.9.20151008.
+            objs.append("upnpdev")
     elif version == "2.2.0":
         objs = _OBJS + ["addr_is_reserved"]
     else:
         objs = _OBJS if old else _OBJS + ["addr_is_reserved"]
     includes = "/I." if old else "/Iinclude /I."
+    # 1.9.20150917's minissdpc.c includes <strings.h> and <unistd.h> before
+    # its _WIN32 branch (later tarballs move them into the POSIX branch); it
+    # uses nothing from either on Windows, so the build tree gets two empty
+    # headers of those names. No upstream file is edited.
+    shim = version == "1.9.20150917"
+    if shim:
+        includes += " /Icorpus-shim"
     # 2.2.3 and later write rc_version.h as well.
     genargs = "miniupnpcstrings.h.in miniupnpcstrings.h"
     if not old and version != "2.2.0":
@@ -137,7 +148,10 @@ def _steps(version):
     compile_ = ("cl /nologo /c /MD /O2 /Ob2 /Zi /W3 /DNDEBUG "
                 "/D_WIN32_WINNT=0x501 /DMINIUPNP_EXPORTS " + includes +
                 " /Foobj-{arch}\\ /Fdbuild-{arch}\\miniupnpc.pdb " + sources)
-    return [
+    pre = [BuildStep("if not exist corpus-shim mkdir corpus-shim", cwd=cwd),
+           BuildStep("type nul > corpus-shim\\strings.h", cwd=cwd),
+           BuildStep("type nul > corpus-shim\\unistd.h", cwd=cwd)] if shim else []
+    return pre + [
         BuildStep("if not exist obj-{arch} mkdir obj-{arch}",
                   cwd=cwd),
         BuildStep("if not exist build-{arch} mkdir build-{arch}",
