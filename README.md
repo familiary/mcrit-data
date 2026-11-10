@@ -104,7 +104,7 @@ Many thanks to Daniel Enders for creating these reference binaries during his Ma
 Also many thanks to Max Ufer for providing the first builds of Go versions 1.19-1.22!  
 The source file used to compile these included as many Golang standard library files as possible to create coverage for common functions.  
 Starting with 1.19, the references are built reproducibly from the latest patch release of each version with [scripts/golang](scripts/golang/): the source is generated from `go list std` and references every exported, non-generic function and method of every importable standard library package (`CGO_ENABLED=0 go build -trimpath`, not stripped), and function names are taken from the pclntab by SMDA.  
-Note that for x64 builds of Go 1.22+, SMDA currently over-approximates type switch jump tables for about 20 functions per file ([smda#363](https://github.com/danielplohmann/smda/issues/363)), so these files will be regenerated once that is fixed.  
+The earlier x64 Windows references for Go 1.22+ have type-switch jump-table over-approximation ([smda#363](https://github.com/danielplohmann/smda/issues/363)) and still need regeneration. The upstream mask-bound fix is included in SMDA 5.0.2, used for the Go 1.27.3 references below; their other analysis failures and recovery limits are recorded separately.  
 When using these with MCRIT, you probably want to have as few as possible / the most fitting version only as you may otherwise run into performance issues. We noticed that the similarity in Golang library functions can lead to huge candidate clusters for which all functions will have to be matched.
 
 
@@ -135,7 +135,14 @@ When using these with MCRIT, you probably want to have as few as possible / the 
 | Golang    | 2026-02-04 | 1.24.13 | [x86](data/Golang/x86/mcrit/golang_1.24.13_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.24.13_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.24.13_x86.7z) / [x64](data/Golang/x64/smda/golang_1.24.13_x64.7z) |
 | Golang    | 2026-08-19 | 1.25.14 | [x86](data/Golang/x86/mcrit/golang_1.25.14_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.25.14_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.25.14_x86.7z) / [x64](data/Golang/x64/smda/golang_1.25.14_x64.7z) |
 | Golang    | 2026-09-01 | 1.26.8 | [x86](data/Golang/x86/mcrit/golang_1.26.8_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.26.8_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.26.8_x86.7z) / [x64](data/Golang/x64/smda/golang_1.26.8_x64.7z) |
+| Golang | 2026-10-19 | 1.27.3 | [x86 PE](data/Golang/x86/mcrit/golang_1.27.3_x86.mcrit) / [x64 PE](data/Golang/x64/mcrit/golang_1.27.3_x64.mcrit) | [x86 PE](data/Golang/x86/smda/golang_1.27.3_x86.7z) / [x64 PE](data/Golang/x64/smda/golang_1.27.3_x64.7z) |
+| Golang | 2026-10-19 | 1.27.3 | [x86 ELF](data/Golang/x86/mcrit/golang_1.27.3_linux_x86.mcrit) / [x64 ELF](data/Golang/x64/mcrit/golang_1.27.3_linux_x64.mcrit) | [x86 ELF](data/Golang/x86/smda/golang_1.27.3_linux_x86.7z) / [x64 ELF](data/Golang/x64/smda/golang_1.27.3_linux_x64.7z) |
+| Golang | 2026-10-19 | 1.27.3 cgo | [x86 PE](data/Golang/x86/mcrit/golang_1.27.3-cgo_x86.mcrit) / [x64 PE](data/Golang/x64/mcrit/golang_1.27.3-cgo_x64.mcrit) | [x86 PE](data/Golang/x86/smda/golang_1.27.3-cgo_x86.7z) / [x64 PE](data/Golang/x64/smda/golang_1.27.3-cgo_x64.7z) |
+| Golang | 2026-10-19 | 1.27.3 cgo | [x86 ELF](data/Golang/x86/mcrit/golang_1.27.3-cgo_linux_x86.mcrit) / [x64 ELF](data/Golang/x64/mcrit/golang_1.27.3-cgo_linux_x64.mcrit) | [x86 ELF](data/Golang/x86/smda/golang_1.27.3-cgo_linux_x86.7z) / [x64 ELF](data/Golang/x64/smda/golang_1.27.3-cgo_linux_x64.7z) |
+| Golang | 2026-10-19 | 1.27.3 race | [x64 PE](data/Golang/x64/mcrit/golang_1.27.3-race_x64.mcrit) | [x64 PE](data/Golang/x64/smda/golang_1.27.3-race_x64.7z) |
+| Golang | 2026-10-19 | 1.27.3 race | [x64 ELF](data/Golang/x64/mcrit/golang_1.27.3-race_linux_x64.mcrit) | [x64 ELF](data/Golang/x64/smda/golang_1.27.3-race_linux_x64.7z) |
 
+Go 1.27.3 PE/ELF coverage, source pins, counts and analyzer limits: [build record](data/Golang/1.27.3/README.md) / [provenance](data/Golang/1.27.3/provenance.json). The `cgo` and `race` rows are the same generated driver built with `CGO_ENABLED=1` and with `-race` (`scripts/golang/build_variant.sh`, [record](data/Golang/1.27.3/variants.json)).
 
 ### Microsoft Visual Studio<a id='msvc'></a>
 

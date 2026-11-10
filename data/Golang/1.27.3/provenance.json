@@ -1,0 +1,1129 @@
+{
+  "golang_1.27.3_linux_x64": {
+    "all_qualifying_distinct_pichashes": 13987,
+    "architecture": "x64",
+    "archive_encoder": "7-Zip 25.01 (x64) : Copyright (c) 1999-2025 Igor Pavlov : 2025-08-03",
+    "archive_flags": "-t7z -m0=lzma2 -mx=3",
+    "build_flags": "CGO_ENABLED=0 GOTOOLCHAIN=local GOENV=off; go build -trimpath; GOFLAGS=-p=2 GOMAXPROCS=2 GOMEMLIMIT=2GiB (build-resource settings)",
+    "built_artifact": "stdcov_go1.27.3_linux_amd64",
+    "comparison_baselines": [
+      {
+        "commit": "92f5371f3d056efae0de81a29e508bcd95e8833d",
+        "export_count": 49,
+        "path": "data/Golang"
+      },
+      {
+        "commit": "00032044b5acb234466cab696f8bcd9c397837a4",
+        "export_count": 16,
+        "path_pattern": "data/Golang/*/mcrit/*_linux_*.mcrit",
+        "pull_request": "https://github.com/familiary/mcrit-data/pull/114"
+      }
+    ],
+    "compiler": "go version go1.27.3 linux/amd64",
+    "component": "",
+    "coverage_component": "stdlib",
+    "family": "Golang",
+    "generated_source_sha256": "44dbd0dde749c1bd95709fbcb6a21e13e6e4d24f09a79596b420050327021d2e",
+    "generator_summary": "packages: 176 used, 0 skipped; references: 4680",
+    "go_env": {
+      "CGO_ENABLED": "0",
+      "GO386": "",
+      "GOAMD64": "v1",
+      "GOARCH": "amd64",
+      "GODEBUG": "",
+      "GOEXPERIMENT": "",
+      "GOFIPS140": "off",
+      "GOFLAGS": "-p=2",
+      "GOOS": "linux",
+      "GOTOOLCHAIN": "local",
+      "GOVERSION": "go1.27.3"
+    },
+    "go_mod_sha256": "a917186780207ff1e2b92bccf84e5453f54b9407dfa3f5c7657741ca233b3877",
+    "goarch": "amd64",
+    "goos": "linux",
+    "image_format": "ELF",
+    "image_function_count": 20584,
+    "is_library": true,
+    "license": "BSD-3-Clause; additional third-party notices in the Go distribution",
+    "mcrit": "data/Golang/x64/mcrit/golang_1.27.3_linux_x64.mcrit",
+    "mcrit_sha256": "59fd7790202cf44d8d6d1f0ec2c070d8eb849b0e632735723c46c23d8bf37b16",
+    "mcrit_version": "1.16.0",
+    "named_entry_mismatches": [],
+    "named_function_count": 19973,
+    "nm_positive_sized_text_entries": 20022,
+    "nm_text_symbol_count": 20024,
+    "notes": "Existing scripts/golang generator and build flags; unmodified SDK standard library. Only main.* coverage-driver functions are removed before export, with statistics recomputed using corpus.smdaify._recompute_statistics. Runtime, stdlib and their compiler helpers are intentionally retained. Symbol entry VAs checked against go tool nm. The reference executable is never run. No source, SDK, executable or build cache is distributed.",
+    "num_functions": 20583,
+    "pichashes_outside_previous_golang_exports": 8665,
+    "pipeline": {
+      "commit": "734697bddffd957cd622d8f536dc0c68ed4bfbc0",
+      "disassembler_script_sha256": "4343e60302a251df433f281bd2824c77b4c055121447e7615468cdc9f5e2c7eb",
+      "exporter_script_sha256": "eb7a0ce82cdcbcf7a647748456249352b4b0be9b4b5cc09302f5f9ed4512205f",
+      "generator_sha256": "71e93ac33b4a099de2f34342041572061568460cc9c001d684e0d031450423ff",
+      "repository": "https://github.com/familiary/mcrit-data"
+    },
+    "qualifying_distinct_pichashes": 13944,
+    "qualifying_named_function_instances": 17255,
+    "raw_disassembly_statistics": {
+      "num_api_calls": 0,
+      "num_basic_blocks": 319148,
+      "num_failed_functions": 55,
+      "num_failed_instructions": 0,
+      "num_function_calls": 135622,
+      "num_functions": 20584,
+      "num_instructions": 1829415,
+      "num_leaf_functions": 3445,
+      "num_recursive_functions": 222,
+      "num_thunk_functions": 0
+    },
+    "raw_named_ratio_over_3_instructions": {
+      "named": 18990,
+      "total": 19575
+    },
+    "removed_driver_functions": [
+      {
+        "name": "main.main",
+        "num_instructions": 61,
+        "offset": 12114208,
+        "pichash": 14431951123364073089
+      }
+    ],
+    "report_timestamp": "2026-11-08T18-50-42",
+    "reproduced_binary_sha256": "bab3f722d568f7ceba81d1cb3dd8339f4d866eee36695c3d120ea71d26f194b7",
+    "retained_named_ratio_over_3_instructions": {
+      "named": 18989,
+      "total": 19574
+    },
+    "sample_version": "1.27.3 linux x64",
+    "sha256": "bab3f722d568f7ceba81d1cb3dd8339f4d866eee36695c3d120ea71d26f194b7",
+    "smda": "data/Golang/x64/smda/golang_1.27.3_linux_x64.7z",
+    "smda_sha256": "b11202fef58a2dac73060648a67da540f0f418c919f9186ce35f7901e51ffc89",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff",
+      "git_ref": "go1.27.3",
+      "git_url": "https://github.com/golang/go",
+      "sdk_sha256": "65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40",
+      "sdk_size_bytes": 70588678,
+      "sdk_url": "https://go.dev/dl/go1.27.3.linux-amd64.tar.gz"
+    },
+    "unnamed_function_count": 610,
+    "unrepresented_nm_text_entries": [
+      {
+        "offset": 5799776,
+        "symbols": [
+          {
+            "name": "archive/tar.(*headerFileInfo).Mode",
+            "size": 56
+          }
+        ]
+      },
+      {
+        "offset": 5966528,
+        "symbols": [
+          {
+            "name": "archive/zip.(*headerFileInfo).String",
+            "size": 66
+          }
+        ]
+      },
+      {
+        "offset": 6061088,
+        "symbols": [
+          {
+            "name": "crypto.(*Hash).HashFunc",
+            "size": 20
+          }
+        ]
+      },
+      {
+        "offset": 6385088,
+        "symbols": [
+          {
+            "name": "encoding/asn1.(*bitStringEncoder).Encode",
+            "size": 261
+          }
+        ]
+      },
+      {
+        "offset": 8276608,
+        "symbols": [
+          {
+            "name": "encoding/json/jsontext.(*objectNamespace).reset",
+            "size": 166
+          }
+        ]
+      },
+      {
+        "offset": 11294336,
+        "symbols": [
+          {
+            "name": "index/suffixarray.induceS_8_32",
+            "size": 427
+          }
+        ]
+      },
+      {
+        "offset": 4201216,
+        "symbols": [
+          {
+            "name": "internal/abi.(*FuncType).NumIn",
+            "size": 5
+          }
+        ]
+      },
+      {
+        "offset": 9864992,
+        "symbols": [
+          {
+            "name": "internal/buildcfg.goarm",
+            "size": 517
+          }
+        ]
+      },
+      {
+        "offset": 8814880,
+        "symbols": [
+          {
+            "name": "net/http/internal/httpsfv.consumeToken",
+            "size": 283
+          }
+        ]
+      },
+      {
+        "offset": 6662784,
+        "symbols": [
+          {
+            "name": "net/netip.(*Addr).IsLinkLocalMulticast",
+            "size": 67
+          }
+        ]
+      },
+      {
+        "offset": 6666848,
+        "symbols": [
+          {
+            "name": "net/netip.(*AddrPort).MarshalBinary",
+            "size": 76
+          }
+        ]
+      },
+      {
+        "offset": 4851936,
+        "symbols": [
+          {
+            "name": "runtime.badreflectcall.abi0",
+            "size": 18
+          }
+        ]
+      },
+      {
+        "offset": 4837728,
+        "symbols": [
+          {
+            "name": "runtime.call1024.abi0",
+            "size": 160
+          }
+        ]
+      },
+      {
+        "offset": 4839584,
+        "symbols": [
+          {
+            "name": "runtime.call1048576.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4841504,
+        "symbols": [
+          {
+            "name": "runtime.call1073741824.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4837248,
+        "symbols": [
+          {
+            "name": "runtime.call128.abi0",
+            "size": 151
+          }
+        ]
+      },
+      {
+        "offset": 4839008,
+        "symbols": [
+          {
+            "name": "runtime.call131072.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4840928,
+        "symbols": [
+          {
+            "name": "runtime.call134217728.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4836864,
+        "symbols": [
+          {
+            "name": "runtime.call16.abi0",
+            "size": 116
+          }
+        ]
+      },
+      {
+        "offset": 4838432,
+        "symbols": [
+          {
+            "name": "runtime.call16384.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4840352,
+        "symbols": [
+          {
+            "name": "runtime.call16777216.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4837888,
+        "symbols": [
+          {
+            "name": "runtime.call2048.abi0",
+            "size": 160
+          }
+        ]
+      },
+      {
+        "offset": 4839776,
+        "symbols": [
+          {
+            "name": "runtime.call2097152.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4837408,
+        "symbols": [
+          {
+            "name": "runtime.call256.abi0",
+            "size": 160
+          }
+        ]
+      },
+      {
+        "offset": 4839200,
+        "symbols": [
+          {
+            "name": "runtime.call262144.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4841120,
+        "symbols": [
+          {
+            "name": "runtime.call268435456.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4836992,
+        "symbols": [
+          {
+            "name": "runtime.call32.abi0",
+            "size": 116
+          }
+        ]
+      },
+      {
+        "offset": 4838624,
+        "symbols": [
+          {
+            "name": "runtime.call32768.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4840544,
+        "symbols": [
+          {
+            "name": "runtime.call33554432.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4838048,
+        "symbols": [
+          {
+            "name": "runtime.call4096.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4839968,
+        "symbols": [
+          {
+            "name": "runtime.call4194304.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4837568,
+        "symbols": [
+          {
+            "name": "runtime.call512.abi0",
+            "size": 160
+          }
+        ]
+      },
+      {
+        "offset": 4839392,
+        "symbols": [
+          {
+            "name": "runtime.call524288.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4841312,
+        "symbols": [
+          {
+            "name": "runtime.call536870912.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4837120,
+        "symbols": [
+          {
+            "name": "runtime.call64.abi0",
+            "size": 116
+          }
+        ]
+      },
+      {
+        "offset": 4838816,
+        "symbols": [
+          {
+            "name": "runtime.call65536.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4840736,
+        "symbols": [
+          {
+            "name": "runtime.call67108864.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4838240,
+        "symbols": [
+          {
+            "name": "runtime.call8192.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 4840160,
+        "symbols": [
+          {
+            "name": "runtime.call8388608.abi0",
+            "size": 168
+          }
+        ]
+      },
+      {
+        "offset": 7979104,
+        "symbols": [
+          {
+            "name": "slices.breakPatternsOrdered[go.shape.int64]",
+            "size": 198
+          }
+        ]
+      },
+      {
+        "offset": 5608352,
+        "symbols": [
+          {
+            "name": "slices.breakPatternsOrdered[go.shape.int]",
+            "size": 198
+          }
+        ]
+      },
+      {
+        "offset": 5989920,
+        "symbols": [
+          {
+            "name": "slices.heapSortCmpFunc[go.shape.struct { compress/bzip2.value uint16; compress/bzip2.length uint8 }]",
+            "size": 461
+          }
+        ]
+      },
+      {
+        "offset": 9787520,
+        "symbols": [
+          {
+            "name": "slices.partialInsertionSortOrdered[go.shape.int32]",
+            "size": 341
+          }
+        ]
+      },
+      {
+        "offset": 7977984,
+        "symbols": [
+          {
+            "name": "slices.partialInsertionSortOrdered[go.shape.int64]",
+            "size": 341
+          }
+        ]
+      },
+      {
+        "offset": 5607232,
+        "symbols": [
+          {
+            "name": "slices.partialInsertionSortOrdered[go.shape.int]",
+            "size": 341
+          }
+        ]
+      },
+      {
+        "offset": 6036128,
+        "symbols": [
+          {
+            "name": "sort.(*StringSlice).Len",
+            "size": 21
+          }
+        ]
+      },
+      {
+        "offset": 5335008,
+        "symbols": [
+          {
+            "name": "time.parseRFC3339[go.shape.string]",
+            "size": 1758
+          }
+        ]
+      },
+      {
+        "offset": 5334112,
+        "symbols": [
+          {
+            "name": "type:.eq.SSSSS",
+            "size": 296
+          }
+        ]
+      },
+      {
+        "offset": 6676608,
+        "symbols": [
+          {
+            "name": "vendor/golang.org/x/net/dns/dnsmessage.NewBuilder",
+            "size": 549
+          }
+        ]
+      }
+    ],
+    "version": "1.27.3"
+  },
+  "golang_1.27.3_linux_x86": {
+    "all_qualifying_distinct_pichashes": 15557,
+    "architecture": "x86",
+    "archive_encoder": "7-Zip 25.01 (x64) : Copyright (c) 1999-2025 Igor Pavlov : 2025-08-03",
+    "archive_flags": "-t7z -m0=lzma2 -mx=3",
+    "build_flags": "CGO_ENABLED=0 GOTOOLCHAIN=local GOENV=off; go build -trimpath; GOFLAGS=-p=2 GOMAXPROCS=2 GOMEMLIMIT=2GiB (build-resource settings)",
+    "built_artifact": "stdcov_go1.27.3_linux_386",
+    "comparison_baselines": [
+      {
+        "commit": "92f5371f3d056efae0de81a29e508bcd95e8833d",
+        "export_count": 49,
+        "path": "data/Golang"
+      },
+      {
+        "commit": "00032044b5acb234466cab696f8bcd9c397837a4",
+        "export_count": 16,
+        "path_pattern": "data/Golang/*/mcrit/*_linux_*.mcrit",
+        "pull_request": "https://github.com/familiary/mcrit-data/pull/114"
+      }
+    ],
+    "compiler": "go version go1.27.3 linux/amd64",
+    "component": "",
+    "coverage_component": "stdlib",
+    "family": "Golang",
+    "generated_source_sha256": "a0dee28c14633e138d381b74f5820d2a41a6f19f446f8c4d6fba3a856afea70f",
+    "generator_summary": "packages: 176 used, 0 skipped; references: 4680",
+    "go_env": {
+      "CGO_ENABLED": "0",
+      "GO386": "sse2",
+      "GOAMD64": "",
+      "GOARCH": "386",
+      "GODEBUG": "",
+      "GOEXPERIMENT": "",
+      "GOFIPS140": "off",
+      "GOFLAGS": "-p=2",
+      "GOOS": "linux",
+      "GOTOOLCHAIN": "local",
+      "GOVERSION": "go1.27.3"
+    },
+    "go_mod_sha256": "a917186780207ff1e2b92bccf84e5453f54b9407dfa3f5c7657741ca233b3877",
+    "goarch": "386",
+    "goos": "linux",
+    "image_format": "ELF",
+    "image_function_count": 20619,
+    "is_library": true,
+    "license": "BSD-3-Clause; additional third-party notices in the Go distribution",
+    "mcrit": "data/Golang/x86/mcrit/golang_1.27.3_linux_x86.mcrit",
+    "mcrit_sha256": "5473aeeae113463aa0f7ac0f8c0f324fdb8d9ef3a75d51d9380ec610a25818f2",
+    "mcrit_version": "1.16.0",
+    "named_entry_mismatches": [],
+    "named_function_count": 20044,
+    "nm_positive_sized_text_entries": 20046,
+    "nm_text_symbol_count": 20048,
+    "notes": "Existing scripts/golang generator and build flags; unmodified SDK standard library. Only main.* coverage-driver functions are removed before export, with statistics recomputed using corpus.smdaify._recompute_statistics. Runtime, stdlib and their compiler helpers are intentionally retained. Symbol entry VAs checked against go tool nm. The reference executable is never run. No source, SDK, executable or build cache is distributed.",
+    "num_functions": 20618,
+    "pichashes_outside_previous_golang_exports": 11310,
+    "pipeline": {
+      "commit": "734697bddffd957cd622d8f536dc0c68ed4bfbc0",
+      "disassembler_script_sha256": "4343e60302a251df433f281bd2824c77b4c055121447e7615468cdc9f5e2c7eb",
+      "exporter_script_sha256": "eb7a0ce82cdcbcf7a647748456249352b4b0be9b4b5cc09302f5f9ed4512205f",
+      "generator_sha256": "71e93ac33b4a099de2f34342041572061568460cc9c001d684e0d031450423ff",
+      "repository": "https://github.com/familiary/mcrit-data"
+    },
+    "qualifying_distinct_pichashes": 15553,
+    "qualifying_named_function_instances": 19472,
+    "raw_disassembly_statistics": {
+      "num_api_calls": 0,
+      "num_basic_blocks": 325902,
+      "num_failed_functions": 135,
+      "num_failed_instructions": 0,
+      "num_function_calls": 147935,
+      "num_functions": 20619,
+      "num_instructions": 2086929,
+      "num_leaf_functions": 225,
+      "num_recursive_functions": 222,
+      "num_thunk_functions": 0
+    },
+    "raw_named_ratio_over_3_instructions": {
+      "named": 19963,
+      "total": 20511
+    },
+    "removed_driver_functions": [
+      {
+        "name": "main.main",
+        "num_instructions": 27,
+        "offset": 142264208,
+        "pichash": 9411578800943819104
+      }
+    ],
+    "report_timestamp": "2026-11-08T19-04-36",
+    "reproduced_binary_sha256": "3d251d5b0b75e959f8d9e81d63682baee2553a57a8a48bdc316a04845905101e",
+    "retained_named_ratio_over_3_instructions": {
+      "named": 19962,
+      "total": 20510
+    },
+    "sample_version": "1.27.3 linux x86",
+    "sha256": "3d251d5b0b75e959f8d9e81d63682baee2553a57a8a48bdc316a04845905101e",
+    "smda": "data/Golang/x86/smda/golang_1.27.3_linux_x86.7z",
+    "smda_sha256": "fc9d125df23b09653526f55408f0849b85ada6cc606c933a9fe899498b96e379",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff",
+      "git_ref": "go1.27.3",
+      "git_url": "https://github.com/golang/go",
+      "sdk_sha256": "65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40",
+      "sdk_size_bytes": 70588678,
+      "sdk_url": "https://go.dev/dl/go1.27.3.linux-amd64.tar.gz"
+    },
+    "unnamed_function_count": 574,
+    "unrepresented_nm_text_entries": [
+      {
+        "offset": 134715360,
+        "symbols": [
+          {
+            "name": "runtime.bulkBarrierPreWriteSrcOnly",
+            "size": 409
+          }
+        ]
+      },
+      {
+        "offset": 135100576,
+        "symbols": [
+          {
+            "name": "runtime.goStatusToTraceGoStatus",
+            "size": 197
+          }
+        ]
+      }
+    ],
+    "version": "1.27.3"
+  },
+  "golang_1.27.3_x64": {
+    "all_qualifying_distinct_pichashes": 13964,
+    "architecture": "x64",
+    "archive_encoder": "py7zr 1.1.4",
+    "archive_flags": "default BCJ + LZMA2 preset 7",
+    "build_flags": "CGO_ENABLED=0 GOTOOLCHAIN=local GOENV=off; go build -trimpath; GOFLAGS=-p=2 GOMAXPROCS=2 GOMEMLIMIT=2GiB (build-resource settings)",
+    "built_artifact": "stdcov_go1.27.3_windows_amd64.exe",
+    "comparison_baselines": [
+      {
+        "commit": "92f5371f3d056efae0de81a29e508bcd95e8833d",
+        "export_count": 49,
+        "path": "data/Golang"
+      },
+      {
+        "commit": "00032044b5acb234466cab696f8bcd9c397837a4",
+        "export_count": 16,
+        "path_pattern": "data/Golang/*/mcrit/*_linux_*.mcrit",
+        "pull_request": "https://github.com/familiary/mcrit-data/pull/114"
+      }
+    ],
+    "compiler": "go version go1.27.3 linux/amd64",
+    "component": "",
+    "coverage_component": "stdlib",
+    "family": "Golang",
+    "generated_source_sha256": "6c4a87877004f6232680f1ae621b8415e0b7df3899f3cbe9e09d73e6b302460c",
+    "generator_summary": "packages: 176 used, 0 skipped; references: 4690",
+    "go_env": {
+      "CGO_ENABLED": "0",
+      "GO386": "",
+      "GOAMD64": "v1",
+      "GOARCH": "amd64",
+      "GODEBUG": "",
+      "GOEXPERIMENT": "",
+      "GOFIPS140": "off",
+      "GOFLAGS": "-p=2",
+      "GOOS": "windows",
+      "GOTOOLCHAIN": "local",
+      "GOVERSION": "go1.27.3"
+    },
+    "go_mod_sha256": "a917186780207ff1e2b92bccf84e5453f54b9407dfa3f5c7657741ca233b3877",
+    "goarch": "amd64",
+    "goos": "windows",
+    "image_format": "PE",
+    "image_function_count": 20123,
+    "is_library": true,
+    "license": "BSD-3-Clause; additional third-party notices in the Go distribution",
+    "mcrit": "data/Golang/x64/mcrit/golang_1.27.3_x64.mcrit",
+    "mcrit_sha256": "0eed66b71f26b090407b15ebfee5deab02588e474c24346d2f98a5814d27a356",
+    "mcrit_version": "1.16.0",
+    "named_entry_mismatches": [],
+    "named_function_count": 20107,
+    "nm_positive_sized_text_entries": 20130,
+    "nm_text_symbol_count": 20131,
+    "notes": "Existing scripts/golang generator and build flags; unmodified SDK standard library. Only main.* coverage-driver functions are removed before export, with statistics recomputed using corpus.smdaify._recompute_statistics. Runtime, stdlib and their compiler helpers are intentionally retained. Symbol entry VAs checked against go tool nm. The reference executable is never run. No source, SDK, executable or build cache is distributed.",
+    "num_functions": 20122,
+    "pichashes_outside_previous_golang_exports": 8741,
+    "pipeline": {
+      "commit": "734697bddffd957cd622d8f536dc0c68ed4bfbc0",
+      "disassembler_script_sha256": "4343e60302a251df433f281bd2824c77b4c055121447e7615468cdc9f5e2c7eb",
+      "exporter_script_sha256": "eb7a0ce82cdcbcf7a647748456249352b4b0be9b4b5cc09302f5f9ed4512205f",
+      "generator_sha256": "71e93ac33b4a099de2f34342041572061568460cc9c001d684e0d031450423ff",
+      "repository": "https://github.com/familiary/mcrit-data"
+    },
+    "qualifying_distinct_pichashes": 13956,
+    "qualifying_named_function_instances": 17384,
+    "raw_disassembly_statistics": {
+      "num_api_calls": 0,
+      "num_basic_blocks": 319693,
+      "num_failed_functions": 51,
+      "num_failed_instructions": 0,
+      "num_function_calls": 138200,
+      "num_functions": 20123,
+      "num_instructions": 1841658,
+      "num_leaf_functions": 3415,
+      "num_recursive_functions": 222,
+      "num_thunk_functions": 0
+    },
+    "raw_named_ratio_over_3_instructions": {
+      "named": 19117,
+      "total": 19129
+    },
+    "removed_driver_functions": [
+      {
+        "name": "main.main",
+        "num_instructions": 61,
+        "offset": 5376705888,
+        "pichash": 14431951123364073089
+      }
+    ],
+    "report_timestamp": "2026-11-08T14-35-11",
+    "reproduced_binary_sha256": "c58797d70cfc8748d78d2314f518d6847c96c5a35bed3297df964f9f331fbed4",
+    "retained_named_ratio_over_3_instructions": {
+      "named": 19116,
+      "total": 19128
+    },
+    "sample_version": "1.27.3 x64",
+    "sha256": "c58797d70cfc8748d78d2314f518d6847c96c5a35bed3297df964f9f331fbed4",
+    "smda": "data/Golang/x64/smda/golang_1.27.3_x64.7z",
+    "smda_sha256": "0d7ad4eeb5987c227392a3cd44e4a87ef3d04b9d9e0b3ac7f622aa5631198031",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff",
+      "git_ref": "go1.27.3",
+      "git_url": "https://github.com/golang/go",
+      "sdk_sha256": "65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40",
+      "sdk_size_bytes": 70588678,
+      "sdk_url": "https://go.dev/dl/go1.27.3.linux-amd64.tar.gz"
+    },
+    "unnamed_function_count": 15,
+    "unrepresented_nm_text_entries": [
+      {
+        "offset": 5370348160,
+        "symbols": [
+          {
+            "name": "archive/tar.(*headerFileInfo).Mode",
+            "size": 64
+          }
+        ]
+      },
+      {
+        "offset": 5370534656,
+        "symbols": [
+          {
+            "name": "archive/zip.(*headerFileInfo).String",
+            "size": 96
+          }
+        ]
+      },
+      {
+        "offset": 5370629216,
+        "symbols": [
+          {
+            "name": "crypto.(*Hash).HashFunc",
+            "size": 32
+          }
+        ]
+      },
+      {
+        "offset": 5370951264,
+        "symbols": [
+          {
+            "name": "encoding/asn1.(*bitStringEncoder).Encode",
+            "size": 288
+          }
+        ]
+      },
+      {
+        "offset": 5372862048,
+        "symbols": [
+          {
+            "name": "encoding/json/jsontext.(*objectNamespace).reset",
+            "size": 192
+          }
+        ]
+      },
+      {
+        "offset": 5375882944,
+        "symbols": [
+          {
+            "name": "index/suffixarray.induceS_8_32",
+            "size": 448
+          }
+        ]
+      },
+      {
+        "offset": 5368716160,
+        "symbols": [
+          {
+            "name": "internal/abi.(*FuncType).NumIn",
+            "size": 32
+          }
+        ]
+      },
+      {
+        "offset": 5374449600,
+        "symbols": [
+          {
+            "name": "internal/buildcfg.goarm",
+            "size": 544
+          }
+        ]
+      },
+      {
+        "offset": 5373399296,
+        "symbols": [
+          {
+            "name": "net/http/internal/httpsfv.consumeToken",
+            "size": 288
+          }
+        ]
+      },
+      {
+        "offset": 5371229056,
+        "symbols": [
+          {
+            "name": "net/netip.(*Addr).IsLinkLocalMulticast",
+            "size": 96
+          }
+        ]
+      },
+      {
+        "offset": 5371233120,
+        "symbols": [
+          {
+            "name": "net/netip.(*AddrPort).MarshalBinary",
+            "size": 96
+          }
+        ]
+      },
+      {
+        "offset": 5369362688,
+        "symbols": [
+          {
+            "name": "runtime.badreflectcall.abi0",
+            "size": 32
+          }
+        ]
+      },
+      {
+        "offset": 5372564512,
+        "symbols": [
+          {
+            "name": "slices.breakPatternsOrdered[go.shape.int64]",
+            "size": 224
+          }
+        ]
+      },
+      {
+        "offset": 5370198848,
+        "symbols": [
+          {
+            "name": "slices.breakPatternsOrdered[go.shape.int]",
+            "size": 224
+          }
+        ]
+      },
+      {
+        "offset": 5370558048,
+        "symbols": [
+          {
+            "name": "slices.heapSortCmpFunc[go.shape.struct { compress/bzip2.value uint16; compress/bzip2.length uint8 }]",
+            "size": 480
+          }
+        ]
+      },
+      {
+        "offset": 5374372128,
+        "symbols": [
+          {
+            "name": "slices.partialInsertionSortOrdered[go.shape.int32]",
+            "size": 352
+          }
+        ]
+      },
+      {
+        "offset": 5372563392,
+        "symbols": [
+          {
+            "name": "slices.partialInsertionSortOrdered[go.shape.int64]",
+            "size": 352
+          }
+        ]
+      },
+      {
+        "offset": 5370197728,
+        "symbols": [
+          {
+            "name": "slices.partialInsertionSortOrdered[go.shape.int]",
+            "size": 352
+          }
+        ]
+      },
+      {
+        "offset": 5370604256,
+        "symbols": [
+          {
+            "name": "sort.(*StringSlice).Len",
+            "size": 32
+          }
+        ]
+      },
+      {
+        "offset": 5369871680,
+        "symbols": [
+          {
+            "name": "time.parseRFC3339[go.shape.string]",
+            "size": 1760
+          }
+        ]
+      },
+      {
+        "offset": 5369870784,
+        "symbols": [
+          {
+            "name": "type:.eq.SSSSS",
+            "size": 320
+          }
+        ]
+      },
+      {
+        "offset": 5371242880,
+        "symbols": [
+          {
+            "name": "vendor/golang.org/x/net/dns/dnsmessage.NewBuilder",
+            "size": 576
+          }
+        ]
+      }
+    ],
+    "version": "1.27.3"
+  },
+  "golang_1.27.3_x86": {
+    "all_qualifying_distinct_pichashes": 15566,
+    "architecture": "x86",
+    "archive_encoder": "7-Zip 25.01 (x64) : Copyright (c) 1999-2025 Igor Pavlov : 2025-08-03",
+    "archive_flags": "-t7z -m0=lzma2 -mx=3",
+    "build_flags": "CGO_ENABLED=0 GOTOOLCHAIN=local GOENV=off; go build -trimpath; GOFLAGS=-p=2 GOMAXPROCS=2 GOMEMLIMIT=2GiB (build-resource settings)",
+    "built_artifact": "stdcov_go1.27.3_windows_386.exe",
+    "comparison_baselines": [
+      {
+        "commit": "92f5371f3d056efae0de81a29e508bcd95e8833d",
+        "export_count": 49,
+        "path": "data/Golang"
+      },
+      {
+        "commit": "00032044b5acb234466cab696f8bcd9c397837a4",
+        "export_count": 16,
+        "path_pattern": "data/Golang/*/mcrit/*_linux_*.mcrit",
+        "pull_request": "https://github.com/familiary/mcrit-data/pull/114"
+      }
+    ],
+    "compiler": "go version go1.27.3 linux/amd64",
+    "component": "",
+    "coverage_component": "stdlib",
+    "family": "Golang",
+    "generated_source_sha256": "2c85260049609e7a66151a84449efcca852b665ad18222db612588cc8e2699be",
+    "generator_summary": "packages: 176 used, 0 skipped; references: 4690",
+    "go_env": {
+      "CGO_ENABLED": "0",
+      "GO386": "sse2",
+      "GOAMD64": "",
+      "GOARCH": "386",
+      "GODEBUG": "",
+      "GOEXPERIMENT": "",
+      "GOFIPS140": "off",
+      "GOFLAGS": "-p=2",
+      "GOOS": "windows",
+      "GOTOOLCHAIN": "local",
+      "GOVERSION": "go1.27.3"
+    },
+    "go_mod_sha256": "a917186780207ff1e2b92bccf84e5453f54b9407dfa3f5c7657741ca233b3877",
+    "goarch": "386",
+    "goos": "windows",
+    "image_format": "PE",
+    "image_function_count": 20675,
+    "is_library": true,
+    "license": "BSD-3-Clause; additional third-party notices in the Go distribution",
+    "mcrit": "data/Golang/x86/mcrit/golang_1.27.3_x86.mcrit",
+    "mcrit_sha256": "305e5e34c7c416897e0cafa16f941bedb81129c3ab769127f176ba19cfa47c24",
+    "mcrit_version": "1.16.0",
+    "named_entry_mismatches": [],
+    "named_function_count": 20134,
+    "nm_positive_sized_text_entries": 20137,
+    "nm_text_symbol_count": 20138,
+    "notes": "Existing scripts/golang generator and build flags; unmodified SDK standard library. Only main.* coverage-driver functions are removed before export, with statistics recomputed using corpus.smdaify._recompute_statistics. Runtime, stdlib and their compiler helpers are intentionally retained. Symbol entry VAs checked against go tool nm. The reference executable is never run. No source, SDK, executable or build cache is distributed.",
+    "num_functions": 20674,
+    "pichashes_outside_previous_golang_exports": 11322,
+    "pipeline": {
+      "commit": "734697bddffd957cd622d8f536dc0c68ed4bfbc0",
+      "disassembler_script_sha256": "4343e60302a251df433f281bd2824c77b4c055121447e7615468cdc9f5e2c7eb",
+      "exporter_script_sha256": "eb7a0ce82cdcbcf7a647748456249352b4b0be9b4b5cc09302f5f9ed4512205f",
+      "generator_sha256": "71e93ac33b4a099de2f34342041572061568460cc9c001d684e0d031450423ff",
+      "repository": "https://github.com/familiary/mcrit-data"
+    },
+    "qualifying_distinct_pichashes": 15565,
+    "qualifying_named_function_instances": 19739,
+    "raw_disassembly_statistics": {
+      "num_api_calls": 1,
+      "num_basic_blocks": 327091,
+      "num_failed_functions": 130,
+      "num_failed_instructions": 0,
+      "num_function_calls": 150923,
+      "num_functions": 20675,
+      "num_instructions": 2122288,
+      "num_leaf_functions": 175,
+      "num_recursive_functions": 222,
+      "num_thunk_functions": 0
+    },
+    "raw_named_ratio_over_3_instructions": {
+      "named": 20047,
+      "total": 20585
+    },
+    "removed_driver_functions": [
+      {
+        "name": "main.main",
+        "num_instructions": 28,
+        "offset": 12742752,
+        "pichash": 9431134986526002895
+      }
+    ],
+    "report_timestamp": "2026-11-08T18-35-19",
+    "reproduced_binary_sha256": "95a7a3234c8538809acab29483dbeba623539de78b95d69bc9cb15da894df986",
+    "retained_named_ratio_over_3_instructions": {
+      "named": 20046,
+      "total": 20584
+    },
+    "sample_version": "1.27.3 x86",
+    "sha256": "95a7a3234c8538809acab29483dbeba623539de78b95d69bc9cb15da894df986",
+    "smda": "data/Golang/x86/smda/golang_1.27.3_x86.7z",
+    "smda_sha256": "a5c783e11860c80b33846e955b023ae066ab45b6600db1cf14738316d1c4f858",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "2aae1000ea1d4b28923b96db28acf4e3b99d6aff",
+      "git_ref": "go1.27.3",
+      "git_url": "https://github.com/golang/go",
+      "sdk_sha256": "65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40",
+      "sdk_size_bytes": 70588678,
+      "sdk_url": "https://go.dev/dl/go1.27.3.linux-amd64.tar.gz"
+    },
+    "unnamed_function_count": 540,
+    "unrepresented_nm_text_entries": [
+      {
+        "offset": 12742878,
+        "symbols": [
+          {
+            "name": "runtime.etext",
+            "size": 3874
+          }
+        ]
+      },
+      {
+        "offset": 4765808,
+        "symbols": [
+          {
+            "name": "runtime.goStatusToTraceGoStatus",
+            "size": 208
+          }
+        ]
+      }
+    ],
+    "version": "1.27.3"
+  }
+}
