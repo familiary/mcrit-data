@@ -13,7 +13,13 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 TOOLCHAIN=$WORK/toolchains/go$VERSION
 if [ ! -x "$TOOLCHAIN/bin/go" ]; then
   mkdir -p "$TOOLCHAIN"
-  curl -sL "https://go.dev/dl/go$VERSION.linux-amd64.tar.gz" | tar -xz -C "$TOOLCHAIN" --strip-components=1
+  TARBALL=$WORK/toolchains/go$VERSION.linux-amd64.tar.gz
+  curl -sSfL -o "$TARBALL" "https://go.dev/dl/go$VERSION.linux-amd64.tar.gz"
+  # refuse any toolchain that is not pinned in toolchains.sha256 or does not match its pin
+  PIN=$(grep -E "  go$VERSION\\.linux-amd64\\.tar\\.gz\$" "$HERE/toolchains.sha256" | cut -d' ' -f1 || true)
+  [ -n "$PIN" ] || { echo "no sha256 pin for go$VERSION in toolchains.sha256" >&2; exit 1; }
+  [ "$(sha256sum "$TARBALL" | cut -d' ' -f1)" = "$PIN" ] || { echo "sha256 mismatch for $TARBALL" >&2; exit 1; }
+  tar -xz -C "$TOOLCHAIN" --strip-components=1 -f "$TARBALL"
 fi
 export PATH=$TOOLCHAIN/bin:$PATH GOTOOLCHAIN=local
 [ "$GOARCH" = amd64 ] && BITS=x64 || BITS=x86
