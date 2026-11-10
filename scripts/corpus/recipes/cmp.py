@@ -26,10 +26,31 @@ the float-free copy is 9 functions smaller on both arches). PicHash overlap, fun
 instructions (x86 / x64), of the vendored build's 144 / 134 distinct hashes
 with v20: 93 / 80; with v10: 65 / 55. So the vendored copy is closer to v20
 than v10 is, but 36 to 40% of it differs from the nearest camgunz tag, which
-is why it is its own artefact and not a rename of v20. c-toxcore itself builds
-cmp.c with -O3 -DNDEBUG (CMake Release), not -O2; that variant was not built,
-so a sample linked from c-toxcore's own object may match by MinHash rather
-than PicHash.
+is why it is its own artefact and not a rename of v20.
+
+The flags c-toxcore gives cmp.c, read from its CMakeLists.txt at v0.2.24 (the
+submodule is at 52bfcfa in every tag from v0.2.21 to v0.2.24 and on master;
+v0.2.20 has 2ac6bca): cmp.c is listed in toxcore_SOURCES (lines 234-235), so
+it is compiled into the toxcore library with the project-wide settings and no
+per-file flags. Those are ``add_definitions(-DCMP_NO_FLOAT=1)`` (line 213),
+CMAKE_C_STANDARD 11 with CMAKE_C_EXTENSIONS OFF (lines 99-106, so -std=c11
+under GCC) and, for non-MSVC compilers, no optimisation or warning option of
+the project's own. The file never sets CMAKE_BUILD_TYPE (INSTALL.md gives its
+default as the empty string and uses ``-D CMAKE_BUILD_TYPE=Release`` in its
+example), so -O3 -DNDEBUG is CMake's own GNU Release default
+(CMAKE_C_FLAGS_RELEASE), in effect only when the builder asks for Release; a
+build with no build type has no -O at all. The Release line is the second
+artefact of ``cmp_toktok_52bfcfa``, ``cmp-O3.dll``: -O3 -DNDEBUG -std=c11
+-DCMP_NO_FLOAT=1, otherwise as cmp.dll. cmp.c has no assert and does not test
+NDEBUG, so that define is recorded for fidelity and changes nothing. Kept +
+removed = image total: x86 165 + 49 = 214, x64 174 + 50 = 224. PicHash
+overlap with the -O2 cmp.dll of the same commit, functions of 10+
+instructions: x86 55 shared of 146 (-O3) and 144 (-O2) distinct hashes, x64
+45 of 136 and 134. So about two thirds of the -O3 image is not in the -O2 one.
+What is still not built is the object as c-toxcore links it: the same file
+inside the toxcore library, where a link-time or unity build
+(CMAKE_UNITY_BUILD, which the CMakeLists.txt makes provision for) can inline
+across it.
 
 Build: cmp.c compiled directly into a DLL, no driver translation unit. cmp is
 a library of exported functions (about 170 definitions in cmp.c at v20) with no state
@@ -87,8 +108,10 @@ def _cmp(version, git_ref):
 # (git ls-remote https://github.com/TokTok/cmp.git master ->
 # 52bfcfa17d2eb4322da2037ad625f5575129cece; the prefix is the one recorded by
 # toxcore.py for c-toxcore v0.2.24). Built with the flag c-toxcore builds it
-# with (-DCMP_NO_FLOAT=1, CMakeLists.txt lines 234-235), which removes the
-# float and double readers and writers, at -O2 like the rest of this family.
+# with (-DCMP_NO_FLOAT=1, CMakeLists.txt line 213 at v0.2.24; lines 234-235
+# list cmp.c in toxcore_SOURCES), which removes the float and double readers
+# and writers, at -O2 like the rest of this family, and a second time with
+# the flags of c-toxcore's CMake Release build (cmp-O3.dll).
 _TOKTOK_SHA = "52bfcfa17d2eb4322da2037ad625f5575129cece"
 
 _TOKTOK = Recipe(
@@ -98,8 +121,20 @@ _TOKTOK = Recipe(
     license="MIT",
     source=Source(git_url="https://github.com/TokTok/cmp.git",
                   git_ref=_TOKTOK_SHA),
-    build=[BuildStep("{cc} -O2 -DCMP_NO_FLOAT=1 -shared -o cmp.dll cmp.c")],
-    artifacts=[Artifact(path="cmp.dll", component="cmp.dll")],
+    build=[
+        BuildStep("{cc} -O2 -DCMP_NO_FLOAT=1 -shared -o cmp.dll cmp.c"),
+        # The flags c-toxcore's own CMake Release build gives cmp.c with GCC
+        # (see the docstring for what was read and where).
+        BuildStep("{cc} -O3 -DNDEBUG -std=c11 -DCMP_NO_FLOAT=1 -shared "
+                  "-o cmp-O3.dll cmp.c"),
+    ],
+    artifacts=[
+        Artifact(path="cmp.dll", component="cmp.dll"),
+        Artifact(path="cmp-O3.dll", component="cmp-O3.dll",
+                 build_flags="-O3 -DNDEBUG -std=c11 -DCMP_NO_FLOAT=1 (cmp.c "
+                             "compiled directly with -shared; the flags of "
+                             "c-toxcore's CMake Release build under GCC)"),
+    ],
     toolchains=["mingw_x86", "mingw_x64"],
     build_flags="-O2 -DCMP_NO_FLOAT=1 (cmp.c compiled directly with -shared, "
                 "the define c-toxcore builds its vendored copy with)",
