@@ -1,94 +1,96 @@
-r"""GnuTLS built with MSVC (v143, /MD): NOT BUILT, and therefore not registered.
+r"""GnuTLS built with MSVC (v143, /MD), beside the MinGW and Linux builds of the same release.
 
-Tracker issue #26. The recipe below is complete and was run three times on the
-windows-2022 runner (cl 19.44), x86 and x64, but the last run still stopped at
-one source file, and the dispatch budget for this item (three) is spent, so
-`RECIPES` is left empty: a registered recipe that fails would turn every
-`all-msvc` run red. To try it again, set `RECIPES` to `_CANDIDATES` and
-dispatch `GnuTLS_3.8.13_msvc` on its own.
-
-What was built, and how (scripts/corpus/exercisers/gnutls_msvc_build.py; the
-Linux and MinGW recipe in gnutls.py explains the dependencies and the
-exclusion):
+Tracker issue #26. Upstream supports MinGW and not MSVC, and GnuTLS cannot be
+built from a hand-written configuration the way GMP and Nettle can (it carries
+about 240 gnulib replacement files whose configure results drive the build),
+so the one part of this build that is GnuTLS's own is its own `configure`, run
+for cl the way the GNU project documents it for MSVC: through MSYS2 bash with
+automake's `compile` and `ar-lib` wrappers in front of cl and lib. Every
+object is compiled by cl. The driver is
+scripts/corpus/exercisers/gnutls_msvc_build.py; gnutls.py explains the
+dependencies and the exclusion, which is the same here.
 
   * GMP 6.3.0 as static gmp.lib (the no-assembly build of gmp_msvc.py with
     `--static`) and Nettle 3.10.2 as static nettle.lib and hogweed.lib against
     that GMP (not mini-gmp; configured the way nettle_msvc_build.py configures
     it, with NETTLE_USE_MINI_GMP 0 and the real limb width in version.h and in
-    the ecc tables). Both built on both architectures in all three runs.
-    gnutls.py's `_NAMESPACES_PE` plus the statics below exclude them from the
-    image by name. The statics were listed from the three libraries as cl built
-    them (symbols of storage class Static, printed to the build log as
-    `STATICS`): 173 in gmp.lib, 124 in nettle.lib, 60 (x64) or 57 (x86) in
-    hogweed.lib; the names of `_STATICS` below (224, and the three functions of the dirent shim), taken from the sources'
-    own static functions and from the Linux list, cover all of them except the
-    CRT inline `time`.
-  * GnuTLS's own `configure`, run under MSYS2 bash (pacman provides make, m4
-    and diffutils) with automake's `build-aux/compile cl -nologo` as CC and
-    `build-aux/ar-lib lib` as AR, `LD=link`, `NM="dumpbin -symbols"`, build =
-    host = <arch>-w64-mingw32 so that it runs what it compiles, the options of
-    gnutls.py plus `--disable-shared --enable-static --disable-hardware-
-    acceleration --disable-dependency-tracking --disable-rpath`, and the
-    helper libraries found through NETTLE_*/HOGWEED_* variables. It completes
-    on both architectures (cl is reported as "not GNU C"; every gnulib probe
-    runs natively).
-  * `make -C gl` builds all of gnulib's replacements with cl and no error, and
-    `make -C lib` compiles every source of lib/ and of its subdirectories
-    (x509, auth, ext, algorithms, extras, hpke, accelerated, nettle, minitasn1,
-    unistring) except the ones listed next. The static archive is then to be
-    linked to libgnutls-30.dll with the corpus flags (/WHOLEARCHIVE of the
-    libtool archive, /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF,
-    exports `^(gnutls|_gnutls)`); that step has never been reached.
+    the ecc tables).
+  * GnuTLS's `configure` with `compile cl -nologo` as CC, `ar-lib lib` as AR,
+    `LD=link`, `NM="dumpbin -symbols"`, build = host = <arch>-w64-mingw32 so
+    that it runs what it compiles, the options of gnutls.py plus
+    `--disable-shared --enable-static --disable-hardware-acceleration
+    --disable-dependency-tracking --disable-rpath`, and the helper libraries
+    found through NETTLE_*/HOGWEED_* variables. `make -C gl` and `make -C lib`
+    build gnulib and every source of lib/ and its subdirectories.
+  * libtool leaves one static archive, lib/.libs/gnutls.lib (cl has no "lib"
+    prefix), which is linked to libgnutls-30.dll with the corpus flags:
+    /WHOLEARCHIVE of the archive and of the convenience libraries libtool did
+    not merge into it, gmp.lib, hogweed.lib and nettle.lib as ordinary
+    archives (only referenced members come in, as with the static libraries of
+    the Linux and MinGW builds), /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF
+    /OPT:NOICF, and 1,885 exports from the objects by the rule of
+    lib/Makefile.am for linkers without a version script, `^(gnutls|_gnutls)`.
+    The link needed no /FORCE.
 
-What stopped it, in order (x64; the x86 text differs only in the path):
-
-  Run 42749164007 (no shim yet), `make -C lib` -k, every error of the build:
+Build-tree additions (NOT part of GnuTLS; no upstream file is edited, but the
+image is NOT byte-identical to a build of unmodified upstream, which does not
+compile with cl). GnuTLS 3.8.13 has MSVC branches for most GNU-isms and misses
+four, found by the runner builds:
 
     lib\x509\verify-high2.c(40): fatal error C1083: Cannot open include file: 'dirent.h': No such file or directory
     lib\global.c(546): error C2143: syntax error: missing ')' before '('      (static void _CONSTRUCTOR lib_init(void); also line 578, lib_deinit)
     lib\crau/crau.h(263): error C2146: syntax error: missing ')' before identifier 'CRAU_MAYBE_UNUSED'      (also lines 269, 279, 285, 290, 295)
     lib\audit.c(28): error C2054: expected '(' to follow '_Thread_local'
-    make[2]: *** No rule to make target 'x509/libgnutls_x509.la', needed by 'libgnutls.la'.
 
-  Each is a GCC-ism GnuTLS 3.8.13 does not guard for cl: `global.c` puts
-  `__attribute__((constructor))` on its two init functions unless the compiler
-  is Solaris's, `crau.h` leaves `CRAU_MAYBE_UNUSED` undefined unless the
-  compiler is GCC or C23, `audit.c` uses `_Thread_local` without including
-  gthreads.h (which would define it for MSVC), and the SDK has no dirent.h.
-  They are answered without editing any upstream file, by a force-included
-  header (`cl -FI`, found through -I) that defines `_Thread_local` as
-  `__declspec(thread)`, `__attribute__(x)` as nothing and `CRAU_MAYBE_UNUSED`
-  as nothing, and by a header-only dirent.h (FindFirstFile based) written into
-  the build tree, both by the exerciser and only for the make phase. With
-  `__attribute__` empty the two init functions are plain unused statics, so
-  this DLL would not run GnuTLS's initialisation at load; it is reference
-  data, not something to run.
+`global.c` puts `__attribute__((constructor))` on its two init functions
+unless the compiler is Solaris's, `crau.h` leaves `CRAU_MAYBE_UNUSED`
+undefined unless the compiler is GCC or C23, `audit.c` uses `_Thread_local`
+without including gthreads.h (which defines it for MSVC), and the SDK has no
+dirent.h. The exerciser writes two headers into the build tree and uses them
+for the make phase only: a force-included one (`cl -FI`, found through -I)
+defining `_Thread_local` as `__declspec(thread)`, `__attribute__(x)` as
+nothing and `CRAU_MAYBE_UNUSED` as nothing, and a dirent.h of
+FindFirstFile-based opendir/readdir/closedir plus the wide `_topendir`
+family, `_TDIR` and `struct _tdirent` that verify-high2.c takes because the
+build defines _UNICODE (the first run with only the narrow functions stopped
+at `verify-high2.c(434): error C2065: '_TDIR': undeclared identifier` and
+`(474): error C2037: left of 'd_name' specifies undefined struct/union
+'_tdirent'`). With `__attribute__` empty the two init functions are plain
+unused statics: this DLL would not run GnuTLS's initialisation at load. It is
+reference data, not something to run. The three narrow dirent functions are in
+`_STATICS` below, so any copy of them is excluded by name.
 
-  Run 42750806400: the shim was found through an absolute path that MSYS2's
-  argument conversion mangled, so every file failed (`Cannot open include file:
-  'D:A:/mcrit-data/.../deps/shim/msvc_shim.h'`); fixed by finding it through
-  -I.
+Exclusion. Nettle, hogweed and GMP code linked in from the static libraries is
+removed by name (`_NAMESPACES_PE` of gnutls.py plus `_STATICS`), the statics
+being the source-level static functions of both trees joined with the Linux
+list, minus every name GnuTLS's own objects define; against the statics that
+cl really produced in the three libraries (173 in gmp.lib, 124 in nettle.lib,
+60 x64 or 57 x86 in hogweed.lib, listed in the build log as `STATICS`) the
+list leaves only the CRT inline `time` uncovered. The names the pattern
+leaves in the images are GnuTLS's own definitions of that shape:
+nettle_tls10_prf, nettle_tls12_prf, nettle_write_be32, mpn_get_base256,
+mpn_set_base256 and mpz_seed_sizeinbase_256_u.
 
-  Run 42752272041, `make -C lib`, the only errors left, both architectures:
+Counts, kept + removed (the baseline's measured MSVC runtime) + excluded
+(Nettle and GMP by name) = image total, from provenance.json:
 
-    lib\x509\verify-high2.c(434): error C2065: '_TDIR': undeclared identifier
-    lib\x509\verify-high2.c(434): error C2065: 'dirp': undeclared identifier
-    lib\x509\verify-high2.c(473): error C2198: 'int _gnutls_ucs2_to_utf8(const void *,size_t,gnutls_datum_t *,unsigned int)': too few arguments for call
-    lib\x509\verify-high2.c(474): error C2037: left of 'd_name' specifies undefined struct/union '_tdirent'
-    lib\x509\verify-high2.c(474): error C2037: left of 'd_namlen' specifies undefined struct/union '_tdirent'
-    make[2]: *** No rule to make target 'x509/libgnutls_x509.la', needed by 'libgnutls.la'.
+    GnuTLS_3.8.13_msvc143_x64_libgnutls.dll   4611 + 190 + 994 = 5795   3322 functions of 10+ instructions, 2864 distinct PicHashes
+    GnuTLS_3.8.13_msvc143_x86_libgnutls.dll   4648 + 204 + 993 = 5845   3415 / 2872
 
-  The build defines _UNICODE, so verify-high2.c takes its wide-character branch
-  (`_TDIR`, `_topendir`, `_treaddir`, `_tclosedir`, `struct _tdirent` with
-  `d_namlen`, which MinGW's dirent.h provides). The dirent shim of the three
-  runs had the narrow functions only. The exerciser in the repository has the
-  wide ones added (`_wopendir` and friends, mapped by the `_UNICODE` macros);
-  that header compiles with MinGW gcc for both architectures with and without
-  _UNICODE, but it has NOT been run on the runner, and what comes after it (the
-  libtool archive, the link of the DLL) has never been reached, so nothing is
-  known about those two steps.
+PicHash overlap of the kept 10+ instruction functions with the MSVC images of
+the helper families: GMP 6.3.0 0 (x86), 0 (x64); Nettle 3.10.2 libnettle 9
+(x86), 6 (x64); libhogweed 3 (x86), 0 (x64). (The Nettle family's MSVC images
+carry mini-gmp, GnuTLS's helper hogweed here uses GMP, which is part of why
+hogweed overlaps little.)
 
-Counts: none; no GnuTLS MSVC image exists.
+Runner builds (windows-2022, cl 19.44): runs 42749164007, 42750806400 and
+42752272041 (GMP and GnuTLS; GnuTLS stopped in lib/ at the errors above and
+then at the dirent shim), 42754505008 (a shim header that had the wide
+functions in the wrong file), 42755679488 (every file of gl/ and lib/
+compiled; the script looked for libgnutls.a while libtool left gnutls.lib) and
+42756951311 (built; the data in the repository is from it).
+
+Not built: other GnuTLS releases and the optional back ends.
 """
 
 import re
@@ -370,17 +372,23 @@ def _recipe(version):
                     "static libraries; libgnutls linked from the libtool "
                     "archive with /WHOLEARCHIVE /DEBUG /Brepro "
                     "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF, exports "
-                    "^(gnutls|_gnutls)",
+                    "^(gnutls|_gnutls); build-tree shim headers: force-included "
+                    "_Thread_local/__attribute__/CRAU_MAYBE_UNUSED definitions "
+                    "and dirent.h",
         notes="Nettle, hogweed and GMP code linked in statically is removed "
               "by name (Recipe.exclude_functions) because the Nettle and GMP "
               "families carry it; libtasn1 and libunistring are GnuTLS's "
               "bundled copies and stay in. Sources are sha256-pinned and "
-              "were checked against the upstream GPG signatures. No source "
-              "is patched; the build is C only (no accelerated assembly).",
+              "were checked against the upstream GPG signatures. No upstream "
+              "file is edited, but GnuTLS does not compile with cl as it is: "
+              "two build-tree headers (a force-included one defining "
+              "_Thread_local as __declspec(thread) and __attribute__(x) and "
+              "CRAU_MAYBE_UNUSED as nothing, and a dirent.h) are added for "
+              "the make phase, so the image is NOT byte-identical to a build "
+              "of unmodified upstream, and without __attribute__((constructor)) "
+              "its init functions are not run at load. C only (no accelerated "
+              "assembly).",
     )
 
 
-_CANDIDATES = {"GnuTLS_%s_msvc" % version: _recipe(version) for version in _VERSIONS}
-
-# Not registered: see the docstring.
-RECIPES = {}
+RECIPES = {"GnuTLS_%s_msvc" % version: _recipe(version) for version in _VERSIONS}
