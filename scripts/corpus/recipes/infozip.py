@@ -152,6 +152,23 @@ patch. Four settings are needed and the first is not obvious:
   LDFLAGS / LD_RELEASE_OPT - both makefiles link with -s, which discards the
                         COFF symbol table this corpus names functions from.
   CC_CPU_OPT=         - unzip passes -mcpu=pentiumpro by default.
+
+Second pass, separate versions so the images above are unchanged (kept +
+removed = total, no exclusions; x86 / x64). Utilities ("<v>-utils"):
+zipcloak 3.0 110 + 159 = 269 / 141 + 157 = 298, zipnote 103 + 158 = 261 /
+134 + 156 = 290, zipsplit 106 + 162 = 268 / 137 + 157 = 294; 3.1a and 3.1b
+zipcloak 108 + 161 = 269 / 139 + 157 = 296, zipnote 101 + 160 = 261 / 132 +
+156 = 288, zipsplit 103 + 164 = 267 / 134 + 159 = 293; 3.1c zipcloak 111 + 161
+= 272 / 143 + 157 = 300, zipnote 104 + 160 = 264 / 136 + 156 = 292, zipsplit
+106 + 164 = 270 / 138 + 159 = 297. "6.0-sfxdll": unzipsfx.exe 100 + 148 = 248
+/ 177 + 144 = 321, unzip32.dll 144 + 139 = 283 / 228 + 134 = 362. x86
+assembler builds ("-asm"): zip.exe 3.0 246 + 208 = 454, 3.1a and 3.1b 246 +
+210 = 456, 3.1c 248 + 209 = 457 (patched build tree, see below); unzip.exe
+129 + 154 = 283, funzip.exe 21 + 134 = 155. Against the C build of the same
+version the assembler builds share 184 of 189 (3.0), 186 of 191 (3.1a, 3.1b),
+188 of 193 (3.1c), 103 of 106 (unzip) and 14 of 16 (funzip) ten-instruction
+PicHashes; each utility shares 78 to 86 of its 84 to 91 with its neighbour;
+no image is PicHash-identical to another.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -280,6 +297,11 @@ RECIPES = {
 # so the shipped images are unchanged. The "-asm" versions are x86 only:
 # upstream's default x86 build with match.S and crc_i386.S assembled in,
 # which the shipped C-only recipes leave out for like-for-like x86/x64.
+# The makefiles assemble match.S and crc_i386.S with $(CC) and ASFLAGS that
+# include LOC/LOCFLAGS, so the -include windows.h the C files need reached
+# the assembler ("vadefs.h:24: Error: no such instruction: `typedef
+# __builtin_va_list __gnuc_va_list'"); ASFLAGS=-c on the command line keeps
+# it to the C files (ASDEFS is empty without USE_ZLIB).
 _UTILS = ["zipcloak.exe", "zipnote.exe", "zipsplit.exe"]
 _ZIP30_UTILS_MAKE = _ZIP30_MAKE.replace(" zip.exe", " " + " ".join(_UTILS))
 _ZIP31_UTILS_MAKE = _ZIP31_MAKE.replace(" zip.exe", " " + " ".join(_UTILS))
@@ -316,7 +338,16 @@ RECIPES["infozip_unzip_6.0-sfxdll"] = Recipe(
     source=RECIPES["infozip_unzip_6.0"].source,
     build=[
         BuildStep("make -f win32/Makefile.gcc clean", allow_failure=True),
-        BuildStep("make -f win32/Makefile.gcc CC={cc} RC={windres} NOASM=1 "
+        # unzip32.dll is linked by a bare `dllwrap`, which then runs bare
+        # dlltool, as and ld; the first attempt failed with "make: ***
+        # [win32/Makefile.gcc:272: unzip32.dll] Error 127" (no dllwrap on
+        # PATH), then "dllwrap: posix_spawnp: No such file or directory".
+        # The cross tools are put on PATH under those names in .bin/, in the
+        # build tree, not the source.
+        BuildStep("mkdir -p .bin && for t in dllwrap dlltool as ld; do "
+                  "ln -sf $(command -v {host}-$t) .bin/$t; done && "
+                  "PATH=$PWD/.bin:$PATH make -f win32/Makefile.gcc CC={cc} "
+                  "RC={windres} NOASM=1 "
                   "CC_CPU_OPT= LD_RELEASE_OPT= LOCAL_UNZIP='%s' "
                   "unzipsfx.exe unzip32.dll" % _INCLUDE),
     ],
@@ -343,7 +374,8 @@ RECIPES["infozip_zip_3.0-asm"] = Recipe(
     source=RECIPES["infozip_zip_3.0"].source,
     build=[BuildStep("make -f win32/makefile.gcc clean", allow_failure=True),
            BuildStep("make -f win32/makefile.gcc CC={cc} RC={windres} "
-                     "LDFLAGS='-o$@' LOCAL_ZIP='%s' zip.exe" % _INCLUDE)],
+                     "LDFLAGS='-o$@' LOCAL_ZIP='%s' ASFLAGS=-c zip.exe"
+                     % _INCLUDE)],
     artifacts=[Artifact(path="zip.exe", component="zip.exe")],
     toolchains=["mingw_x86"],
     build_flags="-O2 (win32/makefile.gcc default), assembler match.S and "
@@ -361,7 +393,8 @@ RECIPES["infozip_zip_3.1c-asm"] = Recipe(
     source=RECIPES["infozip_zip_3.1c"].source,
     build=[BuildStep("make -f win32/makefile.gcc clean", allow_failure=True),
            BuildStep("make -f win32/makefile.gcc CC={cc} RC={windres} "
-                     "LDFLAGS='-o$@' LOCAL_ZIP='%s' zip.exe" % _INCLUDE)],
+                     "LDFLAGS='-o$@' LOCAL_ZIP='%s' ASFLAGS=-c zip.exe"
+                     % _INCLUDE)],
     artifacts=[Artifact(path="zip.exe", component="zip.exe")],
     toolchains=["mingw_x86"],
     build_flags="-O3 (win32/makefile.gcc default), assembler match.S and "
@@ -377,7 +410,7 @@ RECIPES["infozip_unzip_6.0-asm"] = Recipe(
     source=RECIPES["infozip_unzip_6.0"].source,
     build=[BuildStep("make -f win32/Makefile.gcc clean", allow_failure=True),
            BuildStep("make -f win32/Makefile.gcc CC={cc} RC={windres} "
-                     "CC_CPU_OPT= LD_RELEASE_OPT= LOCAL_UNZIP='%s' "
+                     "CC_CPU_OPT= LD_RELEASE_OPT= LOCAL_UNZIP='%s' ASFLAGS=-c "
                      "unzip.exe funzip.exe" % _INCLUDE)],
     artifacts=[Artifact(path="unzip.exe", component="unzip.exe"),
                Artifact(path="funzip.exe", component="funzip.exe")],
@@ -395,3 +428,34 @@ for _beta in ("3.1a", "3.1b"):
         source=RECIPES["infozip_zip_" + _beta].source,
         notes=_NO_ZLIB + _note_beta(_beta) + "zip.exe with upstream's "
               "default x86 assembler fast paths (NOASM not given). x86 only.")
+
+# 3.1c's match.S and crc_i386.S end with an ELF-only
+#     .section .note.GNU-stack, "", @progbits
+#     .previous
+# which the PE assembler rejects ("match.S:409: Error: junk at end of line,
+# first unrecognized character is `-'", "crc_i386.S:306: ..."), so upstream's
+# default x86 MinGW build of 3.1c does not assemble (3.1a and 3.1b do not have
+# the lines). PATCHED BUILD TREE: the recipe deletes exactly those two lines
+# from each file (a sed that checks both pairs were present and are gone);
+# the 3.1c -asm image is therefore NOT byte-identical to a build of
+# unmodified upstream. The lines only mark the stack non-executable on ELF and
+# assemble to nothing in a PE.
+_GNU_STACK = ("for f in match.S crc_i386.S; do "
+              "test \"$(grep -c '^\\.section \\.note\\.GNU-stack' $f)\" = 1 && "
+              "sed -i '/^\\.section \\.note\\.GNU-stack, \"\", @progbits$/,"
+              "/^\\.previous$/d' $f && "
+              "test \"$(grep -c 'GNU-stack\\|^\\.previous' $f)\" = 0 || exit 1; "
+              "done")
+RECIPES["infozip_zip_3.1c-asm"] = _dc.replace(
+    RECIPES["infozip_zip_3.1c-asm"],
+    build=[RECIPES["infozip_zip_3.1c-asm"].build[0], BuildStep(_GNU_STACK)]
+    + RECIPES["infozip_zip_3.1c-asm"].build[1:],
+    build_flags=RECIPES["infozip_zip_3.1c-asm"].build_flags
+    + "; build tree patched: the ELF-only .note.GNU-stack section lines "
+      "deleted from match.S and crc_i386.S",
+    notes=RECIPES["infozip_zip_3.1c-asm"].notes + " PATCHED BUILD TREE: "
+          "3.1c's match.S and crc_i386.S end with an ELF-only "
+          "'.section .note.GNU-stack, \"\", @progbits' / '.previous' pair "
+          "that the PE assembler rejects; the recipe deletes those two lines "
+          "from each file, so this image is NOT byte-identical to a build of "
+          "unmodified upstream.")
