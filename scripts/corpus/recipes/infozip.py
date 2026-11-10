@@ -411,3 +411,34 @@ for _beta in ("3.1a", "3.1b"):
         source=RECIPES["infozip_zip_" + _beta].source,
         notes=_NO_ZLIB + _note_beta(_beta) + "zip.exe with upstream's "
               "default x86 assembler fast paths (NOASM not given). x86 only.")
+
+# 3.1c's match.S and crc_i386.S end with an ELF-only
+#     .section .note.GNU-stack, "", @progbits
+#     .previous
+# which the PE assembler rejects ("match.S:409: Error: junk at end of line,
+# first unrecognized character is `-'", "crc_i386.S:306: ..."), so upstream's
+# default x86 MinGW build of 3.1c does not assemble (3.1a and 3.1b do not have
+# the lines). PATCHED BUILD TREE: the recipe deletes exactly those two lines
+# from each file (a sed that checks both pairs were present and are gone);
+# the 3.1c -asm image is therefore NOT byte-identical to a build of
+# unmodified upstream. The lines only mark the stack non-executable on ELF and
+# assemble to nothing in a PE.
+_GNU_STACK = ("for f in match.S crc_i386.S; do "
+              "test \"$(grep -c '^\\.section \\.note\\.GNU-stack' $f)\" = 1 && "
+              "sed -i '/^\\.section \\.note\\.GNU-stack, \"\", @progbits$/,"
+              "/^\\.previous$/d' $f && "
+              "test \"$(grep -c 'GNU-stack\\|^\\.previous' $f)\" = 0 || exit 1; "
+              "done")
+RECIPES["infozip_zip_3.1c-asm"] = _dc.replace(
+    RECIPES["infozip_zip_3.1c-asm"],
+    build=[RECIPES["infozip_zip_3.1c-asm"].build[0], BuildStep(_GNU_STACK)]
+    + RECIPES["infozip_zip_3.1c-asm"].build[1:],
+    build_flags=RECIPES["infozip_zip_3.1c-asm"].build_flags
+    + "; build tree patched: the ELF-only .note.GNU-stack section lines "
+      "deleted from match.S and crc_i386.S",
+    notes=RECIPES["infozip_zip_3.1c-asm"].notes + " PATCHED BUILD TREE: "
+          "3.1c's match.S and crc_i386.S end with an ELF-only "
+          "'.section .note.GNU-stack, \"\", @progbits' / '.previous' pair "
+          "that the PE assembler rejects; the recipe deletes those two lines "
+          "from each file, so this image is NOT byte-identical to a build of "
+          "unmodified upstream.")
