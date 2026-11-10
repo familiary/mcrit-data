@@ -81,6 +81,17 @@ v10 is kept as the pre-rewrite representative (v17 added 14 functions and the
 reworked object-reading path) and v20 as the current tag, the one c-toxcore's
 copy descends from. v1, v3, v5 and v17-v19 were built and measured and are not
 committed.
+
+Second pass: the tags the first revision built only to measure are committed
+as versions of their own (kept + removed = total, no exclusions;
+ten-instruction PicHashes in brackets), x86 / x64: v1 123 + 49 = 172 (111) /
+132 + 50 = 182 (111); v3 the same counts, sharing 103 of 111 with v1; v5
+160 + 49 = 209 (137) / 169 + 50 = 219 (125); v17 and v18 174 + 49 = 223 (151) /
+183 + 50 = 233 (138); v19 175 + 49 = 224 (153) / 184 + 50 = 234 (140). v17,
+v18 and v19 share all but two of their ten-instruction hashes with v20 and
+with each other, but no two images are PicHash-identical at every size, so
+each is committed. The c-toxcore-compiled cmp.c (see the comment at the end
+of this file) is PicHash-identical to cmp-O3.dll and is not.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
