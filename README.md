@@ -93,6 +93,11 @@ String obfuscation
 * [obfstr](#obfstr)
 * [Obfuscator4g3nt47](#obfuscator4g3nt47)
 
+Go applications
+* [tailcat](#tailcat)
+* [tailscale](#tailscale)
+* [wintun](#wintun)
+
 ## Compilers
 
 Reference code extracted from all files containing precompiled code found in installations for various compiler toolchains.
@@ -1039,4 +1044,63 @@ Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | Obfuscator4g3nt47 | 2023-02-26 | MinGW-w64 GCC 13 | [x86 PE](data/Obfuscator4g3nt47/x86/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.mcrit) / [x64 PE](data/Obfuscator4g3nt47/x64/mcrit/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.mcrit) | [x86 PE](data/Obfuscator4g3nt47/x86/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x86_obfuscator.exe.7z) / [x64 PE](data/Obfuscator4g3nt47/x64/smda/Obfuscator4g3nt47_2023-02-26_mingw13_x64_obfuscator.exe.7z) |
+<!-- /generated -->
+
+## Go applications
+
+Go programs built from pinned upstream source for windows/amd64, windows/386, linux/amd64 and linux/386 (`CGO_ENABLED=0 go build -trimpath`, unstripped). The Compiler column names the C toolchain id that selects the target platform (MinGW-w64 for the PE builds, GCC for the ELF builds); the code was produced by the Go compiler, and each provenance record's notes give the Go version and the `go.sum` digest. The Go runtime and standard library are removed by symbol name (see the Go half in `scripts/corpus/README.md`); what remains is the project and **every module it links**.
+
+### tailscale/tailcat<a id='tailcat'></a>
+
+The netcat-like client over Tailscale's data plane that Kothamine bundles unmodified and runs as `tailcat.exe` (Malwarebytes); BSD-3-Clause. v0.7.0 (commit `15ab9e68bfc6`), built as upstream's releases are (`build-tags.txt` release tags, `-X main.version`) minus `-s -w`, with go1.27.1 because the tag's `go.mod` declares go 1.27.1 (the host's go1.24.7 cannot build it; the toolchain is pinned by `GOTOOLCHAIN=go1.27.1`, not `local`). tailcat is a module client of tailscale.com, not a fork, so most of the image is Tailscale's data plane under tailcat's name: of 11,078 kept functions on linux/amd64, 3,219 are gVisor netstack, about 2,800 are `tailscale.com` packages, 329 `tailscale/wireguard-go`, 462 `golang.org/x/crypto`, 331 `pkg/sftp`, and only 241 `tailscale/tailcat` plus 113 `main` are the application. Kept + removed = total: windows/amd64 9,827 + 9,018 = 18,845; windows/386 10,501 + 9,273 = 19,774; linux/amd64 11,078 + 9,208 = 20,286; linux/386 11,023 + 9,223 = 20,246, so 46 to 49 percent of each image is runtime and standard library. Of the distinct PicHashes of ten instructions or more (6,543 linux/amd64, 7,715 linux/386, 6,144 windows/amd64, 7,313 windows/386) the two 64-bit images share 5,696 and no other pair more than 13. Against the Go families on the same axis: `golang_x_crypto` 46-51 shared (of its 498-519), chisel 43-51, frpc 44-65, frps 91-110, yamux 1-2, go_socks5 0. The report gives no version; v0.7.0 is the newest tag before it (2026-09-25), and the sample is not tied to it. `cmd/tailscale` does not build from tailcat's pinned module graph (see `scripts/corpus/README.md`).  
+Generated with `scripts/build_corpus.py`; see `data/tailcat/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: tailcat -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Name     | Version | Compiler | MCRIT | SMDA |
+| tailcat | 0.7.0 | GCC 13 (Linux, glibc) | [x86 ELF](data/tailcat/x86/mcrit/tailcat_0.7.0_gcc13_x86_tailcat.mcrit) / [x64 ELF](data/tailcat/x64/mcrit/tailcat_0.7.0_gcc13_x64_tailcat.mcrit) | [x86 ELF](data/tailcat/x86/smda/tailcat_0.7.0_gcc13_x86_tailcat.7z) / [x64 ELF](data/tailcat/x64/smda/tailcat_0.7.0_gcc13_x64_tailcat.7z) |
+| tailcat | 0.7.0 | MinGW-w64 GCC 13 | [x86 PE](data/tailcat/x86/mcrit/tailcat_0.7.0_mingw13_x86_tailcat.mcrit) / [x64 PE](data/tailcat/x64/mcrit/tailcat_0.7.0_mingw13_x64_tailcat.mcrit) | [x86 PE](data/tailcat/x86/smda/tailcat_0.7.0_mingw13_x86_tailcat.7z) / [x64 PE](data/tailcat/x64/smda/tailcat_0.7.0_mingw13_x64_tailcat.7z) |
+<!-- /generated -->
+
+### tailscale/tailscale<a id='tailscale'></a>
+
+The Tailscale node daemon `tailscaled` and the `tailscale` command-line client; BSD-3-Clause. v1.102.5 (tag object `8908149cab70`, commit `5fb2a81b065b`, 2026-09-24), the newest release tag before the Malwarebytes report (2026-09-25); the report gives no version, so the build is not tied to the sample. Built from the tag's own `go.mod`/`go.sum` with go1.26.6 (`GOTOOLCHAIN=go1.26.6`; the host's go1.24.7 cannot build it) and the flags of upstream's `build_dist.sh` (no `-tags`, `-trimpath`, `-X tailscale.com/version.longStamp/shortStamp`) minus `-w -s`. The long stamp is `1.102.5-1-t5fb2a81b0`, the value `go run ./cmd/mkversion` printed at the tag commit. No source is patched. `cmd/tailscale` builds from this graph although it does not from tailcat's. Kept + removed = total (counts verified against `provenance.json`):
+
+| Artefact | Kept | Removed (Go runtime and standard library) | Total |
+|----------|------|------|-------|
+| `tailscaled` windows/amd64 | 16,711 | 10,360 | 27,071 |
+| `tailscaled` windows/386 | 17,897 | 10,654 | 28,551 |
+| `tailscaled` linux/amd64 | 22,059 | 10,838 | 32,897 |
+| `tailscaled` linux/386 | 19,596 | 10,811 | 30,407 |
+| `tailscale` windows/amd64 | 6,561 | 10,095 | 16,656 |
+| `tailscale` windows/386 | 6,802 | 10,358 | 17,160 |
+| `tailscale` linux/amd64 | 14,067 | 13,035 | 27,102 |
+| `tailscale` linux/386 | 13,916 | 13,077 | 26,993 |
+
+What is kept is mostly not `main`. By function-name prefix, `tailscaled` linux/amd64 keeps 22,059 functions: 9,021 `tailscale.com/`, 3,768 `gvisor.dev/gvisor`, 589 other `github.com/tailscale/*`, 358 `github.com/tailscale/wireguard-go`, 945 `golang.org/x`, 1,016 compiler-written `type:.eq`/`.hash` functions, 117 `main`, 1,413 unnamed functions kept between named neighbours, and 4,832 from other modules (aws-sdk-go-v2 1,765, go-tpm 526, go-json-experiment 382, klauspost/compress 289, godbus/dbus 257, pkg/sftp 214). Windows/amd64 `tailscaled` keeps 8,588 `tailscale.com/`, 3,750 gVisor, 411 other `tailscale/*`, 298 wireguard-go, 172 `main`, 2,095 other modules. The `tailscale` client is dominated by dependencies: linux/amd64 6,408 `tailscale.com/` of 14,067 against 2,207 aws-sdk-go-v2 and 455 smithy-go, 517 godbus/dbus, 591 go-json-experiment. Distinct PicHashes of functions of 10 or more instructions: `tailscaled` 10,202 (windows/amd64), 11,918 (windows/386), 12,671 (linux/amd64), 13,241 (linux/386); `tailscale` 4,430, 5,075, 7,955, 9,860. Within the family only the two same-bitness Windows/Linux images share much: `tailscaled` windows/amd64 and linux/amd64 share 8,712, `tailscale` 3,867; the 32-bit pair shares 15 and 0, every other pair 0. On one target `tailscaled` and `tailscale` share 2,536 (windows/amd64), 932 (windows/386), 4,447 (linux/amd64) and 1,233 (linux/386). **Overlap with the tailcat family** (same target, distinct PicHashes of 10+ instructions): the two share `tailscale.com`, gVisor and wireguard-go code, and that is not removed. `tailscaled` shares 1,655 (windows/amd64), 1,202 (windows/386), 1,990 (linux/amd64) and 1,415 (linux/386) with `tailcat`, which is 27, 16, 30 and 18 percent of tailcat's images and 16, 10, 16 and 11 percent of `tailscaled`'s; `tailscale` shares 503, 363, 730 and 532 (5 to 11 percent of tailcat's). No cross-target pair against tailcat exceeds 1,725.  
+Generated with `scripts/build_corpus.py`; see `data/tailscale/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: tailscale -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| tailscale | 1.102.4 | go1.26.6 (as distributed upstream) | [x86 PE](data/tailscale/x86/mcrit/tailscale_1.102.4_go1.26.6_x86_tailscale-ipn.exe.mcrit) / [x64 PE](data/tailscale/x64/mcrit/tailscale_1.102.4_go1.26.6_x64_tailscale-ipn.exe.mcrit) | [x86 PE](data/tailscale/x86/smda/tailscale_1.102.4_go1.26.6_x86_tailscale-ipn.exe.7z) / [x64 PE](data/tailscale/x64/smda/tailscale_1.102.4_go1.26.6_x64_tailscale-ipn.exe.7z) |
+| tailscale | 1.102.5 | GCC 13 (Linux, glibc) | [x86 ELF](data/tailscale/x86/mcrit/tailscale_1.102.5_gcc13_x86_tailscale.mcrit) / [x64 ELF](data/tailscale/x64/mcrit/tailscale_1.102.5_gcc13_x64_tailscale.mcrit) | [x86 ELF](data/tailscale/x86/smda/tailscale_1.102.5_gcc13_x86_tailscale.7z) / [x64 ELF](data/tailscale/x64/smda/tailscale_1.102.5_gcc13_x64_tailscale.7z) |
+| tailscale | 1.102.5 | GCC 13 (Linux, glibc) | [x86 ELF](data/tailscale/x86/mcrit/tailscale_1.102.5_gcc13_x86_tailscaled.mcrit) / [x64 ELF](data/tailscale/x64/mcrit/tailscale_1.102.5_gcc13_x64_tailscaled.mcrit) | [x86 ELF](data/tailscale/x86/smda/tailscale_1.102.5_gcc13_x86_tailscaled.7z) / [x64 ELF](data/tailscale/x64/smda/tailscale_1.102.5_gcc13_x64_tailscaled.7z) |
+| tailscale | 1.102.5 | MinGW-w64 GCC 13 | [x86 PE](data/tailscale/x86/mcrit/tailscale_1.102.5_mingw13_x86_tailscale.mcrit) / [x64 PE](data/tailscale/x64/mcrit/tailscale_1.102.5_mingw13_x64_tailscale.mcrit) | [x86 PE](data/tailscale/x86/smda/tailscale_1.102.5_mingw13_x86_tailscale.7z) / [x64 PE](data/tailscale/x64/smda/tailscale_1.102.5_mingw13_x64_tailscale.7z) |
+| tailscale | 1.102.5 | MinGW-w64 GCC 13 | [x86 PE](data/tailscale/x86/mcrit/tailscale_1.102.5_mingw13_x86_tailscaled.mcrit) / [x64 PE](data/tailscale/x64/mcrit/tailscale_1.102.5_mingw13_x64_tailscaled.mcrit) | [x86 PE](data/tailscale/x86/smda/tailscale_1.102.5_mingw13_x86_tailscaled.7z) / [x64 PE](data/tailscale/x64/smda/tailscale_1.102.5_mingw13_x64_tailscaled.7z) |
+<!-- /generated -->
+
+The Windows GUI `tailscale-ipn.exe`, the third file the older Tailscale folders of tracker issue #44 hold beside `tailscaled.exe` and `tailscale.exe`; harvested, not rebuilt, because its source is not in tailscale/tailscale (the binary's build info says `path tailscale.io/win/gui`). It is the unmodified, Authenticode-signed (Tailscale Inc., DigiCert) `tailscale-ipn.exe` inside Tailscale's own MSI installers, unpacked with 7z and never executed: `tailscale-setup-1.102.4-amd64.msi` (sha256 `80eb007e39df...`) and `tailscale-setup-1.102.4-x86.msi` (sha256 `a8bda9fb254...`) from `pkgs.tailscale.com/stable/`. **Version 1.102.4, not 1.102.5:** pkgs.tailscale.com returns 404 for every 1.102.5 Windows installer (`-amd64.msi`, `-x86.msi`, `.exe`, `-full-`), so 1.102.4 is the newest Windows release at or before the family's pin and is one patch release apart from the images above. Compiled with go1.26.6 (build info), so the Compiler column says so; the Go runtime and standard library are removed by the Go glue filter, the rest stays. Kept + removed = total (verified against `provenance.json`): x64 20,752 + 11,940 = 32,692; x86 21,321 + 12,252 = 33,573; no excluded functions. PicHash overlap (10+ instructions) with the v1.102.5 MinGW tailscaled: x64 2,613, x86 1,043 (shared `tailscale.com` code). The binary is Tailscale's proprietary client, not BSD-3-Clause; neither MSI nor executable is committed, only the reports derived from them.
+
+### Wintun<a id='wintun'></a>
+
+The `wintun.dll` that ships beside `tailscaled.exe`, `tailscale.exe` and `tailscale-ipn.exe` in the older Tailscale folders tracker issue #44 describes: WireGuard LLC's layer-3 TUN driver for Windows, whose user-mode DLL carries the signed kernel driver in its resources. Harvested, not rebuilt: version 0.14.1 from `wintun.net/builds/wintun-0.14.1.zip`, pinned by the sha256 `07c256185d6e...` that tailscale v1.102.5 itself pins in `tsconst/wintun/wintun.go`, so this is the Wintun the Tailscale Windows client is built and tested against. What compiled it is read off the PE headers rather than the Linux host that unpacked it - linker 14.29, Rich-header build 30136, MSVC v142 - and the C runtime is linked statically. The PDB both DLLs name is not published, so only the fourteen exported `Wintun*` functions and the entry point are named; kept + removed = total is 811 + 0 = 811 on x86 and 654 + 0 = 654 on x64, the unnamed static CRT included. No PicHash of ten or more instructions is shared between the two architectures or with the tailscale images. The prebuilt binaries are not under the source's GPLv2 but under WireGuard LLC's "Prebuilt Binaries License", which prohibits disassembling and redistributing the DLLs; neither DLL is committed here, only the reports derived from them, and the provenance licence field says so. `tailscale-ipn.exe` is harvested in the tailscale section (version 1.102.4; its source is not in the open tailscale tree).  
+
+Generated with `scripts/build_corpus.py`; see `data/wintun/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: wintun -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| wintun | 0.14.1 | MSVC v142 (Visual Studio 2019), as distributed upstream | [x86 PE](data/wintun/x86/mcrit/wintun_0.14.1_msvc142_x86_wintun.dll.mcrit) / [x64 PE](data/wintun/x64/mcrit/wintun_0.14.1_msvc142_x64_wintun.dll.mcrit) | [x86 PE](data/wintun/x86/smda/wintun_0.14.1_msvc142_x86_wintun.dll.7z) / [x64 PE](data/wintun/x64/smda/wintun_0.14.1_msvc142_x64_wintun.dll.7z) |
 <!-- /generated -->
