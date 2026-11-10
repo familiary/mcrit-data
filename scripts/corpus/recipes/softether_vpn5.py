@@ -438,6 +438,20 @@ _VCPKG = Source(git_url="https://github.com/microsoft/vcpkg.git",
 # source file: '..\\..\\..\\..\\src\\libsodium\\crypto_pwhash\\scryptsalsa208sha256\\
 # nosse\\pwhash_scryptsalsa208sha256_nosse.c'", because the relative path cl
 # resolves is exactly 260 characters (MAX_PATH).
+# OQS_ENABLE=OFF is upstream's own switch (src/Mayaqua/CMakeLists.txt:
+# "By setting this to OFF, Open Quantum Safe algorithms will not be built
+# in", which defines SKIP_OQS_PROVIDER). It defaults to ON for OpenSSL 3.x and
+# the second run stopped on it: cl 19.44 (14.44.35207) dies compiling the
+# OQS provider, "src/Mayaqua/3rdparty/oqs-provider/oqsprov/
+# oqsprov_capabilities.c(683): warning C4034: sizeof returns 0" and then
+# "fatal error C1001: Internal compiler error. (compiler file
+# 'D:\\a\\_work\\1\\s\\src\\vctools\\Compiler\\Utc\\src\\p2\\main.cpp', line 258)",
+# on x86 and x64 alike; SoftEther switches every other KEM and signature
+# family off, which leaves that file with zero-length tables. Upstream's own
+# Windows builds use clang-cl (CMakeSettings.json, .github/workflows/
+# windows.yml), never cl. So the MSVC images carry neither liboqs nor the OQS
+# provider. "-- -k 0" keeps Ninja going past a failed compile so one run
+# reports every error.
 # /Z7 rather than RelWithDebInfo's /Zi so no shared compiler PDB is needed
 # (Ninja compiles in parallel); /MD stated because liboqs and oqs-provider
 # declare an older cmake_minimum_required, under which the runtime comes from
@@ -451,7 +465,7 @@ _MSVC_CONFIGURE = (
     "-DCMAKE_TOOLCHAIN_FILE={vcpkg}\\scripts\\buildsystems\\vcpkg.cmake "
     "-DVCPKG_TARGET_TRIPLET=se-{arch}-windows-release "
     "-DVCPKG_OVERLAY_TRIPLETS={source_root}\\vcpkg-triplets "
-    "-DVCPKG_APPLOCAL_DEPS=OFF "
+    "-DVCPKG_APPLOCAL_DEPS=OFF -DOQS_ENABLE=OFF "
     '"-DVCPKG_INSTALL_OPTIONS=--x-buildtrees-root=C:/vb;--x-packages-root=C:/vp" '
     "-DCMAKE_PROJECT_INCLUDE={source_root}\\se-msvc-runtime.cmake "
     "-DCMAKE_C_FLAGS_RELWITHDEBINFO=" + _MSVC_C + " "
@@ -494,7 +508,7 @@ def _msvc_recipe():
             BuildStep("python {repo}/scripts/corpus/softether5_msvc.py prepare "
                       "{source_root} {arch}"),
             BuildStep(_MSVC_CONFIGURE),
-            BuildStep("cmake --build build-{arch} --target vpnserver"),
+            BuildStep("cmake --build build-{arch} --target vpnserver -- -k 0"),
             # Evidence for the exclusion table, read from this build's own
             # static libraries; see softether5_msvc.py. Never fails the build.
             BuildStep("python {repo}/scripts/corpus/softether5_msvc.py names "
@@ -509,7 +523,8 @@ def _msvc_recipe():
         requires=["cmake", "ninja", "python"],
         # i686 COFF decorates C names with a leading underscore (the x86
         # images name blake2s "_blake2s"); x64 names carry none.
-        exclude_functions=_vendored.patterns(optional_prefix="_"),
+        exclude_functions=_vendored.patterns(optional_prefix="_",
+                                             libraries=("BLAKE2",)),
         build_flags=_MSVC_BUILD_FLAGS,
         notes=_MSVC_NOTES,
     )
