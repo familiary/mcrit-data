@@ -55,15 +55,88 @@ code; 30 liboqs Keccak names occur only in the x86 archive and are in the
 exclusion table with the rest. x86 glue removed also includes libgcc's
 64-bit division helpers and __x86.get_pc_thunk.*.
 
-**Not built: MinGW.** Configuring with x86_64-w64-mingw32-gcc fails in
-CMake's own compiler check, because src/CMakeLists.txt appends MSVC linker
-switches under if(WIN32) whatever the compiler: "x86_64-w64-mingw32-ld:
-cannot find /guard:cf: No such file or directory" (and /DYNAMICBASE,
-/CETCOMPAT), then "CMake will not be able to correctly generate this
-project" at src/Cedar/CMakeLists.txt:5. The Windows path also requires
-vcpkg's unofficial-sodium package (find_package(unofficial-sodium CONFIG
-REQUIRED)). Getting past either means editing upstream's CMake files, so it
-is recorded in the not-built table rather than patched.
+**MinGW x86 and x64: built, from a patched build tree.** The images are
+NOT byte-identical to a build of unmodified upstream. Configuring with
+x86_64-w64-mingw32-gcc first failed in CMake's own compiler check, because
+src/CMakeLists.txt appends MSVC switches under if(WIN32) whatever the
+compiler: "x86_64-w64-mingw32-ld: cannot find /guard:cf: No such file or
+directory" (and /DYNAMICBASE, /CETCOMPAT), then "CMake will not be able to
+correctly generate this project" at src/Cedar/CMakeLists.txt:5. Before
+configuring, the recipe runs scripts/corpus/softether5_mingw.py on the
+cloned tree, which (its docstring has every line of it):
+
+  - deletes those four lines from src/CMakeLists.txt:
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /Qspectre")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /guard:cf")
+        set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} /guard:cf /DYNAMICBASE")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /CETCOMPAT")
+  - adds src/PenCore/pencore.c and pencore.rc as symlinks to PenCore.c and
+    PenCore.rc (CMake's generate step: "Cannot find source file:
+    pencore.c");
+  - writes a header directory, first on the include path: case aliases for
+    the SDK headers upstream spells in mixed case (WinSock2.h, DbgHelp.h,
+    ShlObj.h, ...; cfg.h resolves to Mayaqua's Cfg.h, as on NTFS); prsht.h
+    and fwpmu.h wrappers adding the SDK names mingw-w64 11 lacks
+    (PSWIZBF_ELEVATIONREQUIRED, PSTMSG, PROPSHEETHEADER[AW]_V2,
+    FWPM_SESSION_FLAG_DYNAMIC, FWPM_FILTER_FLAG_PERMIT_IF_CALLOUT_UNREGISTERED,
+    FWPM_LAYER_INBOUND_IPPACKET_V4/V6); a natupnp.h, which mingw-w64 does not
+    ship, declaring IUPnPNAT and the static port-mapping interfaces in the
+    type library's method order; and in the WinSock2.h alias __forceinline
+    without mingw's extern, __try/__except as if (1)/else if (0) (GCC has
+    no SEH in C, so Win32.c's MsSetThreadName raises its exception without
+    a handler) and, for C++ only, Key.h's three-value CRYPTO_KEY_TYPE enum
+    ahead of Types.h's forward typedef;
+  - writes libDbgHelp.Lib.a, libPsapi.Lib.a, libSecur32.Lib.a and
+    libWtsApi32.Lib.a symlinks to mingw's import libraries ("cannot find
+    -lDbgHelp.Lib").
+
+No upstream .c or .h file is changed. Beyond that, by flag: -D_WIN32_WINNT=
+0x0600 (the Vista value MayaType.h sets when nothing has; mingw predefines
+0x0A00, which with MayaType.h's NTDDI_VISTA left "unknown type name
+'IKEEXT_EM_POLICY1'"), -DSKIP_CPU_FEATURES (upstream's own switch;
+cpu_features is only added under if(UNIX)), CMAKE_SYSTEM_PROCESSOR AMD64 or
+x86 for liboqs, -msse2 on x86 as on Linux, and -lstdc++ -lshlwapi in front
+of CMake's default C standard libraries (Cedar's two .cpp files end up in
+C-linked programs: "undefined reference to `__gxx_personality_seh0'";
+"undefined reference to `__imp_SHStrDupW'" from mingw's inline
+InitPropVariantFromString). The vcpkg path's unofficial-sodium is never
+reached: without VCPKG_TARGET_TRIPLET, src/Cedar/CMakeLists.txt finds
+libsodium through pkg-config. OpenSSL 3.0.15, zlib 1.3.1 and libsodium
+1.0.20 are built inside the recipe from pinned tarballs as DLLs and only
+imported (vpnserver.exe imports libcrypto-3-x64.dll, libssl-3-x64.dll,
+zlib1.dll, libsodium-26.dll and libstdc++-6.dll), so none of their code is
+in the images.
+
+Cedar and Mayaqua are static libraries on Windows, so the program is the
+image, and only vpnserver.exe is taken: on x64 vpnbridge, vpnclient and
+vpncmd were linked too and define exactly vpnserver's function symbols,
+except that vpncmd has main/SetConsoleTitleA where the others have
+WinMain, StartProcess and StopProcess. liboqs, the OQS provider and blake2s
+are statically linked and excluded by exact name with the same membership
+test on that build's liboqs.a, liboqsprovider.a and blake2s.c.obj
+(_softether5_vendored.py; seven MinGW-only names, GCC .part.0/.constprop.0
+clones, are kept apart in MINGW_NAMES; x86 matches them behind i686's
+leading underscore). Measured, kept + removed as runtime glue + excluded =
+total:
+
+    mingw13 x64 vpnserver.exe  8092 + 156 + 748 = 8996  (5808 of 10+ instructions, 5380 distinct PicHashes)
+    mingw13 x86 vpnserver.exe  7725 + 162 + 747 = 8634  (6118 of 10+ instructions, 5607 distinct PicHashes)
+
+PicHash overlap (10+ instructions): x86 and x64 share none. The x64 image
+shares nothing with the 5.x x64 ELF libraries or the 4.44 x64 ELF programs
+and 3 hashes with each 4.44 MSVC x64 program; the x86 image shares 68 with
+x86 libcedar.so, 44 with x86 libmayaqua.so, 111 with each 4.44 x86 ELF
+program and nothing with the 4.44 MSVC x86 programs. Unnamed functions:
+399 on x64 (29 of 10+ instructions), 6 on x86 (1). Named survivors that are
+runtime rather than SoftEther: the libstdc++ import thunks __cxa_begin_catch,
+__cxa_end_catch and __gxx_personality_seh0/_v0 (one instruction each,
+PicHash 1253497258561142223), the mingwex __mingw_aligned_malloc family
+(x64 __mingw_aligned_malloc 1432033393685044057, x86
+___mingw_aligned_malloc 16357674226355305341), mingw's inline stdio as
+twelve printf.constprop.0 copies (x64 63033854732689302, x86
+5331446925571218161) and one C++ printf(char const*, ...) (x64
+680774687785349816, x86 9440566005262149013), and on x86 __configthreadlocale
+and __exit; none of them is in the shared MinGW glue baseline.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -312,8 +385,12 @@ _MINGW_NOTES = (
     "liboqs, the OQS provider and blake2s are linked statically and "
     "excluded by exact name (_softether5_vendored.py, MinGW additions "
     "included). ")
-_MINGW_NOTES_X64 = _MINGW_NOTES
-_MINGW_NOTES_X86 = _MINGW_NOTES + "x86 adds -msse2 (blake2s.c requires SSE2)."
+_MINGW_NOTES_X64 = _MINGW_NOTES + (
+    "Measured x64: vpnserver.exe 8092 kept + 156 glue + 748 excluded = 8996.")
+_MINGW_NOTES_X86 = _MINGW_NOTES + (
+    "x86 adds -msse2 (blake2s.c requires SSE2) and matches the excluded "
+    "names behind i686's leading underscore. Measured x86: vpnserver.exe "
+    "7725 kept + 162 glue + 747 excluded = 8634.")
 
 
 def _mingw_recipe(arch, processor, extra_cflags, build_flags, notes, prefix=""):
