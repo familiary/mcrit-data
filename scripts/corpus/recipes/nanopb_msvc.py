@@ -553,12 +553,13 @@ def _nanopb_msvc_cmake(version):
                       "{protoc_zip}"),
             BuildStep('cmake -S . -B build-{arch} -G "NMake Makefiles" '
                       "-DCMAKE_POLICY_VERSION_MINIMUM=3.5 "
+                      "-DCMAKE_BUILD_TYPE=Release "
                       "-DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=OFF "
                       "-Dnanopb_BUILD_GENERATOR=OFF "
                       "-Dnanopb_MSVC_STATIC_RUNTIME=OFF "
                       "-DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON "
-                      '-DCMAKE_C_FLAGS="/DWIN32 /D_WINDOWS /Zi" '
-                      '-DCMAKE_SHARED_LINKER_FLAGS="/DEBUG /Brepro '
+                      '-DCMAKE_C_FLAGS_RELEASE="/MD /O2 /Ob2 /DNDEBUG /Zi" '
+                      '-DCMAKE_SHARED_LINKER_FLAGS_RELEASE="/DEBUG /Brepro '
                       '/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF" '
                       "-Dnanopb_PROTOC_PATH=%CD%/protoc-bin/bin/protoc.exe"),
             BuildStep("cmake --build build-{arch}"),
@@ -568,19 +569,21 @@ def _nanopb_msvc_cmake(version):
                             component="protobuf-nanopb.dll",
                             pdb="build-{arch}/protobuf-nanopb.pdb")],
         toolchains=["msvc_x86", "msvc_x64"],
-        build_flags="upstream CMake (NMake Makefiles), no CMAKE_BUILD_TYPE "
-                    "(upstream default, no /O flag, so cl's /Od), "
-                    "BUILD_SHARED_LIBS=ON, nanopb_BUILD_GENERATOR=OFF, "
+        build_flags="upstream CMake (NMake Makefiles), CMAKE_BUILD_TYPE=Release "
+                    "with /MD /O2 /Ob2 /DNDEBUG /Zi, BUILD_SHARED_LIBS=ON, nanopb_BUILD_GENERATOR=OFF, "
                     "nanopb_MSVC_STATIC_RUNTIME=OFF (/MD instead of upstream's "
-                    "default /MT), CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON, /Zi; "
+                    "default /MT), CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON; "
                     "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at "
                     "link; protoc 21.12 release binary as nanopb_PROTOC_PATH",
         notes="Tag nanopb-%s built through upstream's own CMakeLists.txt "
               "(protobuf-nanopb shared target) with a pinned protoc 21.12 "
-              "release binary for its configure-time check. No build type, "
-              "so unoptimised as upstream's CMake builds with nothing passed. "
-              "Two settings differ from upstream's defaults, both required "
-              "by this corpus: nanopb_MSVC_STATIC_RUNTIME=OFF (upstream "
+              "release binary for its configure-time check. Release build "
+              "type: with nothing passed, CMake's MSVC default is Debug "
+              "(/MDd, /RTC1 and an incremental link, all of which this "
+              "corpus' MSVC mandate excludes; the first dispatch produced "
+              "protobuf-nanopbd.dll that way). The other two settings that "
+              "differ from upstream's defaults are also required by this "
+              "corpus: nanopb_MSVC_STATIC_RUNTIME=OFF (upstream "
               "defaults to /MT; the corpus links /MD) and "
               "CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON (nanopb's headers carry "
               "no dllexport, so cl's DLL would export nothing). Nothing "
