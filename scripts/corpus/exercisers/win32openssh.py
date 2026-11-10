@@ -101,8 +101,24 @@ if(${PORT} MATCHES "zlib")
 endif()
 """
 
+# Every program of the solution (the unit-test projects aside). locate copies
+# whichever of them were built; msbuild checks only the ones the recipe asks
+# for, since older tags have no sshd-session (before 9.8) or sshd-auth (10.0).
 EXES = ["ssh", "sshd", "sshd-session", "sshd-auth", "scp", "sftp",
-        "ssh-agent", "ssh-shellhost"]
+        "ssh-agent", "ssh-shellhost", "ssh-add", "ssh-keygen", "ssh-keyscan",
+        "sftp-server", "ssh-sk-helper", "ssh-pkcs11-helper"]
+
+
+def legacy():
+    """True for a tag before the vcpkg manifest (9.8.3.0 and older).
+
+    Those tags fetch prebuilt LibreSSL, zlib and libfido2 zips from the
+    PowerShell organisation's GitHub releases in config.vcxproj's pre-build
+    event (GetLibreSSL.ps1, GetZlib.ps1, GetFIDO2.ps1, versions from
+    paths.targets) and point the projects at them through paths.targets, so
+    there is nothing for vcpkg to do and no vcpkg directory to add.
+    """
+    return not os.path.exists(os.path.join(OPENSSH, "vcpkg.json"))
 
 
 def say(*parts):
@@ -136,6 +152,17 @@ def run(cmd, env=None, quiet=False):
 
 
 def prep(arch):
+    if legacy():
+        props = "\n".join(l for l in PROPS.splitlines()
+                          if "%(vcpkg)s" not in l) + "\n"
+        with open("msvcprops.props", "w") as handle:
+            handle.write(props % {})
+        say("LEGACY tag (no vcpkg.json): prebuilt dependencies from paths.targets")
+        with open(os.path.join(OPENSSH, "paths.targets"), errors="replace") as handle:
+            for line in handle:
+                if re.search(r"Version>", line):
+                    say("PATHS", line.strip())
+        return
     with open("msvcprops.props", "w") as handle:
         handle.write(PROPS % {"vcpkg": os.path.abspath(installed(arch))})
     os.makedirs(os.path.join("corpus-vcpkg", "triplets"), exist_ok=True)
@@ -172,6 +199,9 @@ def prep(arch):
 
 
 def vcpkg(arch):
+    if legacy():
+        say("LEGACY tag: no vcpkg step")
+        return
     root = vcpkg_root()
     env = dict(os.environ)
     env.update({"VCPKG_ROOT": root,
@@ -247,7 +277,7 @@ def msbuild(arch, targets):
     if code != 0:
         # The solution also holds the unit-test projects, which this recipe
         # does not need; a failure there must not hide programs that built.
-        missing = [n for n in EXES if not glob.glob(
+        missing = [n for n in targets if not glob.glob(
             os.path.join("bin", "**", n + ".exe"), recursive=True)]
         if missing:
             sys.exit("msbuild failed (%d); not built: %s" % (code, " ".join(missing)))
@@ -294,6 +324,10 @@ def report(arch):
     base = installed(arch)
     zlib = [os.path.join(base, "lib", n) for n in ("zlib.lib", "zs.lib")
             if os.path.exists(os.path.join(base, "lib", n))][:1]
+    if legacy():
+        zlib = glob.glob(os.path.join(OPENSSH, "ZLib", "bin", arch, "*.lib"))[:1]
+        for dll in glob.glob(os.path.join(OPENSSH, "LibreSSL", "bin", "desktop", arch, "*")):
+            say("LIBRESSL-FILE", dll)
     say("ZLIB-ARCHIVE", zlib)
     for name in sorted(set(functions(zlib))):
         say("ZLIBFN\t%s\t%s" % (arch, name))

@@ -153,7 +153,10 @@ _COMMIT = "274893f8d1fe86c4d128b514c3af4bc10cdc0c99"
 _HELPER = "python {repo}/scripts/corpus/exercisers/win32openssh.py %s {asm_arch}"
 _TARGETS = ("ssh sshd sshd-session sshd-auth scp sftp ssh-agent "
             "ssh-shellhost")
-_EXES = _TARGETS.split()
+# The solution's other programs, added in the final sweep as new components
+# (the eight above were the first scope); the images committed before stay.
+_TOOLS = "ssh-add ssh-keygen ssh-keyscan sftp-server ssh-sk-helper ssh-pkcs11-helper"
+_EXES = _TARGETS.split() + _TOOLS.split()
 
 _FLAGS = ("Release configuration of the Win32-OpenSSH.sln projects, v143, "
           "Windows SDK 10.0; /MD in place of /MT, /GL and LTCG off, /O2-class "
@@ -176,7 +179,7 @@ def _recipe(version, commit, exclude=()):
         build=[
             BuildStep(_HELPER % "prep"),
             BuildStep(_HELPER % "vcpkg"),
-            BuildStep(_HELPER % "msbuild" + " " + _TARGETS),
+            BuildStep(_HELPER % "msbuild" + " " + _TARGETS + " " + _TOOLS),
             BuildStep(_HELPER % "locate"),
             BuildStep(_HELPER % "report", allow_failure=True),
         ],
@@ -198,7 +201,71 @@ def _recipe(version, commit, exclude=()):
     )
 
 
+_LEGACY_FLAGS = (
+    "Release configuration of the Win32-OpenSSH.sln projects, PlatformToolset "
+    "v143 (upstream's projects name v140/v141 before 9.4), Windows SDK 10.0; "
+    "/MD in place of /MT, /GL and LTCG off, /Zi added; link /OPT:NOREF "
+    "/OPT:NOICF /Brepro /INCREMENTAL:NO /debug /debugtype:cv,fixup /CETCOMPAT; "
+    "dependencies are the prebuilt LibreSSL (DLL), zlib and libfido2 zips that "
+    "the tag's own GetLibreSSL.ps1, GetZlib.ps1 and GetFIDO2.ps1 download "
+    "(versions in paths.targets)")
+
+
+def _sweep_recipe(tag, commit, programs, exclude=()):
+    """Another Win32-OpenSSH tag, added in the final sweep.
+
+    v10.0.0.0 has a vcpkg manifest and goes through exactly the same steps as
+    v10.4.0.0. Tags before it (9.8.3.0 and older) have no manifest: the
+    helper's legacy mode writes the same props file minus the vcpkg paths and
+    lets the tag's own pre-build event fetch its prebuilt dependencies.
+    """
+    vcpkg = tag == "10.0.0.0"
+    recipe = _recipe("Win32_" + tag, commit, exclude)
+    targets = " ".join(programs)
+    recipe.build[2] = BuildStep(_HELPER % "msbuild" + " " + targets)
+    recipe.artifacts = [Artifact(path="corpusout\\%s.exe" % name,
+                                 component="%s.exe" % name,
+                                 pdb="corpusout\\%s.pdb" % name)
+                        for name in programs]
+    recipe.notes = (
+        "Microsoft's Windows fork of OpenSSH (PowerShell/openssh-portable "
+        "tag v%s, commit %s), not OpenSSH portable. Source unpatched; /MD, no "
+        "/GL or LTCG%s are recipe-applied (recipe docstring). LibreSSL is a "
+        "DLL (imported, not in the images); the statically linked zlib is "
+        "excluded by exact name (_win32openssh_zlib.py). The CRT is imported "
+        "(/MD) and stays attributed to data/MSVC."
+        % (tag, commit, " and the vcpkg baseline" if vcpkg else
+           " and toolset v143"))
+    if not vcpkg:
+        recipe.build_flags = _LEGACY_FLAGS
+    return recipe
+
+
+_ALL = _EXES
+_PRE98 = [n for n in _EXES if n not in ("sshd-session", "sshd-auth")]
+_PRE100 = [n for n in _EXES if n != "sshd-auth"]
+# 8.1.0.0 and 8.6.0.0 have no ssh-sk-helper or ssh-pkcs11-helper project.
+_PRE89 = [n for n in _PRE98 if n not in ("ssh-sk-helper", "ssh-pkcs11-helper")]
+
 RECIPES = {
     "OpenSSH_Win32_10.4.0.0_msvc": _recipe("Win32_10.4.0.0", _COMMIT,
                                            [zlib_functions()]),
 }
+
+for _tag, _commit, _programs in (
+        ("10.0.0.0", "b8c08ef9da9450a94a9c5ef717d96a7bd83f3332", _ALL),
+        ("9.8.3.0", "bdacf9868fe9e8024a5312861b7aaa6faba1821f", _PRE100),
+        ("9.8.2.0", "efa17c848b3e579d8a4a0e71edf6d233b5e30917", _PRE100),
+        ("9.8.1.0", "d7e886b9f6ee9ca35babd2a9a19bb9902f145305", _PRE100),
+        ("9.8.0.0", "64f148cc3beeaa7460a96c9be3b0ef122f4c1435", _PRE100),
+        ("9.5.0.0", "59aba65cf2e2f423c09d12ad825c3b32a11f408f", _PRE98),
+        ("9.4.0.0", "f72324ffa1fbf076291cbe92d968dc0b6040a2fe", _PRE98),
+        ("9.2.2.0", "01f950cf976710fae23465659d807ea9dceac168", _PRE98),
+        ("9.2.0.0", "e9b1317613ee1adc0813f56333eaab44c6c73dc8", _PRE98),
+        ("9.1.0.0", "ad957f89e03e3254e27a6b6dfc28c9dd79d3fb3f", _PRE98),
+        ("8.9.1.0", "7b0b41b1a186ad26d5429bff35922a53efad999c", _PRE98),
+        ("8.9.0.0", "bd0d488a3c4bca55626909d81ac766f2aa278791", _PRE98),
+        ("8.6.0.0", "75835a2462e1d8caf614cdb7011e45da929dc142", _PRE89),
+        ("8.1.0.0", "ee11c8e15eb11c48afbe98270080c728243c4300", _PRE89)):
+    RECIPES["OpenSSH_Win32_%s_msvc" % _tag] = _sweep_recipe(
+        _tag, _commit, _programs, [zlib_functions()])
