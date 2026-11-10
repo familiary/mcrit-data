@@ -142,4 +142,7 @@ def _jansson_msvc(version, git_ref):
 RECIPES = {
     "Jansson_2.13.1_msvc": _jansson_msvc("2.13.1", "v2.13.1"),
     "Jansson_2.15.1_msvc": _jansson_msvc("2.15.1", "v2.15.1"),
+    # 2.14, measured and dropped in the first revision of the MinGW recipe
+    # (about 80% overlap with 2.15.1); built now beside the other two tags.
+    "Jansson_2.14_msvc": _jansson_msvc("2.14", "v2.14"),
 }
