@@ -22,6 +22,16 @@ v2.9 rather than HEAD because go.mod there says go 1.25.0 and this host builds
 with go1.24.7 and GOTOOLCHAIN=local; v2.9 declares go 1.24.0 and already pins
 yamux v0.1.2 and the 2016 armon/go-socks5 commit e753329. v2.7 and v2.8
 (go 1.19) pin yamux v0.1.1, which is the older of the two in the wild.
+
+HEAD itself (master at fd268f2, git describe v2.9-5-gfd268f2, 2026-07-26:
+five dependency-bump commits after v2.9, golang.org/x/crypto v0.52.0 and
+x/net v0.55.0) is built as well, with go1.25.14 (the last go1.25 patch
+release; go.mod has no toolchain line) pinned by GOTOOLCHAIN, on the Linux
+runner (run 42774823191). Kept + removed = total: linux/amd64 4176 + 7580 =
+11756, linux/386 4247 + 7596 = 11843, windows/amd64 4022 + 7400 = 11422,
+windows/386 4180 + 7592 = 11772. Against v2.9 on the same axis it shares 1693
+of 2592 distinct PicHashes of 10+ instructions (linux/amd64), 1655 of 2542
+(windows/amd64), 877 of 3031 (linux/386) and 869 of 2988 (windows/386).
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

@@ -10,6 +10,24 @@ kept by the Go glue filter and sit in the image under chisel's name:
 golang.org/x/crypto/ssh (golang_x_crypto family) and armon/go-socks5
 (go_socks5 family) dominate, then gorilla/websocket and the jpillora
 helpers. See the README row for the measured overlap.
+
+The go 1.25 band is built as well, with the Go release each tag's go.mod
+toolchain line names (what a default `go build` selects), pinned by
+GOTOOLCHAIN: v1.11.8 (the last v1.11.x, go 1.25.0, toolchain go1.25.7) with
+go1.25.7 and v1.13.0 (the newest release, go 1.25.0, toolchain go1.27.0)
+with go1.27.0. Built on the Linux runner (run 42774823191, scratch branch
+scratch/s4-go-linux), kept + removed = total:
+
+    v1.11.8  linux/amd64 1333 + 10551 = 11884   linux/386 1338 + 10595 = 11933
+             windows/amd64 1284 + 10385 = 11669 windows/386 1350 + 10661 = 12011
+    v1.13.0  linux/amd64 1717 + 11589 = 13306   linux/386 1701 + 11607 = 13308
+             windows/amd64 1649 + 11375 = 13024 windows/386 1711 + 11646 = 13357
+
+PicHash overlap (distinct, functions of 10+ instructions), v1.11.8 against
+v1.10.1 on the same axis: 539 of 999 (linux/amd64), 549 of 1016
+(windows/amd64), 356 of 1069 (linux/386), 370 of 1093 (windows/386); v1.13.0
+against v1.11.8: 139 of 1265, 143 of 1280, 141 of 1386, 145 of 1408 (the
+go1.27 compiler lays the same code out differently). No pair is identical.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
