@@ -105,7 +105,7 @@ Also many thanks to Max Ufer for providing the first builds of Go versions 1.19-
 The source file used to compile these included as many Golang standard library files as possible to create coverage for common functions.  
 Starting with 1.19, the references are built reproducibly from the latest patch release of each version with [scripts/golang](scripts/golang/): the source is generated from `go list std` and references every exported, non-generic function and method of every importable standard library package (`CGO_ENABLED=0 go build -trimpath`, not stripped), and function names are taken from the pclntab by SMDA.  
 Note that for x64 builds of Go 1.22+, SMDA currently over-approximates type switch jump tables for about 20 functions per file ([smda#363](https://github.com/danielplohmann/smda/issues/363)), so these files will be regenerated once that is fixed.  
-The `linux` rows are the same generator built for linux/386 and linux/amd64 (`GOOS=linux`, ELF) and disassembled with SMDA 5.0.2 / MCRIT 1.16.0, which include the fix for that issue; the Windows x64 files for 1.22+ still need regenerating.  
+The `linux` rows are the same generator built for linux/386 and linux/amd64 (`GOOS=linux`, ELF) and disassembled with SMDA 5.0.2 / MCRIT 1.16.0, which include the fix for that issue; the Windows x64 files for 1.22+ still need regenerating: rebuilding them reproduces byte-identical binaries (the same sha256 as the committed references), so a regenerated report has to replace the SMDA 4.5.0 file rather than sit beside it, because MCRIT keys samples by sha256. go1.26.9 and go1.26.10 are also built for Linux.  
 When using these with MCRIT, you probably want to have as few as possible / the most fitting version only as you may otherwise run into performance issues. We noticed that the similarity in Golang library functions can lead to huge candidate clusters for which all functions will have to be matched.
 
 
@@ -144,6 +144,8 @@ When using these with MCRIT, you probably want to have as few as possible / the 
 | Golang    | 2026-02-04 | 1.24.13 linux | [x86](data/Golang/x86/mcrit/golang_1.24.13_linux_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.24.13_linux_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.24.13_linux_x86.7z) / [x64](data/Golang/x64/smda/golang_1.24.13_linux_x64.7z) |
 | Golang    | 2026-08-19 | 1.25.14 linux | [x86](data/Golang/x86/mcrit/golang_1.25.14_linux_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.25.14_linux_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.25.14_linux_x86.7z) / [x64](data/Golang/x64/smda/golang_1.25.14_linux_x64.7z) |
 | Golang    | 2026-09-01 | 1.26.8 linux | [x86](data/Golang/x86/mcrit/golang_1.26.8_linux_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.26.8_linux_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.26.8_linux_x86.7z) / [x64](data/Golang/x64/smda/golang_1.26.8_linux_x64.7z) |
+| Golang    | 2026-10-08 | 1.26.9 linux | [x86](data/Golang/x86/mcrit/golang_1.26.9_linux_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.26.9_linux_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.26.9_linux_x86.7z) / [x64](data/Golang/x64/smda/golang_1.26.9_linux_x64.7z) |
+| Golang    | 2026-10-19 | 1.26.10 linux | [x86](data/Golang/x86/mcrit/golang_1.26.10_linux_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.26.10_linux_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.26.10_linux_x86.7z) / [x64](data/Golang/x64/smda/golang_1.26.10_linux_x64.7z) |
 
 
 ### Microsoft Visual Studio<a id='msvc'></a>

@@ -1,19 +1,14 @@
 #!/bin/bash
 # Builds the Golang stdlib coverage reference binaries, disassembles them with SMDA and exports .mcrit files.
 #
-# usage: build_references.sh <go version> <goos> <goarch> <workdir> [named-os]
+# usage: build_references.sh <go version> <goos> <goarch> <workdir>
 #   e.g. build_references.sh 1.26.8 windows amd64 /tmp/gorefs
-#
-# A fifth argument "named-os" puts the OS into a Windows reference's name and
-# label too (golang_1.22.12_windows_x64, "1.22.12 windows x64"), the way the
-# Linux references are always named, so a Windows image regenerated with a
-# newer SMDA sits beside the original golang_1.22.12_x64 instead of replacing it.
 #
 # requirements: network access to go.dev (toolchain download), python3 with smda and mcrit installed.
 # The references in this repository were disassembled with the SMDA and MCRIT versions of the
 # mcrit-server docker image, to match what a live MCRIT instance produces for queried samples.
 set -euo pipefail
-VERSION=$1; GOOS=$2; GOARCH=$3; WORK=$4; NAMING=${5:-}
+VERSION=$1; GOOS=$2; GOARCH=$3; WORK=$4
 HERE=$(cd "$(dirname "$0")" && pwd)
 TOOLCHAIN=$WORK/toolchains/go$VERSION
 if [ ! -x "$TOOLCHAIN/bin/go" ]; then
@@ -29,7 +24,7 @@ fi
 export PATH=$TOOLCHAIN/bin:$PATH GOTOOLCHAIN=local
 [ "$GOARCH" = amd64 ] && BITS=x64 || BITS=x86
 [ "$GOOS" = windows ] && EXE=.exe || EXE=
-if [ "$GOOS" = windows ] && [ "$NAMING" != named-os ]; then NAME=golang_${VERSION}_${BITS}; LABEL="$VERSION $BITS"; else NAME=golang_${VERSION}_${GOOS}_${BITS}; LABEL="$VERSION $GOOS $BITS"; fi
+if [ "$GOOS" = windows ]; then NAME=golang_${VERSION}_${BITS}; LABEL="$VERSION $BITS"; else NAME=golang_${VERSION}_${GOOS}_${BITS}; LABEL="$VERSION $GOOS $BITS"; fi
 BIN=stdcov_go${VERSION}_${GOOS}_${GOARCH}$EXE
 BUILD=$WORK/build/go${VERSION}_${GOOS}_${GOARCH}
 mkdir -p "$BUILD" && cd "$BUILD"
