@@ -137,6 +137,41 @@ twelve printf.constprop.0 copies (x64 63033854732689302, x86
 5331446925571218161) and one C++ printf(char const*, ...) (x64
 680774687785349816, x86 9440566005262149013), and on x86 __configthreadlocale
 and __exit; none of them is in the shared MinGW glue baseline.
+
+**MSVC v143 x86 and x64: recipe written, NOT built yet.** The recipe
+softether_vpn_5.2.5189_msvc follows upstream's Windows route (CMake + vcpkg,
+src/BUILD_WINDOWS.md) with cl on the windows-2022 runner; no upstream file is
+edited, so there is no build-tree patch and the images would not need the
+"NOT byte-identical" caveat the MinGW ones carry (they would still differ
+from upstream's own release in build settings: /MD instead of /MT, cl and
+/Z7 instead of clang-cl and /Zi, the corpus link flags, dynamic vcpkg ports).
+Upstream's /Qspectre, /guard:cf, /DYNAMICBASE and /CETCOMPAT stay. vcpkg is
+pinned to its 2026.01.16 release (commit 66c0373d), which fixes OpenSSL
+3.6.0#3, libsodium 1.0.21 and zlib 1.3.1 as DLLs through an overlay triplet
+(dynamic CRT, release only), so none of their code is in vpnserver.exe.
+Three scoped dispatches of windows-reference-data.yml on scratch/
+softether5-msvc, all failed, in this order:
+
+  * run 42748558956: vcpkg's libsodium port, "error C1083: Cannot open
+    source file: '..\\..\\..\\..\\src\\libsodium\\crypto_pwhash\\
+    scryptsalsa208sha256\\nosse\\pwhash_scryptsalsa208sha256_nosse.c'", a
+    260-character path under the corpus work directory; vcpkg's build trees
+    now go to C:/vb and C:/vp (VCPKG_INSTALL_OPTIONS);
+  * run 42749212297 (x86 and x64): "oqsprov_capabilities.c(683): warning
+    C4034: sizeof returns 0", then "fatal error C1001: Internal compiler
+    error. (compiler file 'D:\\a\\_work\\1\\s\\src\\vctools\\Compiler\\Utc\\
+    src\\p2\\main.cpp', line 258)" compiling the OQS provider; upstream's
+    own windows.yml builds with clang-cl. The recipe passes upstream's
+    -DOQS_ENABLE=OFF, so liboqs and the provider are not built and only
+    blake2s is in the exclusion table of this recipe;
+  * run 42750493661 (x86 and x64, ninja -k 0, so every source was tried):
+    one failure each, "3rdparty/BLAKE2/sse/blake2-config.h(69): fatal error
+    C1189: #error:  "This code requires at least SSE2."". cl defines none of
+    the macros the header tests; the recipe now passes /DHAVE_SSE2 for C.
+
+That last change has NOT been run: the three dispatches this item may use are
+spent, so there is no vpnserver.exe, no link result and no data yet. Every
+other Mayaqua, Cedar and libhamcore source compiled in run 3.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -460,6 +495,16 @@ _VCPKG = Source(git_url="https://github.com/microsoft/vcpkg.git",
 # /INCREMENTAL:NO. Upstream's own /Qspectre, /guard:cf, /DYNAMICBASE and
 # /CETCOMPAT are kept.
 _MSVC_C = '"/MD /O2 /Ob1 /DNDEBUG /Z7"'
+# /DHAVE_SSE2 on C only: the third run (every other source compiled, -k 0)
+# failed on exactly one file on x86 and x64, "3rdparty/BLAKE2/sse/
+# blake2s.c.obj ... 3rdparty\\BLAKE2\\sse\\blake2-config.h(69): fatal error
+# C1189: #error:  \"This code requires at least SSE2.\"". blake2-config.h
+# defines HAVE_SSE2 from __SSE2__, __x86_64__ or __amd64__, none of which cl
+# defines, and src/Cedar/CMakeLists.txt's own workaround ("defining HAVE_SSE2
+# manually", set_property(SOURCE ${BLAKE2_SRC} ...)) names the source through
+# a generator expression and so never reaches the file. cl targets SSE2 by
+# default on x86 as on x64; the define is the one the comment there intends.
+_MSVC_CFLAGS = '"/MD /O2 /Ob1 /DNDEBUG /Z7 /DHAVE_SSE2"'
 _MSVC_CONFIGURE = (
     "cmake -S . -B build-{arch} -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo "
     "-DCMAKE_TOOLCHAIN_FILE={vcpkg}\\scripts\\buildsystems\\vcpkg.cmake "
@@ -468,7 +513,7 @@ _MSVC_CONFIGURE = (
     "-DVCPKG_APPLOCAL_DEPS=OFF -DOQS_ENABLE=OFF "
     '"-DVCPKG_INSTALL_OPTIONS=--x-buildtrees-root=C:/vb;--x-packages-root=C:/vp" '
     "-DCMAKE_PROJECT_INCLUDE={source_root}\\se-msvc-runtime.cmake "
-    "-DCMAKE_C_FLAGS_RELWITHDEBINFO=" + _MSVC_C + " "
+    "-DCMAKE_C_FLAGS_RELWITHDEBINFO=" + _MSVC_CFLAGS + " "
     "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=" + _MSVC_C + " "
     '-DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="/DEBUG /INCREMENTAL:NO '
     '/OPT:NOREF /OPT:NOICF /Brepro"')
@@ -478,7 +523,7 @@ _MSVC_BUILD_FLAGS = (
     "(upstream's /Qspectre /guard:cf kept, no /GL or /LTCG); link /DEBUG "
     "/DYNAMICBASE /CETCOMPAT (upstream) /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF "
     "/Brepro; /MD instead of upstream's /MT through CMAKE_PROJECT_INCLUDE; "
-    "vcpkg 2026.01.16 dynamic release triplet (OpenSSL 3.6.0, libsodium "
+    "-DHAVE_SSE2 and -DOQS_ENABLE=OFF; vcpkg 2026.01.16 dynamic release triplet (OpenSSL 3.6.0, libsodium "
     "1.0.21, zlib 1.3.1 as DLLs)")
 _MSVC_NOTES = (
     "The Developer Edition 5.x (tag 5.2.5189) built with MSVC v143 through "
@@ -490,9 +535,12 @@ _MSVC_NOTES = (
     "ports pinned to the vcpkg 2026.01.16 release (upstream: x64-windows-"
     "static, unpinned). OpenSSL, zlib and libsodium are DLLs, so none of their "
     "code is in the image. Cedar and Mayaqua are static on Windows, so the "
-    "program is the image and only vpnserver.exe is taken. liboqs, the OQS "
-    "provider and blake2s are linked statically and excluded by exact name "
-    "(_softether5_vendored.py). ")
+    "program is the image and only vpnserver.exe is taken. Built with "
+    "upstream's own -DOQS_ENABLE=OFF because cl 19.44 stops with an internal "
+    "compiler error (C1001) on the OQS provider, so liboqs and the provider "
+    "are not in the image; -DHAVE_SSE2 supplies the define blake2-config.h "
+    "only derives from GCC/clang macros. blake2s is linked statically and "
+    "excluded by exact name (_softether5_vendored.py). ")
 
 
 def _msvc_recipe():
