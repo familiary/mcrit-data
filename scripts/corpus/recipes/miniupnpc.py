@@ -112,7 +112,11 @@ def _steps(version, cwd="miniupnpc"):
                       " -o wingenminiupnpcstrings init miniupnpc.dll",
                       cwd=cwd, env={"CFLAGS": "-Os"}),
         ]
-    goals = "init" if version == "2.1" else "miniupnpcstrings.h rc_version.h"
+    # 2.2.0 has the cross-compiling sed rule for miniupnpcstrings.h but no
+    # rc_version.h rule yet (2.2.3 has both).
+    goals = ("init" if version == "2.1" else
+             "miniupnpcstrings.h" if version == "2.2.0" else
+             "miniupnpcstrings.h rc_version.h")
     return [BuildStep(_MAKE + " " + goals + " miniupnpc.dll",
                       cwd=cwd, env={"CFLAGS": "-Os"})]
 
