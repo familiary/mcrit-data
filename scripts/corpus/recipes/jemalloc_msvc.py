@@ -306,7 +306,10 @@ _CFLAGS36 = "-nologo -Zi -MD -W3 -O2"
 # v143 also predefines __STDC_VERSION__ (C17), which sends jemalloc's
 # VARIABLE_ARRAY to a C99 variable-length array (src/ctl.c(619): error C2057:
 # expected constant expression); 3.x expects cl to take its pre-C99 branch,
-# _alloca from <malloc.h>, which -U__STDC_VERSION__ restores.
+# _alloca from <malloc.h>. The C17 comes from MSYS2's autoconf 2.72, whose
+# AC_PROG_CC adds -std:c11 to CC for cl; priming ac_cv_prog_cc_c11=no and
+# ac_cv_prog_cc_c99=no keeps the compiler in its default mode, and
+# -U__STDC_VERSION__ stays as a belt-and-braces guard.
 _CPPFLAGS36 = ("-Iinclude/msvc_compat -Dstdbool_h -Dbool=_Bool -Dtrue=1 "
                "-Dfalse=0 -D__bool_true_false_are_defined=1 -U__STDC_VERSION__")
 
@@ -334,7 +337,8 @@ RECIPES["jemalloc_3.6.0_msvc"] = Recipe(
         BuildStep(_SH + 'mkdir -p /tmp/jegit && printf \'#!/bin/sh\\necho '
                   '3.6.0-0-g46c0af68bd248b04df75e4f92d5fb804c3d75340\\n\' > '
                   '/tmp/jegit/git && chmod +x /tmp/jegit/git && '
-                  'PATH=/tmp/jegit:$PATH je_cv_static_page_shift=12 CC=cl '
+                  'PATH=/tmp/jegit:$PATH je_cv_static_page_shift=12 ac_cv_prog_cc_c11=no '
+                  'ac_cv_prog_cc_c99=no CC=cl '
                   'CFLAGS=\'' + _CFLAGS36 + '\' '
                   'CPPFLAGS=\'' + _CPPFLAGS36 + '\' sh ./autogen.sh '
                   '--host=$([ {bitness} = 64 ] && echo x86_64 || echo i686)'
@@ -365,7 +369,8 @@ RECIPES["jemalloc_3.6.0_msvc"] = Recipe(
           "and the clone carries no tag), configure's -I include/msvc_compat "
           "is restated in CPPFLAGS, msvc_compat/stdbool.h's typedef of _Bool (which "
           "v143 rejects) is skipped by predefining its guard and its bool/true/"
-          "false macros, __STDC_VERSION__ is undefined so VARIABLE_ARRAY takes the "
+          "false macros, autoconf's -std:c11 is declined through its cache "
+          "variables and __STDC_VERSION__ undefined so VARIABLE_ARRAY takes the "
           "_alloca branch 3.x wrote for cl, "
           "and je_cv_static_page_shift=12 is primed as in the MinGW recipe. "
           "Built against "
