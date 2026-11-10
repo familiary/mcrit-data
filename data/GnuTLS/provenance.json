@@ -122,17 +122,17 @@
       }
     },
     "exclude_functions": [
-      "^_?_?(?:nettle_(?!tls1[02]_prf$|write_be32$)|gmp)|^_?_?mp[nzqf]_(?!get_base256$|set_base256$|seed_sizeinbase_256_u$)|^ecc_",
+      "^_{0,3}(?:nettle_(?!tls1[02]_prf$|write_be32$)|gmp)|^_{0,3}mp[nzqf]_(?!get_base256$|set_base256$|seed_sizeinbase_256_u$)|^_{0,3}ecc_",
       "^_?(?:\\.rc|LPSX|_camellia256_set_encrypt_key|_siv_s2v|abs_sub_add_n|abs_sub_n|base16_decode_length|base16_encode_final|base16_encode_init|base16_encode_length|base16_encode_update_wrapper|base64_decode_length|base64_encode_length|base64url_decode_length|base64url_encode_length|bc_bin_uiui|block_resieve|ccm_build_iv|check_length\\.part\\.0|ctr_fill|ctr_fill16|div2|drbg_ctr_aes256_output|eax_aes128_set_nonce_wrapper|ecdsa_in_range|ed25519_dom|ed448_dom|encode_raw|equal_h|fat_init|findnext|format_prefix|g|gcd_hook|gcm_aes128_set_nonce_wrapper|gcm_aes192_set_nonce_wrapper|gcm_aes256_set_nonce_wrapper|gcm_camellia128_set_nonce_wrapper|gcm_camellia256_set_nonce_wrapper|gcm_fill|gcm_hash|gcm_sm4_set_nonce_wrapper|get|gost_block_compress|gost_compute_sum_and_hash|gosthash94_update_int\\.part\\.0|gosthash94_write_digest|h|h_byte|hash|hgcd_hook|hgcd_jacobi_hook|hgcd_jacobi_step|hgcd_matrix_apply|hmac_gosthash94_set_key_wrapper|hmac_gosthash94cp_set_key_wrapper|hmac_md5_set_key_wrapper|hmac_ripemd160_set_key_wrapper|hmac_sha1_set_key_wrapper|hmac_sha224_set_key_wrapper|hmac_sha256_set_key_wrapper|hmac_sha384_set_key_wrapper|hmac_sha512_set_key_wrapper|hmac_sm3_set_key_wrapper|hmac_streebog256_set_key_wrapper|hmac_streebog512_set_key_wrapper|ibcrypt\\.constprop\\.0|is_kth_power|jacobi_hook|lc\\.isra\\.0|md2_transform|md4_compress|md4_transform|miller_rabin_pocklington\\.part\\.0|millerrabin|mod\\.part\\.0|mod_eq_m1\\.isra\\.0|mord_2exp\\.isra\\.0|mul1|mul2|mul3|mul4|mul5|mul6|mul7|mul8|ocb_checksum_n|ocb_crypt_n|ocb_fill_n|omac_update|pad_block|perfpow|poly128_mul|poly1305_pad|poly64_mul\\.part\\.0|posmpz_dec_ui|posmpz_inc_ui|pow_equals|randclear_lc|randget_lc|randiset_lc|randseed_lc|randseed_mt|redcify|reduce|rek_raising_fac4|scan|sec_mod_mul|sec_powm|set_xkey|sexp_iterator_parse|sexp_iterator_simple|sha256_write_digest|sha512_write_digest|siv_gcm_authenticate|siv_gcm_derive_keys\\.constprop\\.0|siv_gcm_fill|siv_ghash_pad_update|skip_white|sm3_compress|sm4_set_key|sm4_t_non_lin_sub|step|streebog512_compress|streebog512_write_digest\\.part\\.0|streebog_final|submul|umac_kdf|unget)$"
     ],
-    "excluded_function_count": 1069,
+    "excluded_function_count": 1071,
     "family": "GnuTLS",
     "generated": "2026-11-10",
     "is_blob": false,
     "license": "LGPL-2.1-or-later",
     "mcrit": "data/GnuTLS/x64/mcrit/GnuTLS_3.8.13_mingw13_x64_libgnutls.dll.mcrit",
     "notes": "Nettle, hogweed and GMP code linked in statically is removed by name (Recipe.exclude_functions) because the Nettle and GMP families carry it; libtasn1 and libunistring are GnuTLS's bundled copies and stay in. Source tarballs are sha256-pinned and were checked against the upstream GPG signatures. No source is patched.",
-    "num_functions": 3353,
+    "num_functions": 3351,
     "num_functions_before_exclusion": 4422,
     "removed_runtime_functions": [
       "DllEntryPoint",
@@ -297,7 +297,7 @@
       "wcsnlen",
       "wcsrtombs"
     ],
-    "sha256": "429060fd0f7decbcf6d49aee9d06bd48d171ccf2c476e38cc8701841da90d105",
+    "sha256": "9979a117b0dc452c6f1b878a3926741052721c0670a5a4c462bffc8a7c2ffacd",
     "smda": "data/GnuTLS/x64/smda/GnuTLS_3.8.13_mingw13_x64_libgnutls.dll.7z",
     "smda_version": "5.0.2",
     "source": {
