@@ -45,6 +45,33 @@ SYSLIBS = ["kernel32.lib", "advapi32.lib", "user32.lib", "ws2_32.lib",
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+# The assembly variant (environment GNUPG_CL_ASM=1, recipes *_asm_msvc).
+# cl cannot build libgcrypt with its assembly at all, and not only because it
+# has no GNU assembler: the C code that would call the 81 .S modules is gated
+# on GCC's own predefined macros (rijndael-internal.h: `__GNUC__ >= 4` for
+# AES-NI, `defined(__x86_64__)` for SSSE3/AVX/VAES, and so throughout cipher/
+# and mpi/), which cl never defines, and the inline-assembly translation units
+# (rijndael-aesni.c, the PCLMUL and SHA-NI files, hwf-x86.c's CPUID) are GCC
+# syntax. So this variant compiles every C file with clang-cl, LLVM's
+# cl-compatible driver (MSVC ABI, the same MSVC and UCRT headers, the DLL
+# runtime /MD, linked by link.exe exactly as the cl build), told to present
+# itself as GCC 4.2.1 to the preprocessor (/clang:-fgnuc-version=4.2.1) so
+# that upstream's x86 code paths are selected, and assembles the .S modules
+# with clang-cl as well. libgpg-error, its dependency, is still built with cl.
+# Nothing is edited: clang has variable-length arrays, so PATCHES are not
+# applied. The provenance "compiler" field of these images names the
+# toolchain's cl; the C compiler is clang-cl, which build_flags and notes say.
+ASM = os.environ.get("GNUPG_CL_ASM") == "1"
+CLANG_ARGS = ["/clang:-fgnuc-version=4.2.1"]
+
+
+def clang_cl():
+    for c in (shutil.which("clang-cl"),
+              r"C:\Program Files\LLVM\bin\clang-cl.exe"):
+        if c and os.path.isfile(c):
+            return c
+    raise SystemExit("clang-cl not found (needed for the assembly variant)")
+
 
 def say(*a):
     print("[%s]" % time.strftime("%H:%M:%S", time.gmtime()), *a, flush=True)
@@ -131,7 +158,9 @@ class Cl:
         self.arch = arch
 
     def compile_cmd(self, src, obj, includes, defines, extra=()):
-        cmd = ["cl", "/nologo", "/c", "/MD", "/O2", "/Z7", "/FS", "/utf-8",
+        cc = [clang_cl()] + CLANG_ARGS + (["-m32"] if ARCH == "x86" else []) \
+            if USE_CLANG else ["cl"]
+        cmd = cc + ["/nologo", "/c", "/MD", "/O2", "/Z7", "/FS", "/utf-8",
                "/D_CRT_SECURE_NO_WARNINGS", "/D_CRT_NONSTDC_NO_WARNINGS",
                "/W1"]
         cmd += ["/I" + i for i in includes]
@@ -149,7 +178,8 @@ def compile_all(srcs, builddir, includes, defines, extra_for=None, jobs=4, force
     def one(item):
         src, obj, cwd = item
         extra = list((extra_for or {}).get(os.path.basename(src), ()))
-        if force:
+        if force and not src.endswith((".S", ".s")):
+            # the forced C header is for C translation units, not assembly
             extra.append("/FI" + force)
         extra = list(extra)
         cmd = cl.compile_cmd(src, obj, includes(cwd), defines, extra)
@@ -605,7 +635,8 @@ def build_gcrypt(arch, src, work, prefix):
     triple = ("x86_64" if arch == "x64" else "i686") + "-w64-mingw32"
     say("libgcrypt: configure")
     cmd = [os.path.join(MSYS, "bash.exe"), fwd(os.path.join(HERE, "gnupg_cl.sh")),
-           arch, src, bld, os.path.join(work, "gcinst"), "--"] + OPTS_GC + \
+           arch, src, bld, os.path.join(work, "gcinst"), "--"] + \
+          ([o for o in OPTS_GC if o != "--disable-asm"] if ASM else OPTS_GC) + \
           ["--with-libgpg-error-prefix=" + fwd(prefix),
            # AC_TYPE_PID_T would #define pid_t __int64 on Win64, against the
            # `typedef int pid_t` that gcrypt.h itself makes for non-GNU compilers
@@ -618,6 +649,12 @@ def build_gcrypt(arch, src, work, prefix):
            "ac_cv_func_stricmp=yes"]
     env = dict(os.environ, MSYS2_PATH_TYPE="inherit",
                GNUPG_EXTRA_PATH=os.path.join(prefix, "bin"))
+    if ASM:
+        env["GNUPG_CL_CC"] = fwd(clang_cl())
+        env["GNUPG_CL_CCARGS"] = " ".join(CLANG_ARGS + (["-m32"] if arch == "x86" else []))
+        # clang-cl's directory first, then what gnupg_cl.sh puts on PATH.
+        env["GNUPG_EXTRA_PATH"] = os.path.dirname(clang_cl()) + os.pathsep + \
+            env["GNUPG_EXTRA_PATH"]
     rc, out = run(cmd, timeout=1800, check=False, env=env)
     sys.stdout.write(out.decode("utf-8", "replace")[-12000:])
     if rc:
@@ -626,7 +663,10 @@ def build_gcrypt(arch, src, work, prefix):
     items = []
     missing = []
     asm_skipped = []
-    patched = apply_patches(src)
+    patched = [] if ASM else apply_patches(src)
+    if ASM:
+        say("libgcrypt: assembly variant, C and .S compiled by %s %s; no source edits"
+            % (clang_cl(), " ".join(CLANG_ARGS)))
     gen_gost_sb(bld, src)
     for sub in ("compat", "mpi", "cipher", "random", "src"):
         mkp = os.path.join(bld, sub, "Makefile")
@@ -640,7 +680,7 @@ def build_gcrypt(arch, src, work, prefix):
                 if s is not None and s.endswith(".rc"):
                     say("libgcrypt: %s is a resource, not compiled" % o)
                     continue
-                if s is not None and s.endswith((".S", ".s")):
+                if s is not None and s.endswith((".S", ".s")) and not ASM:
                     asm_skipped.append("%s/%s" % (sub, o))
                     continue
                 if s is None:
@@ -650,7 +690,12 @@ def build_gcrypt(arch, src, work, prefix):
                 if sub == "src" and oname.startswith("libgcrypt_la-"):
                     oname = oname[len("libgcrypt_la-"):]
                 items.append((s, sub + "-" + oname + ".obj", os.path.join(bld, sub)))
-    items += generic_mpi_modules(bld, src, items)
+    if not ASM:
+        items += generic_mpi_modules(bld, src, items)
+    else:
+        say("libgcrypt: %d of the objects are assembler modules: %s" % (
+            sum(1 for i in items if i[0].endswith((".S", ".s"))),
+            " ".join(os.path.basename(i[0]) for i in items if i[0].endswith((".S", ".s")))))
     say("libgcrypt: %d objects from upstream's Makefiles, %d GNU-syntax assembler modules "
         "not assembled by cl (the C code does not reference them: no USE_*_ASM is defined): %s"
         % (len(items) + len(missing) + len(asm_skipped), len(asm_skipped), " ".join(asm_skipped)))
@@ -674,10 +719,16 @@ def build_gcrypt(arch, src, work, prefix):
     extra = {"rndjent.c": ["/Od"], "jitterentropy-base.c": ["/Od"],
              "hwf-x86.c": ["/D__x86_64__" if arch == "x64" else "/D__i386__"],
              }
+    if ASM:
+        # clang defines the CPU macros itself; hwf-x86.c gets its CPUID code.
+        del extra["hwf-x86.c"]
     base_defs = ["HAVE_CONFIG_H", "DLL_EXPORT",
                  "HAVE_GCC_STORAGE_CLASS__THREAD=1", "__thread=__declspec(thread)"]
-    items, needs_x86 = resolve_hwfeatures(items, includes, base_defs,
-                                          os.path.join(shim, "gnupg_cl_fi.h"), arch, shim, bld, src)
+    if ASM:
+        needs_x86 = False
+    else:
+        items, needs_x86 = resolve_hwfeatures(items, includes, base_defs,
+                                              os.path.join(shim, "gnupg_cl_fi.h"), arch, shim, bld, src)
     if needs_x86 and not any(os.path.basename(i[0]) == "hwf-x86.c" for i in items):
         hx = os.path.join(src, "src", "hwf-x86.c")
         if os.path.isfile(hx):
@@ -704,8 +755,14 @@ def build_gcrypt(arch, src, work, prefix):
     return dll
 
 
+ARCH = None
+USE_CLANG = False   # set for the libgcrypt half of the assembly variant only
+
+
 def main():
+    global ARCH, USE_CLANG
     arch, pkg, src = sys.argv[1], sys.argv[2], os.path.abspath(sys.argv[3])
+    ARCH = arch
     work = os.path.join(src, "msvc-" + arch)
     os.makedirs(work, exist_ok=True)
     prefix = os.path.join(work, "inst")
@@ -718,6 +775,7 @@ def main():
             t.extractall(work)
         ge = glob.glob(os.path.join(work, "libgpg-error-*"))[0]
         build_gpg_error(arch, ge, work, prefix, False, lenient=True)
+        USE_CLANG = ASM
         build_gcrypt(arch, src, work, prefix)
     say("done")
 

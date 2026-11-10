@@ -34,7 +34,9 @@ export RC=windres
 export lt_cv_path_LD=link lt_cv_path_NM="dumpbin -symbols"
 export CFLAGS="-O2 -MD -Z7 -FS"
 export LDFLAGS="-Wl,-DEBUG -Wl,-INCREMENTAL:NO -Wl,-OPT:NOREF -Wl,-OPT:NOICF -Wl,-Brepro"
-export CC="$src/build-aux/compile cl -nologo"
+# GNUPG_CL_CC names the C compiler (default cl); GNUPG_CL_CCARGS adds its
+# options (the clang-cl variant, see gnupg_cl.py ASM).
+export CC="$src/build-aux/compile ${GNUPG_CL_CC:-cl} -nologo ${GNUPG_CL_CCARGS:-}"
 
 mkdir -p "$bld"; cd "$bld" || exit 1
 stamp "configure"

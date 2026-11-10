@@ -221,5 +221,38 @@ def _gc(version):
     )
 
 
-_BUILT = ("1.8.14", "1.10.4", "1.11.3")
+_BUILT = ("1.8.14", "1.10.4", "1.11.3", "1.10.3", "1.8.5")
 RECIPES = {"libgcrypt_%s_msvc" % v: _gc(v) for v in _BUILT}
+
+
+# The assembly variant: the issue (r0ny123/mcrit-data#25) asks for the
+# assembler modules, and cl cannot reach them (gnupg_cl.py, ASM, says why), so
+# the C and the .S files of libgcrypt are compiled with clang-cl for the MSVC
+# ABI and runtime and linked by link.exe like the other MSVC images; nothing
+# is edited (clang has variable-length arrays). Own version slug, so the cl
+# images keep theirs.
+def _gc_asm(version):
+    recipe = _gc(version)
+    recipe.version = version + "-clangcl"
+    recipe.build = [BuildStep(_PY, env={"GNUPG_CL_ASM": "1"})]
+    recipe.build_flags = (
+        "C and assembly compiled by clang-cl (LLVM, MSVC ABI) with "
+        "/clang:-fgnuc-version=4.2.1, /MD /O2 /Z7 (no /GL), assembler modules "
+        "on (no --disable-asm); /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF "
+        "/OPT:NOICF at link (link.exe); configure by upstream, no make; no "
+        "source edits; libgpg-error built with cl")
+    recipe.notes = (
+        "Shared libgcrypt from the signed GnuPG release tarball with its "
+        "assembler modules and hardware acceleration, for the MSVC ABI and the "
+        "DLL runtime. cl cannot build this configuration: the C code that "
+        "dispatches to the assembly is gated on GCC's predefined macros and the "
+        "inline-assembly files are GCC syntax, so every libgcrypt translation "
+        "unit, C and assembly, is compiled by clang-cl "
+        "presenting itself as GCC 4.2.1; the provenance compiler field names "
+        "the toolchain's cl, which built the paired libgpg-error %s. No "
+        "upstream file is edited. See scripts/corpus/exercisers/gnupg_cl.py."
+        % PAIRING[version])
+    return recipe
+
+
+RECIPES.update({"libgcrypt_%s_asm_msvc" % v: _gc_asm(v) for v in _BUILT})
