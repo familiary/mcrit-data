@@ -300,3 +300,48 @@ MUSL_EXCLUDE_TEXT = (
     "functions whose bytes differ from the baseline's copy (README, \"The "
     "musl half\")."
 )
+
+
+# ---------------------------------------------------------------------------
+# hwloc, for the XMRig builds with WITH_HWLOC=ON. The same pinned release as
+# the hwloc family (recipes/hwloc.py), built the same way, as a shared
+# library under deps-<arch>/hwloc that the miner imports.
+
+def _hwloc_source():
+    from .hwloc import SOURCE
+    return SOURCE
+
+
+def hwloc_extra_sources():
+    return dict(EXTRA_SOURCES, hwloc=_hwloc_source())
+
+
+def _hwloc_configure(host_option):
+    from .hwloc import CONFIGURE_OPTIONS
+    return [
+        BuildStep("rm -rf deps-{arch}/hwloc && mkdir -p deps-{arch}/hwloc && "
+                  "tar xjf {hwloc} -C deps-{arch}/hwloc --strip-components=1"),
+        BuildStep("./configure %s%s" % (host_option, CONFIGURE_OPTIONS),
+                  cwd="deps-{arch}/hwloc", env={"CFLAGS": "", "CXXFLAGS": ""}),
+        BuildStep("make -j$(nproc) -C hwloc", cwd="deps-{arch}/hwloc"),
+    ]
+
+
+def linux_hwloc():
+    """hwloc as a shared libhwloc.so, under deps-<arch>/hwloc."""
+    return _hwloc_configure("")
+
+
+def mingw_hwloc():
+    """hwloc as libhwloc-15.dll with its import library."""
+    return _hwloc_configure("--host={host} ")
+
+
+def linux_hwloc_options():
+    return ("-DHWLOC_INCLUDE_DIR=$PWD/deps-{arch}/hwloc/include "
+            "-DHWLOC_LIBRARY=$PWD/deps-{arch}/hwloc/hwloc/.libs/libhwloc.so")
+
+
+def mingw_hwloc_options():
+    return ("-DHWLOC_INCLUDE_DIR=$PWD/deps-{arch}/hwloc/include "
+            "-DHWLOC_LIBRARY=$PWD/deps-{arch}/hwloc/hwloc/.libs/libhwloc.dll.a")

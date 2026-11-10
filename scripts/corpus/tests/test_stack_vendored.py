@@ -127,8 +127,10 @@ class TableHygieneTest(unittest.TestCase):
         # these three names, only in the recipes below; the other 26 names of
         # the bundled ed25519 set that OpenSSL lacks are never listed.
         expected = {"XMRig_6.25.0": ("slide",),
+                    "XMRig_6.25.0-gpu-hwloc": ("slide",),
                     "xmrig-proxy_6.26.0": ("slide",),
                     "XMRig_6.25.0_msvc": ("load_3", "load_4"),
+                    "XMRig_6.25.0-gpu-hwloc_msvc": ("load_3", "load_4"),
                     "xmrig-proxy_6.26.0_msvc": ("load_3", "load_4")}
         found = {}
         for recipe, table in vendored.NAMES.items():
@@ -188,13 +190,14 @@ class ProvenanceCountsTest(unittest.TestCase):
                     yield key, entry
 
     def _recipe_of(self, key):
-        match = re.match(r"(.+?)_([\d.]+)_(gcc13|mingw13|msvc143|musl11)_(x86|x64)_", key)
+        # A version may carry a variant suffix (XMRig 6.25.0-gpu-hwloc).
+        match = re.match(r"(.+?)_([\d.]+(?:-[a-z-]+)?)_(gcc13|mingw13|msvc143|musl11)_(x86|x64)_", key)
         family, version, toolchain, arch = match.groups()
         name = "%s_%s" % (family, version)
         if toolchain == "mingw13" and family == "xmr-stak":
             name += "_mingw"
         elif toolchain == "gcc13":
-            name += "_linux"
+            name += "_linux" + ("_x86" if family == "xmr-stak" and arch == "x86" else "")
         elif toolchain == "msvc143":
             name += "_msvc" + ("_x86" if family == "xmr-stak" and arch == "x86" else "")
         elif toolchain == "musl11":
@@ -208,7 +211,9 @@ class ProvenanceCountsTest(unittest.TestCase):
             self.assertEqual(entry["num_functions_before_exclusion"],
                              entry["num_functions"] + entry["excluded_function_count"], key)
             self.assertGreater(entry["excluded_function_count"], 0, key)
-        self.assertEqual(seen, 21)
+        # 21 images, then the six XMRig 6.25.0-gpu-hwloc images and the
+        # xmr-stak Linux x86 image.
+        self.assertEqual(seen, 28)
 
     def test_each_record_carries_its_recipes_patterns(self):
         for key, entry in self._entries():

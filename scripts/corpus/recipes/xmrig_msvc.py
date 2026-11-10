@@ -94,3 +94,82 @@ RECIPES = {
               "libraries and are not in the image.",
     ),
 }
+
+
+
+# XMRig 6.25.0 with its stock feature set (WITH_HWLOC, WITH_OPENCL and
+# WITH_CUDA ON), as xmrig.py's 6.25.0-gpu-hwloc. On MSVC XMRig's cpu.cmake
+# does not look for an installed hwloc: it calls
+# add_subdirectory(src/3rdparty/hwloc), which compiles its vendored copy (hwloc
+# 2.12.1, the hwloc family's release) as a static library named `hwloc` into
+# the miner, and no option changes that. So that hwloc is not counted under
+# XMRig, the recipe builds the hwloc family's DLL first (the release tarball,
+# contrib/windows-cmake, the same options as hwloc.py's MSVC recipe, under
+# deps-<arch>\hwloc) and hands CMake exercisers/xmrig_hwloc_shared.cmake
+# through CMAKE_PROJECT_xmrig_INCLUDE: it replaces that one add_subdirectory
+# call with an imported target of the same name whose import library is
+# hwloc.lib, so cpu.cmake's `set(CPUID_LIB hwloc)` links the DLL. No XMRig
+# file is modified (the vendored headers, the same 2.12.1, are still the ones
+# on the include path); the image imports hwloc.dll as the Linux and MinGW
+# images import libhwloc.
+from .hwloc import MSVC_CMAKE_OPTIONS as _HWLOC_CMAKE  # noqa: E402
+from .hwloc import SOURCE as _HWLOC_SOURCE  # noqa: E402
+
+_HWLOC_UNTAR = (
+    'python -c "'
+    "import sys,tarfile;t=tarfile.open(sys.argv[1]);"
+    "m=[x for x in t.getmembers() if '/' in x.name];"
+    "[setattr(x,'name',x.name.split('/',1)[1]) for x in m];"
+    "t.extractall(sys.argv[2],members=m)"
+    '" "{hwloc}" deps-{arch}\\hwloc')
+
+_CMAKE_STOCK = (_CMAKE.replace("-DWITH_HWLOC=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF",
+                               "-DWITH_HWLOC=ON -DWITH_OPENCL=ON -DWITH_CUDA=ON")
+                + " -DCMAKE_PROJECT_xmrig_INCLUDE="
+                "{repo}/scripts/corpus/exercisers/xmrig_hwloc_shared.cmake "
+                "-DXM_HWLOC_IMPLIB=%CD%/deps-{arch}/hwloc-build/hwloc.lib "
+                "-DXM_HWLOC_DLL=%CD%/deps-{arch}/hwloc-build/hwloc.dll")
+
+RECIPES["XMRig_6.25.0-gpu-hwloc_msvc"] = Recipe(
+    family="XMRig",
+    version="6.25.0-gpu-hwloc",
+    upstream="https://github.com/xmrig/xmrig",
+    license="GPL-3.0-or-later (SPDX identifier in src/version.h)",
+    source=Source(git_url="https://github.com/xmrig/xmrig.git",
+                  git_ref="v6.25.0"),
+    extra_sources=dict(deps.EXTRA_SOURCES, hwloc=_HWLOC_SOURCE),
+    build=(deps.msvc_openssl() + deps.msvc_libuv() + [
+        BuildStep(_HWLOC_UNTAR),
+        BuildStep("cmake -S deps-{arch}\\hwloc\\contrib\\windows-cmake "
+                  "-B deps-{arch}\\hwloc-build " + _HWLOC_CMAKE),
+        BuildStep("cmake --build deps-{arch}\\hwloc-build --target hwloc"),
+        BuildStep('if "{arch}"=="x64" ' + _CMAKE_STOCK),
+        BuildStep('if "{arch}"=="x86" ' + _CMAKE_STOCK + " -DWITH_ASM=OFF"),
+        BuildStep("cmake --build build-{arch}"),
+        BuildStep("dir build-{arch} deps-{arch}\\hwloc-build", allow_failure=True),
+    ]),
+    artifacts=[Artifact(path="build-{arch}/xmrig.exe",
+                        component="xmrig.exe",
+                        pdb="build-{arch}/xmrig.pdb")],
+    toolchains=["msvc_x86", "msvc_x64"],
+    exclude_functions=vendored.patterns("XMRig_6.25.0-gpu-hwloc_msvc"),
+    build_flags="/MD /O2 /Oi /DNDEBUG /Zi (build type Corpus, without "
+                "XMRig's /MT and /GL); /DEBUG /Brepro /INCREMENTAL:NO "
+                "/OPT:NOREF /OPT:NOICF at link; WITH_HWLOC=ON WITH_OPENCL=ON "
+                "WITH_CUDA=ON (stock); hwloc 2.12.1 DLL imported in place of "
+                "the vendored static hwloc (CMAKE_PROJECT_xmrig_INCLUDE)",
+    notes="Stock feature set: WITH_HWLOC, WITH_OPENCL and WITH_CUDA ON "
+          "(XMRig's defaults; NVML and ADL with them); the GPU backends need "
+          "no SDK and load their runtimes at run time. XMRig's MSVC build "
+          "would compile its vendored hwloc 2.12.1 statically; the recipe "
+          "builds the hwloc family's 2.12.1 DLL from the release tarball "
+          "(sha256 38a90328bb86259f9bb2fe1dc57fd841e111d1e6358012bef23dfd95d21dc66b) "
+          "and replaces add_subdirectory(src/3rdparty/hwloc) with an imported "
+          "target (exercisers/xmrig_hwloc_shared.cmake, through "
+          "CMAKE_PROJECT_xmrig_INCLUDE), so hwloc is imported and not in the "
+          "image; no source file is modified. llhttp, Argon2/Blake2b and "
+          "ed25519 helpers, rapidjson, C++ standard library functions and "
+          "__scrt_common_main_seh are removed by exact name as for the 6.25.0 "
+          "image (_stack_vendored.py). libuv and OpenSSL are linked as DLL "
+          "import libraries and are not in the image.",
+)

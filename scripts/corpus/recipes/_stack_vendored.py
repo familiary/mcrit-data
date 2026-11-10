@@ -522,12 +522,32 @@ NAMES = {
         'rapidjson': _RAPIDJSON_1,
         'stdlib': _STDLIB_1,
     },
+    'XMRig_6.25.0-gpu-hwloc': {
+        'llhttp': _LLHTTP_1,
+        'argon2': _ARGON2_1,
+        'ed25519': _ED25519_1,
+        'rapidjson': _RAPIDJSON_1,
+        'stdlib': _STDLIB_1,
+    },
     'XMRig_6.25.0_linux': {
         'llhttp': _LLHTTP_2,
         'rapidjson': _RAPIDJSON_2,
         'stdlib': _STDLIB_2,
     },
+    'XMRig_6.25.0-gpu-hwloc_linux': {
+        'llhttp': _LLHTTP_2,
+        'rapidjson': _RAPIDJSON_2,
+        'stdlib': _STDLIB_2,
+    },
     'XMRig_6.25.0_msvc': {
+        'llhttp': _LLHTTP_3,
+        'argon2': _ARGON2_2,
+        'ed25519': _ED25519_2,
+        'rapidjson': _RAPIDJSON_3,
+        'stdlib': _STDLIB_3,
+        'crt': _CRT_1,
+    },
+    'XMRig_6.25.0-gpu-hwloc_msvc': {
         'llhttp': _LLHTTP_3,
         'argon2': _ARGON2_2,
         'ed25519': _ED25519_2,
@@ -541,6 +561,10 @@ NAMES = {
         'stdlib': _STDLIB_4,
     },
     'xmr-stak_2.10.8_linux': {
+        'rapidjson': _RAPIDJSON_2,
+        'stdlib': _STDLIB_2,
+    },
+    'xmr-stak_2.10.8_linux_x86': {
         'rapidjson': _RAPIDJSON_2,
         'stdlib': _STDLIB_2,
     },
