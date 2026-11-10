@@ -190,6 +190,7 @@ DIRENT_H = r"""/* Header-only dirent for the one place GnuTLS needs it (lib/x509
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 #include <windows.h>
 struct dirent { char d_name[MAX_PATH]; };
 typedef struct mcrit_shim_dir {
@@ -225,6 +226,51 @@ static __inline int closedir(DIR *dir)
   free(dir);
   return 0;
 }
+/* The wide variants lib/x509/verify-high2.c takes when _UNICODE is defined
+   (the case on the runner: _topendir, _treaddir, _tclosedir, _TDIR and
+   struct _tdirent with d_name and d_namlen, which MinGW's dirent.h has). */
+struct _wdirent { wchar_t d_name[MAX_PATH]; size_t d_namlen; };
+typedef struct mcrit_shim_wdir {
+  HANDLE handle; WIN32_FIND_DATAW data; int first; struct _wdirent entry;
+} _WDIR;
+static __inline _WDIR *_wopendir(const wchar_t *name)
+{
+  wchar_t pattern[MAX_PATH + 3];
+  size_t n = wcslen(name);
+  _WDIR *dir;
+  if (n + 3 > sizeof(pattern) / sizeof(pattern[0])) return NULL;
+  memcpy(pattern, name, n * sizeof(wchar_t));
+  if (n && name[n - 1] != L'/' && name[n - 1] != L'\\') pattern[n++] = L'\\';
+  pattern[n++] = L'*';
+  pattern[n] = 0;
+  dir = (_WDIR *)malloc(sizeof(*dir));
+  if (!dir) return NULL;
+  dir->handle = FindFirstFileW(pattern, &dir->data);
+  if (dir->handle == INVALID_HANDLE_VALUE) { free(dir); return NULL; }
+  dir->first = 1;
+  return dir;
+}
+static __inline struct _wdirent *_wreaddir(_WDIR *dir)
+{
+  if (dir->first) dir->first = 0;
+  else if (!FindNextFileW(dir->handle, &dir->data)) return NULL;
+  lstrcpynW(dir->entry.d_name, dir->data.cFileName, MAX_PATH);
+  dir->entry.d_namlen = wcslen(dir->entry.d_name);
+  return &dir->entry;
+}
+static __inline int _wclosedir(_WDIR *dir)
+{
+  FindClose(dir->handle);
+  free(dir);
+  return 0;
+}
+#ifdef _UNICODE
+#define _tdirent _wdirent
+#define _TDIR _WDIR
+#define _topendir _wopendir
+#define _treaddir _wreaddir
+#define _tclosedir _wclosedir
+#endif
 #endif
 """
 
@@ -241,6 +287,51 @@ SHIM_H = """/* Written by gnutls_msvc_build.py; force-included with cl -FI. */
 #define _Thread_local __declspec(thread)
 #define __attribute__(x)
 #define CRAU_MAYBE_UNUSED
+/* The wide variants lib/x509/verify-high2.c takes when _UNICODE is defined
+   (the case on the runner: _topendir, _treaddir, _tclosedir, _TDIR and
+   struct _tdirent with d_name and d_namlen, which MinGW's dirent.h has). */
+struct _wdirent { wchar_t d_name[MAX_PATH]; size_t d_namlen; };
+typedef struct mcrit_shim_wdir {
+  HANDLE handle; WIN32_FIND_DATAW data; int first; struct _wdirent entry;
+} _WDIR;
+static __inline _WDIR *_wopendir(const wchar_t *name)
+{
+  wchar_t pattern[MAX_PATH + 3];
+  size_t n = wcslen(name);
+  _WDIR *dir;
+  if (n + 3 > sizeof(pattern) / sizeof(pattern[0])) return NULL;
+  memcpy(pattern, name, n * sizeof(wchar_t));
+  if (n && name[n - 1] != L'/' && name[n - 1] != L'\\') pattern[n++] = L'\\';
+  pattern[n++] = L'*';
+  pattern[n] = 0;
+  dir = (_WDIR *)malloc(sizeof(*dir));
+  if (!dir) return NULL;
+  dir->handle = FindFirstFileW(pattern, &dir->data);
+  if (dir->handle == INVALID_HANDLE_VALUE) { free(dir); return NULL; }
+  dir->first = 1;
+  return dir;
+}
+static __inline struct _wdirent *_wreaddir(_WDIR *dir)
+{
+  if (dir->first) dir->first = 0;
+  else if (!FindNextFileW(dir->handle, &dir->data)) return NULL;
+  lstrcpynW(dir->entry.d_name, dir->data.cFileName, MAX_PATH);
+  dir->entry.d_namlen = wcslen(dir->entry.d_name);
+  return &dir->entry;
+}
+static __inline int _wclosedir(_WDIR *dir)
+{
+  FindClose(dir->handle);
+  free(dir);
+  return 0;
+}
+#ifdef _UNICODE
+#define _tdirent _wdirent
+#define _TDIR _WDIR
+#define _topendir _wopendir
+#define _treaddir _wreaddir
+#define _tclosedir _wclosedir
+#endif
 #endif
 """
 
