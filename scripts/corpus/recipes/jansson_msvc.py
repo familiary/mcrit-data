@@ -95,6 +95,14 @@ tag, same arch; the MSVC side is the larger, the counts are as measured):
 
 So the pair is almost disjoint: the two compilers share essentially no exact
 function body, which is the case for holding the MSVC axis at all.
+
+Jansson 2.14 (tag v2.14), built in a second pass (scoped run 42776994495)
+beside the two tags above with the same recipe: x86 230 + 157 = 387, x64
+225 + 150 = 375 (kept + removed = total, no exclusions). It was dropped from
+the first revision for overlapping 2.15.1 by about 80% under GCC; under MSVC
+it shares 140 of its 174 (x86) and 122 of its 164 (x64) PicHashes of ten
+instructions or more with 2.13.1 and 137 / 124 with 2.15.1, so it is a
+reference of its own.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
