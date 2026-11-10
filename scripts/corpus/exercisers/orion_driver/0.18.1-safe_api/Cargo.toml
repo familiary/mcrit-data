@@ -1,0 +1,38 @@
+# Driver crate for orion-rs/orion 0.18.1 with the high-level API (safe_api). See
+# ../../../recipes/orion.py.
+#
+# orion is resolved from the crates.io tarball the recipe fetches and
+# checksums (sha256 = the crates.io checksum), through a --config
+# patch.crates-io path override on the command line. The lockfile next to
+# this manifest pins every other crate by crates.io checksum.
+
+# Empty table on purpose: without it cargo walks upwards looking for a
+# workspace root.
+[workspace]
+
+[package]
+name = "orion_driver"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+# A cdylib: SMDA cannot read a Rust static library.
+crate-type = ["cdylib"]
+path = "../src/safe_api18.rs"
+
+[dependencies]
+# orion's default features: safe_api (std, getrandom), which the high-level
+# API needs.
+orion = { version = "=0.18.1" }
+
+[profile.release]
+panic = "abort"
+opt-level = 3
+lto = false
+codegen-units = 16
+debug = false
+strip = "none"
+
+[profile.dev]
+panic = "abort"
