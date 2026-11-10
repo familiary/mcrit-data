@@ -164,3 +164,35 @@ RECIPES = {
     "miniupnpc_2.2.3": _miniupnpc("2.2.3", "miniupnpc_2_2_3"),
     "miniupnpc_2.3.3": _miniupnpc("2.3.3", "miniupnpc_2_3_3"),
 }
+
+# The final sweep: every other dated 1.9.x release tarball upstream lists
+# (http://miniupnp.free.fr/files/), and the two tags that were built and left
+# out as redundant with 2.2.3. An image whose PicHash set (10+ instructions)
+# is identical to one already carried is not committed; the recipe docstring
+# lists which those were. sha256 is of the download (no upstream checksum).
+_DATED = {
+    "1.9.20140401": "d02670112125300f7a3d61421714d99105edd90190bf12542d16785f16f017aa",
+    "1.9.20140610": "31beffe44a5d7b7bbad3729cdd6f9f85844b9e5771aebb56550f87cbedcf5d3b",
+    "1.9.20140701": "26f3985bad7768b8483b793448ae49414cdc4451d0ec83e7c1944367e15f9f07",
+    "1.9.20140906": "e16f3381f22ecd08aa54fb8b51b5e483e9c9472dcb2883c15a0054a843c9435c",
+    "1.9.20140911": "7435bebfdd8c76127136f733979ad2ab56999d204176a1044293536f2e20b21c",
+    "1.9.20141027": "763a3ebed0c3267b8605247b38f46e99bfe54c96a9ca2882aa9abb5485407540",
+    "1.9.20141108": "8456172f333ac4b73d4378e8a5ae1d7676dbc47092fa77848c533126fb87e5cd",
+    "1.9.20141113": "efeaa8d688657bed3ea561f528acd206162a20d7f4edc013611c2c4dfd32c284",
+    "1.9.20141117": "1573e5c7248930107bdf6e80e98cc4a7adf6152f465e4268e3b4b4843c79af9d",
+    "1.9.20141128": "754419d9fec75deefa2c630a90eaf156bb008db5dbcdb662377715b7c1662e26",
+    "1.9.20150427": "b3207ddc0b0001887d6a29260e8d609d0ad2c35bec99a2358281bb8951919837",
+    "1.9.20150430": "76d707434833bd1114a17e339dfe89515feb80d648028d7cfd5750a0e8df7647",
+    "1.9.20150522": "a77c34a1020f908342de2d32f730c1f49771648817382216513ef6c998bf5571",
+    "1.9.20150609": "86e6ccec5b660ba6889893d1f3fca21db087c6466b1a90f495a1f87ab1cd1c36",
+    "1.9.20150721": "60b52654e780f9091a5ae472c5c17a5f37797d204639865d98635d67e4e86bb3",
+    "1.9.20150730": "1d64fab1fd3b4c8545139341ba197f19329a863f4f21b578fc2a228ab586a604",
+    "1.9.20150917": "3087c32929c1e9db4947d6a184694e06ec604bca29449b75daec295a5d8f11da",
+    "1.9.20151008": "e444ac3b587ce82709c4d0cfca1fe71f44f9fc433e9f946b12b9e1bfe667a633",
+    "1.9.20151026": "f3cf9a5a31588a917d4d9237e5bc50f84d00c5aa48e27ed50d9b88dfa6a25d47",
+    "1.9.20160209": "572171eacc1d72537ce47b6f4571260757ab7bcfdaf54c3a55c7f88594d94b6f",
+}
+for _v, _sha in _DATED.items():
+    RECIPES["miniupnpc_%s" % _v] = _miniupnpc_tarball(_v, _sha)
+RECIPES["miniupnpc_2.2.0"] = _miniupnpc("2.2.0", "miniupnpc_2_2_0")
+RECIPES["miniupnpc_2.2.8"] = _miniupnpc("2.2.8", "miniupnpc_2_2_8")
