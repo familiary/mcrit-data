@@ -271,3 +271,150 @@ def _all(version):
 RECIPES = {}
 for _v in _VERSIONS:
     RECIPES.update(_all(_v))
+
+
+# ---------------------------------------------------------------------------
+# The variants added after the first two releases (see "Further variants" in
+# the module docstring). Each pins its rustc with rustup instead of taking the
+# host's or the runner's stable, so the same toolchain builds every axis.
+
+_SRC = "https://static.crates.io/crates/%s/%s-%s.crate"
+
+# version slug -> (crate fetched, its version, crates.io sha256, driver
+# directory or None for the arti binary crate itself, rustc, features)
+_VARIANTS = {
+    "2.8.0": ("arti-client", "0.48.0",
+              "5bb17a5096e30f2b2bf9f7493ff7577ac66ed7059b8e435658a2884546afe70c",
+              "2.8.0", "1.97.0", "default + static-sqlite"),
+    "2.3.0-full": ("arti-client", "0.42.0",
+                   "16739ee6ad4ee11073a8d12c34a911ea72977c5ce4abbb21a1f7cf5955f22a01",
+                   "2.3.0-full", "1.97.0", "full + static-sqlite"),
+    "1.1.13-rust1.75": ("arti-client", "0.14.0",
+                        "7ffd8cfa3b2bdbeefd4a8d8656a3763b53275fdd61e5aaf77821e3fec05f11b4",
+                        "1.1.13-rust1.75", "1.75.0", "default + static-sqlite"),
+    "2.3.0-cli": ("arti", "2.3.0",
+                  "937670cbf2189f02070a50275609a6d4057865bb6124b678e3aa2d5c3adcd714",
+                  None, "1.97.0", "default + static-sqlite"),
+    "1.1.13-cli": ("arti", "1.1.13",
+                   "614ac83e08192637fd9e1a1a1ba9261c06b958c1a124461dd85a74e973ca0971",
+                   None, "1.75.0", "default + static-sqlite"),
+}
+
+# The arti binary crate adds its own namespace (arti::) and, with its default
+# features, the arti-* workspace crates it links; everything else is excluded
+# exactly as for the driver.
+_OWN_CLI = _OWN + r"|arti|arti_[a-z0-9_]+"
+_EXCLUDE_CLI = [r"^(?!<?(?:%s)::|_{1,2}ZN\d+(?:%s)|_{1,2}ZN\d+_\$LT\$(?:%s))"
+                % (_OWN_CLI, _OWN_CLI, _OWN_CLI)]
+
+_VARIANT_NOTES = {
+    "2.8.0": ("Arti 2.8.0 (2026-11-04, the newest release; arti-client "
+              "0.48.0), built from the std cdylib driver crate "
+              "(scripts/corpus/exercisers/arti_driver/2.8.0) with "
+              "arti-client's default features plus static-sqlite. The "
+              "driver's Cargo.lock is the arti 2.8.0 release crate's own "
+              "(sha256 34f021b3ac0b757e0c60710fd15df3b5157d41327289ebb0ab493bce1050b0d4) "
+              "pruned by cargo to 508 packages, every one at the release's "
+              "version and checksum. "),
+    "2.3.0-full": ("Arti 2.3.0 (arti-client 0.42.0) with arti-client's "
+                   "\"full\" feature: every non-experimental feature "
+                   "(onion-service client and service, bridge-client, "
+                   "pt-client, vanguards, async-std, memquota, rpc, keymgr) "
+                   "on top of the defaults, plus static-sqlite; driver "
+                   "scripts/corpus/exercisers/arti_driver/2.3.0-full, whose "
+                   "Cargo.lock is the arti 2.3.0 release crate's pruned by "
+                   "cargo to 553 packages, every one at the release's "
+                   "version and checksum. "),
+    "1.1.13-rust1.75": ("Arti 1.1.13 (arti-client 0.14.0) with the release "
+                        "Cargo.lock unchanged (time 0.3.31, which does not "
+                        "compile on rustc 1.80 or later), built with rustc "
+                        "1.75.0, the stable release current when 1.1.13 "
+                        "shipped (2024-02-05). Driver "
+                        "scripts/corpus/exercisers/arti_driver/1.1.13-rust1.75: "
+                        "the arti 1.1.13 release crate's Cargo.lock pruned by "
+                        "cargo to 388 packages with no version changed, and "
+                        "src_legacy/lib.rs, the same driver source with "
+                        "#[no_mangle] for rustc 1.75. "),
+    "2.3.0-cli": ("The arti binary crate itself (the arti 2.3.0 release crate "
+                  "from crates.io), the Tor client and SOCKS/DNS proxy, built "
+                  "with its own shipped Cargo.lock --locked, its default "
+                  "features (tokio, native-tls, dns-proxy, harden, "
+                  "compression, bridge-client, pt-client, "
+                  "onion-service-client, vanguards) plus static-sqlite, "
+                  "cargo's default release profile (the crate publishes "
+                  "none), i.e. what `cargo install arti --locked --features "
+                  "static-sqlite` builds. Kept: the Arti namespaces of the "
+                  "driver plus arti:: and arti_*::. "),
+    "1.1.13-cli": ("The arti binary crate itself (the arti 1.1.13 release "
+                   "crate from crates.io) built with its own shipped "
+                   "Cargo.lock --locked and rustc 1.75.0 (time 0.3.31 needs "
+                   "a rustc older than 1.80), its default features plus "
+                   "static-sqlite, cargo's default release profile; what "
+                   "`cargo install arti@1.1.13 --locked --features "
+                   "static-sqlite` builds with that rustc. Kept: the Arti "
+                   "namespaces of the driver plus arti:: and arti_*::. "),
+}
+
+
+def _variant(slug, target, toolchains, kind, triple_note, steps_before=(),
+             env=None, msvc=False, prefix=""):
+    crate, crate_ver, sha, driver, rustc, features = _VARIANTS[slug]
+    env = dict(env or {}, RUSTUP_TOOLCHAIN=rustc)
+    install = BuildStep("rustup toolchain install %s --profile minimal "
+                        "--target %s" % (rustc, target), env=dict(env))
+    if driver is None:
+        cargo = ("cargo build --release --locked --target-dir target "
+                 "--features static-sqlite --target %s" % target)
+        binary = "arti.exe" if kind != "elf" else "arti"
+        pdb = "target/%s/release/arti.pdb" % target if msvc else None
+        exclude = list(_EXCLUDE_CLI)
+        profile = ("cargo default release profile (opt-level 3, LTO off, "
+                   "codegen-units 16, panic=unwind, debug info off)")
+    else:
+        cargo = _CARGO % (driver, target)
+        binary = ("libarti_driver.so" if kind == "elf"
+                  else "arti_driver.dll")
+        pdb = "target/%s/release/arti_driver.pdb" % target if msvc else None
+        exclude = list(_EXCLUDE)
+        profile = ("cargo --release (opt-level 3, LTO off, codegen-units 16, "
+                   "panic=abort, debug info off)")
+    return Recipe(
+        family="arti",
+        version=slug,
+        upstream=_UPSTREAM,
+        license=_LICENSE,
+        source=Source(url=_SRC % (crate, crate, crate_ver), sha256=sha),
+        build=list(steps_before) + [
+            install,
+            BuildStep("rustc -vV", env=dict(env)),
+            BuildStep(prefix + cargo, env=dict(env)),
+        ],
+        artifacts=[Artifact(path="target/%s/release/%s" % (target, binary),
+                            component=binary, pdb=pdb)],
+        toolchains=toolchains,
+        requires=["cargo"],
+        exclude_functions=exclude,
+        build_flags="%s --locked, rustc %s (rustup), features %s; %s"
+                    % (profile, rustc, features, triple_note),
+        notes=_VARIANT_NOTES[slug] + "Only the Arti workspace's own code is "
+              "kept; see the recipe module docstring.",
+    )
+
+
+for _slug in _VARIANTS:
+    _tag = "arti_" + _slug
+    RECIPES[_tag + "_linux"] = _variant(
+        _slug, "{platform}-unknown-linux-gnu", ["linux_x86", "linux_x64"],
+        "elf", "i686-unknown-linux-gnu / x86_64-unknown-linux-gnu, system "
+        "OpenSSL for native-tls", prefix=_ELF32)
+    RECIPES[_tag] = _variant(
+        _slug, "{platform}-pc-windows-gnu", ["mingw_x86", "mingw_x64"],
+        "mingw", "i686-pc-windows-gnu / x86_64-pc-windows-gnu, native-tls "
+        "through Schannel")
+    for _arch, _triple in (("x86", "i686-pc-windows-msvc"),
+                           ("x64", "x86_64-pc-windows-msvc")):
+        RECIPES["%s_msvc_%s" % (_tag, _arch)] = _variant(
+            _slug, _triple, ["msvc_" + _arch], "msvc",
+            _triple + ", dynamic CRT (/MD), native-tls through Schannel, "
+            "link /OPT:NOREF /OPT:NOICF /Brepro /INCREMENTAL:NO",
+            env={"RUSTFLAGS": _MSVC_RUSTFLAGS}, msvc=True)
