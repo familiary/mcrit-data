@@ -114,6 +114,22 @@ def _resolve(index, family, slug, entry):
     if not candidates:
         raise Unmatched("no recipe produces %s %s" % (family, version))
     if len(candidates) > 1:
+        # The component first, because it is the one field that a harvested
+        # prebuilt and a rebuild of the same version are told apart by. A
+        # prebuilt is extracted by a MinGW toolchain and its slug names the
+        # MSVC that compiled it upstream (Artifact.producer), so the slug's
+        # toolchain points at the wrong recipe from either direction: the
+        # MinGW rebuild's entries match the prebuilt recipe's toolchains, and
+        # the prebuilt's own entries narrow onto the MSVC rebuild. Keeping
+        # only the candidates that declare the entry's component settles that
+        # without reading the slug at all, and only ever narrows.
+        component = entry.get("component", "")
+        by_component = [(name, recipe) for name, recipe in candidates
+                        if any(a.component == component
+                               for a in recipe.artifacts)]
+        if by_component:
+            candidates = by_component
+    if len(candidates) > 1:
         # Every family that gained an MSVC recipe beside its MinGW one has
         # two recipes for each of its versions, which is 189 of this corpus's
         # entries - so (family, version) stopped identifying a recipe and the
@@ -134,6 +150,11 @@ def _resolve(index, family, slug, entry):
         # family has exactly one recipe; that is not a property to rely on.
         wanted = _toolchain_of(slug, family, version)
         if any(a.is_blob for _, recipe in candidates for a in recipe.artifacts):
+            wanted = None
+        # The same holds for an artefact whose producer is stated: its slug
+        # names who compiled it upstream, not the toolchain that ran.
+        if any(getattr(a, "producer", None)
+               for _, recipe in candidates for a in recipe.artifacts):
             wanted = None
         narrowed = [(name, recipe) for name, recipe in candidates
                     if wanted in {canonical_alias(t)
