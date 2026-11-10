@@ -105,6 +105,14 @@ the trimmed image's are in the default MSVC image (the x64 six differ because
 NO_ASSERT and NO_STDIO change the code around them), and 0 of 44 / 0 of 42
 against the trimmed MinGW image, so the MSVC and MinGW trimmed pair is as
 disjoint as the default pair.
+
+The later 3.1 tags (scoped run 42777108622). 3.1.2: default x86 190 + 138 =
+328, x64 189 + 145 = 334; trimmed x86 60 + 128 = 188, x64 59 + 133 = 192
+(kept + removed = total, no exclusions). Against 3.1.0 it shares 139 of 143
+(x86) and 135 of 138 (x64) PicHashes of ten instructions or more, the trimmed
+build 41 of 44 and 40 of 42. 3.1.1 is not committed: both its default and its
+trimmed MSVC images are PicHash-identical, every function at every size, to
+the 3.1.0 images of the same architecture, so they would add nothing.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -177,7 +185,9 @@ RECIPES = {
     "miniz_3.1.0_trim_msvc": _miniz_msvc("3.1.0", "3.1.0", trimmed=True),
 }
 
-# The two later tags of the 3.1 line, default and trimmed (see miniz.py).
-for _v in ("3.1.1", "3.1.2"):
+# The later tags of the 3.1 line, default and trimmed (see miniz.py). 3.1.1
+# is not built: measured in run 42777108622, its default and trimmed images
+# are PicHash-identical to the 3.1.0 ones on both architectures.
+for _v in ("3.1.2",):
     RECIPES["miniz_%s_msvc" % _v] = _miniz_msvc(_v, _v)
     RECIPES["miniz_%s_trim_msvc" % _v] = _miniz_msvc(_v, _v, trimmed=True)
