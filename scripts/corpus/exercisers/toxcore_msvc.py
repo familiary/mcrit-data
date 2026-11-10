@@ -97,6 +97,22 @@ def prepare(sodium_dir, pth_dir, out_dir, legacy, pc=False):
                   'set(pthreads4w_LIBRARIES "%s")\n'
                   % (cm(pth_dll), cm(pth_lib), cm(pth_dir), cm(pth_dir),
                      cm(pth_lib)))
+    if "pc" in (pc or ()):
+        # v0.2.19 and v0.2.20 look pthreads up only as find_package(pthreads)
+        # with the target PThreads4W::PThreads4W (vcpkg's port name) and
+        # otherwise fall back to Threads, which on MSVC finds no pthread.h
+        # ("util.h(13): fatal error C1083: Cannot open include file:
+        # 'pthread.h'" in run 42789820112). Same pinned pthreads4w build.
+        os.makedirs(os.path.join(out_dir, "pthreads"), exist_ok=True)
+        with open(os.path.join(out_dir, "pthreads", "pthreads-config.cmake"),
+                  "w") as out:
+            out.write("add_library(PThreads4W::PThreads4W SHARED IMPORTED)\n"
+                      "set_target_properties(PThreads4W::PThreads4W PROPERTIES\n"
+                      '  IMPORTED_LOCATION "%s"\n'
+                      '  IMPORTED_IMPLIB "%s"\n'
+                      '  INTERFACE_INCLUDE_DIRECTORIES "%s")\n'
+                      "set(pthreads_FOUND TRUE)\n"
+                      % (cm(pth_dll), cm(pth_lib), cm(pth_dir)))
     with open(os.path.join(out_dir, "pkg-config.bat"), "w") as out:
         if not pc:
             out.write('@if "%1"=="--version" (echo 0.29.2& exit /b 0)\r\n@exit /b 1\r\n')
