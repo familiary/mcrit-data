@@ -130,3 +130,82 @@ RECIPES = {
               "recipe docstring.",
     ),
 }
+
+
+# --- The ref.c build (upstream's Argon2RefDll project: the same six units
+# with src\ref.c in place of src\opt.c and the same Release settings) and
+# RandomX's vendored Argon2d subset (see argon2.py), with RandomX's MSVC
+# flags for the SIMD units (/arch:AVX2 on argon2_avx2.c; SSSE3 needs no
+# switch under cl on x64 and is the SSE2-baseline intrinsic path on x86).
+# Separate versions so the committed images are unchanged.
+_REF_BUILD = _BUILD.replace("src\\opt.c", "src\\ref.c")
+
+RECIPES["argon2_20190702-ref_msvc"] = Recipe(
+    family="argon2",
+    version="20190702-ref",
+    upstream="https://github.com/P-H-C/phc-winner-argon2",
+    license="CC0-1.0 OR Apache-2.0",
+    source=Source(git_url="https://github.com/P-H-C/phc-winner-argon2.git",
+                  git_ref="20190702"),
+    build=[BuildStep(_REF_BUILD), BuildStep("dir", allow_failure=True)],
+    artifacts=[Artifact(path="libargon2.dll", component="libargon2.dll",
+                        pdb="libargon2.pdb")],
+    toolchains=["msvc_x86", "msvc_x64"],
+    build_flags="/O2 /Oi /Gy /sdl /MD /Zi (the vs2015 Argon2RefDll Release "
+                "settings), src/ref.c; /DEBUG /Brepro /OPT:NOREF /OPT:NOICF "
+                "at link",
+    notes="Same tag, the six translation units of upstream's "
+          "vs2015/Argon2RefDll project (src/ref.c instead of src/opt.c), "
+          "built with that project's Release settings and /MD. Nothing "
+          "patched.",
+)
+
+_RX_SRC = "src\\argon2_core.c src\\argon2_ref.c src\\blake2\\blake2b.c"
+RECIPES["argon2_randomx-6fe0e39_msvc"] = Recipe(
+    family="argon2",
+    version="randomx-6fe0e39",
+    upstream="https://github.com/tevador/RandomX",
+    license="BSD-3-Clause (RandomX); the Argon2 code is CC0-1.0 OR "
+            "Apache-2.0 upstream",
+    source=Source(git_url="https://github.com/tevador/RandomX.git",
+                  git_ref="6fe0e390acc28a50bfe7f59603c2a6effae4a7cd"),
+    build=[
+        BuildStep("cl /nologo /c /O2 /Oi /MD /Zi /Fdrandomx-argon2.pdb %s"
+                  % _RX_SRC),
+        BuildStep("cl /nologo /c /O2 /Oi /MD /Zi /Fdrandomx-argon2.pdb "
+                  "src\\argon2_ssse3.c"),
+        BuildStep("cl /nologo /c /O2 /Oi /MD /Zi /arch:AVX2 "
+                  "/Fdrandomx-argon2.pdb src\\argon2_avx2.c"),
+        BuildStep('python -c "'
+                  "import subprocess,glob;"
+                  "o=''.join([subprocess.check_output(['dumpbin','/SYMBOLS',f]).decode() "
+                  "for f in sorted(glob.glob('*.obj'))]);"
+                  "l=[t[t.index('|')+1] for t in map(str.split,o.splitlines()) "
+                  "if '|' in t and '()' in t and 'External' in t "
+                  "and any([w.startswith('SECT') for w in t])];"
+                  "p='{arch}'=='x86';"
+                  "n=sorted(set([s[1:] if p and s.startswith('_') else s for s in l]));"
+                  "assert n,'no exports found';"
+                  "open('randomx-argon2.def','w').write('EXPORTS\\n'+'\\n'.join(n)+'\\n');"
+                  "print(len(n),'exports')"
+                  '"'),
+        BuildStep("link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO "
+                  "/OPT:NOREF /OPT:NOICF /DEF:randomx-argon2.def "
+                  "/PDB:randomx-argon2.pdb /OUT:randomx-argon2.dll "
+                  "argon2_core.obj argon2_ref.obj blake2b.obj "
+                  "argon2_ssse3.obj argon2_avx2.obj"),
+        BuildStep("dir", allow_failure=True),
+    ],
+    artifacts=[Artifact(path="randomx-argon2.dll",
+                        component="randomx-argon2.dll",
+                        pdb="randomx-argon2.pdb")],
+    toolchains=["msvc_x86", "msvc_x64"],
+    build_flags="/O2 /Oi /MD /Zi, /arch:AVX2 on argon2_avx2.c; /DEBUG "
+                "/Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link, "
+                "exports from a .def generated from the objects",
+    notes="The Argon2d subset tevador/RandomX vendors (commit 6fe0e39), the "
+          "five files compiled with cl and linked into one DLL with a .def "
+          "generated from the objects' defined external functions. Filed "
+          "under argon2 as Argon2's code in the form RandomX carries it. "
+          "Nothing patched.",
+)
