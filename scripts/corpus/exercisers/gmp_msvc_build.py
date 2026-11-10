@@ -479,6 +479,11 @@ def main():
     flags = ["/I" + gen, "/I" + src, "/DHAVE_CONFIG_H=1", "/D__GMP_WITHIN_GMP=1",
              "/D_CRT_SECURE_NO_WARNINGS", "/D_CRT_NONSTDC_NO_WARNINGS"]
     generated = build_generators(src, gen, args.arch, flags)
+    if configured is not None:
+        # --enable-fat: gmp-impl.h includes "fat.h", which configure links into
+        # its build root; searched after gen/ and the tree, so gen/config.h
+        # and gen/gmp.h still win over configure's gcc ones.
+        flags.append("/I" + cfg)
 
     makefile = read_text(os.path.join(src, "Makefile.in"))
     plain = []
