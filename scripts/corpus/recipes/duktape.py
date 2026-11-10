@@ -103,3 +103,68 @@ RECIPES = {
     "Duktape_2.7.0": _duktape(
         "2.7.0", "90f8d2fa8b5567c6899830ddef2c03f3c27960b11aca222fa17aa7ac613c2890"),
 }
+
+
+# The final sweep.
+#
+# 2.7.0 at -O2, the level backlog #87 names, as its own recipe so that the
+# committed -Os duktape.dll of 2.7.0 is not rebuilt.
+def _o2_only(version, sha256):
+    recipe = _duktape(version, sha256, with_o2=True)
+    recipe.build = recipe.build[1:]
+    recipe.artifacts = recipe.artifacts[1:]
+    # Its own version slug: refresh_provenance.py tells recipes apart by
+    # (version, toolchain), and the -Os recipe of 2.7.0 already holds that.
+    recipe.version = version + "-O2"
+    return recipe
+
+
+# MeshAgent's vendored copy (Ylianst/MeshAgent microscript/duktape.c, which
+# defines DUK_VERSION 20600L, at the commit the MeshAgent recipes pin). Its
+# duktape.h adds DUK_USE_EXEC_TIMEOUT_CHECK ILibDuktape_EXEC_TIMEOUT_CHECK, a
+# callback the agent executable defines, so a standalone DLL has one
+# unresolved import. As in MeshAgent's own Windows build (one Duktape DLL per
+# executable, see meshagent.py) it is resolved through an import library of
+# the host, generated from a two-line .def, so no stub code enters the image:
+# the DLL imports the callback from MeshAgent.exe. The defines are the ones
+# the MeshAgent recipes compile the engine with; -O2 as there. Nothing in the
+# tree is edited.
+MESHAGENT_REF = "26846b1c7f0841d71938f6bebc96eef5a947d217"
+MESHAGENT_DUK_DEFS = ("-DDUK_USE_DATE_NOW_WINDOWS -DDUK_USE_DEBUGGER_SUPPORT "
+                      "-DDUK_USE_INTERRUPT_COUNTER -DDUK_USE_DEBUGGER_INSPECT "
+                      "-DDUK_USE_DEBUGGER_PAUSE_UNCAUGHT -DDUK_USE_DEBUGGER_DUMPHEAP")
+HOST_DEF = ("printf 'LIBRARY MeshAgent.exe\\nEXPORTS\\n"
+            "ILibDuktape_EXEC_TIMEOUT_CHECK\\n' > corpus-host.def")
+
+
+def _meshagent_vendored():
+    return Recipe(
+        family="Duktape",
+        version="2.6.0-meshagent",
+        upstream="https://github.com/Ylianst/MeshAgent (vendored "
+                 "https://github.com/svaarala/duktape 2.6.0)",
+        license="MIT (Duktape); MeshAgent is Apache-2.0",
+        source=Source(git_url="https://github.com/Ylianst/MeshAgent.git",
+                      git_ref=MESHAGENT_REF),
+        build=[BuildStep(HOST_DEF),
+               BuildStep("{prefix}dlltool -d corpus-host.def -l libcorpus-host.a"),
+               BuildStep("{cc} -shared -O2 " + MESHAGENT_DUK_DEFS +
+                         " microscript/duktape.c -o duktape.dll -L. -lcorpus-host")],
+        artifacts=[Artifact(path="duktape.dll", component="duktape.dll")],
+        toolchains=["mingw_x86", "mingw_x64"],
+        build_flags="-O2 and MeshAgent's DUK_USE_* defines (" + MESHAGENT_DUK_DEFS +
+                    "); ILibDuktape_EXEC_TIMEOUT_CHECK imported from MeshAgent.exe "
+                    "through a generated import library",
+        notes="MeshAgent's vendored Duktape 2.6.0 (microscript/duktape.c and its "
+              "customised duktape.h/duk_config.h) at the MeshAgent commit the "
+              "MeshAgent recipes pin, compiled on its own as a DLL. The agent's "
+              "exec-timeout callback is imported from the host executable as "
+              "MeshAgent's own per-executable Duktape DLL does; no source is "
+              "edited.",
+    )
+
+
+RECIPES["Duktape_2.7.0_O2"] = _o2_only(
+    "2.7.0", "90f8d2fa8b5567c6899830ddef2c03f3c27960b11aca222fa17aa7ac613c2890")
+RECIPES["Duktape_2.6.0_meshagent"] = _meshagent_vendored()
+
