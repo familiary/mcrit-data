@@ -2609,5 +2609,49 @@ class ExcludedPicHashTest(unittest.TestCase):
         self.assertEqual(recipe.exclude_pichashes, {})
 
 
+class HarvestedCompilerFieldTest(unittest.TestCase):
+    """provenance.json must not say the unpacking host compiled a prebuilt.
+
+    A harvested DLL built by upstream with MSVC was recorded with the MinGW
+    GCC version string of the Linux host that unpacked it, because the field
+    was filled from the toolchain leg that ran.
+    """
+
+    def _toolchain(self):
+        import types
+        return types.SimpleNamespace(short_id="mingw13", id="mingw13_x64")
+
+    def _artifact(self, producer=None, is_blob=False):
+        import types
+        return types.SimpleNamespace(producer=producer, is_blob=is_blob)
+
+    def test_a_harvested_prebuilt_does_not_claim_the_host_compiler(self):
+        from corpus import pipeline
+
+        value = pipeline.recorded_compiler(
+            self._artifact("msvc141"), self._toolchain(),
+            "x86_64-w64-mingw32-gcc (GCC) 13-win32")
+        self.assertTrue(value.startswith("not compiled here"))
+        self.assertIn("producer msvc141", value)
+        self.assertIn("extracted on a host with x86_64-w64-mingw32-gcc", value)
+
+    def test_a_local_build_keeps_its_own_version_string(self):
+        from corpus import pipeline
+
+        for producer in (None, "mingw13"):
+            self.assertEqual(
+                pipeline.recorded_compiler(
+                    self._artifact(producer), self._toolchain(), "gcc 13"),
+                "gcc 13")
+
+    def test_a_blob_is_unchanged(self):
+        from corpus import pipeline
+
+        self.assertEqual(
+            pipeline.recorded_compiler(
+                self._artifact(is_blob=True), self._toolchain(), "gcc 13"),
+            "MSVC (upstream, exact version unknown)")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
