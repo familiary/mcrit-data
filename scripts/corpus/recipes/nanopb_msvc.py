@@ -180,6 +180,75 @@ tag, same arch):
 The pair shares no exact function body at all, which is the case for holding
 the MSVC axis. The MSVC side has more functions of 10+ instructions than the
 MinGW side at every tag.
+
+Second pass: the other define combinations, /O1 of the shipped sets, and
+upstream's CMake (scoped runs 42775414776 and 42777327062), as versions
+"<tag>-defines" and "<tag>-cmake" so the images above are unchanged.
+"-defines" holds, per tag, the runtime plus generated driver.pb.c with each
+of the twelve subsets of {PB_FIELD_32BIT, PB_NO_ERRMSG, PB_BUFFER_ONLY,
+PB_ENABLE_MALLOC} not already shipped (components protobuf-nanopb-<field32,
+noerrmsg, bufferonly, malloc joined by "-">.dll) at /O2, and -all, -small and
+-big at /O1 (protobuf-nanopb-<set>-O1.dll). Kept + removed = total (no
+exclusions):
+
+    0.3.9.10-cmake protobuf-nanopb.dll    x64 80 + 129 = 209
+    0.3.9.10-defines protobuf-nanopb-all-O1.dll x86 85 + 127 = 212, x64 85 + 131 = 216
+    0.3.9.10-defines protobuf-nanopb-big-O1.dll x86 85 + 127 = 212, x64 85 + 131 = 216
+    0.3.9.10-defines protobuf-nanopb-bufferonly-malloc.dll x86 89 + 127 = 216, x64 85 + 131 = 216
+    0.3.9.10-defines protobuf-nanopb-bufferonly.dll x86 83 + 125 = 208, x64 80 + 129 = 209
+    0.3.9.10-defines protobuf-nanopb-field32-bufferonly-malloc.dll x86 89 + 127 = 216, x64 85 + 131 = 216
+    0.3.9.10-defines protobuf-nanopb-field32-bufferonly.dll x86 83 + 125 = 208, x64 80 + 129 = 209
+    0.3.9.10-defines protobuf-nanopb-field32-noerrmsg-bufferonly.dll x86 83 + 125 = 208, x64 80 + 129 = 209
+    0.3.9.10-defines protobuf-nanopb-field32-noerrmsg-malloc.dll x86 89 + 127 = 216, x64 85 + 131 = 216
+    0.3.9.10-defines protobuf-nanopb-field32-noerrmsg.dll x86 83 + 125 = 208, x64 80 + 129 = 209
+    0.3.9.10-defines protobuf-nanopb-field32.dll x86 83 + 125 = 208, x64 80 + 129 = 209
+    0.3.9.10-defines protobuf-nanopb-malloc.dll x86 89 + 127 = 216, x64 85 + 131 = 216
+    0.3.9.10-defines protobuf-nanopb-noerrmsg-bufferonly-malloc.dll x86 89 + 127 = 216, x64 85 + 131 = 216
+    0.3.9.10-defines protobuf-nanopb-noerrmsg-malloc.dll x86 89 + 127 = 216, x64 85 + 131 = 216
+    0.3.9.10-defines protobuf-nanopb-noerrmsg.dll x86 83 + 125 = 208, x64 80 + 129 = 209
+    0.3.9.10-defines protobuf-nanopb-small-O1.dll x86 80 + 125 = 205, x64 80 + 129 = 209
+    0.4.5-cmake  protobuf-nanopb.dll    x64 77 + 129 = 206
+    0.4.5-defines protobuf-nanopb-all-O1.dll x86 82 + 127 = 209, x64 82 + 131 = 213
+    0.4.5-defines protobuf-nanopb-big-O1.dll x86 82 + 127 = 209, x64 82 + 131 = 213
+    0.4.5-defines protobuf-nanopb-bufferonly-malloc.dll x86 85 + 127 = 212, x64 82 + 131 = 213
+    0.4.5-defines protobuf-nanopb-bufferonly.dll x86 79 + 125 = 204, x64 77 + 129 = 206
+    0.4.5-defines protobuf-nanopb-field32-bufferonly-malloc.dll x86 85 + 127 = 212, x64 82 + 131 = 213
+    0.4.5-defines protobuf-nanopb-field32-bufferonly.dll x86 79 + 125 = 204, x64 77 + 129 = 206
+    0.4.5-defines protobuf-nanopb-field32-noerrmsg-bufferonly.dll x86 78 + 125 = 203, x64 77 + 129 = 206
+    0.4.5-defines protobuf-nanopb-field32-noerrmsg-malloc.dll x86 84 + 127 = 211, x64 82 + 131 = 213
+    0.4.5-defines protobuf-nanopb-field32-noerrmsg.dll x86 78 + 125 = 203, x64 77 + 129 = 206
+    0.4.5-defines protobuf-nanopb-field32.dll x86 78 + 125 = 203, x64 77 + 129 = 206
+    0.4.5-defines protobuf-nanopb-malloc.dll x86 85 + 127 = 212, x64 82 + 131 = 213
+    0.4.5-defines protobuf-nanopb-noerrmsg-bufferonly-malloc.dll x86 83 + 127 = 210, x64 82 + 131 = 213
+    0.4.5-defines protobuf-nanopb-noerrmsg-malloc.dll x86 83 + 127 = 210, x64 82 + 131 = 213
+    0.4.5-defines protobuf-nanopb-noerrmsg.dll x86 78 + 125 = 203, x64 77 + 129 = 206
+    0.4.5-defines protobuf-nanopb-small-O1.dll x86 77 + 125 = 202, x64 77 + 129 = 206
+    0.4.9.2-cmake protobuf-nanopb.dll    x64 78 + 129 = 207
+    0.4.9.2-defines protobuf-nanopb-all-O1.dll x86 82 + 127 = 209, x64 82 + 131 = 213
+    0.4.9.2-defines protobuf-nanopb-big-O1.dll x86 82 + 127 = 209, x64 82 + 131 = 213
+    0.4.9.2-defines protobuf-nanopb-bufferonly-malloc.dll x86 85 + 127 = 212, x64 82 + 131 = 213
+    0.4.9.2-defines protobuf-nanopb-bufferonly.dll x86 79 + 125 = 204, x64 78 + 129 = 207
+    0.4.9.2-defines protobuf-nanopb-field32-bufferonly-malloc.dll x86 83 + 127 = 210, x64 82 + 131 = 213
+    0.4.9.2-defines protobuf-nanopb-field32-bufferonly.dll x86 79 + 125 = 204, x64 78 + 129 = 207
+    0.4.9.2-defines protobuf-nanopb-field32-noerrmsg-bufferonly.dll x86 79 + 125 = 204, x64 78 + 129 = 207
+    0.4.9.2-defines protobuf-nanopb-field32-noerrmsg-malloc.dll x86 83 + 127 = 210, x64 82 + 131 = 213
+    0.4.9.2-defines protobuf-nanopb-field32-noerrmsg.dll x86 79 + 125 = 204, x64 78 + 129 = 207
+    0.4.9.2-defines protobuf-nanopb-field32.dll x86 79 + 125 = 204, x64 78 + 129 = 207
+    0.4.9.2-defines protobuf-nanopb-malloc.dll x86 85 + 127 = 212, x64 82 + 131 = 213
+    0.4.9.2-defines protobuf-nanopb-noerrmsg-bufferonly-malloc.dll x86 83 + 127 = 210, x64 82 + 131 = 213
+    0.4.9.2-defines protobuf-nanopb-noerrmsg-malloc.dll x86 84 + 127 = 211, x64 82 + 131 = 213
+    0.4.9.2-defines protobuf-nanopb-noerrmsg.dll x86 79 + 125 = 204, x64 78 + 129 = 207
+    0.4.9.2-defines protobuf-nanopb-small-O1.dll x86 78 + 125 = 203, x64 78 + 129 = 207
+
+Not committed, because the images were PicHash-identical (every function at
+every size) to committed ones and would add nothing: the empty define set
+with the driver, identical to the default protobuf-nanopb.dll of the same tag
+and architecture on all six targets (driver.pb.c is a descriptor table), and
+the CMake build on x86 at all three tags, identical to the direct /O2 build.
+On x64 the CMake Release build differs from the direct build in 1 to 3 of
+67 to 71 hashes of ten instructions or more. Against the nearest other image
+of the same tag and architecture the committed images share between 49% and
+99% of those hashes.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -491,8 +560,14 @@ def _nanopb_msvc_defines(version, keep=None):
     artifacts = []
     how = (" (nanopb_generator.py %s, protoc from %s)"
            % (version, _GENERATORS[version][0]))
+    # The empty set with the driver ("driver") is not built: measured in run
+    # 42775414776, its image is PicHash-identical to the committed default
+    # protobuf-nanopb.dll of the same version and architecture on all six
+    # targets (driver.pb.c is a descriptor table with no function), so it
+    # would add nothing.
     jobs = [(tag, "protobuf-nanopb-" + tag,
-             defines.replace("-D", "/D"), "/O2") for tag, defines in _COMBOS]
+             defines.replace("-D", "/D"), "/O2") for tag, defines in _COMBOS
+            if tag != "driver"]
     jobs += [(tag + "-O1", dll + "-O1", defines, "/O1")
              for tag, dll, defines in _SIZE_SETS]
     for tag, dll, defines, opt in jobs:
@@ -568,7 +643,12 @@ def _nanopb_msvc_cmake(version):
         artifacts=[Artifact(path="build-{arch}/protobuf-nanopb.dll",
                             component="protobuf-nanopb.dll",
                             pdb="build-{arch}/protobuf-nanopb.pdb")],
-        toolchains=["msvc_x86", "msvc_x64"],
+        # x64 only: on x86 the CMake Release image was measured (run
+        # 42777327062) PicHash-identical to the committed direct /O2 build of
+        # the same tag at all three versions, so it would add nothing; on
+        # x64 it differs (3 or 1 of 67 to 71 hashes of ten instructions or
+        # more not shared).
+        toolchains=["msvc_x64"],
         build_flags="upstream CMake (NMake Makefiles), CMAKE_BUILD_TYPE=Release "
                     "with /MD /O2 /Ob2 /DNDEBUG /Zi, BUILD_SHARED_LIBS=ON, nanopb_BUILD_GENERATOR=OFF, "
                     "nanopb_MSVC_STATIC_RUNTIME=OFF (/MD instead of upstream's "
