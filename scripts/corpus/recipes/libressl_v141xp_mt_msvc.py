@@ -1,4 +1,134 @@
-"""LibreSSL 3.1.0, v141_xp, static runtime (/MT), sleep() removed. DRAFT.
+"""LibreSSL 3.1.0, v141_xp, with the static C runtime (/MT) and sleep() removed.
+
+Tracker r0ny123/mcrit-data#61 describes LibreSSL 3.1.0 as it is linked
+statically by the consumer the issue is about: static libraries (crypto-46,
+ssl-48, tls-20 .lib) built with the v141_xp toolset, with two changes to
+the upstream tree - USE_STATIC_MSVC_RUNTIMES (/MT) in CMakeLists.txt and
+the sleep() function taken out of crypto/compat/posix_win.c.
+libressl_v141xp_msvc.py is the stock build of that version and toolset (/MD,
+sleep() kept); this recipe adds the configuration with both changes, beside
+it, as the components libcrypto-mt, libssl-mt and libtls-mt. Library code
+only: no consumer project is fetched, built or included. Source pin, toolset
+install, generator and CMake version are those of libressl_v141xp_msvc.py
+(its docstring has the details); what differs is below.
+
+NOT byte-identical to a build of unmodified upstream. The recipe edits the
+unpacked tree before configuring, two deletions and nothing else, each
+guarded by the sha256 of the file as shipped:
+
+    --- crypto/compat/posix_win.c   (sha256 b81e7077...b382c -> a25395da...dbc17)
+    @@ -242,10 +242,4 @@
+     	return 0;
+     }
+     
+    -unsigned int sleep(unsigned int seconds)
+    -{
+    -	Sleep(seconds * 1000);
+    -	return seconds;
+    -}
+    -
+     #endif
+
+    --- crypto/CMakeLists.txt       (sha256 2655c6b6...b8fd9 -> 3b53b65c...644bd)
+    @@ -808,7 +808,6 @@
+     	set(EXTRA_EXPORT ${EXTRA_EXPORT} posix_write)
+     	set(EXTRA_EXPORT ${EXTRA_EXPORT} posix_getsockopt)
+     	set(EXTRA_EXPORT ${EXTRA_EXPORT} posix_setsockopt)
+    -	set(EXTRA_EXPORT ${EXTRA_EXPORT} sleep)
+     endif()
+
+The first is the change the issue names. The second exists only because the
+image is a DLL: that line puts sleep into the .def file, and with the
+function gone the link stops at "crypto_p.def : error LNK2001: unresolved
+external symbol sleep" / "fatal error LNK1120: 1 unresolved externals" (run
+42767147671, both architectures). A static library has no .def file. The
+declaration in include/compat/unistd.h is left alone, and nothing in
+crypto/, ssl/ or tls/ calls sleep().
+
+/MT without touching CMakeLists.txt. The stock 3.1.0 tree has no
+USE_STATIC_MSVC_RUNTIMES option, so passing it would do nothing; what the
+option stands for is /MT in place of /MD, and that is given on the command
+line: CMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /DNDEBUG /Zi /Urestrict", the
+stock recipe's string with one letter changed (cmake_minimum_required is
+3.0, so CMP0091 is OLD and the runtime flag is taken from there). Read back
+from the build logs of run 42768243092: every cl line carries /MT and none
+/MD; 0 errors on the three targets of both architectures; ml64 assembles
+the same 15 modules on x64 and x86 is C only (OPENSSL_NO_ASM), as in the
+stock build; link /INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF /OPT:NOICF /DLL
+/SUBSYSTEM:CONSOLE,"5.01" (x86) or "5.02" (x64); no /GL, no /LTCG. /MT is an
+exception to this corpus's /MD rule, made because it is the configuration
+the issue asks for; the /MD build stays beside it.
+
+The image is a DLL, not the .lib. SMDA reads PE images, not COFF archives,
+so the /MT-compiled objects are linked into crypto-46.dll, ssl-48.dll and
+tls-20.dll exactly as the stock recipe links them (BUILD_SHARED_LIBS=ON; the
+tree compiles one set of objects either way and uses no dllexport or
+*_EXPORTS definition). What a DLL adds to the objects is its import thunks:
+libssl and libtls reach libcrypto through one-instruction jumps, as in the
+stock images.
+
+The C runtime is not counted as LibreSSL. /MT links the static UCRT
+(10.0.10240, what the XP toolset selects) and vcruntime 14.16 into each of
+the three DLLs: 2985 to 3806 functions per image beside the library's own.
+Two filters remove them. The glue baseline (name and PicHash both equal to
+a probe's) takes 1216 to 1466 per image; its probes are measured against
+UCRT 10.0.26100 and do not link all of the runtime, so the rest passes it.
+That rest goes by name, Recipe.exclude_functions with the patterns of
+_libressl_static_crt.py, whose docstring states the rule and its evidence:
+the /MD image of the same tarball, compiler and flags imports the runtime,
+so a name the /MD image lacks is not LibreSSL's. Measured on the imported
+images:
+
+  * kept + removed (baseline) + excluded (by name) = image total, x86 | x64:
+
+        libcrypto-mt  5122+1466+2340=8928 | 5146+1446+2330=8922
+        libssl-mt     1256+1219+1791=4266 | 1267+1216+1769=4252
+        libtls-mt      321+1270+1991=3582 |  322+1261+1975=3558
+
+    against the stock /MD images' kept counts 5145, 1258, 327 | 5168, 1271,
+    328. The patterns match no function name of the six /MD images except
+    26 x64 names that are import thunks of the C runtime there.
+  * Kept names the /MD image of the same component does not have: the
+    kernel32 import thunks GetFullPathNameW and GetModuleFileNameA (one
+    instruction each, one or two per image; each is LibreSSL's own import in
+    one component and the runtime's in the others, so they are not in the
+    pattern) and, in the x64 libcrypto, general_allocate_string
+    (crypto/ui/ui_lib.c, 53 instructions), which is LibreSSL's. Nothing
+    else. No unnamed function on x86; the 35 on x64 are libcrypto's MASM
+    routines, 35 in the /MD image too.
+  * Against data/MSVC (2015, 2017 and 2019 Pro images): of the kept
+    functions of 10 or more instructions, 15 of 4417 on x86 and 0 of 3770
+    on x64 share a PicHash with it; the 15 are LibreSSL functions of 10 to
+    12 instructions (ASN1_item_i2d, ssl3_read ...) and the same 15 match
+    from the /MD images. data/MSVC does not identify the removed runtime
+    either (of the 1704 named functions of 10+ instructions that only
+    the /MT x86 libcrypto has, 1 has a hash in it), so the exclusion rests
+    on names, not on hashes.
+  * Not kept, for comparison with /MD: sleep (removed at source), and the
+    import thunks of the C runtime (_strerror, __read ...), which no longer
+    exist.
+
+PicHash overlap with the stock /MD images of this version, functions of 10
+or more instructions, distinct hashes, /MT | /MD | shared:
+
+    x86  libcrypto 3040 | 3046 | 2425   libssl 698 | 696 | 577   libtls 131 | 131 | 85
+    x64  libcrypto 2786 | 2787 | 2123   libssl 616 | 616 | 481   libtls 110 | 110 | 63
+    union of the three: x86 3860 | 3864 | 3079, x64 3508 | 3509 | 2664
+
+So about a fifth of the bodies (781 of 3860 hashes on x86, 844 of 3508 on
+x64) differ from the /MD build although the source differs by one function:
+under /MD a call into the runtime is an indirect call through the import
+table, under /MT a direct one, and every function that calls malloc, free,
+memcpy or a stdio routine changes with it. None of the six images is
+PicHash-identical to its /MD sibling.
+
+Runs. 42767147671: the LNK2001 above (nothing built). 42768243092: built,
+no exclusion yet; the measurement the name lists come from (kept 7462,
+3047, 2312 | 7476, 3036, 2297). 42770252734: the imported one, same
+binaries filtered. Each run exits non-zero with every artefact built, for
+the three baseline probes that cannot build with cl 19.16
+(libressl_v141xp_msvc.py). Two recipes rather than one because the x86
+pattern also drops unnamed functions and the x64 one must not.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

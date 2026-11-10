@@ -48,9 +48,10 @@ routines, 35 in the /MD image as well. That is why the recipe is split by
 architecture.
 
 Left in on purpose: GetFullPathNameW and GetModuleFileNameA. They are
-one-instruction kernel32 import thunks that libcrypto has for LibreSSL's own
-calls and libssl/libtls only for the runtime's, and a per-recipe pattern
-cannot tell the two apart.
+one-instruction kernel32 import thunks; each is LibreSSL's own import in one
+component (GetModuleFileNameA in libcrypto, GetFullPathNameW in libssl) and
+only the runtime's in the others, and a per-recipe pattern cannot tell the
+two apart.
 """
 
 import re
