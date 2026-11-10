@@ -1,0 +1,43 @@
+# Driver crate for Arti 2.3.0 (arti-client 0.42.0). See ../../../recipes/arti.py.
+#
+# arti-client is resolved from the crates.io tarball the recipe fetches and
+# checksums (sha256 = the crates.io checksum), through a --config
+# patch.crates-io path override on the command line. Every other crate comes
+# from the lockfile next to this manifest, which started as the Cargo.lock
+# that crates.io ships inside the arti 2.3.0 release crate and so pins the
+# same versions and checksums as that release.
+
+# Empty table on purpose: without it cargo walks upwards looking for a
+# workspace root.
+[workspace]
+
+[package]
+name = "arti_driver"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+# A cdylib: SMDA cannot read a Rust static library.
+crate-type = ["cdylib"]
+path = "../src/lib.rs"
+
+[dependencies]
+# Default features of arti-client (tokio, native-tls, compression) plus
+# static-sqlite, which bundles SQLite so the build needs no system libsqlite3
+# (there is none on the Windows targets, nor a 32-bit one on the Linux host).
+arti-client = { version = "=0.42.0", features = ["static-sqlite"] }
+tokio = { version = "1", features = ["rt", "net", "time", "io-util"] }
+
+[profile.release]
+# Upstream's release profile (opt-level 3, no LTO) with panic=abort and the
+# corpus' unreferenced-code policy left to the linker flags in the recipe.
+panic = "abort"
+opt-level = 3
+lto = false
+codegen-units = 16
+debug = false
+strip = "none"
+
+[profile.dev]
+panic = "abort"
