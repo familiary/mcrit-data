@@ -94,3 +94,54 @@ RECIPES = {
               "libraries and are not in the image.",
     ),
 }
+
+
+# XMRig 6.25.0 with its stock feature set (WITH_HWLOC, WITH_OPENCL and
+# WITH_CUDA ON), as xmrig.py's 6.25.0-gpu-hwloc. On MSVC XMRig's cpu.cmake
+# does not look for an installed hwloc: it compiles its vendored copy,
+# src/3rdparty/hwloc (hwloc 2.12.1, the hwloc family's release), as a static
+# library into the miner, and no option changes that. Its functions are
+# therefore in the image; the ones carrying hwloc's public or internal prefix
+# (hwloc_*, hwloc__*) are removed by name and counted as excluded, and its
+# few static helpers without the prefix stay under XMRig.
+_HWLOC_EXCLUDE = [r"^_{0,2}hwloc_"]
+
+_CMAKE_STOCK = _CMAKE.replace("-DWITH_HWLOC=OFF -DWITH_OPENCL=OFF -DWITH_CUDA=OFF",
+                              "-DWITH_HWLOC=ON -DWITH_OPENCL=ON -DWITH_CUDA=ON")
+
+RECIPES["XMRig_6.25.0-gpu-hwloc_msvc"] = Recipe(
+    family="XMRig",
+    version="6.25.0-gpu-hwloc",
+    upstream="https://github.com/xmrig/xmrig",
+    license="GPL-3.0-or-later (SPDX identifier in src/version.h); the "
+            "vendored src/3rdparty/hwloc is BSD-3-Clause",
+    source=Source(git_url="https://github.com/xmrig/xmrig.git",
+                  git_ref="v6.25.0"),
+    extra_sources=dict(deps.EXTRA_SOURCES),
+    build=(deps.msvc_openssl() + deps.msvc_libuv() + [
+        BuildStep('if "{arch}"=="x64" ' + _CMAKE_STOCK),
+        BuildStep('if "{arch}"=="x86" ' + _CMAKE_STOCK + " -DWITH_ASM=OFF"),
+        BuildStep("cmake --build build-{arch}"),
+        BuildStep("dir build-{arch}", allow_failure=True),
+    ]),
+    artifacts=[Artifact(path="build-{arch}/xmrig.exe",
+                        component="xmrig.exe",
+                        pdb="build-{arch}/xmrig.pdb")],
+    toolchains=["msvc_x86", "msvc_x64"],
+    exclude_functions=vendored.patterns("XMRig_6.25.0_msvc") + _HWLOC_EXCLUDE,
+    build_flags="/MD /O2 /Oi /DNDEBUG /Zi (build type Corpus, without "
+                "XMRig's /MT and /GL); /DEBUG /Brepro /INCREMENTAL:NO "
+                "/OPT:NOREF /OPT:NOICF at link; WITH_HWLOC=ON WITH_OPENCL=ON "
+                "WITH_CUDA=ON (stock)",
+    notes="Stock feature set: WITH_HWLOC, WITH_OPENCL and WITH_CUDA ON "
+          "(XMRig's defaults; NVML and ADL with them); the GPU backends need "
+          "no SDK and load their runtimes at run time. XMRig compiles its "
+          "vendored hwloc 2.12.1 statically on MSVC (no option selects an "
+          "external one); hwloc_* and hwloc__* functions are removed by name "
+          "and counted in excluded_function_count, its unprefixed static "
+          "helpers stay. llhttp, Argon2/Blake2b and ed25519 helpers, "
+          "rapidjson, C++ standard library functions and "
+          "__scrt_common_main_seh are removed by exact name as for the 6.25.0 "
+          "image (_stack_vendored.py). libuv and OpenSSL are linked as DLL "
+          "import libraries and are not in the image.",
+)

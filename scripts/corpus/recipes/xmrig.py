@@ -355,3 +355,84 @@ RECIPES = {
     "XMRig_6.25.0_linux": _linux(),
     "XMRig_6.25.0_musl": _musl(),
 }
+
+
+# ---------------------------------------------------------------------------
+# XMRig 6.25.0 with its stock feature set: WITH_HWLOC, WITH_OPENCL and
+# WITH_CUDA (and WITH_NVML, WITH_ADL with them) at their CMakeLists.txt
+# defaults, ON, where the recipes above turn all three off. None of the three
+# needs an SDK: the OpenCL backend ships its own CL headers in src/3rdparty
+# and loads OpenCL.dll / libOpenCL.so at run time (OclLib), the CUDA backend
+# only loads the separate xmrig-cuda plugin (CudaLib), and NVML and ADL are
+# loaded the same way. hwloc is the hwloc 2.12.1 release of the hwloc family
+# (recipes/hwloc.py), built as a shared library and imported, so it is not
+# in the image. Filed as version 6.25.0-gpu-hwloc beside the 6.25.0 images.
+
+_CONFIG_STOCK = (_CONFIG.replace("-DWITH_HWLOC=OFF -DWITH_OPENCL=OFF "
+                                 "-DWITH_CUDA=OFF",
+                                 "-DWITH_HWLOC=ON -DWITH_OPENCL=ON "
+                                 "-DWITH_CUDA=ON"))
+
+_NOTES_STOCK = (
+    "Stock feature set: WITH_HWLOC, WITH_OPENCL and WITH_CUDA ON (XMRig's own "
+    "defaults; NVML and ADL with them). The GPU backends need no vendor SDK: "
+    "XMRig carries the OpenCL headers and loads the OpenCL runtime, the "
+    "xmrig-cuda plugin, NVML and ADL at run time. hwloc 2.12.1 (the hwloc "
+    "family's release tarball, sha256 "
+    "38a90328bb86259f9bb2fe1dc57fd841e111d1e6358012bef23dfd95d21dc66b) is "
+    "built as a shared library with the optional hwloc backends off and "
+    "imported, so it is not in the image. Otherwise as the 6.25.0 recipe: "
+    "libuv 1.52.1 and OpenSSL 3.5.8 shared, build type Corpus, -maes, no -s, "
+    "no -static. The vendored-code exclusions of the 6.25.0 images apply "
+    "unchanged (_stack_vendored.py)."
+)
+
+
+def _mingw_stock():
+    recipe = _mingw()
+    import dataclasses
+    return dataclasses.replace(
+        recipe, version="6.25.0-gpu-hwloc",
+        extra_sources=deps.hwloc_extra_sources(),
+        build=(deps.mingw_openssl() + deps.mingw_libuv() + deps.mingw_hwloc() + [
+            deps.mingw_header_shim(),
+            BuildStep(
+                "cmake -S . -B build-{arch} -DCMAKE_SYSTEM_NAME=Windows "
+                "-DCMAKE_SYSTEM_PROCESSOR={platform} "
+                "-DCMAKE_C_COMPILER={cc} " + deps.MINGW_WRAPPER + " "
+                "-DCMAKE_RC_COMPILER={windres} "
+                "-DCMAKE_FIND_ROOT_PATH=/usr/{host} "
+                + _CONFIG_STOCK + " " + deps.mingw_dep_options() + " "
+                + deps.mingw_hwloc_options() + " " + deps.MINGW_SHIM_FLAGS,
+                env=dict(deps.MINGW_WRAPPER_ENV, CFLAGS="", CXXFLAGS="")),
+            BuildStep("cmake --build build-{arch} -j$(nproc)",
+                      env=dict(deps.MINGW_WRAPPER_ENV)),
+        ]),
+        build_flags=recipe.build_flags + "; WITH_HWLOC=ON WITH_OPENCL=ON "
+                    "WITH_CUDA=ON (stock), hwloc 2.12.1 DLL",
+        notes=_NOTES_STOCK,
+    )
+
+
+def _linux_stock():
+    recipe = _linux()
+    import dataclasses
+    return dataclasses.replace(
+        recipe, version="6.25.0-gpu-hwloc",
+        extra_sources=deps.hwloc_extra_sources(),
+        build=(deps.linux_openssl() + deps.linux_libuv() + deps.linux_hwloc() + [
+            BuildStep(
+                "cmake -S . -B build-{arch} " + _CONFIG_STOCK + " "
+                + deps.linux_dep_options() + " " + deps.linux_hwloc_options()
+                + " " + _LINK_RULE % "libuv.so",
+                env={"CFLAGS": "", "CXXFLAGS": ""}),
+            BuildStep("cmake --build build-{arch} -j$(nproc)"),
+        ]),
+        build_flags=recipe.build_flags + "; WITH_HWLOC=ON WITH_OPENCL=ON "
+                    "WITH_CUDA=ON (stock), hwloc 2.12.1 shared library",
+        notes=_NOTES_STOCK,
+    )
+
+
+RECIPES["XMRig_6.25.0-gpu-hwloc"] = _mingw_stock()
+RECIPES["XMRig_6.25.0-gpu-hwloc_linux"] = _linux_stock()
