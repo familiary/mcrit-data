@@ -145,4 +145,76 @@ def _recipe(version):
     )
 
 
+def _cxx_recipe(version):
+    """libgmpxx with cl: the C++ wrapper, linked against this build's libgmp."""
+    return Recipe(
+        family="GMP",
+        version=version,
+        upstream="https://gmplib.org/",
+        license="LGPL-3.0-or-later OR GPL-2.0-or-later (dual, licensee's choice)",
+        source=Source(url="https://ftp.gnu.org/gnu/gmp/gmp-%s.tar.xz" % version,
+                      sha256=_VERSIONS[version]),
+        build=[BuildStep(_BUILD + " --cxx"),
+               BuildStep("dir gmpbuild", allow_failure=True)],
+        artifacts=[Artifact(path="gmpbuild/libgmpxx-4.dll",
+                            component="libgmpxx.dll",
+                            pdb="gmpbuild/libgmpxx-4.pdb")],
+        toolchains=["msvc_x86", "msvc_x64"],
+        build_flags="/O2 /MD /Z7 /EHsc -D__GMP_WITHIN_GMPXX, the CXX_OBJECTS of "
+                    "Makefile.in (cxx/*.cc) linked against the import library "
+                    "of the generic-C libgmp-10.dll of the same run; /DEBUG "
+                    "/Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF; exports "
+                    "generated from the objects",
+        notes="libgmpxx, GMP's C++ wrapper, compiled with cl by "
+              "gmp_msvc_build.py --cxx from the unmodified tree (no configure "
+              "run, as for libgmp). It imports libgmp, so no libgmp code is in "
+              "it; the MSVC C++ runtime is imported (/MD). Pinned by the "
+              "sha256 of a GPG-verified release tarball.",
+    )
+
+
+def _asm_recipe(version, mode):
+    """libgmp with cl for the C and GMP's own assembly (native or fat)."""
+    fat = mode == "fat"
+    return Recipe(
+        family="GMP",
+        version="%s-%s" % (version, "fat" if fat else "asm"),
+        upstream="https://gmplib.org/",
+        license="LGPL-3.0-or-later OR GPL-2.0-or-later (dual, licensee's choice)",
+        source=Source(url="https://ftp.gnu.org/gnu/gmp/gmp-%s.tar.xz" % version,
+                      sha256=_VERSIONS[version]),
+        build=[BuildStep(_BUILD + " --asm " + mode),
+               BuildStep("dir gmpbuild", allow_failure=True)],
+        artifacts=[Artifact(path="gmpbuild/libgmp-10.dll",
+                            component="libgmp.dll",
+                            pdb="gmpbuild/libgmp-10.pdb")],
+        toolchains=["msvc_x86", "msvc_x64"],
+        build_flags="/O2 /MD /Z7 for every C file; GMP's mpn assembly selected "
+                    "by upstream configure for <arch>-w64-mingw32"
+                    + (" --enable-fat (every x86 CPU variant, CPUID dispatch)"
+                       if fat else " (its default CPU path, no --enable-fat)")
+                    + ", run through m4 and assembled by MSYS2's MinGW gcc -c "
+                    "(GNU as, COFF), as mpn/Makefile's .asm.lo rule does; "
+                    "config.h from the cl table plus configure's "
+                    "HAVE_NATIVE_*/CPU-family/WANT_FAT_BINARY lines; /DEBUG "
+                    "/Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link, plus "
+                    "/FORCE:MULTIPLE for the extern-inline functions of gmp.h; "
+                    "exports generated from the objects",
+        notes="cl cannot assemble GMP's m4/GNU-as sources, so the assembly is "
+              "assembled by the GNU assembler of MSYS2's MinGW gcc into COFF "
+              "objects that link.exe links with the cl-compiled C; the file "
+              "selection, config.m4 and gmp-mparam.h are upstream configure's "
+              "for the MinGW host of the same CPU. No upstream file is edited. "
+              "Like the generic MSVC image it is linked with /FORCE:MULTIPLE, so "
+              "it is NOT the output of an ordinary link of unmodified upstream. "
+              "Built against the DLL runtime. Pinned by the sha256 of a "
+              "GPG-verified release tarball.",
+    )
+
+
 RECIPES = {"GMP_%s_msvc" % version: _recipe(version) for version in _VERSIONS}
+RECIPES.update({"GMP_%s_cxx_msvc" % version: _cxx_recipe(version)
+                for version in _VERSIONS})
+for _version in _VERSIONS:
+    RECIPES["GMP_%s_asm_msvc" % _version] = _asm_recipe(_version, "native")
+    RECIPES["GMP_%s_fat_msvc" % _version] = _asm_recipe(_version, "fat")

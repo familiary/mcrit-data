@@ -89,6 +89,8 @@ _CONFIGURE_ELF = ("mkdir -p build-{arch} && cd build-{arch} && "
 # version -> sha256 of the GPG-verified tarball
 _VERSIONS = {
     "6.3.0": "a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898",
+    "6.2.1": "fd4829912cddd12f84181c3451cc752be224643e87fac497b69edddadc49b4f2",
+    "6.1.2": "87b565e89a9a684fe4ebeeddb8399dce2599f9c9049854ca8c0dfbdea0e21912",
 }
 
 
@@ -124,7 +126,55 @@ def _recipe(version, linux):
     )
 
 
+# libgmpxx, the C++ wrapper (stream input/output and numeric_limits for the
+# gmpxx.h classes), is configure's --enable-cxx. It is its own recipe so the
+# libgmp images above stay as they are; this build also makes a libgmp, which
+# is not an artefact here. The import-library edit of _FIX_IMPLIB would point
+# both DLLs at libgmp.dll.a, so this one names each after its own library.
+_FIX_IMPLIB_CXX = (r"sed -i 's|-Xlinker --out-implib -Xlinker \\\$lib|-Xlinker "
+                   r"--out-implib -Xlinker \\\$output_objdir/\\\$libname.dll.a|' libtool")
+
+
+def _cxx_recipe(version, linux):
+    if linux:
+        configure = _CONFIGURE_ELF + " --enable-cxx"
+    else:
+        configure = ("mkdir -p build-{arch} && cd build-{arch} && "
+                     "{source_root}/configure --host={host} " + _COMMON +
+                     " --enable-cxx && " + _FIX_IMPLIB_CXX)
+    return Recipe(
+        family="GMP",
+        version=version,
+        upstream="https://gmplib.org/",
+        license="LGPL-3.0-or-later OR GPL-2.0-or-later (dual, licensee's choice)",
+        source=Source(url="https://ftp.gnu.org/gnu/gmp/gmp-%s.tar.xz" % version,
+                      sha256=_VERSIONS[version]),
+        build=[BuildStep(configure),
+               BuildStep("make -j$(nproc)", cwd="build-{arch}")],
+        artifacts=[Artifact(
+            path="build-{arch}/.libs/" + ("libgmpxx.so" if linux else "libgmpxx-4.dll"),
+            component="libgmpxx.so" if linux else "libgmpxx.dll")],
+        toolchains=["linux_x86", "linux_x64"] if linux else ["mingw_x86", "mingw_x64"],
+        requires=["m4"],
+        build_flags="-O2 -g (configure default), --enable-cxx --enable-fat, "
+                    "shared libraries only; libgmpxx is the artefact"
+                    + ("" if linux else "; generated libtool edited so each "
+                       "import library is named after its own DLL"),
+        notes="libgmpxx, GMP's C++ wrapper library, from upstream's configure "
+              "with --enable-cxx, unpatched" + (
+              "" if linux else " except that the generated libtool script of the "
+              "build directory is edited so that the import libraries are not "
+              "written over the DLLs (the image is NOT byte-identical to a build "
+              "of unmodified upstream, which yields no usable DLL)") + ". It "
+              "links against libgmp, so none of libgmp's code is in it; the "
+              "libstdc++ code it instantiates is the toolchain's. Pinned by the "
+              "sha256 of a GPG-verified release tarball.",
+    )
+
+
 RECIPES = {}
 for _version in _VERSIONS:
     RECIPES["GMP_%s" % _version] = _recipe(_version, linux=False)
     RECIPES["GMP_%s_linux" % _version] = _recipe(_version, linux=True)
+    RECIPES["GMP_%s_cxx" % _version] = _cxx_recipe(_version, linux=False)
+    RECIPES["GMP_%s_cxx_linux" % _version] = _cxx_recipe(_version, linux=True)

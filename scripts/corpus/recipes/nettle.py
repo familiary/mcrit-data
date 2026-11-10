@@ -195,6 +195,8 @@ _VERSIONS = {
               "libnettle-6.dll", "libhogweed-4.dll", False),
     "3.7.3": ("661f5eb03f048a3b924c3a8ad2515d4068e40f67e774e8a26827658007e3bcf0",
               "libnettle-8.dll", "libhogweed-6.dll", True),
+    "3.9.1": ("ccfeff981b0ca71bbd6fbcb054f407c60ffb644389a5be80d6716d5b550c6ce3",
+              "libnettle-8.dll", "libhogweed-6.dll", True),
     "3.10.2": ("fe9ff51cb1f2abb5e65a6b8c10a92da0ab5ab6eaf26e7fc2b675c45f1fb519b5",
                "libnettle-8.dll", "libhogweed-6.dll", True),
     "4.0": ("3addbc00da01846b232fb3bc453538ea5468da43033f21bb345cb1e9073f5094",

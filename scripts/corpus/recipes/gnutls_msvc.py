@@ -97,7 +97,7 @@ import re
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
 from .gnutls import (_GMP_SHA256, _GMP_VERSION, _NAMESPACES_PE,
-                     _NETTLE_SHA256, _NETTLE_VERSION, _VERSIONS)
+                     _NETTLE_SHA256, _NETTLE_VERSION, _VERSIONS, _url)
 
 
 # The file-local functions of GMP's generic C tree and of Nettle 3.10.2 as cl
@@ -349,9 +349,7 @@ def _recipe(version):
         version=version,
         upstream="https://www.gnutls.org/",
         license="LGPL-2.1-or-later",
-        source=Source(
-            url="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.8/gnutls-%s.tar.xz" % version,
-            sha256=_VERSIONS[version]),
+        source=Source(url=_url(version), sha256=_VERSIONS[version]),
         extra_sources={
             "gmp_archive": Source(
                 url="https://ftp.gnu.org/gnu/gmp/gmp-%s.tar.xz" % _GMP_VERSION,

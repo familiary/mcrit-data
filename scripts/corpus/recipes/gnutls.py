@@ -65,7 +65,13 @@ _NETTLE_SHA256 = "fe9ff51cb1f2abb5e65a6b8c10a92da0ab5ab6eaf26e7fc2b675c45f1fb519
 # version -> sha256 of the GPG-verified tarball
 _VERSIONS = {
     "3.8.13": "ffed8ec1bf09c2426d4f14aae377de4753b53e537d685e604e99a8b16ca9c97e",
+    "3.7.11": "90e337504031ef7d3077ab1a52ca8bac9b2f72bc454c95365a1cd1e0e81e06e9",
 }
+
+
+def _url(version):
+    return "https://www.gnupg.org/ftp/gcrypt/gnutls/v%s/gnutls-%s.tar.xz" % (
+        ".".join(version.split(".")[:2]), version)
 
 # Name patterns of the code that GnuTLS links in statically from the helper
 # libraries and that the Nettle and GMP families already carry: the public
@@ -271,8 +277,7 @@ def _recipe(version, linux):
         version=version,
         upstream="https://www.gnutls.org/",
         license="LGPL-2.1-or-later",
-        source=Source(url="https://www.gnupg.org/ftp/gcrypt/gnutls/v3.8/gnutls-%s.tar.xz" % version,
-                      sha256=_VERSIONS[version]),
+        source=Source(url=_url(version), sha256=_VERSIONS[version]),
         extra_sources={
             "gmp_archive": Source(url="https://ftp.gnu.org/gnu/gmp/gmp-%s.tar.xz" % _GMP_VERSION,
                                   sha256=_GMP_SHA256),

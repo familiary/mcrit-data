@@ -144,8 +144,14 @@ def version_of(src):
     return ".".join(parts)
 
 
-def write_config(src, gen, arch):
+def write_config(src, gen, arch, configured=None):
     defines = _defines(arch)
+    if configured is not None:
+        # The assembly build: no NO_ASM, and what configure decided about the
+        # assembly (HAVE_NATIVE_mpn_*, the CPU family, WANT_FAT_BINARY) taken
+        # from the config.h it wrote for the MinGW host of the same CPU.
+        del defines["NO_ASM"]
+        defines.update(configured)
     version = version_of(src)
     defines["PACKAGE_VERSION"] = '"%s"' % version
     defines["PACKAGE_STRING"] = '"GNU MP %s"' % version
@@ -312,6 +318,117 @@ def exports(objects, arch, path):
     print("%s: %d exports" % (path, len(names)))
 
 
+ASM_SCRIPT = r'''
+set -u
+SRC="$(cygpath -u "$SRC_WIN")"
+OBJ="$(cygpath -u "$OBJ_WIN")"
+CFG="$(cygpath -u "$CFG_WIN")"
+pacman -Sy --noconfirm --needed m4 make diffutils "$GCC_PKG" || exit 90
+export PATH="$MINGW_PREFIX_DIR/bin:$PATH"
+echo "gcc: $(command -v gcc) $(gcc -dumpmachine) $(gcc -dumpversion)  as: $(as --version | head -1)  m4: $(m4 --version | head -1)"
+mkdir -p "$CFG" "$OBJ" && cd "$CFG"
+"$SRC/configure" --build=$TRIPLE --host=$TRIPLE --enable-shared --disable-static $FAT_OPTION > configure.out 2>&1 || {
+  echo "=== configure failed (exit $?)"; cat configure.out; tail -n 150 config.log; exit 91; }
+grep -E "^(checking (for assembler|ABI|compiler)|config.status: linking)" configure.out
+cd mpn
+# The .asm.lo rule of mpn/Makefile, through mpn/m4-ccas: m4 with the -D
+# options of COMPILE_FLAGS and libtool's pic_flag, then $(CCAS) on the result.
+for stem in $ASM_STEMS; do
+  echo "m4 -DHAVE_CONFIG_H -D__GMP_WITHIN_GMP -DOPERATION_$stem -DDLL_EXPORT -DPIC $stem.asm > tmp-$stem.s; gcc -c tmp-$stem.s -o $OBJ/$stem.o"
+  m4 -DHAVE_CONFIG_H -D__GMP_WITHIN_GMP -DOPERATION_$stem -DDLL_EXPORT -DPIC $stem.asm > tmp-$stem.s || exit 92
+  gcc -c tmp-$stem.s -o "$OBJ/$stem.o" || exit 93
+  rm -f tmp-$stem.s
+done
+echo "=== assembled $(ls "$OBJ" | wc -l) files"
+'''
+
+
+def _bash_env(arch, src, cfg, obj, fat, stems):
+    x64 = arch == "x64"
+    env = dict(os.environ)
+    env.update({
+        "SRC_WIN": src, "CFG_WIN": cfg, "OBJ_WIN": obj,
+        "TRIPLE": "x86_64-w64-mingw32" if x64 else "i686-w64-mingw32",
+        "GCC_PKG": "mingw-w64-x86_64-gcc" if x64 else "mingw-w64-i686-gcc",
+        "MINGW_PREFIX_DIR": "/mingw64" if x64 else "/mingw32",
+        "FAT_OPTION": "--enable-fat" if fat else "",
+        "ASM_STEMS": " ".join(stems),
+        "MSYSTEM": "MSYS", "CHERE_INVOKING": "1",
+    })
+    return env
+
+
+def configure_asm(src, work, arch, fat):
+    """Run GMP's own configure for the MinGW host of the same CPU.
+
+    cl has no assembler for GMP's m4/GNU-as sources, but the configure step
+    and the assembly need no C compiler of the target: configure, run with
+    the MinGW gcc of MSYS2 for <arch>-w64-mingw32 (the host the MinGW images
+    of this family are built for), selects the CPU path, links the mpn
+    sources into mpn/ and writes config.m4, config.h and gmp-mparam.h. Those
+    choices are what this build takes; every C file is still compiled by cl.
+    """
+    cfg = os.path.join(work, "cfg")
+    obj = os.path.join(work, "asmobj")
+    bash = find_bash()
+    # First pass: configure only (no assembly stems yet).
+    env = _bash_env(arch, src, cfg, obj, fat, [])
+    print("> %s -lc <configure for %s%s>" % (bash, env["TRIPLE"],
+                                             " --enable-fat" if fat else ""),
+          flush=True)
+    result = subprocess.run([bash, "-lc", ASM_SCRIPT], env=env)
+    if result.returncode != 0:
+        raise SystemExit("configure of GMP for the assembly failed (exit %d)"
+                         % result.returncode)
+    mpn = os.path.join(cfg, "mpn")
+    makefile = read_text(os.path.join(mpn, "Makefile"))
+    match = re.search(r"^OFILES\s*=([^\n]*)", makefile, re.M)
+    stems = [w.replace("$U.lo", "").replace(".lo", "")
+             for w in match.group(1).split()]
+    asm, c = [], []
+    for stem in stems:
+        if os.path.exists(os.path.join(mpn, stem + ".asm")):
+            asm.append(stem)
+        elif os.path.exists(os.path.join(mpn, stem + ".c")):
+            c.append(stem)
+        else:
+            raise SystemExit("mpn/%s: neither .asm nor .c in the configured "
+                             "tree" % stem)
+    print("configured mpn: %d objects, %d assembly, %d C" % (
+        len(stems), len(asm), len(c)), flush=True)
+    print("ASM %s" % " ".join(asm))
+    print("C %s" % " ".join(c))
+    # Second pass: the configure is repeated (it is quick and idempotent) and
+    # every assembly file goes through m4 and gcc -c, as the .asm.lo rule does.
+    env = _bash_env(arch, src, cfg, obj, fat, asm)
+    result = subprocess.run([bash, "-lc", ASM_SCRIPT], env=env)
+    if result.returncode != 0:
+        raise SystemExit("assembly of GMP's mpn files failed (exit %d)"
+                         % result.returncode)
+    configured = {}
+    for line in read_text(os.path.join(cfg, "config.h")).splitlines():
+        m = re.match(r"#define\s+((?:HAVE_NATIVE_|HAVE_HOST_CPU_FAMILY_|"
+                     r"WANT_FAT_BINARY)\w*)\s+(.*)$", line)
+        if m:
+            configured[m.group(1)] = m.group(2).strip()
+    print("from configure's config.h: %s" % ", ".join(sorted(configured)))
+    objects = [os.path.join(obj, s + ".o") for s in asm]
+    missing = [o for o in objects if not os.path.exists(o)]
+    if missing:
+        raise SystemExit("assembler left no object for %s" % missing[:5])
+    return cfg, configured, c, objects
+
+
+def find_bash():
+    for candidate in (r"C:\msys64\usr\bin\bash.exe",):
+        if os.path.exists(candidate):
+            return candidate
+    found = shutil.which("bash")
+    if not found:
+        raise SystemExit("no bash on this machine")
+    return found
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--arch", required=True, choices=("x86", "x64"))
@@ -321,6 +438,15 @@ def main():
     parser.add_argument("--static", action="store_true",
                         help="build gmp.lib and gmp.h under --prefix, not a DLL")
     parser.add_argument("--prefix", default="")
+    parser.add_argument("--asm", choices=("none", "native", "fat"),
+                        default="none",
+                        help="none: mpn/generic C (the default); native: the "
+                             "assembly of configure's default CPU path for "
+                             "<arch>-w64-mingw32; fat: --enable-fat, every "
+                             "x86 CPU variant with CPUID dispatch")
+    parser.add_argument("--cxx", action="store_true",
+                        help="also build libgmpxx-4.dll (CXX_OBJECTS of "
+                             "Makefile.in) against libgmp-10.dll")
     args = parser.parse_args()
 
     src = os.path.abspath(args.src)
@@ -328,8 +454,16 @@ def main():
     gen = os.path.join(work, "gen")
     os.makedirs(gen, exist_ok=True)
 
-    version = write_config(src, gen, args.arch)
+    configured = None
+    if args.asm != "none":
+        cfg, configured, asm_c, asm_objects = configure_asm(
+            src, work, args.arch, fat=args.asm == "fat")
+    version = write_config(src, gen, args.arch, configured)
     write_gmp_h(src, gen, args.arch, dll=not args.static)
+    if configured is not None:
+        # configure links the CPU path's gmp-mparam.h into the build root.
+        shutil.copyfile(os.path.join(cfg, "gmp-mparam.h"),
+                        os.path.join(gen, "gmp-mparam.h"))
     flags = ["/I" + gen, "/I" + src, "/DHAVE_CONFIG_H=1", "/D__GMP_WITHIN_GMP=1",
              "/D_CRT_SECURE_NO_WARNINGS", "/D_CRT_NONSTDC_NO_WARNINGS"]
     generated = build_generators(src, gen, args.arch, flags)
@@ -361,13 +495,24 @@ def main():
         base = os.path.basename(relative)
         obj = os.path.join(objdir, "mpn_" + base[:-2] + ".obj")
         jobs.append((os.path.join(gen, base), obj, [], flags))
-    for name, source in sorted(functions.items()):
-        obj = os.path.join(objdir, "mpn_" + name + ".obj")
-        jobs.append((os.path.join(src, "mpn", "generic", source + ".c"), obj,
-                     ["/DOPERATION_" + name], flags))
+    if configured is None:
+        for name, source in sorted(functions.items()):
+            obj = os.path.join(objdir, "mpn_" + name + ".obj")
+            jobs.append((os.path.join(src, "mpn", "generic", source + ".c"), obj,
+                         ["/DOPERATION_" + name], flags))
+    else:
+        # The C half of the configured mpn/ (generic files the CPU path has
+        # no assembly for, and with --enable-fat the fat_*.c wrappers and
+        # fat.c), compiled by cl from the configured tree.
+        for stem in asm_c:
+            obj = os.path.join(objdir, "mpn_" + stem + ".obj")
+            jobs.append((os.path.join(cfg, "mpn", stem + ".c"), obj,
+                         ["/DOPERATION_" + stem], flags))
     os.makedirs(objdir, exist_ok=True)
     compile_all(jobs)
     objects = sorted(job[1] for job in jobs)
+    if configured is not None:
+        objects += asm_objects
     if len(objects) != len(set(objects)):
         raise SystemExit("object name collision")
 
@@ -411,6 +556,40 @@ def main():
         if result.returncode != 0:
             raise SystemExit("link of libgmp-10.dll failed")
         print("gmp %s: libgmp-10.dll" % version)
+        if args.cxx:
+            build_cxx(src, gen, work, makefile, args.arch)
+
+
+def build_cxx(src, gen, work, makefile, arch):
+    """libgmpxx: the C++ stream and limits wrapper, as --enable-cxx builds it.
+
+    Its sources are CXX_OBJECTS of Makefile.in (cxx/*.cc), compiled with
+    -D__GMP_WITHIN_GMPXX (what cxx/Makefile.am sets) so gmp.h marks their
+    functions __declspec(dllexport), and linked against the import library
+    of libgmp-10.dll; exports by the same every-defined-function rule.
+    """
+    match = re.search(r"^CXX_OBJECTS\s*=((?:[^\n]*\\\n)*[^\n]*)", makefile,
+                      re.M)
+    if not match:
+        raise SystemExit("CXX_OBJECTS not found in Makefile.in")
+    sources = [w[:-3] + ".cc" for w in
+               match.group(1).replace("\\\n", " ").split() if w.endswith(".lo")]
+    objdir = os.path.join(work, "objxx")
+    os.makedirs(objdir, exist_ok=True)
+    flags = ["/I" + gen, "/I" + src, "/DHAVE_CONFIG_H=1",
+             "/D__GMP_WITHIN_GMPXX=1", "/EHsc", "/D_CRT_SECURE_NO_WARNINGS"]
+    jobs = [(os.path.join(src, s), os.path.join(
+        objdir, os.path.basename(s)[:-3] + ".obj"), [], flags) for s in sources]
+    print("libgmpxx: %d sources: %s" % (len(jobs), " ".join(sources)))
+    compile_all(jobs)
+    objects = sorted(j[1] for j in jobs)
+    exports(objects, arch, "libgmpxx-4.def")
+    command = ["link", "/nologo", "/DLL", "/DEBUG", "/Brepro",
+               "/INCREMENTAL:NO", "/OPT:NOREF", "/OPT:NOICF",
+               "/DEF:libgmpxx-4.def", "/PDB:libgmpxx-4.pdb",
+               "/OUT:libgmpxx-4.dll"] + objects + ["libgmp-10.lib"]
+    run(command)
+    print("libgmpxx-4.dll built")
 
 
 if __name__ == "__main__":
