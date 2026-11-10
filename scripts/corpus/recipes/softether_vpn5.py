@@ -432,6 +432,12 @@ def _mingw_recipe(arch, processor, extra_cflags, build_flags, notes, prefix=""):
 # is on the command line.
 _VCPKG = Source(git_url="https://github.com/microsoft/vcpkg.git",
                 git_ref="66c0373dc7fca549e5803087b9487edfe3aca0a1")
+# vcpkg's build trees and packages go to C:/vb and C:/vp: under the corpus
+# work directory (build/sources/<recipe>-vcpkg/buildtrees/...) the first run's
+# libsodium port stopped on its longest file name, "error C1083: Cannot open
+# source file: '..\\..\\..\\..\\src\\libsodium\\crypto_pwhash\\scryptsalsa208sha256\\
+# nosse\\pwhash_scryptsalsa208sha256_nosse.c'", because the relative path cl
+# resolves is exactly 260 characters (MAX_PATH).
 # /Z7 rather than RelWithDebInfo's /Zi so no shared compiler PDB is needed
 # (Ninja compiles in parallel); /MD stated because liboqs and oqs-provider
 # declare an older cmake_minimum_required, under which the runtime comes from
@@ -446,6 +452,7 @@ _MSVC_CONFIGURE = (
     "-DVCPKG_TARGET_TRIPLET=se-{arch}-windows-release "
     "-DVCPKG_OVERLAY_TRIPLETS={source_root}\\vcpkg-triplets "
     "-DVCPKG_APPLOCAL_DEPS=OFF "
+    '"-DVCPKG_INSTALL_OPTIONS=--x-buildtrees-root=C:/vb;--x-packages-root=C:/vp" '
     "-DCMAKE_PROJECT_INCLUDE={source_root}\\se-msvc-runtime.cmake "
     "-DCMAKE_C_FLAGS_RELWITHDEBINFO=" + _MSVC_C + " "
     "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=" + _MSVC_C + " "
