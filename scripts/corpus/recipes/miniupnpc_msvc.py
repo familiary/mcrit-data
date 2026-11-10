@@ -115,13 +115,23 @@ _OBJS_19 = ["miniwget", "minixml", "igd_desc_parse", "minisoap", "miniupnpc",
 def _steps(version):
     tarball = version.startswith("1.9")
     cwd = "." if tarball else "miniupnpc"
-    old = tarball or version in ("2.0", "2.1")
+    old = tarball or version in ("2.0", "2.1", "2.2.0")
     srcdir = "" if old else "src\\"
-    objs = _OBJS_19 if tarball else (_OBJS if old else _OBJS + ["addr_is_reserved"])
+    # The four dated tarballs from 1.9.20150917 on list minissdpc.o in
+    # Makefile.mingw's OBJS, the earlier ones do not; 2.2.0 is flat like 2.1
+    # but already has addr_is_reserved.c.
+    if tarball:
+        objs = list(_OBJS_19)
+        if version >= "1.9.20150917":
+            objs.insert(4, "minissdpc")
+    elif version == "2.2.0":
+        objs = _OBJS + ["addr_is_reserved"]
+    else:
+        objs = _OBJS if old else _OBJS + ["addr_is_reserved"]
     includes = "/I." if old else "/Iinclude /I."
     # 2.2.3 and later write rc_version.h as well.
     genargs = "miniupnpcstrings.h.in miniupnpcstrings.h"
-    if not old:
+    if not old and version != "2.2.0":
         genargs += " rc_version.h"
     sources = " ".join(srcdir + o + ".c" for o in objs)
     compile_ = ("cl /nologo /c /MD /O2 /Ob2 /Zi /W3 /DNDEBUG "
@@ -198,3 +208,12 @@ RECIPES = {
     "miniupnpc_2.2.3_msvc": _miniupnpc_msvc("2.2.3", "miniupnpc_2_2_3"),
     "miniupnpc_2.3.3_msvc": _miniupnpc_msvc("2.3.3", "miniupnpc_2_3_3"),
 }
+
+# The final sweep: the other dated 1.9.x tarballs and the 2.2.0 and 2.2.8 tags,
+# the same sources as the MinGW recipes (miniupnpc.py _DATED).
+from .miniupnpc import _DATED  # noqa: E402
+_TARBALL_19.update(_DATED)
+for _v in _DATED:
+    RECIPES["miniupnpc_%s_msvc" % _v] = _miniupnpc_msvc(_v, None)
+RECIPES["miniupnpc_2.2.0_msvc"] = _miniupnpc_msvc("2.2.0", "miniupnpc_2_2_0")
+RECIPES["miniupnpc_2.2.8_msvc"] = _miniupnpc_msvc("2.2.8", "miniupnpc_2_2_8")
