@@ -189,3 +189,53 @@ RECIPES = {
     "Detours_2026-09-29-nmake_msvc": _nmake(
         "2026-09-29-nmake", _COMMIT),
 }
+
+
+# All ten objects of src/Makefile (adds the Itanium, ARM and ARM64 offline
+# copiers), as separate "-allcopiers" versions so the seven-object images
+# above are unchanged.
+_OBJS_ALL = _OBJS + "disolia64 disolarm disolarm64".split()
+_COMPILE_ALL = ("cl /nologo /c /O2 /MD /Zi /Gy /Gm- /DWIN32_LEAN_AND_MEAN "
+                "/D_WIN32_WINNT=0x501 /DDETOUR_DEBUG=0 "
+                "/Fddetours.compiler.pdb "
+                + " ".join("src\\%s.cpp" % o for o in _OBJS_ALL))
+_LINK_ALL = ("link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF "
+             "/OPT:NOICF /PDB:detours.pdb /OUT:detours.dll "
+             + " ".join(o + ".obj" for o in _OBJS_ALL) + " kernel32.lib")
+_LINK_NMAKE_ALL = ("link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO "
+                   "/OPT:NOREF /OPT:NOICF /PDB:detours.pdb /OUT:detours.dll "
+                   + " ".join("src\\obj.{arch}\\%s.obj" % o
+                              for o in _OBJS_ALL)
+                   + " msvcrt.lib vcruntime.lib ucrt.lib kernel32.lib")
+_ALL_NOTE = (" ALL-COPIERS VARIANT: all ten objects of upstream's "
+             "src/Makefile are linked, the seven of the base build plus the "
+             "Itanium, ARM and ARM64 offline copiers (disolia64, disolarm, "
+             "disolarm64: disasm.cpp under DETOURS_<ARCH>_OFFLINE_LIBRARY, "
+             "exporting DetourCopyInstructionIA64/ARM/ARM64), which is the "
+             "whole of what detours.lib carries. A separate version so the "
+             "seven-object images are unchanged.")
+
+
+def _allcopiers(base, version):
+    import dataclasses
+    recipe = RECIPES[base]
+    if base.endswith("-nmake_msvc"):
+        build = [BuildStep(_NMAKE, cwd="src"),
+                 BuildStep("dir src\\obj.{arch}", allow_failure=True),
+                 BuildStep(_LINK_NMAKE_ALL)]
+    else:
+        build = [BuildStep(_COMPILE_ALL), BuildStep(_LINK_ALL)]
+    return dataclasses.replace(
+        recipe, version=version, build=build,
+        build_flags=recipe.build_flags + "; all ten src/Makefile objects "
+        "linked (adds disolia64, disolarm, disolarm64)",
+        notes=(recipe.notes.split(" Measured:")[0] + "." if " Measured:" in
+               recipe.notes else recipe.notes) + _ALL_NOTE)
+
+
+RECIPES["Detours_2026-09-29-allcopiers_msvc"] = _allcopiers(
+    "Detours_2026-09-29_msvc", "2026-09-29-allcopiers")
+RECIPES["Detours_4.0.1-allcopiers_msvc"] = _allcopiers(
+    "Detours_4.0.1_msvc", "4.0.1-allcopiers")
+RECIPES["Detours_2026-09-29-nmake-allcopiers_msvc"] = _allcopiers(
+    "Detours_2026-09-29-nmake_msvc", "2026-09-29-nmake-allcopiers")

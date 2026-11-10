@@ -258,3 +258,64 @@ RECIPES = {
               "MinGW build of the 2026-09-29 commit.",
     ),
 }
+
+
+# All ten objects src/Makefile links into detours.lib: the seven above plus
+# the Itanium, ARM and ARM64 offline copiers (disolia64, disolarm, disolarm64,
+# each disasm.cpp under DETOURS_<ARCH>_OFFLINE_LIBRARY, a host-side decoder).
+# These are separate versions ("-allcopiers") so the seven-object images
+# above stay as they are.
+_OBJS_ALL = _OBJS + "disolia64 disolarm disolarm64".split()
+_COMPILE_ALL = " && ".join(
+    "{cxx} -O2 -DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x501 -DDETOUR_DEBUG=0 "
+    "-c src/%s.cpp -o %s.o" % (o, o) for o in _OBJS_ALL)
+_COMPILE_401_ALL = " && ".join(
+    "{cxx} -O2 -fpermissive -Isrc -include detours_mingw_shim.h "
+    "-DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x501 -DDETOUR_DEBUG=0 "
+    "-DDETOURS_INTERNAL -D_CRT_STDIO_ARBITRARY_WIDE_SPECIFIERS=1 "
+    "-c src/%s.cpp -o %s.o" % (o, o) for o in _OBJS_ALL)
+_LINK_ALL = ("{cxx} -shared -shared-libgcc -o detours.dll %s"
+             % " ".join(o + ".o" for o in _OBJS_ALL))
+
+_ALL_NOTE = (" ALL-COPIERS VARIANT: all ten objects of upstream's "
+             "src/Makefile are linked, the seven of the base build plus the "
+             "Itanium, ARM and ARM64 offline copiers (disolia64, disolarm, "
+             "disolarm64: disasm.cpp under DETOURS_<ARCH>_OFFLINE_LIBRARY, "
+             "exporting DetourCopyInstructionIA64/ARM/ARM64), which is the "
+             "whole of what detours.lib carries. A separate version so the "
+             "seven-object images are unchanged.")
+
+RECIPES["Detours_2026-09-29-allcopiers"] = Recipe(
+    family="Detours",
+    version="2026-09-29-allcopiers",
+    upstream=RECIPES["Detours_2026-09-29"].upstream,
+    license=RECIPES["Detours_2026-09-29"].license,
+    source=RECIPES["Detours_2026-09-29"].source,
+    build=[BuildStep(_COMPILE_ALL), BuildStep(_LINK_ALL)],
+    artifacts=[Artifact(path="detours.dll", component="detours.dll")],
+    toolchains=["mingw_x86", "mingw_x64"],
+    build_flags=RECIPES["Detours_2026-09-29"].build_flags
+    + "; all ten src/Makefile objects linked (adds disolia64, disolarm, "
+      "disolarm64)",
+    notes="Commit 1dbd4ea of microsoft/Detours, 2026-09-29, built with "
+          "MinGW exactly as the Detours_2026-09-29 recipe." + _ALL_NOTE,
+)
+RECIPES["Detours_4.0.1-allcopiers"] = Recipe(
+    family="Detours",
+    version="4.0.1-allcopiers",
+    upstream=RECIPES["Detours_4.0.1"].upstream,
+    license=RECIPES["Detours_4.0.1"].license,
+    source=RECIPES["Detours_4.0.1"].source,
+    build=[BuildStep(_WRITE_SHIM), BuildStep(_PATCH),
+           BuildStep(_COMPILE_401_ALL), BuildStep(_LINK_ALL)],
+    artifacts=[Artifact(path="detours.dll", component="detours.dll")],
+    toolchains=["mingw_x86", "mingw_x64"],
+    build_flags=RECIPES["Detours_4.0.1"].build_flags
+    + "; all ten src/Makefile objects linked (adds disolia64, disolarm, "
+      "disolarm64)",
+    notes="The v4.0.1 tag built with MinGW from the same patched tree as "
+          "the Detours_4.0.1 recipe. PATCHED BUILD: this image is NOT "
+          "byte-identical to a build of unmodified upstream (generated "
+          "force-included shim detours_mingw_shim.h and the seven-line sed "
+          "on creatwth.cpp described for Detours_4.0.1)." + _ALL_NOTE,
+)
