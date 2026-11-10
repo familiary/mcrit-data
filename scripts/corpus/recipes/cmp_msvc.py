@@ -157,6 +157,17 @@ def _cmp_msvc(version, git_ref):
 _TOKTOK_COMPILE = ('cl /nologo /c /O2 /MD /Zi /DCMP_NO_FLOAT=1 '
                    '/Fdcmp.pdb /Focmp.obj cmp.c')
 
+# cmp.c with the flags c-toxcore's CMake Release build gives it under cl:
+# CMake's /O2 /Ob2 /DNDEBUG, C11 (CMAKE_C_STANDARD 11) and the project's
+# /W4 /analyze. Its own object and PDB; the .def generated for cmp.dll is
+# reused, the defines being the same.
+_TOKTOK_REL_COMPILE = ('cl /nologo /c /O2 /Ob2 /DNDEBUG /std:c11 /W4 /analyze '
+                       '/MD /Zi /DCMP_NO_FLOAT=1 '
+                       '/Fdcmp-rel.pdb /Focmp-rel.obj cmp.c')
+_TOKTOK_REL_LINK = ('link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO '
+                    '/OPT:NOREF /OPT:NOICF /DEF:cmp.def '
+                    '/PDB:cmp-rel.pdb /OUT:cmp-rel.dll cmp-rel.obj')
+
 _TOKTOK = Recipe(
     family="cmp",
     version="toktok-52bfcfa",
@@ -168,10 +179,21 @@ _TOKTOK = Recipe(
         BuildStep(_TOKTOK_COMPILE),
         BuildStep(_DEF),
         BuildStep(_LINK),
+        BuildStep(_TOKTOK_REL_COMPILE),
+        BuildStep(_TOKTOK_REL_LINK),
         BuildStep("dir", allow_failure=True),
     ],
     artifacts=[Artifact(path="cmp.dll", component="cmp.dll",
-                        pdb="cmp.pdb")],
+                        pdb="cmp.pdb"),
+               Artifact(path="cmp-rel.dll", component="cmp-rel.dll",
+                        pdb="cmp-rel.pdb",
+                        build_flags=(
+                            "/O2 /Ob2 /DNDEBUG /std:c11 /W4 /analyze /MD /Zi "
+                            "/DCMP_NO_FLOAT=1 (cmp.c compiled directly; the "
+                            "flags of c-toxcore's CMake Release build under "
+                            "cl); /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF "
+                            "/OPT:NOICF at link; exports from the same "
+                            "generated /DEF as cmp.dll"))],
     toolchains=["msvc_x86", "msvc_x64"],
     build_flags=("/O2 /MD /Zi /DCMP_NO_FLOAT=1 (cmp.c compiled directly); "
                  "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at "
