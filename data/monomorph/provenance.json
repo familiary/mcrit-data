@@ -1,0 +1,36 @@
+{
+  "monomorph_2022-09-30_gcc13_x64_monomorph": {
+    "architecture": "x64",
+    "build_flags": "-Wall -Wextra -std=c99 -lz, no optimisation flag (upstream's own command), with upstream's -static removed so glibc and zlib are imported rather than linked in",
+    "built_artifact": "loader/monomorph",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "monomorph",
+    "family": "monomorph",
+    "generated": "2026-09-28",
+    "is_blob": false,
+    "license": "MIT",
+    "mcrit": "data/monomorph/x64/mcrit/monomorph_2022-09-30_gcc13_x64_monomorph.mcrit",
+    "notes": "The loader from loader/monomorph.c, which is the only thing in the repository that compiles; the rest is Python tooling for generating MD5 collision blocks. Four functions and that is the whole project: get_bit, decode_buf and inflate_buf are static, main is the entry point. Built without upstream's -static, because a static link put 1397 function symbols in the image of which 1393 were glibc and zlib - no glibc baseline exists here to subtract them and they would have entered under this name and duplicated data/libzlib. Upstream does ship a statically linked binary, so a copy met in the wild carries glibc and zlib around these four bodies; the four still match. x86-64 only, which is what upstream ships and what the technique is written for. What actually distinguishes the project is a 4 MB array of MD5 collision blocks, which is data rather than code, so upstream's own advice is to identify it with a collision detector; the reference value here is the loader around it.",
+    "num_functions": 16,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_fini",
+      "_init",
+      "_start",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "8cfe26a5aae99efb23a1b1228d03c3936f9447305951c050e7ed39432047ffa9",
+    "smda": "data/monomorph/x64/smda/monomorph_2022-09-30_gcc13_x64_monomorph.7z",
+    "smda_version": "4.8.0",
+    "source": {
+      "commit": "846722239689de87eb5140ed7984099c3056e262",
+      "git_ref": "846722239689de87eb5140ed7984099c3056e262",
+      "git_url": "https://github.com/DavidBuchanan314/monomorph.git"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://github.com/DavidBuchanan314/monomorph",
+    "version": "2022-09-30"
+  }
+}
