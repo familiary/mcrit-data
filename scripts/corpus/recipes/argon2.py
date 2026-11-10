@@ -131,6 +131,21 @@ handles Argon2d, Argon2i and Argon2id in one function; only the BLAKE2b parts
 and the address computation are shared. It shares nothing with libsodium
 beyond ``___chkstk`` (0 hashes of ten instructions or more in the eight
 images). A build of the RandomX subset belongs to that family's recipe.
+
+Second pass: the two builds above that were measured and not committed are
+now versions of their own (kept + removed = total, no exclusions;
+ten-instruction PicHashes in brackets). ``20190702-ref`` (OPTTARGET=none, so
+the Makefile's own opt.c test fails, ref.c is compiled and no -march is
+passed): x86 60 + 54 = 114 (56), x64 73 + 53 = 126 (53). On x64 it shares 51
+of 53 hashes with the opt.c image (fill_block and fill_segment differ); on
+x86 only 3 of 56, because without -march=pentium4 the whole library is
+compiled for GCC's default i686 target rather than SSE2. (The earlier
+measurement of 54 of 56 kept -march=pentium4 with ref.c, which upstream's
+Makefile never does.) ``randomx-6fe0e39``, the five Argon2 files RandomX
+vendors, compiled with its per-file -mssse3/-mavx2 at -O3: x86 24 + 52 = 76
+(22), x64 33 + 52 = 85 (21); it shares the same 5 hashes with the opt.c image
+as measured before (index_alpha, blake2b_compress, blake2b_init_param,
+blake2b_update, ___chkstk).
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
