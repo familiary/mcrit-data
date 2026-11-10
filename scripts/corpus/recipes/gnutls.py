@@ -48,8 +48,10 @@ x86) that a name pattern cannot reach. Overlap between the four GnuTLS
 images: Linux x86/x64 0, MinGW x86/x64 0, Linux x64/MinGW x64 27, Linux
 x86/MinGW x86 158.
 
-Not built: MSVC (upstream supports MinGW only), other GnuTLS releases and the
-optional back ends; see scripts/corpus/README.md.
+Not built: MSVC (upstream supports MinGW only; the attempt, which compiled all
+of gnulib and all but one file of lib/ with cl, is described in
+gnutls_msvc.py), other GnuTLS releases and the optional back ends; see
+scripts/corpus/README.md.
 """
 
 import re

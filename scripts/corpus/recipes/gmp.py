@@ -30,10 +30,11 @@ the functions of a native one). On Linux x86 the build is ABI=32 with
 CC="gcc -m32" (the corpus toolchain's -m32), on x64 ABI=64; MinGW goes
 through --host=i686-w64-mingw32 and x86_64-w64-mingw32 and produces
 libgmp-10.dll. On Linux the artefact is libgmp.so as libtool leaves it in
-.libs/ (libgmp.so.10.5.0 and its symlink). MSVC is not built: GMP's own
-configure and assembly (GNU as, m4-processed .asm) do not run under cl, and
-the project documents MinGW, not MSVC, for Windows. The MinGW legs carry the
-one libtool edit described above _COMMON.
+.libs/ (libgmp.so.10.5.0 and its symlink). MSVC is a separate recipe,
+GMP_6.3.0_msvc (gmp_msvc.py): GMP's own configure and assembly (GNU as,
+m4-processed .asm) do not run under cl, and the project documents MinGW, not
+MSVC, for Windows, so that build compiles the portable C of mpn/generic from
+a script. The MinGW legs carry the one libtool edit described above _COMMON.
 
 Measured on the artefacts (SMDA 5.0.2), kept + removed = image total, removed
 being the glue baseline's measured compiler runtime and CRT:
@@ -57,8 +58,8 @@ implementation) 3 on x64 and 2 on x86. Named functions that are not GMP's API
 from outside GMP.
 
 Not built: other releases (6.2.1 and 6.1.2 were not built or measured; one
-release is the scope of this pass), libgmpxx, MSVC (see above), and GnuTLS
-(see the corpus README's table of targets not built).
+release is the scope of this pass) and libgmpxx. GnuTLS has its own recipes
+(gnutls.py; its MSVC attempt is described in gnutls_msvc.py).
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
