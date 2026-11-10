@@ -87,9 +87,15 @@ RECIPES = {
 
 # The neighbouring releases the first revision built only to measure and
 # deleted: 9.2.1 (34/41 x86 and 23/29 x64 hashes of ten instructions or more
-# shared with 9.3.0) and 9.4.3 (42/44 and 28/30). 9.3.1 shared 44/44 and
-# 30/30 at that floor; it is built so the whole PicHash set can be compared,
-# and is committed only if it is not identical to 9.3.0's.
+# shared with 9.3.0) and 9.4.3 (42/44 and 28/30). 9.3.1 is not added: built
+# again in the second pass, its images are PicHash-identical, every function
+# at every size, to 9.3.0's on both architectures (124 + 114 = 238 / 136 +
+# 109 = 245, the same counts), so it would add nothing.
 RECIPES["llhttp_9.2.1"] = _llhttp("9.2.1", "release/v9.2.1")
 RECIPES["llhttp_9.4.3"] = _llhttp("9.4.3", "release/v9.4.3")
-RECIPES["llhttp_9.3.1"] = _llhttp("9.3.1", "release/v9.3.1")
+
+# Measured (kept + removed = total, no exclusions; ten-instruction PicHashes
+# in brackets): 9.2.1 x86 121 + 114 = 235 (41), x64 133 + 109 = 242 (29);
+# 9.4.3 x86 126 + 114 = 240 (44), x64 138 + 109 = 247 (30). 9.2.1 shares 34
+# of 41 / 23 of 29 with 9.4.3 and 9.4.3 42 of 44 / 28 of 30 with 9.3.0, so
+# neither is a duplicate.
