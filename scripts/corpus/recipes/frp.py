@@ -40,7 +40,8 @@ from ..recipe import Artifact, BuildStep, Recipe, Source
 from ._go import GO_BUILD_FLAGS, GO_ENV, GO_TOOLCHAINS
 
 
-def _frp(version, git_ref, go_directive, notes_extra, go_version=None):
+def _frp(version, git_ref, go_directive, notes_extra, go_version=None,
+         extra_tags=""):
     # go_version None: the host's go1.24.7 with GOTOOLCHAIN=local, like every
     # other Go family. Otherwise GOTOOLCHAIN pins that release, which the host
     # go fetches as golang.org/toolchain through the module proxy and verifies
@@ -59,14 +60,14 @@ def _frp(version, git_ref, go_directive, notes_extra, go_version=None):
         license="Apache-2.0",
         source=Source(git_url="https://github.com/fatedier/frp.git",
                       git_ref=git_ref),
-        build=[
+        build=([] if extra_tags else [
             BuildStep("mkdir -p assets/frps/static assets/frpc/static && "
                       "{ [ -n \"$(ls -A assets/frps/static)\" ] || "
-                      "touch assets/frps/static/.keep; }"),
-            BuildStep("go build -trimpath -tags frpc -o frpc ./cmd/frpc",
-                      env=env),
-            BuildStep("go build -trimpath -tags frps -o frps ./cmd/frps",
-                      env=env),
+                      "touch assets/frps/static/.keep; }")]) + [
+            BuildStep("go build -trimpath -tags frpc%s -o frpc ./cmd/frpc"
+                      % extra_tags, env=env),
+            BuildStep("go build -trimpath -tags frps%s -o frps ./cmd/frps"
+                      % extra_tags, env=env),
         ],
         artifacts=[Artifact(path="frpc", component="frpc"),
                    Artifact(path="frps", component="frps")],
@@ -78,10 +79,12 @@ def _frp(version, git_ref, go_directive, notes_extra, go_version=None):
               "exercisers. The Go runtime and standard library are removed by "
               "the Go glue filter; the github.com/* and golang.org/x/* "
               "closure is kept under frp's name, including the fatedier/yamux "
-              "fork that replaces hashicorp/yamux. assets/frps/static is "
-              "empty upstream, so one empty .keep file lets go:embed "
-              "resolve (the dashboard is not bundled). %s"
-              % (git_ref, built_with, go_directive, notes_extra),
+              "fork that replaces hashicorp/yamux. %s%s"
+              % (git_ref, built_with, go_directive,
+                 "" if extra_tags else
+                 "assets/frps/static is empty upstream, so one empty .keep "
+                 "file lets go:embed resolve (the dashboard is not "
+                 "bundled). ", notes_extra),
     )
 
 
@@ -132,17 +135,27 @@ RECIPES = {
     # 1.24.0, built with the host's go1.24.7 like the images above.
     "frp_0.65.0": _frp(
         "0.65.0", "v0.65.0",
-        "go 1.24.0",
+        "go 1.24.0; armon/go-socks5 v0.0.0-20160902184237-e75332964ef5, "
+        "hashicorp/yamux v0.1.1 replaced by fatedier/yamux "
+        "v0.0.0-20250825093530-d0154be01cd6, golang.org/x/net v0.39.0, "
+        "golang.org/x/crypto v0.37.0, quic-go v0.53.0",
         "Commit 2f5e1f79457b5e9d769f2ac063443b62640185a9; go.sum sha256 "
         "e36e4b1520f7542c63d23ec0d086c366111a6c0c2bb1b8087948dade0f777030."),
     # The newest release, whose go.mod says go 1.26.0: go1.26.10, the last
     # patch release of that line.
     "frp_0.72.0": _frp(
         "0.72.0", "v0.72.0",
-        "go 1.26.0",
+        "go 1.26.0; armon/go-socks5 v0.0.0-20160902184237-e75332964ef5, "
+        "fatedier/yamux v0.3.0 (a direct dependency here, no longer a "
+        "replace of hashicorp/yamux), golang.org/x/net v0.62.0, "
+        "golang.org/x/crypto v0.58.0, quic-go v0.65.0",
         "Commit bafec21abce5f91ae4a05b4bd19c55543c263128; go.sum sha256 "
         "d49411ae549c4023d847d68983ab384c314f921f576b54f0d208b965c24f5255. "
         "Toolchain golang.org/toolchain v0.0.1-go1.26.10.linux-amd64 "
-        "h1:5VAGHlY8yl8pTPVSNIez3SNMy6fWabs+QMR25f3oMT0=.",
-        go_version="go1.26.10"),
+        "h1:5VAGHlY8yl8pTPVSNIez3SNMy6fWabs+QMR25f3oMT0=. The dashboard "
+        "moved to web/frpc/dist and web/frps/dist (`go:embed dist`), which "
+        "upstream does not commit either; its Makefile then adds the noweb "
+        "tag (NOWEB_TAG), and so does this build (-tags frpc,noweb and "
+        "frps,noweb), so no file is added to the tree for it.",
+        go_version="go1.26.10", extra_tags=",noweb"),
 }
