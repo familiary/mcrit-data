@@ -62,7 +62,32 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # applied. The provenance "compiler" field of these images names the
 # toolchain's cl; the C compiler is clang-cl, which build_flags and notes say.
 ASM = os.environ.get("GNUPG_CL_ASM") == "1"
-CLANG_ARGS = ["/clang:-fgnuc-version=4.2.1"]
+# -Wno-error=incompatible-function-pointer-types: hwfeatures.c assigns
+# GetProcAddress results to typed pointers, which current clang makes an
+# error by default (GCC 13 warns); a diagnostic setting, not a code change.
+CLANG_ARGS = ["/clang:-fgnuc-version=4.2.1",
+              "/clang:-Wno-error=incompatible-function-pointer-types"]
+
+
+def asm_mpi_modules(bld, src):
+    """The multi-precision primitives config.links chose (mpi/mod-source-info.h
+    of the build tree names each one's source, assembly or C), since the
+    generated mpi/Makefile lists none of them under this configure run."""
+    path = os.path.join(bld, "mpi", "mod-source-info.h")
+    with open(path, encoding="utf-8", errors="replace") as f:
+        chosen = re.findall(r'":([\w/.-]+\.[Sc])"', f.read())
+    items = []
+    for rel in chosen:
+        fn = os.path.splitext(os.path.basename(rel))[0]
+        items.append((os.path.join(src, "mpi", *rel.split("/")),
+                      "mpi-" + fn + ".obj", os.path.join(bld, "mpi")))
+    say("libgcrypt: mpi modules from config.links: %s" % " ".join(chosen))
+    return items
+
+
+# Per-file flags of cipher/Makefile.am that matter on x86 (the others are for
+# PowerPC and AArch64): serpent-avx512-x86.c is compiled with $(avx512f_cflags).
+ASM_FILE_FLAGS = {"serpent-avx512-x86.c": ["/clang:-mavx512f"]}
 
 
 def clang_cl():
@@ -695,6 +720,7 @@ def build_gcrypt(arch, src, work, prefix):
     if not ASM:
         items += generic_mpi_modules(bld, src, items)
     else:
+        items += asm_mpi_modules(bld, src)
         say("libgcrypt: %d of the objects are assembler modules: %s" % (
             sum(1 for i in items if i[0].endswith((".S", ".s"))),
             " ".join(os.path.basename(i[0]) for i in items if i[0].endswith((".S", ".s")))))
@@ -724,6 +750,7 @@ def build_gcrypt(arch, src, work, prefix):
     if ASM:
         # clang defines the CPU macros itself; hwf-x86.c gets its CPUID code.
         del extra["hwf-x86.c"]
+        extra.update(ASM_FILE_FLAGS)
     base_defs = ["HAVE_CONFIG_H", "DLL_EXPORT",
                  "HAVE_GCC_STORAGE_CLASS__THREAD=1", "__thread=__declspec(thread)"]
     if ASM:
