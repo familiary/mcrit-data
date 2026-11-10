@@ -206,3 +206,92 @@ RECIPES = {
     "cmp_20_msvc": _cmp_msvc("20", "v20"),
     "cmp_toktok_52bfcfa_msvc": _TOKTOK,
 }
+
+
+# --- cmp as c-toxcore's own MSVC build compiles it: the counterpart of
+# cmp_toktok_52bfcfa-toxcore in cmp.py. c-toxcore v0.2.24 is built with its
+# CMake Release exactly as the c-toxcore family's MSVC recipe on
+# claude/corpus-toxcore builds it (libsodium 1.0.20 through its vs2022
+# project, ReleaseDLL; pthreads4w 3.0.0 through `nmake VC`; the dependency
+# lookups answered by scripts/corpus/exercisers/toxcore_msvc.py, copied
+# unchanged from that branch), and the helper's `link` step, which links the
+# cmp.c.obj c-toxcore's build compiled into its own cmp.dll (with a .def
+# from the object) before re-linking toxcore.dll without it, supplies the
+# artefact: cmp.dll, not toxcore.dll. Nothing patched.
+_TOX_SODIUM = Source(
+    url="https://download.libsodium.org/libsodium/releases/libsodium-1.0.20.tar.gz",
+    sha256="ebb65ef6ca439333c2bb41a0c1990587288da07f6c7fd07cb3a18cc18d30ce19")
+_TOX_PTHREADS = Source(
+    url="https://sourceforge.net/projects/pthreads4w/files/"
+        "pthreads4w-code-v3.0.0.zip/download",
+    sha256="b81136effb7185c77601fe2e0e6ac19bd996912e4814cebdd3010b0fac9e259b")
+_TOX_PROPS = (
+    'python -c "'
+    "open('msvcprops.props','w').write("
+    "'<Project><ItemDefinitionGroup><ClCompile>'"
+    "'<DebugInformationFormat>ProgramDatabase</DebugInformationFormat>'"
+    "'</ClCompile><Link>'"
+    "'<GenerateDebugInformation>true</GenerateDebugInformation>'"
+    "'<ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>'"
+    "'<EnableCOMDATFolding>false</EnableCOMDATFolding>'"
+    "'<OptimizeReferences>false</OptimizeReferences>'"
+    "'<AdditionalOptions>/Brepro</AdditionalOptions>'"
+    "'</Link></ItemDefinitionGroup></Project>')"
+    '"')
+_TOX_HELPER = 'python {repo}/scripts/corpus/exercisers/toxcore_msvc.py'
+_TOX_CMAKE = ('cmake -S . -B build-{arch} -G "NMake Makefiles" '
+              '-DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON '
+              '"-DCMAKE_PREFIX_PATH=%CD%\\tox-deps" '
+              '"-DPKG_CONFIG_EXECUTABLE=%CD%\\tox-deps\\pkg-config.bat" '
+              '-DBUILD_TOXAV=OFF -DENABLE_STATIC=OFF -DENABLE_SHARED=ON '
+              '-DUNITTEST=OFF -DAUTOTEST=OFF -DDHT_BOOTSTRAP=OFF '
+              '-DBOOTSTRAP_DAEMON=OFF -DBUILD_MISC_TESTS=OFF '
+              '-DCMAKE_POLICY_VERSION_MINIMUM=3.5 '
+              '-DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON '
+              '-DCMAKE_C_FLAGS_RELEASE="/MD /O2 /Ob2 /DNDEBUG /Zi" '
+              '-DCMAKE_SHARED_LINKER_FLAGS_RELEASE='
+              '"/INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF /OPT:NOICF"')
+
+RECIPES["cmp_toktok_52bfcfa-toxcore_msvc"] = Recipe(
+    family="cmp",
+    version="toktok-52bfcfa-toxcore-0.2.24",
+    upstream="https://github.com/TokTok/cmp",
+    license="MIT (cmp, built from c-toxcore's submodule; c-toxcore itself "
+            "is GPL-3.0-or-later and none of its code is in the image)",
+    source=Source(git_url="https://github.com/TokTok/c-toxcore.git",
+                  git_ref="v0.2.24"),
+    extra_sources={"libsodium_src": _TOX_SODIUM, "pthreads_src": _TOX_PTHREADS},
+    build=[
+        BuildStep("mkdir sodium pth"),
+        BuildStep("tar -xf {libsodium_src} -C sodium --strip-components=1"),
+        BuildStep("tar -xf {pthreads_src} -C pth --strip-components=1"),
+        BuildStep(_TOX_PROPS),
+        BuildStep('msbuild sodium\\builds\\msvc\\vs2022\\libsodium\\libsodium.vcxproj '
+                  '/p:Configuration=ReleaseDLL /p:Platform={msbuild_platform} '
+                  '/p:PlatformToolset=v143 '
+                  '/p:ForceImportBeforeCppTargets=%CD%\\msvcprops.props '
+                  '/m /v:minimal'),
+        BuildStep("nmake /nologo /E VC", cwd="pth"),
+        BuildStep(_TOX_HELPER + " prepare sodium pth tox-deps"),
+        BuildStep(_TOX_CMAKE),
+        BuildStep("type build-{arch}\\CMakeFiles\\toxcore_shared.dir\\flags.make",
+                  allow_failure=True),
+        BuildStep("cmake --build build-{arch} --target toxcore_shared"),
+        BuildStep(_TOX_HELPER + " link build-{arch} tox-out-{arch} sodium pth {arch}"),
+        BuildStep("dir tox-out-{arch}", allow_failure=True),
+    ],
+    artifacts=[Artifact(path="tox-out-{arch}/cmp.dll", component="cmp.dll",
+                        pdb="tox-out-{arch}/cmp.pdb")],
+    toolchains=["msvc_x86", "msvc_x64"],
+    build_flags="cmp.c as compiled by c-toxcore v0.2.24's own CMake Release "
+                "for the toxcore_shared target (/MD /O2 /Ob2 /DNDEBUG /Zi "
+                "plus upstream's /W4 /analyze, -DCMP_NO_FLOAT=1), the object "
+                "linked alone into cmp.dll with a /DEF generated from it; "
+                "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF",
+    notes="The cmp.c object c-toxcore v0.2.24's own MSVC CMake Release build "
+          "compiles from its third_party/cmp submodule (TokTok/cmp 52bfcfa), "
+          "linked on its own into a DLL by the c-toxcore family's helper "
+          "(scripts/corpus/exercisers/toxcore_msvc.py), as that family's "
+          "recipe splits it out of toxcore.dll. No c-toxcore code is in the "
+          "image. Nothing patched.",
+)
