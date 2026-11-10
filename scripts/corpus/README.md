@@ -269,7 +269,49 @@ upstream source it came from.
 ## What this pipeline can and cannot do
 
 SMDA has no COFF/`ar` loader, so static `.lib`/`.a` archives remain out of
-reach without IDA. Recipes therefore build a **DLL or EXE**. That covers only
+reach without IDA. Recipes therefore build a **DLL or EXE**.
+
+**A Linux `.ko` is out of reach, and the way it fails is the part worth
+knowing.** Two candidates turn on this
+([#53](https://github.com/r0ny123/mcrit-data/issues/53),
+[#54](https://github.com/r0ny123/mcrit-data/issues/54)) and neither issue
+could answer it, so it was measured. The first measurement was misleading
+and is corrected here, because the correction is the useful part.
+
+A kernel module is `ET_REL`: `readelf -h` reports
+`Type: REL (Relocatable file)`, `readelf -lW` reports `There are no program
+headers in this file`, and each executable section starts at address `0x0`,
+because a relocatable object's sections are unplaced until something links
+or loads them. SMDA lays out an image from program headers, so there is
+nothing for it to place.
+
+What that produces depends on the module, which is why one probe is not
+enough. On a purpose-built three-function probe module, SMDA returns
+`status: ok`, `architecture: intel 64` and `num_functions: 0` - it finds
+nothing at all, and nothing raises. On Diamorphine's real module it returns
+`status: ok` and **12 functions, 666 instructions, 10 of them of ten
+instructions or more, 60% of them named** - which clears both the
+eight-function floor and the symbol-coverage gate.
+
+That second case is the dangerous one, because the names are wrong. The
+kernel is built with `-fpatchable-function-entry` for kCFI, so every
+function is preceded by a 16-byte `__pfx_` pad with its own symbol. With no
+layout to work from, SMDA merges pad and body and keeps the **pad's** name:
+`__pfx_resolve_sym` is `size 0x10` in the ELF but is reported with 53
+instructions, `__pfx_hacked_getdents64` with 45, `__pfx_hacked_kill` with
+45. Meanwhile the two largest real bodies, 191 instructions each, come back
+unnamed. So a `.ko` artefact would pass every gate this pipeline has while
+attributing `resolve_sym`'s code to a padding stub - misattribution that no
+check here can catch, which is the one thing this corpus exists to avoid.
+
+So a Linux kernel-mode axis needs section-based `ET_REL` layout in SMDA, or
+a link step that assigns addresses, before a kernel version is worth
+choosing. The kernel-version question is real - upstream Kbuild files derive
+`KDIR` from `uname -r`, so a recipe would have to pin one rather than
+inherit the runner's - but it is the second question, not the first. The
+Windows kernel side is unaffected and never was: a `.sys` is a linked PE
+with program headers, which is why `APICallProxy` and `BlackBoneDrv` go
+through this pipeline normally.
 the functions the linker actually pulled in, rather than every object in an
 archive, which is a real coverage difference from the IDA-derived families
 and is why the MinGW rows are described separately in the README.
@@ -540,6 +582,9 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| Medusa rkload and additional hidden-visibility variant | [#40](https://github.com/r0ny123/mcrit-data/issues/40) | NOT BUILT in this follow-up. The installer/loader and additional rootkit build variant stopped under safeguards before compilation. Existing rkld.so x86/x64 references are retained. No compiler error, PicHash comparison or coverage gain is claimed for the unattempted variants; this is not evidence that compilation is impossible. |
+| Diamorphine and Reptile addressed kernel derivatives | [#53](https://github.com/r0ny123/mcrit-data/issues/53), [#54](https://github.com/r0ny123/mcrit-data/issues/54) | NOT BUILT in this follow-up. The proposed kernel-module build and final addressed-image link were not attempted because assembling the operational rootkits stopped under safeguards. No LTS kernel was selected and no new linker error or function count is claimed. The earlier ET_REL measurements remain below as historical evidence, not a measurement of the unattempted addressed derivative. |
+| Diamorphine | [#53](https://github.com/r0ny123/mcrit-data/issues/53) | Not built, and the reason is misattribution rather than the kernel-version decision the issue asks for. It does build: `obj-m := diamorphine.o` with `KDIR ?=` honoured, so a kernel can be pinned cleanly, and against `linux-headers-6.8.0-31-generic` it produced a 437 KB `ET_REL` module. SMDA then reads it and returns `status: ok` with **12 functions, 666 instructions, 10 of ten instructions or more and 60% named** - clearing both the function floor and the symbol gate. The names are nevertheless wrong, and that is the blocker. The kernel is built `-fpatchable-function-entry` for kCFI, so each function is preceded by a 16-byte `__pfx_` pad carrying its own symbol; with no program headers and every section at address 0 there is no layout to resolve them against, so SMDA merges pad with body and keeps the pad's name. Measured: `__pfx_resolve_sym` is `size 0x10` in the ELF yet is reported with 53 instructions, `__pfx_hacked_getdents64` with 45, `__pfx_hacked_kill` with 45, `__pfx_module_show` with 37 - while the two largest real bodies, 191 instructions each, come back unnamed. Committing that would file `resolve_sym`'s code under a padding stub's name and pass every gate on the way. Everything else here is clean and stays recorded for when `ET_REL` layout lands: BSD-style licence (`LICENSE.txt`, Copyright 2014 Victor N. Ramos Mello), one 501-line module, 17 functions in source, no vendored code. Reptile's kernel half ([#54](https://github.com/r0ny123/mcrit-data/issues/54)) is unbuilt for this same reason; its userland half is built and is its own family. On the pin, the evidence-supported kernel is 5.19.17 (the Gen Digital sample's); this host runs 6.18.44 and can install only 6.8.0-x through 7.0.0-x. |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
 | donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |

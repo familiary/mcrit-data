@@ -85,6 +85,8 @@ Offensive tooling
 * [BlackBoneDrv](#blackbonedrv)
 * [SysWhispers](#syswhispers)
 * [Hidden](#hidden)
+* [Medusa](#medusa)
+* [Reptile](#reptile)
 
 String obfuscation
 * [Obfuscate](#obfuscate)
@@ -964,6 +966,43 @@ The project carries no licence of any kind - no LICENSE or COPYING file and no c
 Generated with `scripts/build_corpus.py`; see `data/Hidden/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Hidden -->
+<!-- /generated -->
+
+### Medusa<a id='medusa'></a>
+
+ldpreload/Medusa, a ring-3 rootkit of the same shape as [Azazel](#azazel): a shared object installed through `/etc/ld.so.preload` so the dynamic linker interposes its libc, PAM, utmp, libpcap and TCP-wrappers entry points ahead of the real ones. Intezer's reporting describes OrBit as a rebuild of this project.  
+**Only `build/rkld.so` is collected, and upstream's `make` is never invoked**, because its default `all:` target modifies the host it builds on: it runs `sudo sed -i` on `/etc/ssh/sshd_config` to set `PermitRootLogin yes` and then restarts sshd, in the default target rather than an `install:` one. The compiler lines are issued directly instead. Two other parts of that target are left out on their own merits: `bin/rkload` links `-static`, which would put all of glibc under this family's name as it did for monomorph, and it embeds the finished `.so` as a C array via `xxd -i`, so it would carry the implant as data.  
+The build does compile and run upstream's `src/config.c`, because `src/rkld.c:33` and `src/rknet.c:19` include `../build/xor.h` which only that binary produces. It was read before being run: its only side effects are `unlink`, `open` and `write` on `./build/xor.h`, which it fills with XOR-obfuscated copies of constants hardcoded in `config.c` itself - upstream's defaults, with no operator input. That is the same category as LuaJIT's host-built `buildvm`, which this tooling already runs mid-build.  
+Built **without** `-fvisibility=hidden`, as Azazel is and for the same reason: an interposition library's exported names are the artefact. `include/arch.h` is generated per *target* rather than from the host's `uname -m`, because `rkld.c:1653` and `:1664` guard two `sys_connect`/`sys_bind` pairs with `__i386__` and `__AMD64__`, and gcc defines `__i386__` itself under `-m32` - so an x86 build against an x64 `arch.h` compiles both and fails with `redefinition of 'sys_connect'`.  
+216 functions on x86 and 214 on x64. **Against Azazel, the measurement issue #40 and #55 ask for: all 21 symbol names the two share are present in both families, and they share zero PicHashes of ten instructions or more.** Both projects hook the same libc and PAM entry points, so both necessarily define functions called `open`, `__xstat` and `pam_authenticate`; none of those bodies is the same code. That is the distinction the deep check's leakage rule turns on, and it is why the two families coexist without leakage.  
+There is no `-O` anywhere in upstream's `Makefile`, so this is `-O0`. Licence: none stated - no `LICENSE` file and no licence header in any source file, recorded as a fact.  
+
+Generated with `scripts/build_corpus.py`; see `data/Medusa/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Medusa -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Medusa | 2025-04-05 | GCC 13 (Linux, glibc) | [x86 ELF](data/Medusa/x86/mcrit/Medusa_2025-04-05_gcc13_x86_rkld.so.mcrit) / [x64 ELF](data/Medusa/x64/mcrit/Medusa_2025-04-05_gcc13_x64_rkld.so.mcrit) | [x86 ELF](data/Medusa/x86/smda/Medusa_2025-04-05_gcc13_x86_rkld.so.7z) / [x64 ELF](data/Medusa/x64/smda/Medusa_2025-04-05_gcc13_x64_rkld.so.7z) |
+<!-- /generated -->
+
+### Reptile<a id='reptile'></a>
+
+f0rb1dd3n/Reptile's **userland half**. Upstream builds four binaries: `shell` and `cmd`, which its own Makefile comments describe as the pair that "stay in the victim machine", and `listener` and `packet`, which stay on the attacker's. Three are collected; **`cmd` is not** - SMDA reports 27 functions for its x64 binary of which exactly one, `main` at 470 instructions, is the project's, the other 26 being `.plt` stubs, so it would clear the eight-function floor on import stubs rather than on project code. That is the trap `scripts/corpus/README.md` records for 4g3nt47/Obfuscator. The binary is still built, upstream's rule left intact; it is simply not collected. Mandiant's reporting puts this project on UNC3886's FortiManager intrusions.  
+**The `kernel/` half is not built**, and the reason is the pipeline rather than the project: it is a `.ko`, and a relocatable kernel object has no program headers and every section at address 0, so SMDA has no layout to work from and either finds nothing or attaches names to the wrong bodies. `scripts/corpus/README.md` records that in full, with measurements. It is an SMDA limitation and holds whatever is decided about kernel versions.  
+**Two values are pinned, and that is the only departure from upstream's build path.** `scripts/random.sh` derives `AUTH` and `HTUA` from `/dev/urandom` and the `%config` target runs it, so even `make defconfig` randomises them - and `userland/Makefile` compiles `shell` and `cmd` with `-DAUTH=` and `-DHTUA=`, putting both into the code as 32-bit immediates. Upstream's build is therefore not reproducible by construction. They are pinned to `0x52657074` and `0x696c6521`, visibly synthetic (ASCII `Rept` and `ile!`) so nobody mistakes them for observed values, and recorded in `build_flags` so this artefact reproduces exactly. The cost is bounded: the few functions comparing against those immediates will not match a real sample's, which carries that actor's random pair; every other function is unaffected. The alternative, letting `/dev/urandom` decide, gives reference data whose digest means nothing.  
+Everything else is upstream's, including the pipe through its own `scripts/destringify.pl`. The remaining configuration is `configs/defconfig` unchanged (`HIDE="reptile"`, reaching `shell` as `-DNAME`). The compile lines are issued directly rather than through `make` for one reason: each rule ends with a literal `strip`, not `$(STRIP)`, so there is no variable to override the way [TinySHell](#tinyshell)'s `STRIP=true` does.  
+`userland/crypto/aes.c`, `userland/crypto/sha1.c` and `userland/transport/pel.c` are Christophe Devine's - `pel.c`'s header reads "Packet Encryption Layer for Tiny SHell" and upstream's README credits creaktive/tsh. They are in `DEP_SRC`, so they are linked into `shell` and `listener` but not `cmd` or `packet`. **Measured against the [TinySHell](#tinyshell) family, the two share 8 PicHashes of ten instructions or more, and 7 of them are exactly that vendored code**: `aes_encrypt`, `aes_decrypt`, `aes_set_key`, `sha1_starts`, `sha1_process` and `sha1_finish`. The eighth is `_init`, the 32-bit PIC glue this README records as surviving the filter. That is real code sharing rather than misattribution, and it is recorded rather than filtered, because subtracting it would mean claiming Reptile does not contain code it demonstrably ships.  
+Counts, symbol-carrying functions: `shell` 32/27, `listener` 56/45, `packet` 29/17 on x86/x64. `min_named_ratio` is 0.36, taken from measurement rather than analogy: the gate's own figures on x64 are `shell` 25/68 = 0.368, `listener` 0.434 and `packet` 0.395, while every x86 artefact passes the 0.5 default.  
+Licence: none stated. The repository ships `DISCLAIMER.md` and no `LICENSE` file, recorded as a fact; the vendored Devine files are GPL by their own headers.  
+
+Generated with `scripts/build_corpus.py`; see `data/Reptile/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Reptile -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Reptile | 2026-08-17 | GCC 13 (Linux, glibc) | [x86 ELF](data/Reptile/x86/mcrit/Reptile_2026-08-17_gcc13_x86_listener.mcrit) / [x64 ELF](data/Reptile/x64/mcrit/Reptile_2026-08-17_gcc13_x64_listener.mcrit) | [x86 ELF](data/Reptile/x86/smda/Reptile_2026-08-17_gcc13_x86_listener.7z) / [x64 ELF](data/Reptile/x64/smda/Reptile_2026-08-17_gcc13_x64_listener.7z) |
+| Reptile | 2026-08-17 | GCC 13 (Linux, glibc) | [x86 ELF](data/Reptile/x86/mcrit/Reptile_2026-08-17_gcc13_x86_packet.mcrit) / [x64 ELF](data/Reptile/x64/mcrit/Reptile_2026-08-17_gcc13_x64_packet.mcrit) | [x86 ELF](data/Reptile/x86/smda/Reptile_2026-08-17_gcc13_x86_packet.7z) / [x64 ELF](data/Reptile/x64/smda/Reptile_2026-08-17_gcc13_x64_packet.7z) |
+| Reptile | 2026-08-17 | GCC 13 (Linux, glibc) | [x86 ELF](data/Reptile/x86/mcrit/Reptile_2026-08-17_gcc13_x86_shell.mcrit) / [x64 ELF](data/Reptile/x64/mcrit/Reptile_2026-08-17_gcc13_x64_shell.mcrit) | [x86 ELF](data/Reptile/x86/smda/Reptile_2026-08-17_gcc13_x86_shell.7z) / [x64 ELF](data/Reptile/x64/smda/Reptile_2026-08-17_gcc13_x64_shell.7z) |
 <!-- /generated -->
 
 ## String obfuscation
