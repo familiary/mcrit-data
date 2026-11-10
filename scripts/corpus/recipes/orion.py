@@ -342,3 +342,83 @@ for _name in list(RECIPES):
     _v, _, _rest = _name[len("orion_"):].partition("_")
     RECIPES["orion_%s-debug%s" % (_v, ("_" + _rest) if _rest else "")] = \
         _debug(_name, RECIPES[_name])
+
+
+# The high-level API (the `safe_api` feature: orion::aead and its streaming
+# API, orion::auth, orion::hash, orion::kdf, orion::pwhash, and orion::kex on
+# 0.17 or orion::kem, orion::hpke and orion::signer on 0.18), which tracker
+# issue #7 names (orion::aead) and the no_std driver cannot reach because
+# safe_api turns on std and getrandom. A std cdylib driver
+# (exercisers/orion_driver/src/safe_api17.rs, safe_api18.rs) calls every
+# entry point, filed as version <v>-safe_api. std, core, alloc, getrandom and
+# the other dependencies are linked statically and excluded by name with the
+# same orion-only pattern as the no_std builds, so only orion's own code is
+# kept. The driver lockfiles were resolved by cargo at the time of writing and
+# are built --locked. Every leg pins its rustc with rustup like the debug
+# variants: 1.97.0 for ELF and MinGW, 1.99.1 for MSVC.
+_SAFE_NOTES = (
+    "Built from a std cdylib driver crate (scripts/corpus/exercisers/"
+    "orion_driver/%s-safe_api, src/%s) that calls orion's high-level API "
+    "(safe_api, orion's default features): aead (with streaming), auth, "
+    "hash, kdf, pwhash and %s. orion is compiled from the crates.io tarball "
+    "pinned by sha256 through a cargo patch.crates-io path override; every "
+    "other crate is pinned in the driver's Cargo.lock and built --locked. "
+    "Only the orion:: namespace is kept; std, core, alloc, getrandom, "
+    "subtle, zeroize, the other dependencies and the driver's orion_sx_* "
+    "exports are excluded by name. Compiler: %s, pinned with rustup "
+    "(RUSTUP_TOOLCHAIN).")
+
+
+def _safe(version, target, toolchains, artifact, rustc, kind, steps_before=(),
+          env=None, pdb=None):
+    src = "safe_api18.rs" if version == "0.18.1" else "safe_api17.rs"
+    extra = ("kem, hpke and signer" if version == "0.18.1" else "kex")
+    env = dict(env or {}, RUSTUP_TOOLCHAIN=rustc)
+    cargo = BuildStep(_CARGO % (version + "-safe_api", target), env=dict(env))
+    build = [BuildStep("rustup toolchain install %s --profile minimal "
+                       "--target %s" % (rustc, target))]
+    build += [__import__("dataclasses").replace(s, env=dict(s.env, **env))
+              for s in steps_before]
+    build += [BuildStep("rustc -vV", env=dict(env)), cargo]
+    return Recipe(
+        family="orion",
+        version=version + "-safe_api",
+        upstream=_UPSTREAM,
+        license=_LICENSE % ("2026" if version == "0.18.1" else "2025"),
+        source=_crate(version),
+        build=build,
+        artifacts=[Artifact(path="target/%s/release/%s" % (target, artifact),
+                            component=artifact.replace("lib", "", 1)
+                            if artifact.startswith("lib") else artifact,
+                            pdb=pdb)],
+        toolchains=toolchains,
+        requires=["cargo"],
+        exclude_functions=list(_EXCLUDE),
+        build_flags=("cargo --release (opt-level 3, LTO off, codegen-units "
+                     "16, panic=abort, debug info off) --locked, std driver "
+                     "crate, orion default features (safe_api); " + kind),
+        notes=_SAFE_NOTES % (version, src, extra,
+                             "rustc %s (%s)" % (rustc, kind)),
+    )
+
+
+for _v in _VERSIONS:
+    _t = "orion_%s-safe_api" % _v
+    RECIPES[_t + "_linux"] = _safe(
+        _v, "{platform}-unknown-linux-gnu", ["linux_x86", "linux_x64"],
+        "liborion_driver.so", "1.97.0",
+        "i686-unknown-linux-gnu / x86_64-unknown-linux-gnu")
+    RECIPES[_t] = _safe(
+        _v, "{platform}-pc-windows-gnu", ["mingw_x86", "mingw_x64"],
+        "orion_driver.dll", "1.97.0",
+        "i686-pc-windows-gnu / x86_64-pc-windows-gnu")
+    for _arch, _triple in (("x86", "i686-pc-windows-msvc"),
+                           ("x64", "x86_64-pc-windows-msvc")):
+        RECIPES["%s_msvc_%s" % (_t, _arch)] = _safe(
+            _v, _triple, ["msvc_" + _arch], "orion_driver.dll", "1.99.1",
+            _triple + ", dynamic CRT (/MD), link /OPT:NOREF /OPT:NOICF "
+            "/Brepro /INCREMENTAL:NO",
+            steps_before=[BuildStep("rustup target add " + _triple)],
+            env={"RUSTFLAGS": "-C link-arg=/OPT:NOREF -C link-arg=/OPT:NOICF "
+                              "-C link-arg=/Brepro -C link-arg=/INCREMENTAL:NO"},
+            pdb="target/%s/release/orion_driver.pdb" % _triple)
