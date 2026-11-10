@@ -269,6 +269,19 @@ component ("2015-03-16-O0", "-O1", "-O3", "-Os"):
 The nearest other image of the same target shares at most 14 of their
 hashes (-O3 against -O2 on MinGW x86) and -O0 at most 1, so each level is a
 reference of its own.
+
+Tor's real digest ("2026-10-07-tor-openssl", above): Tor's ed25519_tor.c with
+Tor's own crypto_digest code over the pinned OpenSSL 3.0.15 libcrypto, plain
+and SSE2. Kept + removed = total (no exclusions; ten-instruction PicHashes in
+brackets): MinGW x86 112 + 55 = 167 (82), SSE2 115 + 54 = 169 (85); x64
+107 + 55 = 162 (70), SSE2 112 + 55 = 167 (74); Linux x86 175 + 5 = 180 (103),
+SSE2 188 + 5 = 193 (105); x64 169 + 6 = 175 (85), SSE2 176 + 5 = 181 (91).
+Against the stand-in-digest 2026-10-07-tor component of the same target 41
+of 82 (MinGW x86), 39 of 70 (MinGW x64), 24 of 103 (Linux x86) and 38 of 85
+(Linux x64) are shared: the donna arithmetic and the Tor API, while the
+digest functions (crypto_digest512_new, crypto_digest_add_bytes,
+crypto_digest_get_digest and the rest of crypto_digest_openssl.c,
+crypto_digest.c and keccak-tiny) are Tor's own and new.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
