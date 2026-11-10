@@ -23,7 +23,7 @@ MSVCBIN=$(dirname "$(command -v cl)")
 GNUBIN=$(dirname "$(command -v windres)")
 # MSVC first (MSYS's /usr/bin/link would shadow link.exe), then MSYS, then the
 # directory with windres, which configure looks for on a mingw32 host.
-export PATH="${GNUPG_EXTRA_PATH:+$(cygpath -u "$GNUPG_EXTRA_PATH"):}$MSVCBIN:/usr/bin:$GNUBIN"
+export PATH="${GNUPG_EXTRA_PATH:+$(cygpath -u -p "$GNUPG_EXTRA_PATH"):}$MSVCBIN:/usr/bin:$GNUBIN"
 stamp "arch=$arch src=$src bld=$bld"
 cl 2>&1 < /dev/null | head -1
 make --version < /dev/null | head -1
