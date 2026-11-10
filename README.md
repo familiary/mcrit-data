@@ -444,6 +444,18 @@ Generated with `scripts/build_corpus.py`; see `data/GMP/provenance.json` for sou
 | GMP | 6.3.0 | MinGW-w64 GCC 13 | [x86 PE](data/GMP/x86/mcrit/GMP_6.3.0_mingw13_x86_libgmp.dll.mcrit) / [x64 PE](data/GMP/x64/mcrit/GMP_6.3.0_mingw13_x64_libgmp.dll.mcrit) | [x86 PE](data/GMP/x86/smda/GMP_6.3.0_mingw13_x86_libgmp.dll.7z) / [x64 PE](data/GMP/x64/smda/GMP_6.3.0_mingw13_x64_libgmp.dll.7z) |
 <!-- /generated -->
 
+### GnuTLS<a id='gnutls'></a>
+
+GnuTLS 3.8.13 (LGPL-2.1-or-later), the GNU TLS library: follow-on of the Nettle and GMP work (issue #26), whose handshake and record layer is the part that collides with OpenSSL. `libgnutls` as GCC 13 Linux ELF and MinGW DLL, x86 and x64. GnuTLS statically links Nettle 3.10.2 (with GMP) and GMP 6.3.0 here, built as helper libraries in the build tree, and the code that the Nettle and GMP families already carry is removed from the GnuTLS images by name (`Recipe.exclude_functions`: the `nettle_*`, `__gmp*`, `mpn_/mpz_/mpq_/mpf_*`, `ecc_*` namespaces minus the few of those names GnuTLS defines itself, plus the file-local statics of both libraries listed by name). libtasn1 and libunistring are GnuTLS's bundled copies and stay in the images. Configured with `--with-included-libtasn1 --with-included-unistring --without-p11-kit --disable-doc --disable-tests --disable-tools` (full flag list in `data/GnuTLS/provenance.json`). Kept + removed runtime glue + excluded = image total: x64 Linux 3,871 + 5 + 1,181 = 5,057, x86 Linux 4,520 + 9 + 1,063 = 5,592, x64 MinGW 3,351 + 161 + 1,071 = 4,583, x86 MinGW 3,221 + 166 + 1,021 = 4,408. PicHash overlap (10+ instructions) with Nettle 3.10.2 and GMP 6.3.0 of the same toolchain and architecture after the exclusion: 16 (x64 Linux), 14 (x86 Linux), 36 (x64 MinGW), 53 (x86 MinGW), mostly GnuTLS's own thin wrappers of identical shape and GMP assembly blocks the PE symbol table leaves without a name, which a name pattern cannot reach. The sources are sha256-pinned and were checked against the upstream GPG signatures; nothing is patched. MSVC is not built (upstream supports MinGW and not MSVC), see `scripts/corpus/README.md`.  
+Generated with `scripts/build_corpus.py`; see `data/GnuTLS/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: GnuTLS -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| GnuTLS | 3.8.13 | GCC 13 (Linux, glibc) | [x86 ELF](data/GnuTLS/x86/mcrit/GnuTLS_3.8.13_gcc13_x86_libgnutls.so.mcrit) / [x64 ELF](data/GnuTLS/x64/mcrit/GnuTLS_3.8.13_gcc13_x64_libgnutls.so.mcrit) | [x86 ELF](data/GnuTLS/x86/smda/GnuTLS_3.8.13_gcc13_x86_libgnutls.so.7z) / [x64 ELF](data/GnuTLS/x64/smda/GnuTLS_3.8.13_gcc13_x64_libgnutls.so.7z) |
+| GnuTLS | 3.8.13 | MinGW-w64 GCC 13 | [x86 PE](data/GnuTLS/x86/mcrit/GnuTLS_3.8.13_mingw13_x86_libgnutls.dll.mcrit) / [x64 PE](data/GnuTLS/x64/mcrit/GnuTLS_3.8.13_mingw13_x64_libgnutls.dll.mcrit) | [x86 PE](data/GnuTLS/x86/smda/GnuTLS_3.8.13_mingw13_x86_libgnutls.dll.7z) / [x64 PE](data/GnuTLS/x64/smda/GnuTLS_3.8.13_mingw13_x64_libgnutls.dll.7z) |
+<!-- /generated -->
+
 ### libuv<a id='libuv'></a>
 
 libuv is the event loop behind Node.js and a good deal of C tooling.  

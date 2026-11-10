@@ -1,4 +1,56 @@
-"""GnuTLS 3.8.13 - the GNU TLS library (libgnutls), Linux ELF and MinGW DLL, x86 and x64."""
+"""GnuTLS 3.8.13 - the GNU TLS library (libgnutls), Linux ELF and MinGW DLL, x86 and x64.
+
+Tracker issue #26 (the GnuTLS layer is the study's largest collision with
+OpenSSL, 1,613 functions). This is the follow-on to the Nettle and GMP
+families: the aim here is breadth of GnuTLS itself, with the Nettle and GMP
+code that GnuTLS links in left to those two families.
+
+Build: GnuTLS needs Nettle (with hogweed), GMP, libtasn1 and libunistring.
+GMP 6.3.0 (--enable-fat --with-pic) and Nettle 3.10.2 (against that GMP,
+--disable-shared, -fPIC) are built first as static helper libraries under
+deps-{arch} of the build tree; libtasn1 and libunistring are GnuTLS's bundled
+copies (--with-included-libtasn1 --with-included-unistring). GnuTLS is
+configured --enable-shared --disable-static --without-p11-kit --without-idn
+--without-zlib --without-brotli --without-zstd --without-tpm --without-tpm2
+--disable-doc --disable-tests --disable-tools --disable-cxx --disable-libdane
+--disable-nls --disable-guile, and only gl/ and lib/ are made. MinGW passes
+lt_cv_deplibs_check_method=pass_all to configure: without it libtool refuses
+the static helper archives for a DLL ("libtool will only create a static
+version of it") and the DLL is never written. That is a configure variable,
+not a source edit; no upstream file is patched in any leg.
+
+Sources: gnutls-3.8.13.tar.xz, gmp-6.3.0.tar.xz and nettle-3.10.2.tar.gz are
+pinned by sha256 and their detached signatures were verified with gpg against
+the upstream keys (GnuTLS: Zoltan Fridrich and Alexander Sosedkin; GMP and
+Nettle: Niels Moeller, whose key has expired since but was valid when the
+signatures were made).
+
+Exclusion: the helper libraries' code is in the image whatever the flags are,
+and the Nettle and GMP families already carry it, so it is removed by name
+through Recipe.exclude_functions (the namespaces and the file-local statics
+below; see the comment on _NAMESPACES_ELF). kept + removed (compiler runtime
+glue) + excluded = image total, recomputed from provenance.json:
+
+  x64 Linux  3871 + 5   + 1181 = 5057
+  x86 Linux  4520 + 9   + 1063 = 5592
+  x64 MinGW  3351 + 161 + 1071 = 4583
+  x86 MinGW  3221 + 166 + 1021 = 4408
+
+PicHash overlap (functions of 10+ instructions) of the kept functions with
+Nettle 3.10.2 and GMP 6.3.0 of the same toolchain and architecture: x64 Linux
+16, x86 Linux 14, x64 MinGW 36, x86 MinGW 53 (before the 32-bit PE underscore
+fix of the patterns the x86 MinGW image overlapped 434). What is left is
+GnuTLS's own thin wrappers (_gnutls_cmac_magma_*, x86_hmac_sha*_set_key,
+padlock_hmac_*), a few Nettle statics that are not on the list
+(memxor3_different_alignment_b, mpn_get/set_base256 which GnuTLS defines
+itself), and unnamed GMP assembly blocks in the PE images (9 on x64, 14 on
+x86) that a name pattern cannot reach. Overlap between the four GnuTLS
+images: Linux x86/x64 0, MinGW x86/x64 0, Linux x64/MinGW x64 27, Linux
+x86/MinGW x86 158.
+
+Not built: MSVC (upstream supports MinGW only), other GnuTLS releases and the
+optional back ends; see scripts/corpus/README.md.
+"""
 
 import re
 
