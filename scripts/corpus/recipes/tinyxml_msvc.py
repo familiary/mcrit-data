@@ -115,6 +115,67 @@ FOSSIL's "tinyXML 2.0.2" has no SourceForge release; it is the TinyXML2 tag
 2.0.2, see tinyxml.py on the MinGW branch. validate --deep (these families plus cJSON, lz4, q3vm,
 aPLib, bzip2): 0 problems apart from README links to families outside the
 sparse checkout; no leakage.
+
+Second pass (scoped run 42776463353): every other TinyXML release on
+SourceForge and the TinyXML2 tags 8.0.0 and 10.0.0, with the 2.6.2 and
+TinyXML2 command lines (1.2.4 with /FIstring.h, the 2.1.x STL builds with
+/FIiostream; nothing patched), as versions of their own. Kept + removed =
+total (no exclusions):
+
+    1.2.4        tinyxml.dll            x86 124 + 1515 = 1639, x64 158 + 1519 = 1677
+    2.1.1        tinyxml.dll            x86 161 + 167 = 328, x64 212 + 177 = 389
+    2.1.1        tinyxml_stl.dll        x86 181 + 1535 = 1716, x64 232 + 1542 = 1774
+    2.1.2        tinyxml.dll            x86 161 + 167 = 328, x64 212 + 177 = 389
+    2.1.2        tinyxml_stl.dll        x86 165 + 1533 = 1698, x64 216 + 1538 = 1754
+    2.1.3        tinyxml.dll            x86 162 + 167 = 329, x64 215 + 177 = 392
+    2.1.3        tinyxml_stl.dll        x86 167 + 1535 = 1702, x64 220 + 1541 = 1761
+    2.1.4        tinyxml.dll            x86 161 + 167 = 328, x64 218 + 177 = 395
+    2.1.4        tinyxml_stl.dll        x86 166 + 1535 = 1701, x64 223 + 1541 = 1764
+    2.1.5        tinyxml.dll            x86 160 + 168 = 328, x64 217 + 177 = 394
+    2.1.5        tinyxml_stl.dll        x86 166 + 1535 = 1701, x64 223 + 1541 = 1764
+    2.2.0-beta   tinyxml.dll            x86 182 + 171 = 353, x64 244 + 180 = 424
+    2.2.0-beta   tinyxml_stl.dll        x86 193 + 1599 = 1792, x64 265 + 1605 = 1870
+    2.2.1        tinyxml.dll            x86 182 + 171 = 353, x64 244 + 180 = 424
+    2.2.1        tinyxml_stl.dll        x86 193 + 1599 = 1792, x64 265 + 1605 = 1870
+    2.3.0-beta   tinyxml.dll            x86 189 + 173 = 362, x64 245 + 182 = 427
+    2.3.0-beta   tinyxml_stl.dll        x86 199 + 1598 = 1797, x64 270 + 1604 = 1874
+    2.3.1-beta   tinyxml.dll            x86 205 + 173 = 378, x64 272 + 182 = 454
+    2.3.1-beta   tinyxml_stl.dll        x86 218 + 1598 = 1816, x64 307 + 1604 = 1911
+    2.3.2        tinyxml.dll            x86 205 + 173 = 378, x64 272 + 182 = 454
+    2.3.2        tinyxml_stl.dll        x86 218 + 1598 = 1816, x64 307 + 1604 = 1911
+    2.3.3        tinyxml.dll            x86 224 + 173 = 397, x64 296 + 182 = 478
+    2.3.3        tinyxml_stl.dll        x86 237 + 1598 = 1835, x64 326 + 1604 = 1930
+    2.3.4        tinyxml.dll            x86 225 + 173 = 398, x64 287 + 182 = 469
+    2.3.4        tinyxml_stl.dll        x86 235 + 1598 = 1833, x64 324 + 1604 = 1928
+    2.4.0        tinyxml.dll            x86 232 + 174 = 406, x64 313 + 183 = 496
+    2.4.0        tinyxml_stl.dll        x86 237 + 1598 = 1835, x64 329 + 1605 = 1934
+    2.4.1        tinyxml.dll            x86 232 + 174 = 406, x64 309 + 183 = 492
+    2.4.1        tinyxml_stl.dll        x86 237 + 1598 = 1835, x64 329 + 1605 = 1934
+    2.4.2        tinyxml.dll            x86 231 + 174 = 405, x64 308 + 183 = 491
+    2.4.2        tinyxml_stl.dll        x86 236 + 1598 = 1834, x64 328 + 1605 = 1933
+    2.4.3        tinyxml.dll            x86 254 + 173 = 427, x64 325 + 181 = 506
+    2.4.3        tinyxml_stl.dll        x86 264 + 1599 = 1863, x64 358 + 1610 = 1968
+    2.5.0-beta   tinyxml.dll            x86 264 + 172 = 436, x64 328 + 180 = 508
+    2.5.0-beta   tinyxml_stl.dll        x86 292 + 1596 = 1888, x64 391 + 1605 = 1996
+    2.5.1        tinyxml.dll            x86 255 + 172 = 427, x64 325 + 180 = 505
+    2.5.1        tinyxml_stl.dll        x86 292 + 1597 = 1889, x64 391 + 1605 = 1996
+    2.5.3        tinyxml.dll            x86 258 + 172 = 430, x64 330 + 180 = 510
+    2.5.3        tinyxml_stl.dll        x86 295 + 1597 = 1892, x64 396 + 1605 = 2001
+    2.6.0        tinyxml.dll            x86 258 + 172 = 430, x64 315 + 179 = 494
+    2.6.0        tinyxml_stl.dll        x86 294 + 1532 = 1826, x64 372 + 1538 = 1910
+    2.6.1        tinyxml.dll            x86 258 + 172 = 430, x64 313 + 179 = 492
+    2.6.1        tinyxml_stl.dll        x86 294 + 1532 = 1826, x64 370 + 1538 = 1908
+    8.0.0        tinyxml2.dll           x86 481 + 185 = 666, x64 488 + 191 = 679
+    10.0.0       tinyxml2.dll           x86 485 + 185 = 670, x64 494 + 189 = 683
+
+1.2.4 has no string class of its own, so like the STL builds it exports
+std::string instantiations that the glue baseline removes (about 1,500).
+Against the nearest other TinyXML image of the same architecture, between
+11% (2.3.4 x64, 15 of 140) and 99% (2.6.0 STL x86, 168 of 169) of the
+PicHashes of ten instructions or more are shared, never all of them. 2.5.2
+is not committed: its MSVC images (default and STL, both architectures) are
+PicHash-identical, every function at every size, to 2.5.1's, so they would
+add nothing.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -302,7 +363,10 @@ def _tinyxml_old_msvc(version):
     )
 
 
+# 2.5.2 is left out: measured in run 42776463353, its images are
+# PicHash-identical to 2.5.1's on both architectures, default and STL.
 for _v in TINYXML_RELEASES:
-    RECIPES["TinyXML_%s_msvc" % _v] = _tinyxml_old_msvc(_v)
+    if _v != "2.5.2":
+        RECIPES["TinyXML_%s_msvc" % _v] = _tinyxml_old_msvc(_v)
 RECIPES["TinyXML2_8.0.0_msvc"] = _tinyxml2("8.0.0")
 RECIPES["TinyXML2_10.0.0_msvc"] = _tinyxml2("10.0.0")
