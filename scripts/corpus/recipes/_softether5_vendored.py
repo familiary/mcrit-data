@@ -1307,7 +1307,40 @@ NAMES = {
 }
 
 
-def patterns():
-    """One anchored alternation per library, for Recipe.exclude_functions."""
-    return ["^(?:%s)$" % "|".join(re.escape(n) for n in NAMES[k])
-            for k in NAMES if NAMES[k]]
+# The MinGW (Windows) builds link the same liboqs, OQS provider and blake2s
+# statically into the programs (cpu_features is not built for Windows), and
+# the same membership test on that build's own liboqs.a, liboqsprovider.a and
+# blake2s.c.obj finds the names above plus these, which GCC's partial
+# inlining and constant propagation produce only there (fprintf.constprop.0
+# is mingw-w64's inline fprintf as compiled into liboqs and the provider; no
+# SoftEther object defines it). Kept apart so the Linux recipes' patterns,
+# and with them their provenance, do not change.
+MINGW_NAMES = {
+    'liboqs': (
+        'SHA3_sha3_256_inc_init.part.0',
+        'SHA3_sha3_384_inc_init.part.0',
+        'SHA3_sha3_512_inc_init.part.0',
+        'SHA3_shake256_inc_init.part.0',
+        'SHA3_shake256_x4_inc_init.part.0',
+        'fprintf.constprop.0',
+    ),
+    'BLAKE2': (
+        'blake2s_update.part.0',
+    ),
+}
+
+
+def patterns(mingw=False):
+    """One anchored alternation per library, for Recipe.exclude_functions.
+
+    With ``mingw`` the MinGW additions are folded into their library's
+    alternation.
+    """
+    out = []
+    for k in NAMES:
+        names = list(NAMES[k])
+        if mingw:
+            names += [n for n in MINGW_NAMES.get(k, ()) if n not in names]
+        if names:
+            out.append("^(?:%s)$" % "|".join(re.escape(n) for n in names))
+    return out

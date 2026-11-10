@@ -87,10 +87,16 @@ class RecipeWiringTest(unittest.TestCase):
         found = [recipe for recipe in recipes.all_recipes().values()
                  if recipe.family == "SoftEtherVPN"
                  and recipe.version.startswith("5.")]
-        self.assertEqual(len(found), 2)
+        self.assertEqual(len(found), 4)
         for recipe in found:
-            self.assertEqual(recipe.exclude_functions, v5.patterns())
-        for pattern in v5.patterns():
+            mingw = recipe.toolchains[0].startswith("mingw")
+            self.assertEqual(recipe.exclude_functions, v5.patterns(mingw=mingw))
+        # The MinGW additions extend the table; the Linux patterns are the
+        # table alone, so their provenance does not move.
+        for plain, extended in zip(v5.patterns(), v5.patterns(mingw=True)):
+            plain_names = set(plain[4:-2].split("|"))
+            self.assertTrue(plain_names <= set(extended[4:-2].split("|")))
+        for pattern in v5.patterns() + v5.patterns(mingw=True):
             self.assertTrue(pattern.startswith("^(?:") and pattern.endswith(")$"))
             rx = re.compile(pattern)
             # SoftEther's own CamelCase API must never match.

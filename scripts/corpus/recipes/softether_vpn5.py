@@ -174,6 +174,174 @@ _ARTIFACTS = [
 _SOURCE = Source(git_url="https://github.com/SoftEtherVPN/SoftEtherVPN.git",
                  git_ref="5.2.5189")
 
+
+# MinGW: the three libraries the Windows build looks for (vcpkg's on
+# upstream's MSVC path) are built here from pinned release tarballs, as DLLs
+# with import libraries, so none of their code enters the images - the same
+# position as the dynamic OpenSSL, zlib and libsodium of the Linux leg.
+# OpenSSL and zlib use the pins of recipes/openssl.py and recipes/libpng.py.
+_ZLIB = "1.3.1"
+_SODIUM = "1.0.20"
+_OPENSSL = "3.0.15"
+_DEPS_MINGW = {
+    "zlib_archive": Source(
+        url="https://zlib.net/fossils/zlib-%s.tar.gz" % _ZLIB,
+        sha256="9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23"),
+    "sodium_archive": Source(
+        url="https://download.libsodium.org/libsodium/releases/libsodium-%s.tar.gz" % _SODIUM,
+        sha256="ebb65ef6ca439333c2bb41a0c1990587288da07f6c7fd07cb3a18cc18d30ce19"),
+    "openssl_archive": Source(
+        url="https://github.com/openssl/openssl/releases/download/openssl-%s/openssl-%s.tar.gz"
+            % (_OPENSSL, _OPENSSL),
+        sha256="23c666d0edf20f14249b3d8f0368acaee9ab585b09e1de82107c66e1f3ec9533"),
+}
+
+# The build-tree preparation of scripts/corpus/softether5_mingw.py: four
+# MSVC-only lines deleted from src/CMakeLists.txt, two case symlinks in
+# src/PenCore, a header directory and an import-library alias directory. Its
+# docstring lists every byte of it.
+_MINGW_PREPARE = ("python {repo}/scripts/corpus/softether5_mingw.py "
+                  "{source_root} {source_root}/mingw-shim /usr/{host}/lib")
+_MINGW_ZLIB = ("mkdir -p deps-src deps/include deps/lib deps/bin && "
+               "tar xf {zlib_archive} -C deps-src && "
+               "make -C deps-src/zlib-%s -f win32/Makefile.gcc PREFIX={prefix} "
+               "STRIP=true -j$(nproc) zlib1.dll && "
+               "cp deps-src/zlib-%s/zlib.h deps-src/zlib-%s/zconf.h deps/include/ && "
+               "cp deps-src/zlib-%s/libz.dll.a deps/lib/" % ((_ZLIB,) * 4))
+_MINGW_SODIUM = ("tar xf {sodium_archive} -C deps-src && cd deps-src/libsodium-%s && "
+                 "./configure --host={host} --prefix={source_root}/deps "
+                 "--disable-static --enable-shared && make -j$(nproc) && make install"
+                 % _SODIUM)
+# --cross-compile-prefix prepends the triple itself (see recipes/openssl.py).
+# The static libcrypto.a/libssl.a that install_dev also installs are deleted
+# so nothing can link OpenSSL statically.
+_MINGW_OPENSSL = ("tar xf {openssl_archive} -C deps-src && cd deps-src/openssl-%s && "
+                  "./Configure {openssl_target} --cross-compile-prefix={prefix} "
+                  "shared no-tests --prefix={source_root}/deps --libdir=lib && "
+                  "(make -j$(nproc) build_libs || make -j$(nproc) build_libs) && "
+                  "make install_dev && rm -f {source_root}/deps/lib/libcrypto.a "
+                  "{source_root}/deps/lib/libssl.a" % _OPENSSL)
+_OPENSSL_ENV = {"CC": "gcc", "CXX": "g++", "AR": "ar", "RANLIB": "ranlib",
+                "WINDRES": "windres"}
+# Upstream's RelWithDebInfo, as on Linux. CMAKE_SYSTEM_PROCESSOR is what
+# liboqs picks its implementations by (AMD64 is what its own
+# toolchain_windows-amd64.cmake sets, x86 what toolchain_windows_x86.cmake
+# sets). Two defines: _WIN32_WINNT=0x0600 is the Vista value
+# Mayaqua/MayaType.h sets when nothing else has (mingw's _mingw.h defines
+# 0x0A00 first, which with MayaType.h's NTDDI_VISTA leaves ipsectypes.h using
+# IKEEXT_EM_POLICY1 that iketypes.h never declares: "unknown type name
+# 'IKEEXT_EM_POLICY1'"); SKIP_CPU_FEATURES is upstream's own switch for
+# builds without google/cpu_features, which src/Mayaqua/CMakeLists.txt only
+# adds under if(UNIX) - MSVC skips the include through _MSC_VER instead, so
+# without it Encrypt.c stops with "cpu_features_macros.h: No such file or
+# directory".
+_MINGW_FLAGS = ("-I{source_root}/mingw-shim/include -D_WIN32_WINNT=0x0600 "
+                "-DSKIP_CPU_FEATURES")
+
+
+def _mingw_configure(processor, extra_cflags=""):
+    flags = (_MINGW_FLAGS + " " + extra_cflags).strip()
+    return ("cmake -S . -B build -G 'Unix Makefiles' "
+            "-DCMAKE_BUILD_TYPE=RelWithDebInfo "
+            "-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_SYSTEM_PROCESSOR=%s "
+            "-DCMAKE_C_COMPILER={cc} -DCMAKE_CXX_COMPILER={cxx} "
+            "-DCMAKE_RC_COMPILER={windres} "
+            "'-DCMAKE_FIND_ROOT_PATH={source_root}/deps;/usr/{host}' "
+            "-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER "
+            "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY "
+            "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY "
+            "-DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY "
+            "-DOPENSSL_ROOT_DIR={source_root}/deps "
+            "-DZLIB_INCLUDE_DIR={source_root}/deps/include "
+            "-DZLIB_LIBRARY={source_root}/deps/lib/libz.dll.a "
+            "'-DCMAKE_C_FLAGS=%s' '-DCMAKE_CXX_FLAGS=%s' "
+            "'-DCMAKE_EXE_LINKER_FLAGS=-L{source_root}/mingw-shim/lib'"
+            % (processor, flags, flags))
+
+
+_MINGW_ENV = {
+    "PKG_CONFIG_LIBDIR": "{source_root}/deps/lib/pkgconfig",
+    "PKG_CONFIG_PATH": "",
+}
+# Cedar's two C++ files (Win32Com.cpp, WinJumpList.cpp) end up in programs
+# whose only source is C, so CMake links them with gcc and nothing pulls in
+# the C++ runtime ("undefined reference to `__gxx_personality_seh0'",
+# "`__cxa_end_catch'", "`vtable for __cxxabiv1::__class_type_info'" from
+# libcedar.a(Win32Com.cpp.obj)); MSVC's single runtime hides this.
+# InitPropVariantFromString, inline in mingw's propvarutil.h, needs
+# shlwapi's SHStrDupW, which the SDK build gets without naming it
+# ("undefined reference to `__imp_SHStrDupW'"). Both libraries go in front of
+# CMake's own default list for Windows-GNU, which is otherwise kept as it is;
+# libstdc++ is the import library, so its code stays in libstdc++-6.dll.
+_MINGW_STDLIBS = ("'-DCMAKE_C_STANDARD_LIBRARIES=-lstdc++ -lshlwapi -lkernel32 "
+                  "-luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 "
+                  "-luuid -lcomdlg32 -ladvapi32'")
+# Only vpnserver is built and taken: Cedar and Mayaqua are static libraries
+# on Windows, and vpnbridge, vpnclient and vpncmd link the same members of
+# them - on x64 their function symbols are vpnserver's exactly, except that
+# vpncmd has main/SetConsoleTitleA where the others have WinMain,
+# StartProcess and StopProcess.
+_MINGW_BUILD = "cmake --build build -j$(nproc) --target vpnserver"
+_MINGW_CLEAN = "rm -rf deps-src"
+
+
+_MINGW_BUILD_FLAGS = (
+    "upstream RelWithDebInfo (-O2 -g -DNDEBUG) cross-compiled with CMake for "
+    "Windows; BUILD TREE PATCHED by scripts/corpus/softether5_mingw.py (4 "
+    "MSVC-only lines deleted from src/CMakeLists.txt, case aliases, SDK "
+    "shim headers, __forceinline/__try shims); -D_WIN32_WINNT=0x0600 "
+    "-DSKIP_CPU_FEATURES; -lstdc++ -lshlwapi added to the C standard "
+    "libraries; OpenSSL %s, zlib %s and libsodium %s built from pinned "
+    "tarballs as DLLs" % (_OPENSSL, _ZLIB, _SODIUM))
+_MINGW_NOTES = (
+    "The Developer Edition 5.x (tag 5.2.5189) cross-compiled with MinGW-w64. "
+    "NOT byte-identical to a build of unmodified upstream: the recipe edits "
+    "the cloned build tree before configuring (scripts/corpus/softether5_mingw.py "
+    "lists every change: four MSVC-only switch lines (/Qspectre, /guard:cf, "
+    "/guard:cf /DYNAMICBASE, /CETCOMPAT) deleted from src/CMakeLists.txt; "
+    "symlinks pencore.c/pencore.rc in src/PenCore; a header directory of "
+    "case aliases and Windows SDK definitions mingw-w64 11 lacks (prsht.h, "
+    "fwpmu.h, natupnp.h); __forceinline redefined without extern, __try/"
+    "__except turned into if/else, and for C++ the CRYPTO_KEY_TYPE enum "
+    "declared ahead of its forward typedef; mixed-case import-library "
+    "aliases). No upstream .c or .h file is modified. OpenSSL, zlib and "
+    "libsodium are built from pinned tarballs as DLLs and imported, so "
+    "none of their code is in the image. Cedar and Mayaqua are static on "
+    "Windows, so the program is the image; only vpnserver.exe is taken "
+    "because vpnbridge, vpnclient and vpncmd link the same functions. "
+    "liboqs, the OQS provider and blake2s are linked statically and "
+    "excluded by exact name (_softether5_vendored.py, MinGW additions "
+    "included). ")
+_MINGW_NOTES_X64 = _MINGW_NOTES
+_MINGW_NOTES_X86 = _MINGW_NOTES + "x86 adds -msse2 (blake2s.c requires SSE2)."
+
+
+def _mingw_recipe(arch, processor, extra_cflags, build_flags, notes):
+    return Recipe(
+        family="SoftEtherVPN",
+        version="5.2.5189",
+        upstream="https://github.com/SoftEtherVPN/SoftEtherVPN",
+        license="Apache-2.0",
+        source=_SOURCE,
+        extra_sources=_DEPS_MINGW,
+        build=[
+            BuildStep(_MINGW_PREPARE),
+            BuildStep(_MINGW_ZLIB),
+            BuildStep(_MINGW_SODIUM),
+            BuildStep(_MINGW_OPENSSL, env=_OPENSSL_ENV),
+            BuildStep(_MINGW_CLEAN),
+            BuildStep(_mingw_configure(processor, extra_cflags) + " " + _MINGW_STDLIBS,
+                      env=_MINGW_ENV),
+            BuildStep(_MINGW_BUILD),
+        ],
+        artifacts=[Artifact(path="build/vpnserver.exe", component="vpnserver")],
+        toolchains=["mingw_%s" % arch],
+        requires=["cmake", "make", "perl", "pkg-config", "python"],
+        exclude_functions=_vendored.patterns(mingw=True),
+        build_flags=build_flags,
+        notes=notes,
+    )
+
 RECIPES = {
     "softether_vpn_5.2.5189_linux": Recipe(
         family="SoftEtherVPN",
@@ -244,4 +412,9 @@ RECIPES = {
                "kept + 7 glue + 7 excluded = 5187, libmayaqua.so 3024 + 9 + "
                "873 = 3906."),
     ),
+    "softether_vpn_5.2.5189_mingw_x64": _mingw_recipe(
+        "x64", "AMD64", "", _MINGW_BUILD_FLAGS, _MINGW_NOTES_X64),
+    "softether_vpn_5.2.5189_mingw_x86": _mingw_recipe(
+        "x86", "x86", "-msse2", _MINGW_BUILD_FLAGS + "; x86 adds -msse2",
+        _MINGW_NOTES_X86),
 }
