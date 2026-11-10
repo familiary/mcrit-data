@@ -7,8 +7,8 @@ argument parser - and Zydis's only dependency. Zycore is a git submodule that
 each Zydis tag pins by commit, and the pipeline's fetch stage initialises it,
 so its commit is recorded in provenance beside Zydis's own.
 
-Why it is here. Issue 45 of the tracker. data/Hidden vendors Zydis 3.1.0 and
-Zycore 1.0.0 under Hidden/Disasm and compiles them into Hidden.sys with
+Why it is here. Issue 45 of the tracker. data/Hidden vendors Zydis and
+Zycore (version macros 3.1.0 and 1.0.0) under Hidden/Disasm and compiles them into Hidden.sys with
 ZYCORE_STATIC_DEFINE, ZYDIS_STATIC_DEFINE and ZYAN_NO_LIBC, so 103 of the
 507 functions the Hidden family reports for Hidden.sys are Zydis or Zycore
 under the wrong name (the committed notes say 101; 103 carry a Zydis, Zyan or
@@ -20,23 +20,14 @@ No published function-level match between Zydis and a ValleyRAT sample
 exists, and none is claimed.
 
 Measured against the Hidden family, on the x64 artefacts (Hidden is x64 only,
-because the WDK has no x86 kernel libraries): every one of those 103 symbol
-names is present in the MSVC build of Zydis 3.1.0 (103 of 103, with and
-without ZYAN_NO_LIBC), against 83 in the MinGW and ELF builds and 95 in
-4.1.1 MSVC, so the vendored copy is confirmed as 3.1.0 by name. Exact PicHash
-agreement is much thinner: 3 of the 91 substantial ones
-(ZydisFormatterBufferGetString, ZydisFormatterTokenNext and
-ZydisIsFeatureEnabled, same name and same hash) with the 3.1.0 MSVC builds, 2
-with 4.1.1 MSVC and none with MinGW or ELF. The driver is compiled by the
-WDK's kernel-mode toolset with its own flags, which is a different code
-generator configuration from the user-mode cl line used here, and the other 88
-differ in encoding, not in what they are. So Hidden.sys's copy is not an
-exact duplicate of this one, and fuzzy matching, not PicHash, is what will
-link them. The functions are still carried inside data/Hidden/x64 under the
-Hidden name: moving them out would rewrite committed Hidden data, which needs
-a name-based removal this tooling does not have (refilter removes by baseline
-symbol and PicHash only), so that is left as a decision and recorded in
-hidden.py.
+because the WDK has no x86 kernel libraries): of those 103 symbol names, 83
+are present in the ELF and MinGW builds of tag 3.1.0 and 103 in its MSVC
+builds, and no ELF function has the PicHash of its Hidden.sys namesake.
+Hidden/Disasm is, by content, master at commit 6a17c48 with Zycore 4f3746f
+rather than tag v3.1.0 (the "Hidden's commit" paragraph of zydis_msvc.py);
+that commit is built for MinGW, MSVC and the WDK, not for Linux, because
+Hidden is a Windows driver and the MSVC and WDK builds are what account for
+it. hidden.py excludes what they prove.
 
 Zycore is not a family of its own. It cannot be built into a PE by itself
 without becoming a second copy of the same functions: a Zycore DLL and a Zydis
@@ -58,7 +49,8 @@ route needs no change to upstream. Examples and tools are switched off, and
 -DCMAKE_POLICY_VERSION_MINIMUM=3.5 lets CMake 4 configure the 3.x projects'
 old minimum.
 
-Two versions. 3.1.0 is what Hidden vendors and the issue's first priority.
+Two versions here. 3.1.0 is the tag Hidden's version macros name and the
+issue's first priority.
 4.1.1 is the current release (4.x adds an encoder and has 194 Zydis* functions
 in the MSVC x64 image against 3.1.0's 132). The
 PicHash overlap at the ten-instruction floor between them on one toolchain is
