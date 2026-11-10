@@ -394,6 +394,14 @@ def _variant(slug, target, toolchains, kind, triple_note, steps_before=(),
         toolchains=toolchains,
         requires=["cargo"],
         exclude_functions=exclude,
+        # The arti binary on MSVC, built with cargo's default profile (no
+        # debug info), names only its public symbols in the PDB: measured
+        # 38% (2.3.0 x64), 36% (2.3.0 x86), 44% (1.1.13 x64) and 40% (1.1.13
+        # x86) of functions of 3+ instructions in run 42776062997, against
+        # the 0.5 default. Not a stripped build; turning on debug info would
+        # change the code (orion's debug = true MSVC images differ from the
+        # release ones), so the floor is lowered for these four only.
+        min_named_ratio=0.3 if (driver is None and msvc) else 0.5,
         build_flags="%s --locked, rustc %s (rustup), features %s; %s"
                     % (profile, rustc, features, triple_note),
         notes=_VARIANT_NOTES[slug] + "Only the Arti workspace's own code is "
