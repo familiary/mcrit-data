@@ -83,6 +83,15 @@ By family: XMRig 484 (MinGW 61 + 40, Linux 48 + 40, MSVC 123 + 118, musl 31 +
 are data/<family>/provenance.json's excluded_function_count (for the musl
 images the libuv/OpenSSL ones plus these).
 
+The recipes added afterwards (XMRig_6.25.0-gpu-hwloc on MinGW, Linux and MSVC,
+xmr-stak_2.10.8_linux_x86) build the same trees with the same compilers and
+take the tables of their siblings unchanged (XMRig_6.25.0, XMRig_6.25.0_linux,
+XMRig_6.25.0_msvc, xmr-stak_2.10.8_linux); the MSVC gpu-hwloc table adds the
+hwloc category below. They were applied when the images were built: XMRig
+gpu-hwloc MinGW 65 + 44, Linux 60 + 48, MSVC 123 + 118 (x64 + x86);
+xmr-stak Linux x86 10, and 2 more (_STDLIB_6) re-derived from its archive. The 18 + 18 MSVC hwloc functions were then removed
+from the archives of run 42822515768 without a rebuild, as above.
+
 Measured and deliberately left in:
 
   * The ed25519 helpers (ge_p1p1_to_p2, ge_p1p1_to_p3, slide, load_3, load_4).
@@ -514,6 +523,31 @@ _LLHTTP_5 = (
 )
 
 
+# xmr-stak's Linux x86 image: _STDLIB_2 and the i686 spelling (int for the
+# difference type) of the char-vector introsort that _STDLIB_2 lists for x64.
+# Its one PicHash is carried under that name by XMRig, xmrig-proxy and this
+# image, each in both of its copies (`validate --deep`).
+_STDLIB_6 = tuple(sorted(_STDLIB_2 + (
+    'void std::__introsort_loop<__gnu_cxx::__normal_iterator<char*, std::vector<char, std::allocator<char> > >, int, __gnu_cxx::__ops::_Iter_less_iter>(__gnu_cxx::__normal_iterator<char*, std::vector<char, std::allocator<char> > >, __gnu_cxx::__normal_iterator<char*, std::vector<char, std::allocator<char> > >, int, __gnu_cxx::__ops::_Iter_less_iter) [clone .isra.0]',
+)))
+
+# hwloc's own `static __hwloc_inline` helpers from hwloc.h and hwloc/helper.h,
+# which MSVC emits as functions in XMRig's translation units when the miner
+# links the hwloc DLL (XMRig_6.25.0-gpu-hwloc_msvc); GCC inlines them on Linux
+# and MinGW. Evidence P: every function of each name in the x86 and x64 images
+# (18 in each) is PicHash-equal to the same-named function of data/hwloc's
+# MSVC hwloc.dll of the same architecture.
+_HWLOC_1 = (
+    'hwloc_get_nbobjs_by_type',
+    'hwloc_get_next_obj_by_depth',
+    'hwloc_get_next_obj_by_type',
+    'hwloc_get_numanode_obj_by_os_index',
+    'hwloc_get_pu_obj_by_os_index',
+    'hwloc_get_root_obj',
+    'hwloc_obj_get_info_by_name',
+)
+
+
 NAMES = {
     'XMRig_6.25.0': {
         'llhttp': _LLHTTP_1,
@@ -554,6 +588,7 @@ NAMES = {
         'rapidjson': _RAPIDJSON_3,
         'stdlib': _STDLIB_3,
         'crt': _CRT_1,
+        'hwloc': _HWLOC_1,
     },
     'XMRig_6.25.0_musl': {
         'llhttp': _LLHTTP_4,
@@ -566,7 +601,7 @@ NAMES = {
     },
     'xmr-stak_2.10.8_linux_x86': {
         'rapidjson': _RAPIDJSON_2,
-        'stdlib': _STDLIB_2,
+        'stdlib': _STDLIB_6,
     },
     'xmr-stak_2.10.8_mingw': {
         'rapidjson': _RAPIDJSON_1,
@@ -607,7 +642,7 @@ NAMES = {
 }
 
 
-CATEGORIES = ("llhttp", "argon2", "ed25519", "rapidjson", "stdlib", "crt")
+CATEGORIES = ("llhttp", "argon2", "ed25519", "rapidjson", "stdlib", "crt", "hwloc")
 
 
 def exact_names(names):

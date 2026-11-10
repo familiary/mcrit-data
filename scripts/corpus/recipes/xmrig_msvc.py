@@ -111,7 +111,15 @@ RECIPES = {
 # hwloc.lib, so cpu.cmake's `set(CPUID_LIB hwloc)` links the DLL. No XMRig
 # file is modified (the vendored headers, the same 2.12.1, are still the ones
 # on the include path); the image imports hwloc.dll as the Linux and MinGW
-# images import libhwloc.
+# images import libhwloc. What MSVC still emits from hwloc's headers, the
+# `static __hwloc_inline` helpers of hwloc.h and hwloc/helper.h that GCC
+# inlines, is 18 functions under 7 names per image, each PicHash-equal to the
+# same-named function of data/hwloc's MSVC hwloc.dll; they are excluded by
+# exact name (_stack_vendored.py, category hwloc). Built in run 42822515768:
+# kept + removed + excluded = total, x64 18,313 + 2,329 + 141 = 20,783, x86
+# 18,895 + 2,210 + 136 = 21,241; no function of 10+ instructions is
+# PicHash-shared with hwloc.dll. Against XMRig_6.25.0_msvc (distinct PicHashes,
+# 10+ instructions): 3,732 of 4,964 (x64), 4,050 of 4,955 (x86).
 from .hwloc import MSVC_CMAKE_OPTIONS as _HWLOC_CMAKE  # noqa: E402
 from .hwloc import SOURCE as _HWLOC_SOURCE  # noqa: E402
 
@@ -167,7 +175,8 @@ RECIPES["XMRig_6.25.0-gpu-hwloc_msvc"] = Recipe(
           "and replaces add_subdirectory(src/3rdparty/hwloc) with an imported "
           "target (exercisers/xmrig_hwloc_shared.cmake, through "
           "CMAKE_PROJECT_xmrig_INCLUDE), so hwloc is imported and not in the "
-          "image; no source file is modified. llhttp, Argon2/Blake2b and "
+          "image; no source file is modified. hwloc's header inline helpers "
+          "that MSVC emits (7 names) are excluded by exact name. llhttp, Argon2/Blake2b and "
           "ed25519 helpers, rapidjson, C++ standard library functions and "
           "__scrt_common_main_seh are removed by exact name as for the 6.25.0 "
           "image (_stack_vendored.py). libuv and OpenSSL are linked as DLL "

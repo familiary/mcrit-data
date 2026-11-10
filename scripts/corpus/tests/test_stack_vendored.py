@@ -150,6 +150,11 @@ class TableHygieneTest(unittest.TestCase):
             self.assertEqual(name, "__scrt_common_main_seh")
             self.assertIn("_msvc", recipe)
 
+    def test_hwloc_is_the_inline_helpers_of_the_msvc_gpu_hwloc_recipe(self):
+        for recipe, name in _all_names("hwloc"):
+            self.assertRegex(name, r"^hwloc_(get|obj)_", (recipe, name))
+            self.assertEqual(recipe, "XMRig_6.25.0-gpu-hwloc_msvc")
+
     def test_identifiers_kept_on_purpose_are_in_no_table(self):
         kept = set(KEPT_ED25519 + KEPT_MINGW_CRT + KEPT_ARGON2)
         for recipe, name in _all_names():

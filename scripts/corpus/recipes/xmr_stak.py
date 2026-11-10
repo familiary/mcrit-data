@@ -124,6 +124,9 @@ RECIPES = {
 #     stubs of the MinGW recipe), so those generated stubs are in the image.
 # Everything else is the x64 recipe: OpenSSL 3.5.8 shared, CPU backend only,
 # XMR-STAK_COMPILE=generic, -include cstdio.
+# Built in run 42794750598 (scratch/s4-xmrig-linux); its own exclusion table
+# (_stack_vendored.py, _STDLIB_6) then removed two more functions from the
+# archive without a rebuild: 1,899 kept + 6 removed + 12 excluded = 1,917.
 from .xmr_stak_mingw import _ASM, _SRC, _UMUL32  # noqa: E402
 
 _PATCH_LINUX_X86 = BuildStep(
@@ -157,7 +160,7 @@ def _stak_x86():
             BuildStep("cmake --build build-{arch} -j$(nproc)"),
         ],
         toolchains=["linux_x86"],
-        exclude_functions=vendored.patterns("xmr-stak_2.10.8_linux"),
+        exclude_functions=vendored.patterns("xmr-stak_2.10.8_linux_x86"),
         build_flags="-O3 -DNDEBUG (CMake Release), -msse2 -maes; build tree "
                     "patched by the recipe (32-bit #error removed, 32-bit "
                     "umul128, x86 compat header force-included, asm ret stubs)",

@@ -48,6 +48,52 @@
     "upstream": "https://github.com/fireice-uk/xmr-stak",
     "version": "2.10.8"
   },
+  "xmr-stak_2.10.8_gcc13_x86_xmr-stak": {
+    "architecture": "x86",
+    "build_flags": "-O3 -DNDEBUG (CMake Release), -msse2 -maes; build tree patched by the recipe (32-bit #error removed, 32-bit umul128, x86 compat header force-included, asm ret stubs)",
+    "built_artifact": "build-x86/bin/xmr-stak",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "xmr-stak",
+    "dependencies": {
+      "ssl": {
+        "archive": "openssl-3.5.8.tar.gz",
+        "sha256": "a8f84a39918ec6415ce765d9b429d313ba97b8143169c172e734b9514464f5b2",
+        "url": "https://github.com/openssl/openssl/releases/download/openssl-3.5.8/openssl-3.5.8.tar.gz"
+      }
+    },
+    "exclude_functions": [
+      "^(?:rapidjson::internal::Stack<rapidjson::CrtAllocator>::Destroy\\(\\)|void\\ rapidjson::internal::Stack<rapidjson::CrtAllocator>::Expand<char>\\(unsigned\\ long\\))$",
+      "^(?:__gnu_cxx::__normal_iterator<char\\*,\\ std::vector<char,\\ std::allocator<char>\\ >\\ >\\ std::__unique<__gnu_cxx::__normal_iterator<char\\*,\\ std::vector<char,\\ std::allocator<char>\\ >\\ >,\\ __gnu_cxx::__ops::_Iter_equal_to_iter>\\(__gnu_cxx::__normal_iterator<char\\*,\\ std::vector<char,\\ std::allocator<char>\\ >\\ >,\\ __gnu_cxx::__normal_iterator<char\\*,\\ std::vector<char,\\ std::allocator<char>\\ >\\ >,\\ __gnu_cxx::__ops::_Iter_equal_to_iter\\)\\ \\[clone\\ \\.isra\\.0\\]|std::_Rb_tree<long,\\ std::pair<long\\ const,\\ long>,\\ std::_Select1st<std::pair<long\\ const,\\ long>\\ >,\\ std::less<long>,\\ std::allocator<std::pair<long\\ const,\\ long>\\ >\\ >::_M_get_insert_unique_pos\\(long\\ const\\&\\)\\ \\[clone\\ \\.isra\\.0\\]|std::__cxx11::basic_string<char,\\ std::char_traits<char>,\\ std::allocator<char>\\ >\\ std::__cxx11::regex_traits<char>::lookup_collatename<char\\ const\\*>\\(char\\ const\\*,\\ char\\ const\\*\\)\\ const|std::__cxx11::basic_string<char,\\ std::char_traits<char>,\\ std::allocator<char>\\ >\\ std::__cxx11::regex_traits<char>::transform_primary<char\\ const\\*>\\(char\\ const\\*,\\ char\\ const\\*\\)\\ const|std::__cxx11::basic_string<char,\\ std::char_traits<char>,\\ std::allocator<char>\\ >::operator=\\(std::__cxx11::basic_string<char,\\ std::char_traits<char>,\\ std::allocator<char>\\ >\\&\\&\\)\\ \\[clone\\ \\.isra\\.0\\]|std::__cxx11::regex_traits<char>::_RegexMask\\ std::__cxx11::regex_traits<char>::lookup_classname<char\\ const\\*>\\(char\\ const\\*,\\ char\\ const\\*,\\ bool\\)\\ const|std::__cxx11::regex_traits<char>::isctype\\(char,\\ std::__cxx11::regex_traits<char>::_RegexMask\\)\\ const\\ \\[clone\\ \\.isra\\.0\\]|std::vector<std::__cxx11::sub_match<__gnu_cxx::__normal_iterator<char\\ const\\*,\\ std::__cxx11::basic_string<char,\\ std::char_traits<char>,\\ std::allocator<char>\\ >\\ >\\ >,\\ std::allocator<std::__cxx11::sub_match<__gnu_cxx::__normal_iterator<char\\ const\\*,\\ std::__cxx11::basic_string<char,\\ std::char_traits<char>,\\ std::allocator<char>\\ >\\ >\\ >\\ >\\ >::operator=\\(std::vector<std::__cxx11::sub_match<__gnu_cxx::__normal_iterator<char\\ const\\*,\\ std::__cxx11::basic_string<char,\\ std::char_traits<char>,\\ std::allocator<char>\\ >\\ >\\ >,\\ std::allocator<std::__cxx11::sub_match<__gnu_cxx::__normal_iterator<char\\ const\\*,\\ std::__cxx11::basic_string<char,\\ std::char_traits<char>,\\ std::allocator<char>\\ >\\ >\\ >\\ >\\ >\\ const\\&\\)\\ \\[clone\\ \\.isra\\.0\\]|void\\ std::__adjust_heap<__gnu_cxx::__normal_iterator<char\\*,\\ std::vector<char,\\ std::allocator<char>\\ >\\ >,\\ long,\\ char,\\ __gnu_cxx::__ops::_Iter_less_iter>\\(__gnu_cxx::__normal_iterator<char\\*,\\ std::vector<char,\\ std::allocator<char>\\ >\\ >,\\ long,\\ long,\\ char,\\ __gnu_cxx::__ops::_Iter_less_iter\\)\\ \\[clone\\ \\.isra\\.0\\]|void\\ std::__adjust_heap<__gnu_cxx::__normal_iterator<unsigned\\ short\\*,\\ std::vector<unsigned\\ short,\\ std::allocator<unsigned\\ short>\\ >\\ >,\\ long,\\ unsigned\\ short,\\ __gnu_cxx::__ops::_Iter_less_iter>\\(__gnu_cxx::__normal_iterator<unsigned\\ short\\*,\\ std::vector<unsigned\\ short,\\ std::allocator<unsigned\\ short>\\ >\\ >,\\ long,\\ long,\\ unsigned\\ short,\\ __gnu_cxx::__ops::_Iter_less_iter\\)\\ \\[clone\\ \\.isra\\.0\\]|void\\ std::__adjust_heap<std::reverse_iterator<unsigned\\ long\\*>,\\ long,\\ unsigned\\ long,\\ __gnu_cxx::__ops::_Iter_less_iter>\\(std::reverse_iterator<unsigned\\ long\\*>,\\ long,\\ long,\\ unsigned\\ long,\\ __gnu_cxx::__ops::_Iter_less_iter\\)\\ \\[clone\\ \\.isra\\.0\\]|void\\ std::__introsort_loop<__gnu_cxx::__normal_iterator<char\\*,\\ std::vector<char,\\ std::allocator<char>\\ >\\ >,\\ int,\\ __gnu_cxx::__ops::_Iter_less_iter>\\(__gnu_cxx::__normal_iterator<char\\*,\\ std::vector<char,\\ std::allocator<char>\\ >\\ >,\\ __gnu_cxx::__normal_iterator<char\\*,\\ std::vector<char,\\ std::allocator<char>\\ >\\ >,\\ int,\\ __gnu_cxx::__ops::_Iter_less_iter\\)\\ \\[clone\\ \\.isra\\.0\\]|void\\ std::__introsort_loop<__gnu_cxx::__normal_iterator<char\\*,\\ std::vector<char,\\ std::allocator<char>\\ >\\ >,\\ long,\\ __gnu_cxx::__ops::_Iter_less_iter>\\(__gnu_cxx::__normal_iterator<char\\*,\\ std::vector<char,\\ std::allocator<char>\\ >\\ >,\\ __gnu_cxx::__normal_iterator<char\\*,\\ std::vector<char,\\ std::allocator<char>\\ >\\ >,\\ long,\\ __gnu_cxx::__ops::_Iter_less_iter\\)\\ \\[clone\\ \\.isra\\.0\\]|void\\ std::__introsort_loop<std::reverse_iterator<unsigned\\ long\\*>,\\ long,\\ __gnu_cxx::__ops::_Iter_less_iter>\\(std::reverse_iterator<unsigned\\ long\\*>,\\ std::reverse_iterator<unsigned\\ long\\*>,\\ long,\\ __gnu_cxx::__ops::_Iter_less_iter\\)\\ \\[clone\\ \\.isra\\.0\\])$"
+    ],
+    "excluded_function_count": 12,
+    "family": "xmr-stak",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "GPL-3.0",
+    "mcrit": "data/xmr-stak/x86/mcrit/xmr-stak_2.10.8_gcc13_x86_xmr-stak.mcrit",
+    "notes": "NOT byte-identical to a build of unmodified upstream: recipe-applied patch, see the xmr_stak.py docstring. An unsupported configuration (upstream #errors on 32-bit builds): its CryptoNight v8 and CryptonightR assembly is replaced by one-instruction ret stubs. CPU backend only (CUDA and OpenCL off), without libmicrohttpd and hwloc, with TLS: OpenSSL 3.5.8 built from a pinned source and linked as a shared library. XMR-STAK_COMPILE=generic, so no -march=native; xmr-stak adds -msse2 -maes itself. CMake Release (-O3 -DNDEBUG). rapidjson and C++ standard library instantiations that other families also carry are removed by exact name (exclude_functions, see _stack_vendored.py).",
+    "num_functions": 1899,
+    "num_functions_before_exclusion": 1911,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy",
+      "std::ctype<char>::do_widen(char) const"
+    ],
+    "sha256": "9feea89996617e718f60ca7b2decf4a8952a4f55d2749e492ee3ac809cfc74bd",
+    "smda": "data/xmr-stak/x86/smda/xmr-stak_2.10.8_gcc13_x86_xmr-stak.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "67cf951b15ccac79763706e392b49ebc95957c51",
+      "git_ref": "2.10.8",
+      "git_url": "https://github.com/fireice-uk/xmr-stak.git"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://github.com/fireice-uk/xmr-stak",
+    "version": "2.10.8"
+  },
   "xmr-stak_2.10.8_mingw13_x64_xmr-stak.exe": {
     "architecture": "x64",
     "build_flags": "-O3 -DNDEBUG (CMake Release), -msse2 -maes; build tree patched by the recipe (_umul128 renamed, -Wl,-z,noexecstack removed; x86 also: 32-bit #error removed, _WIN64 -> _WIN32, 32-bit umul128, x86 compat header, asm stubs)",
