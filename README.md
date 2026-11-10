@@ -445,7 +445,9 @@ Generated with `scripts/build_corpus.py`; see `data/lzo/provenance.json` for sou
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
 | lzo | 2.10 | MinGW-w64 GCC 13 | [x86 PE](data/lzo/x86/mcrit/lzo_2.10_mingw13_x86_liblzo2-2.dll.mcrit) / [x64 PE](data/lzo/x64/mcrit/lzo_2.10_mingw13_x64_liblzo2-2.dll.mcrit) | [x86 PE](data/lzo/x86/smda/lzo_2.10_mingw13_x86_liblzo2-2.dll.7z) / [x64 PE](data/lzo/x64/smda/lzo_2.10_mingw13_x64_liblzo2-2.dll.7z) |
+| lzo | 2.10 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/lzo/x86/mcrit/lzo_2.10_msvc143_x86_lzo2.dll.mcrit) / [x64 PE](data/lzo/x64/mcrit/lzo_2.10_msvc143_x64_lzo2.dll.mcrit) | [x86 PE](data/lzo/x86/smda/lzo_2.10_msvc143_x86_lzo2.dll.7z) / [x64 PE](data/lzo/x64/smda/lzo_2.10_msvc143_x64_lzo2.dll.7z) |
 | lzo | minilzo-2.10 | MinGW-w64 GCC 13 | [x86 PE](data/lzo/x86/mcrit/lzo_minilzo-2.10_mingw13_x86_minilzo.dll.mcrit) / [x64 PE](data/lzo/x64/mcrit/lzo_minilzo-2.10_mingw13_x64_minilzo.dll.mcrit) | [x86 PE](data/lzo/x86/smda/lzo_minilzo-2.10_mingw13_x86_minilzo.dll.7z) / [x64 PE](data/lzo/x64/smda/lzo_minilzo-2.10_mingw13_x64_minilzo.dll.7z) |
+| lzo | minilzo-2.10 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/lzo/x86/mcrit/lzo_minilzo-2.10_msvc143_x86_minilzo.dll.mcrit) / [x64 PE](data/lzo/x64/mcrit/lzo_minilzo-2.10_msvc143_x64_minilzo.dll.mcrit) | [x86 PE](data/lzo/x86/smda/lzo_minilzo-2.10_msvc143_x86_minilzo.dll.7z) / [x64 PE](data/lzo/x64/smda/lzo_minilzo-2.10_msvc143_x64_minilzo.dll.7z) |
 <!-- /generated -->
 
 ### miniLZO<a id='minilzo'></a>
