@@ -87,6 +87,23 @@ on the runner (run 42676010529, v143), kept + removed = image total: x86
 instructions (x86 / x64), of its 163 / 152 distinct: 110 / 80 with v20 and
 73 / 55 with v10 (the MSVC v20 has 175 / 161), and 0 / 0 with its MinGW
 counterpart.
+
+No separate "c-toxcore Release" image on this axis, unlike MinGW's cmp-O3.dll,
+because it would be a copy. c-toxcore's CMakeLists.txt (v0.2.24) gives cl
+/W4 /analyze and a list of /wd warning switches (lines 113-138), C11 through
+CMAKE_C_STANDARD (/std:c11) and /DCMP_NO_FLOAT=1; CMake's MSVC Release default
+adds /MD /O2 /Ob2 /DNDEBUG. Against the line built here (/O2 /MD
+/DCMP_NO_FLOAT=1) that is /Ob2, which /O2 implies, /DNDEBUG, which cmp.c and
+cmp.h never test, and warning, analysis and language-mode switches. It was
+measured, not only read: run 42770123676 (windows-2022, v143) built cmp.c a
+second time with ``/O2 /Ob2 /DNDEBUG /std:c11 /W4 /analyze /MD /Zi
+/DCMP_NO_FLOAT=1`` and the same link line, and every function of that image
+has the name, instruction count and PicHash of the corresponding function in
+the committed toktok-52bfcfa cmp.dll, on both arches (x86 204 kept + 123
+removed, 163 of 163 distinct PicHashes of 10+ instructions shared; x64 183 +
+129, 152 of 152). The duplicate is not committed and its build step is not
+kept in this recipe; the toktok-52bfcfa image above is the c-toxcore MSVC
+Release compile of cmp.c.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
