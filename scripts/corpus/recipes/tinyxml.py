@@ -144,3 +144,122 @@ RECIPES = {
     "TinyXML2_9.0.0": _tinyxml2("9.0.0"),
     "TinyXML2_11.0.0": _tinyxml2("11.0.0"),
 }
+
+
+# --- Every other TinyXML release on SourceForge, and the two TinyXML2 tags
+# that were measured and dropped. The issue's "TinyXML 2.0.2" does not exist
+# (no 2.0.2 folder under tinyxml/tinyxml/ and tinyxml_2_0_2.zip answers 404),
+# so it is not built; every release that does exist is. The tarballs carry no
+# published checksum; the sha256 values below were computed from the
+# SourceForge downloads. SourceForge folder -> file: "<v>" or "<v> Beta" or
+# "Beta <v>" -> tinyxml_<v with underscores>.tar.gz.
+#
+# Old sources against GCC 13, with compiler flags only (no source edit):
+#   1.2.4   tinyxml.cpp/tinyxmlparser.cpp call strchr/strstr without
+#           <string.h>: "'strchr' was not declared in this scope"; built with
+#           -include string.h. It has no tinystr.cpp and no TIXML_USE_STL.
+#   2.1.x   "extra qualification 'TiXmlDeclaration::' on member" (tinyxml.h)
+#           and "cannot convert 'bool' to 'const char*' in return"
+#           (tinyxmlparser.cpp, `return false;` from a const char* function,
+#           valid C++98); built with -std=gnu++98 -fpermissive. The STL
+#           build also uses std::istream/std::ostream after including only
+#           <iosfwd>-level headers ("invalid use of incomplete type
+#           'std::istream'"), so it adds -include iostream.
+#   2.2.0+  compile as shipped, with the 2.6.2 recipe's command line.
+TINYXML_RELEASES = {
+    # version: (SourceForge folder, sha256 of the .tar.gz)
+    "1.2.4": ("1.2.4", "5834783220ecdd118158ddccd6e21c88f929bd2edee3a12d16d904933e76db10"),
+    "2.1.1": ("2.1.1", "effed167a0f37bcdeaacdabf51f48f108a954e8ff8fc0aa2ab7100514b141157"),
+    "2.1.2": ("2.1.2", "1a5928da4a4cceb08d30944cbe042e5365e0664f473b9fe4e569882aeabd1536"),
+    "2.1.3": ("2.1.3", "45612ab220f4307694c0f254bc236a49c5b83581d92e4a79ff4b8589cf6d36da"),
+    "2.1.4": ("2.1.4", "4dbf7a4859447c9f7be3cd675ffdb64abbbf799a74e5c90873a93d5bbb17fe3f"),
+    "2.1.5": ("2.1.5", "3d594d06f71d87751a30deff28c49c677b4cc5e0c0157ce7dbabbd4a1400225e"),
+    "2.2.0-beta": ("Beta%202.2.0", "217d910a49da9152cdfc0abeb55a041c81aea35ef296ef9383931dc8ebbf9d18"),
+    "2.2.1": ("2.2.1", "8b6c9cc3d5f4c2737ee98aaa618b4b685ee82fa41a1ba3cbd9c7d4b6230cd054"),
+    "2.3.0-beta": ("2.3.0%20Beta", "01a47a96267b23e9944c3c6db184bf3790ac6e7d1425c5984aadcadd3199a88c"),
+    "2.3.1-beta": ("2.3.1%20Beta", "115e2c480eaeae500af10c320c74d579289cdec3d95760fe003041b0ed9dceb4"),
+    "2.3.2": ("2.3.2", "673724eacd4604c22d509ba6c16d2f779cd902f19d6d308550c1e3b50776b21c"),
+    "2.3.3": ("2.3.3", "7a96bf547359d4b5ea6f2fdf4bd25e14252ba45cad3e409eb39193996dca357f"),
+    "2.3.4": ("2.3.4", "75f0f4a9ba6e617519189761f7d196f6891ad8404ba5d09a0610f4c0a4db3139"),
+    "2.4.0": ("2.4.0", "5f100316df96639008e668dad8918bdebe952168d25fa2632c50c2c680d30ad6"),
+    "2.4.1": ("2.4.1", "c4861790c157a7d9ed230de7f82f5c6e3c861a67eb92c719dffea05d573a0dee"),
+    "2.4.2": ("2.4.2", "873ddec4e4490c7923981714d3980cbd44e4879d882e55268878be1bfb801fce"),
+    "2.4.3": ("2.4.3", "756aadcb378d5deb56003d6970a665de9f91386c5ba3a253684bea51c5bdc094"),
+    "2.5.0-beta": ("2.5.0%20Beta", "93f74d103f155b993ada1a6aa966e9bb8735857901a0e3f4521fd4f033ef36f3"),
+    "2.5.1": ("2.5.1", "7ba53c7eab44035d60beab1759310784a57f90820b42dbff09ebdfb988e5b78c"),
+    "2.5.2": ("2.5.2", "a185a7728cc23279cfeeeb15b1bb3d410e8d3986cf81fd05de4d4841b4e07d1c"),
+    "2.5.3": ("2.5.3", "c0b88bc5413e41ed566dab9f7a192e0e9e6060cc13ebdeab4766168559620d2b"),
+    "2.6.0": ("2.6.0", "326971cd9d0f1cd12cfb9bcb3150848625506fb2c168765b8a3a88a9c7b084f2"),
+    "2.6.1": ("2.6.1", "c9b85047fb3f5b86a0e313a4f2a21bdf7bdada32ba2df580cffb170029b27214"),
+}
+
+
+def tinyxml_source(version):
+    folder, sha = TINYXML_RELEASES[version]
+    number = version.split("-")[0]
+    return Source(url="https://downloads.sourceforge.net/project/tinyxml/"
+                      "tinyxml/%s/tinyxml_%s.tar.gz"
+                      % (folder, number.replace(".", "_")), sha256=sha)
+
+
+def tinyxml_sources(version):
+    files = ["tinyxml.cpp", "tinyxmlerror.cpp", "tinyxmlparser.cpp"]
+    return files if version == "1.2.4" else files + ["tinystr.cpp"]
+
+
+def tinyxml_has_stl(version):
+    return version != "1.2.4"
+
+
+def _old_flags(version, stl):
+    if version == "1.2.4":
+        return "-include string.h"
+    if version.startswith("2.1."):
+        return "-std=gnu++98 -fpermissive" + (" -include iostream" if stl
+                                              else "")
+    return ""
+
+
+def _tinyxml_old(version):
+    srcs = " ".join(tinyxml_sources(version))
+    steps, artifacts = [], []
+    variants = [False, True] if tinyxml_has_stl(version) else [False]
+    for stl in variants:
+        dll = "tinyxml_stl.dll" if stl else "tinyxml.dll"
+        flags = " ".join(f for f in ("-O2", "-DTIXML_USE_STL" if stl else "",
+                                     _old_flags(version, stl)) if f)
+        steps.append(BuildStep("{cxx} %s -shared -o %s %s -shared-libgcc"
+                               % (flags, dll, srcs)))
+        artifacts.append(Artifact(path=dll, component=dll, build_flags=flags))
+    return Recipe(
+        family="TinyXML",
+        version=version,
+        upstream="https://sourceforge.net/projects/tinyxml/",
+        license="Zlib",
+        source=tinyxml_source(version),
+        build=steps,
+        artifacts=artifacts,
+        toolchains=["mingw_x86", "mingw_x64"],
+        build_flags=_old_flags(version, False) and
+        "-O2 " + _old_flags(version, False) or "-O2",
+        notes="SourceForge release %s (tinyxml_%s.tar.gz; sha256 computed "
+              "from the download, none is published), compiled into a "
+              "shared library from its library sources (%s) the way the "
+              "2.6.2 recipe builds 2.6.2: tinyxml.dll is the default non-STL "
+              "build%s. Any extra flag is a compiler option for GCC 13 over "
+              "unmodified source and is in the artefact's build_flags; "
+              "nothing is patched."
+              % (version, version.split("-")[0].replace(".", "_"), srcs,
+                 ", tinyxml_stl.dll the std::string build (-DTIXML_USE_STL)"
+                 if tinyxml_has_stl(version) else
+                 " (this release has no TIXML_USE_STL)"),
+    )
+
+
+for _v in TINYXML_RELEASES:
+    RECIPES["TinyXML_%s" % _v] = _tinyxml_old(_v)
+
+# Measured and dropped in the first revision for overlapping a kept
+# neighbour by 79 to 88%; an overlap below 100% is committed.
+RECIPES["TinyXML2_8.0.0"] = _tinyxml2("8.0.0")
+RECIPES["TinyXML2_10.0.0"] = _tinyxml2("10.0.0")
