@@ -1761,6 +1761,93 @@ class IncrementalLinkTableTest(unittest.TestCase):
         self._check([])
 
 
+class LandingPadIslandTest(unittest.TestCase):
+    """A long run of jumps that is not a link table.
+
+    mingw-w64 libgrpc.dll on x86 has 69 unnamed ``jmp rel32`` functions at a
+    five-byte stride, which is past the limit and looks exactly like the
+    incremental link table the check exists for. It is GCC's exception
+    landing-pad stubs: 69 landing pads of one function whose cleanup code was
+    moved to a ``.cold`` part, packed after that function's last ``ret``. The
+    run is 69 of 1318 unnamed direct jumps in 25818 functions, and none of the
+    69 jumps to a function entry. These tests pin both directions, so that
+    admitting that image cannot admit an actual link table.
+    """
+
+    def _check(self, functions):
+        from corpus import smdaify
+
+        smdaify.assert_not_incrementally_linked(_Report(functions), "x.dll")
+
+    def _real(self, count=2000):
+        """Ordinary named functions, well clear of where the run goes."""
+        return [_Function(40, "real_%d" % i, 0x10000 + i * 0x40)
+                for i in range(count)]
+
+    def _run(self, targets, start=0x401005):
+        return [_Function(1, "", start + i * 5,
+                          [_Instruction("jmp", "0x%x" % target)])
+                for i, target in enumerate(targets)]
+
+    def _interior(self, count=69):
+        """Targets in the middle of a function, as a .cold part's are."""
+        return [0x900000 + 3 + i * 7 for i in range(count)]
+
+    def test_the_libgrpc_shape_is_admitted(self):
+        self._check(self._real() + self._run(self._interior()))
+
+    def test_the_same_run_in_a_small_image_is_refused(self):
+        """Interior targets alone are not enough: a table is most of its image."""
+        with self.assertRaises(Exception) as caught:
+            self._check(self._real(5) + self._run(self._interior()))
+        self.assertIn("incremental link table", str(caught.exception))
+
+    def test_a_table_in_a_large_image_is_refused(self):
+        """Each entry is the only way into a function, so it targets its entry."""
+        real = self._real()
+        entries = [function.offset for function in real[:69]]
+        with self.assertRaises(Exception) as caught:
+            self._check(real + self._run(entries))
+        self.assertIn("incremental link table", str(caught.exception))
+
+    def test_a_table_whose_targets_were_not_recovered_is_refused_by_share(self):
+        """Nothing at the targets, so only the proportion can say."""
+        self._check(self._real(2000) + self._run(self._interior(40)))
+        with self.assertRaises(Exception):
+            self._check(self._real(200) + self._run(self._interior(400)))
+
+    def test_targets_that_do_not_parse_are_treated_as_entries(self):
+        run = [_Function(1, "", 0x401005 + i * 5,
+                         [_Instruction("jmp", "eax_or_something")])
+               for i in range(69)]
+        with self.assertRaises(Exception):
+            self._check(self._real() + run)
+
+    def test_the_entry_fraction_cut_off_is_ten_percent(self):
+        real = self._real()
+        interior = self._interior()
+        # 6 of 69 is 8.7 percent, 8 of 69 is 11.6 percent.
+        self._check(real + self._run(
+            [real[i].offset for i in range(6)] + interior[6:]))
+        with self.assertRaises(Exception):
+            self._check(real + self._run(
+                [real[i].offset for i in range(8)] + interior[8:]))
+
+    def test_one_table_among_islands_is_still_refused(self):
+        real = self._real()
+        island = self._run(self._interior(), start=0x401005)
+        table = self._run([function.offset for function in real[:69]],
+                          start=0x480005)
+        with self.assertRaises(Exception):
+            self._check(real + island + table)
+
+    def test_a_run_below_the_limit_is_untouched_by_all_of_this(self):
+        from corpus import config
+
+        self._check(self._real() + self._run(
+            self._interior(config.MAX_INCREMENTAL_THUNK_RUN - 1)))
+
+
 class _Recipe(object):
     def __init__(self, toolchains, artifacts):
         self.toolchains = toolchains
