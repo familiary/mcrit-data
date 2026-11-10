@@ -151,12 +151,38 @@ def run(cmd, env=None, quiet=False):
     return result.returncode, result.stdout
 
 
-def prep(arch):
+def prep(arch, extra=()):
     if legacy():
         props = "\n".join(l for l in PROPS.splitlines()
                           if "%(vcpkg)s" not in l) + "\n"
+        if "nonstdc" in extra:
+            # Tags before 9.4 (v141 projects): the fork's win32compat headers
+            # rename POSIX functions with macros (#define isatty w32_isatty)
+            # that the Windows SDK 10.0.26100 corecrt_io.h POSIX-name
+            # declarations then expand into ("corecrt_io.h(493,30): error
+            # C2143 ... C2373: 'w32_isatty': redefinition"). Those optional
+            # declarations are switched off; the fork declares its own.
+            props = props.replace("_ACRTIMP=;_DCRTIMP=;",
+                                  "_ACRTIMP=;_DCRTIMP=;_CRT_DECLARE_NONSTDC_NAMES=0;")
         with open("msvcprops.props", "w") as handle:
             handle.write(props % {})
+        for arg in extra:
+            if arg.startswith("zlib="):
+                # zlib=<release tag>:<sha256>: the tag's own GetZLib.ps1
+                # asks for a PowerShell/zlib release with no asset (8.1.0.0:
+                # V2.1.11, HTTP 404), so the ZLib directory it would expand is
+                # filled from the named release first (GetZLib.ps1 returns
+                # early when it exists). Verified by sha256.
+                import hashlib, io, urllib.request, zipfile
+                tag, sha = arg[5:].split(":")
+                url = ("https://github.com/PowerShell/zlib/releases/download/"
+                       "%s/zlib.zip" % tag)
+                data = urllib.request.urlopen(url).read()
+                got = hashlib.sha256(data).hexdigest()
+                if got != sha:
+                    sys.exit("zlib zip sha256 %s, expected %s" % (got, sha))
+                zipfile.ZipFile(io.BytesIO(data)).extractall(OPENSSH)
+                say("ZLIB-PREFILLED", url, sha)
         say("LEGACY tag (no vcpkg.json): prebuilt dependencies from paths.targets")
         with open(os.path.join(OPENSSH, "paths.targets"), errors="replace") as handle:
             for line in handle:
@@ -353,7 +379,7 @@ def main(argv):
         sys.exit(__doc__)
     command, arch = argv[1], argv[2]
     if command == "prep":
-        prep(arch)
+        prep(arch, argv[3:])
     elif command == "vcpkg":
         vcpkg(arch)
     elif command == "msbuild":
