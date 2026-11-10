@@ -191,3 +191,24 @@ RECIPES["OpenSSL_0.9.7e_msvc"] = _msvc_09(
 RECIPES["OpenSSL_0.9.6_msvc"] = _msvc_09(
     "0.9.6", "5215b670c2674df9a642565ea68a67e6d955d8efcca1aa1b4e6a5b4fd2744ee8", False)
 
+
+# 1.0.0t and the 0.9.x releases put /WX in VC-WIN32's CFLAG, and cl 19.44
+# warns where the cl of their day did not (`b_print.c(381): error C2220: the
+# following warning is treated as an error`; 0.9.6/0.9.7e at e_os.h). _CL_ is
+# appended after cl's command line, so _CL_=/WX- turns the warnings back into
+# warnings without touching the generated makefile; the code is unchanged.
+def _no_wx(recipe):
+    steps = []
+    for step in recipe.build:
+        if step.command.startswith("nmake "):
+            step = BuildStep(step.command, env={"_CL_": "/WX-"})
+        steps.append(step)
+    recipe.build = steps
+    recipe.build_flags += "; _CL_=/WX- (cl 19.44 warnings would stop upstream's /WX)"
+    return recipe
+
+
+for _name in ("OpenSSL_1.0.0t_msvc", "OpenSSL_0.9.8zh_msvc", "OpenSSL_0.9.7e_msvc",
+              "OpenSSL_0.9.6_msvc"):
+    RECIPES[_name] = _no_wx(RECIPES[_name])
+
