@@ -1,0 +1,358 @@
+{
+  "libgcc_10.3.0-bootlin2021.11-1_gcc13_x86_libgcc.elf": {
+    "architecture": "x86",
+    "build_flags": "Prebuilt GCC 10.3.0 libgcc.a + libgcc_eh.a (Bootlin x86-i686 uclibc stable-2021.11-1); host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libgcc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "x86-i686--uclibc--stable-2021.11-1.tar.bz2",
+        "sha256": "d15cfe391474ea19e6a468c011955027581c6a16953380baf3c5718ad42fc45d",
+        "url": "https://toolchains.bootlin.com/downloads/releases/toolchains/x86-i686/tarballs/x86-i686--uclibc--stable-2021.11-1.tar.bz2"
+      }
+    },
+    "family": "libgcc",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "GPL-3.0-or-later with GCC runtime library exception 3.1 (GCC 10.3.0)",
+    "mcrit": "data/libgcc/x86/mcrit/libgcc_10.3.0-bootlin2021.11-1_gcc13_x86_libgcc.elf.mcrit",
+    "notes": "Harvested from the Bootlin x86-i686--uclibc--stable-2021.11-1 toolchain (Buildroot, GCC 10.3.0, uClibc-ng), not rebuilt; the toolchain tarball is pinned by sha256. The recorded host compiler drives only the final link. Entry address zero, no startup, dynamic host libc; the image is not runnable. All members of libgcc.a and libgcc_eh.a are retained. The runtime filter is off because libgcc is the subject. zlib supplies only the staging directory; none of it is linked.",
+    "num_functions": 235,
+    "sha256": "1c7ece6643851306bb99c94fc61db126430b4763a22c00b4475c26bb281306d6",
+    "smda": "data/libgcc/x86/smda/libgcc_10.3.0-bootlin2021.11-1_gcc13_x86_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://gcc.gnu.org/; https://toolchains.bootlin.com/",
+    "version": "10.3.0-bootlin2021.11-1"
+  },
+  "libgcc_10.3.0-bootlin2021.11-5_gcc13_x64_libgcc.elf": {
+    "architecture": "x64",
+    "build_flags": "Prebuilt GCC 10.3.0 libgcc.a + libgcc_eh.a (Bootlin x86-64 uclibc stable-2021.11-5); host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libgcc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "x86-64--uclibc--stable-2021.11-5.tar.bz2",
+        "sha256": "e68fd1b23f4a5c5132f2122e4012c17eb24e5179b2ff45bb793a27ac30dd454f",
+        "url": "https://toolchains.bootlin.com/downloads/releases/toolchains/x86-64/tarballs/x86-64--uclibc--stable-2021.11-5.tar.bz2"
+      }
+    },
+    "family": "libgcc",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "GPL-3.0-or-later with GCC runtime library exception 3.1 (GCC 10.3.0)",
+    "mcrit": "data/libgcc/x64/mcrit/libgcc_10.3.0-bootlin2021.11-5_gcc13_x64_libgcc.elf.mcrit",
+    "notes": "Harvested from the Bootlin x86-64--uclibc--stable-2021.11-5 toolchain (Buildroot, GCC 10.3.0, uClibc-ng), not rebuilt; the toolchain tarball is pinned by sha256. The recorded host compiler drives only the final link. Entry address zero, no startup, dynamic host libc; the image is not runnable. All members of libgcc.a and libgcc_eh.a are retained. The runtime filter is off because libgcc is the subject. zlib supplies only the staging directory; none of it is linked.",
+    "num_functions": 261,
+    "sha256": "5cb8a4a0116cd8a2f7bfde93bc8bc66ce9ee3ba32cd41215bc19ce680fbce943",
+    "smda": "data/libgcc/x64/smda/libgcc_10.3.0-bootlin2021.11-5_gcc13_x64_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://gcc.gnu.org/; https://toolchains.bootlin.com/",
+    "version": "10.3.0-bootlin2021.11-5"
+  },
+  "libgcc_13.2.0-mingw-w64_mingw13_x64_libgcc.dll": {
+    "architecture": "x64",
+    "build_flags": "Prebuilt mingw-w64 GCC 13.2.0 (win32 threads) libgcc.a + libgcc_eh.a (Ubuntu 13.2.0-6ubuntu1+26.1); host link only: -shared -nostartfiles -nodefaultlibs -Wl,-e,0 -Wl,--whole-archive plus the msvcrt and kernel32 import libraries",
+    "built_artifact": "libgcc.dll",
+    "compiler": "x86_64-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "libgcc.dll",
+    "family": "libgcc",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "GPL-3.0-or-later with GCC runtime library exception 3.1 (GCC 13.2.0)",
+    "mcrit": "data/libgcc/x64/mcrit/libgcc_13.2.0-mingw-w64_mingw13_x64_libgcc.dll.mcrit",
+    "notes": "Harvested from the prebuilt mingw-w64 GCC 13.2.0 toolchain (gcc-mingw-w64-{x86-64,i686}-win32 13.2.0-6ubuntu1+26.1), not rebuilt; archives pinned by sha256 in the build. SMDA has no COFF/ar loader, so both archives are linked whole into a DLL with entry address zero and no startup; the image is not runnable. Four generated empty definitions (_pei386_runtime_relocator, _CRT_MT, __mingw_vfprintf, __mingwthr_key_dtor) and the msvcrt/kernel32 import thunks the link needs stay in the image as named functions of one to a few instructions. The runtime filter is off because libgcc is the subject. zlib supplies only the staging directory.",
+    "num_functions": 583,
+    "sha256": "ba8d648d181fa8346f19477218e0f55b1cd6dbff9b42c02da061d94c970bf1cc",
+    "smda": "data/libgcc/x64/smda/libgcc_13.2.0-mingw-w64_mingw13_x64_libgcc.dll.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "mingw13_x64",
+    "upstream": "https://gcc.gnu.org/; https://www.mingw-w64.org/",
+    "version": "13.2.0-mingw-w64"
+  },
+  "libgcc_13.2.0-mingw-w64_mingw13_x86_libgcc.dll": {
+    "architecture": "x86",
+    "build_flags": "Prebuilt mingw-w64 GCC 13.2.0 (win32 threads) libgcc.a + libgcc_eh.a (Ubuntu 13.2.0-6ubuntu1+26.1); host link only: -shared -nostartfiles -nodefaultlibs -Wl,-e,0 -Wl,--whole-archive plus the msvcrt and kernel32 import libraries",
+    "built_artifact": "libgcc.dll",
+    "compiler": "i686-w64-mingw32-gcc (GCC) 13-win32",
+    "component": "libgcc.dll",
+    "family": "libgcc",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "GPL-3.0-or-later with GCC runtime library exception 3.1 (GCC 13.2.0)",
+    "mcrit": "data/libgcc/x86/mcrit/libgcc_13.2.0-mingw-w64_mingw13_x86_libgcc.dll.mcrit",
+    "notes": "Harvested from the prebuilt mingw-w64 GCC 13.2.0 toolchain (gcc-mingw-w64-{x86-64,i686}-win32 13.2.0-6ubuntu1+26.1), not rebuilt; archives pinned by sha256 in the build. SMDA has no COFF/ar loader, so both archives are linked whole into a DLL with entry address zero and no startup; the image is not runnable. Four generated empty definitions (_pei386_runtime_relocator, _CRT_MT, __mingw_vfprintf, __mingwthr_key_dtor) and the msvcrt/kernel32 import thunks the link needs stay in the image as named functions of one to a few instructions. The runtime filter is off because libgcc is the subject. zlib supplies only the staging directory.",
+    "num_functions": 567,
+    "sha256": "23df04ebfc8aa35a55205fc55f0dab212a060b420cfae659e2ded40beb78adab",
+    "smda": "data/libgcc/x86/smda/libgcc_13.2.0-mingw-w64_mingw13_x86_libgcc.dll.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "mingw13_x86",
+    "upstream": "https://gcc.gnu.org/; https://www.mingw-w64.org/",
+    "version": "13.2.0-mingw-w64"
+  },
+  "libgcc_13.3.0-ubuntu24.04_gcc13_x64_libgcc.elf": {
+    "architecture": "x64",
+    "build_flags": "Prebuilt GCC 13.3.0 libgcc.a + libgcc_eh.a of the host toolchain (Ubuntu 13.3.0-6ubuntu2~24.04.1); host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libgcc.elf",
+    "family": "libgcc",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "GPL-3.0-or-later with GCC runtime library exception 3.1 (GCC 13.3.0)",
+    "mcrit": "data/libgcc/x64/mcrit/libgcc_13.3.0-ubuntu24.04_gcc13_x64_libgcc.elf.mcrit",
+    "notes": "Harvested from the prebuilt gcc13 toolchain (Ubuntu 24.04, libgcc-13-dev / lib32gcc-13-dev 13.3.0-6ubuntu2~24.04.1), not rebuilt; archives pinned by sha256 in the build. The host linker links both archives whole into an ELF with entry address zero, no startup, dynamic host libc; the image is not runnable. The runtime filter is off because libgcc is the subject. zlib supplies only the staging directory; none of it is linked.",
+    "num_functions": 675,
+    "sha256": "f564fbecbf39b3b1ba660202d72781772c3ecc22724ec3ffa56d9208593fd4b9",
+    "smda": "data/libgcc/x64/smda/libgcc_13.3.0-ubuntu24.04_gcc13_x64_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://gcc.gnu.org/; https://packages.ubuntu.com/noble/libgcc-13-dev",
+    "version": "13.3.0-ubuntu24.04"
+  },
+  "libgcc_13.3.0-ubuntu24.04_gcc13_x86_libgcc.elf": {
+    "architecture": "x86",
+    "build_flags": "Prebuilt GCC 13.3.0 libgcc.a + libgcc_eh.a of the host toolchain (Ubuntu 13.3.0-6ubuntu2~24.04.1); host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libgcc.elf",
+    "family": "libgcc",
+    "generated": "2026-11-09",
+    "is_blob": false,
+    "license": "GPL-3.0-or-later with GCC runtime library exception 3.1 (GCC 13.3.0)",
+    "mcrit": "data/libgcc/x86/mcrit/libgcc_13.3.0-ubuntu24.04_gcc13_x86_libgcc.elf.mcrit",
+    "notes": "Harvested from the prebuilt gcc13 toolchain (Ubuntu 24.04, libgcc-13-dev / lib32gcc-13-dev 13.3.0-6ubuntu2~24.04.1), not rebuilt; archives pinned by sha256 in the build. The host linker links both archives whole into an ELF with entry address zero, no startup, dynamic host libc; the image is not runnable. The runtime filter is off because libgcc is the subject. zlib supplies only the staging directory; none of it is linked.",
+    "num_functions": 651,
+    "sha256": "1f9eb45569318df36c5ab5a409eb94ba11c5204e45a7a0c2fbb276b66e782ac8",
+    "smda": "data/libgcc/x86/smda/libgcc_13.3.0-ubuntu24.04_gcc13_x86_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://gcc.gnu.org/; https://packages.ubuntu.com/noble/libgcc-13-dev",
+    "version": "13.3.0-ubuntu24.04"
+  },
+  "libgcc_4.1.2-uclibc0.9.30.1_gcc14_x64_libgcc.elf": {
+    "architecture": "x64",
+    "build_flags": "Prebuilt GCC 4.1.2 libgcc.a + libgcc_eh.a; host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libgcc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "mini-native-x86_64.tar.bz2",
+        "sha256": "38203f01f4dceff5c7128953b5ec50478cf0a1395a8c162223b150b53e338f41",
+        "url": "https://uclibc.org/downloads/binaries/0.9.30.1/mini-native-x86_64.tar.bz2"
+      }
+    },
+    "family": "libgcc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "GPL-2.0-or-later with GCC runtime linking exception (GCC 4.1.2)",
+    "mcrit": "data/libgcc/x64/mcrit/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x64_libgcc.elf.mcrit",
+    "notes": "Harvested from uClibc.org mini-native 0.9.30.1, not rebuilt. GCC 4.1.2 producer confirmed by .comment. The recorded host compiler drives only the final link. Entry zero, no startup, dynamic host libc; not runnable. All members of libgcc.a and libgcc_eh.a are retained. Runtime filter off because libgcc is the subject. zlib is only the staging directory.",
+    "num_functions": 136,
+    "sha256": "1ce4324bfe0ad341df7f1823f6e40181898895071c049fc3d82d2315d4e41469",
+    "smda": "data/libgcc/x64/smda/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x64_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://gcc.gnu.org/; https://uclibc.org/downloads/binaries/0.9.30.1/",
+    "version": "4.1.2-uclibc0.9.30.1"
+  },
+  "libgcc_4.1.2-uclibc0.9.30.1_gcc14_x86_libgcc.elf": {
+    "architecture": "x86",
+    "build_flags": "Prebuilt GCC 4.1.2 libgcc.a + libgcc_eh.a; host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libgcc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "mini-native-i686.tar.bz2",
+        "sha256": "37172fec0d0b723bd51990662d5ccf98c0ba386427781a292a09ab7b212d432f",
+        "url": "https://uclibc.org/downloads/binaries/0.9.30.1/mini-native-i686.tar.bz2"
+      }
+    },
+    "family": "libgcc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "GPL-2.0-or-later with GCC runtime linking exception (GCC 4.1.2)",
+    "mcrit": "data/libgcc/x86/mcrit/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x86_libgcc.elf.mcrit",
+    "notes": "Harvested from uClibc.org mini-native 0.9.30.1, not rebuilt. GCC 4.1.2 producer confirmed by .comment. The recorded host compiler drives only the final link. Entry zero, no startup, dynamic host libc; not runnable. All members of libgcc.a and libgcc_eh.a are retained. Runtime filter off because libgcc is the subject. zlib is only the staging directory.",
+    "num_functions": 135,
+    "sha256": "531053d027fa71c9d71c29a3e6b0c31f66f5c2a0b75b28b89d1b5bdea3f375c8",
+    "smda": "data/libgcc/x86/smda/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x86_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://gcc.gnu.org/; https://uclibc.org/downloads/binaries/0.9.30.1/",
+    "version": "4.1.2-uclibc0.9.30.1"
+  },
+  "libgcc_4.2.1-aboriginal1.4.4_gcc14_x64_libgcc.elf": {
+    "architecture": "x64",
+    "build_flags": "Prebuilt GCC 4.2.1 libgcc.a + libgcc_eh.a; host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libgcc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "cross-compiler-x86_64.tar.gz",
+        "sha256": "418b3710496e22904a5d8eb3361b629f8a49bc7232df1cfd9ff353323dc514bc",
+        "url": "https://web.archive.org/web/20171205071925id_/http://landley.net/aboriginal/downloads/old/binaries/1.4.4/cross-compiler-x86_64.tar.gz"
+      }
+    },
+    "family": "libgcc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "GPL-2.0-or-later with GCC runtime linking exception (GCC 4.2.1)",
+    "mcrit": "data/libgcc/x64/mcrit/libgcc_4.2.1-aboriginal1.4.4_gcc14_x64_libgcc.elf.mcrit",
+    "notes": "Harvested from Aboriginal Linux 1.4.4, not rebuilt. The GCC 4.2.1 producer is confirmed by .comment. The recorded host compiler drives only the final link. Entry address zero, no startup, dynamic host libc; the image is not runnable. All members of libgcc.a and libgcc_eh.a are retained. The runtime filter is off because libgcc is the subject. zlib supplies only the staging directory; none of it is linked.",
+    "num_functions": 145,
+    "sha256": "412c7080d3a225c19b65c6876f92f044b661f6733615f1217aaf449336d21349",
+    "smda": "data/libgcc/x64/smda/libgcc_4.2.1-aboriginal1.4.4_gcc14_x64_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://gcc.gnu.org/; https://landley.net/aboriginal/",
+    "version": "4.2.1-aboriginal1.4.4"
+  },
+  "libgcc_4.2.1-aboriginal1.4.4_gcc14_x86_libgcc.elf": {
+    "architecture": "x86",
+    "build_flags": "Prebuilt GCC 4.2.1 libgcc.a + libgcc_eh.a; host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libgcc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "cross-compiler-i686.tar.gz",
+        "sha256": "4f016c9d7607839ffff28e70ebb46f384deabc5df17825c94e3a30388814ff25",
+        "url": "https://web.archive.org/web/20171205071925id_/http://landley.net/aboriginal/downloads/old/binaries/1.4.4/cross-compiler-i686.tar.gz"
+      }
+    },
+    "family": "libgcc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "GPL-2.0-or-later with GCC runtime linking exception (GCC 4.2.1)",
+    "mcrit": "data/libgcc/x86/mcrit/libgcc_4.2.1-aboriginal1.4.4_gcc14_x86_libgcc.elf.mcrit",
+    "notes": "Harvested from Aboriginal Linux 1.4.4, not rebuilt. The GCC 4.2.1 producer is confirmed by .comment. The recorded host compiler drives only the final link. Entry address zero, no startup, dynamic host libc; the image is not runnable. All members of libgcc.a and libgcc_eh.a are retained. The runtime filter is off because libgcc is the subject. zlib supplies only the staging directory; none of it is linked.",
+    "num_functions": 155,
+    "sha256": "31bfe59856f7bb2e002d57e2776e5087198995a836ac723f05300cb862df2328",
+    "smda": "data/libgcc/x86/smda/libgcc_4.2.1-aboriginal1.4.4_gcc14_x86_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://gcc.gnu.org/; https://landley.net/aboriginal/",
+    "version": "4.2.1-aboriginal1.4.4"
+  },
+  "libgcc_6.4.0-bootlin2018.02-1_gcc13_x64_libgcc.elf": {
+    "architecture": "x64",
+    "build_flags": "Prebuilt GCC 6.4.0 libgcc.a + libgcc_eh.a (Bootlin x86-64-core-i7 uclibc stable-2018.02-1); host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libgcc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "x86-64-core-i7--uclibc--stable-2018.02-1.tar.bz2",
+        "sha256": "d6805be2e3a29c6c7872839615e6b24937ca74c5174480325edeedb629a58a71",
+        "url": "https://toolchains.bootlin.com/downloads/releases/toolchains/x86-64-core-i7/tarballs/x86-64-core-i7--uclibc--stable-2018.02-1.tar.bz2"
+      }
+    },
+    "family": "libgcc",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "GPL-3.0-or-later with GCC runtime library exception 3.1 (GCC 6.4.0)",
+    "mcrit": "data/libgcc/x64/mcrit/libgcc_6.4.0-bootlin2018.02-1_gcc13_x64_libgcc.elf.mcrit",
+    "notes": "Harvested from the Bootlin x86-64-core-i7--uclibc--stable-2018.02-1 toolchain (Buildroot, GCC 6.4.0, uClibc-ng), not rebuilt; the toolchain tarball is pinned by sha256. The recorded host compiler drives only the final link. Entry address zero, no startup, dynamic host libc; the image is not runnable. All members of libgcc.a and libgcc_eh.a are retained. The runtime filter is off because libgcc is the subject. zlib supplies only the staging directory; none of it is linked.",
+    "num_functions": 235,
+    "sha256": "22fda1b2a4f6146ec7df1ba9f2f9880011d6f1d0fbc02170bcbf32d551fe3b4d",
+    "smda": "data/libgcc/x64/smda/libgcc_6.4.0-bootlin2018.02-1_gcc13_x64_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://gcc.gnu.org/; https://toolchains.bootlin.com/",
+    "version": "6.4.0-bootlin2018.02-1"
+  },
+  "libgcc_6.4.0-bootlin2018.02-1_gcc13_x86_libgcc.elf": {
+    "architecture": "x86",
+    "build_flags": "Prebuilt GCC 6.4.0 libgcc.a + libgcc_eh.a (Bootlin x86-i686 uclibc stable-2018.02-1); host link only: -no-pie -nostartfiles -Wl,-e,0 -Wl,--whole-archive; dynamic libc",
+    "built_artifact": "libgcc.elf",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libgcc.elf",
+    "dependencies": {
+      "toolchain_archive": {
+        "archive": "x86-i686--uclibc--stable-2018.02-1.tar.bz2",
+        "sha256": "587d09cbcd719910862d96b259aed8663ef2c292f3a02b9f8ba4e95a2c353c6f",
+        "url": "https://toolchains.bootlin.com/downloads/releases/toolchains/x86-i686/tarballs/x86-i686--uclibc--stable-2018.02-1.tar.bz2"
+      }
+    },
+    "family": "libgcc",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "GPL-3.0-or-later with GCC runtime library exception 3.1 (GCC 6.4.0)",
+    "mcrit": "data/libgcc/x86/mcrit/libgcc_6.4.0-bootlin2018.02-1_gcc13_x86_libgcc.elf.mcrit",
+    "notes": "Harvested from the Bootlin x86-i686--uclibc--stable-2018.02-1 toolchain (Buildroot, GCC 6.4.0, uClibc-ng), not rebuilt; the toolchain tarball is pinned by sha256. The recorded host compiler drives only the final link. Entry address zero, no startup, dynamic host libc; the image is not runnable. All members of libgcc.a and libgcc_eh.a are retained. The runtime filter is off because libgcc is the subject. zlib supplies only the staging directory; none of it is linked.",
+    "num_functions": 234,
+    "sha256": "c57f48b91442a577c9a568cc1d2a729bded68926c6ee37d2d6c36063dcea44b1",
+    "smda": "data/libgcc/x86/smda/libgcc_6.4.0-bootlin2018.02-1_gcc13_x86_libgcc.elf.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://gcc.gnu.org/; https://toolchains.bootlin.com/",
+    "version": "6.4.0-bootlin2018.02-1"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "libiptc_1.8.11_gcc14_x64_libiptc.so": {
+    "architecture": "x64",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden -shared -Wl,-Bsymbolic -Wl,--whole-archive (libip4tc.a and libip6tc.a); --disable-nftables --disable-shared --enable-static",
+    "built_artifact": "libiptc.so",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libiptc.so",
+    "family": "libiptc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "GPL-2.0-or-later",
+    "mcrit": "data/libiptc/x64/mcrit/libiptc_1.8.11_gcc14_x64_libiptc.so.mcrit",
+    "notes": "Issue #43 supplies no version; 1.8.11 is chosen freely. The legacy IPv4 and IPv6 archives are linked whole into a corpus shared image, not an upstream-distributed binary. No CLI, extensions or nft dependencies are included; libc is dynamic. This is legitimate netfilter API code.",
+    "num_functions": 104,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "60e584308bdb8d1f7fc0f2e56bee1b27ba6b17f7d5e1e758f750c86d51a1ff24",
+    "smda": "data/libiptc/x64/smda/libiptc_1.8.11_gcc14_x64_libiptc.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "iptables-1.8.11.tar.xz",
+      "sha256": "d87303d55ef8c92bcad4dd3f978b26d272013642b029425775f5bad1009fe7b2",
+      "url": "https://www.netfilter.org/projects/iptables/files/iptables-1.8.11.tar.xz"
+    },
+    "toolchain": "gcc14_x64",
+    "upstream": "https://git.netfilter.org/iptables/",
+    "version": "1.8.11"
+  },
+  "libiptc_1.8.11_gcc14_x86_libiptc.so": {
+    "architecture": "x86",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden -shared -Wl,-Bsymbolic -Wl,--whole-archive (libip4tc.a and libip6tc.a); --disable-nftables --disable-shared --enable-static",
+    "built_artifact": "libiptc.so",
+    "compiler": "gcc (Debian 14.2.0-19) 14.2.0",
+    "component": "libiptc.so",
+    "family": "libiptc",
+    "generated": "2026-11-06",
+    "is_blob": false,
+    "license": "GPL-2.0-or-later",
+    "mcrit": "data/libiptc/x86/mcrit/libiptc_1.8.11_gcc14_x86_libiptc.so.mcrit",
+    "notes": "Issue #43 supplies no version; 1.8.11 is chosen freely. The legacy IPv4 and IPv6 archives are linked whole into a corpus shared image, not an upstream-distributed binary. No CLI, extensions or nft dependencies are included; libc is dynamic. This is legitimate netfilter API code.",
+    "num_functions": 131,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.cx",
+      "__x86.get_pc_thunk.di",
+      "__x86.get_pc_thunk.dx",
+      "__x86.get_pc_thunk.si",
+      "frame_dummy"
+    ],
+    "sha256": "6f0f5834d81d8229cb8c5ca4e974689dbd1d13cc1a8e783a78b506996f9ec171",
+    "smda": "data/libiptc/x86/smda/libiptc_1.8.11_gcc14_x86_libiptc.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "iptables-1.8.11.tar.xz",
+      "sha256": "d87303d55ef8c92bcad4dd3f978b26d272013642b029425775f5bad1009fe7b2",
+      "url": "https://www.netfilter.org/projects/iptables/files/iptables-1.8.11.tar.xz"
+    },
+    "toolchain": "gcc14_x86",
+    "upstream": "https://git.netfilter.org/iptables/",
+    "version": "1.8.11"
+  }
+}
