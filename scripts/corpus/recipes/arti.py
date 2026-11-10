@@ -21,8 +21,8 @@ crates.io (non-yanked):
     7ffd8cfa3b2bdbeefd4a8d8656a3763b53275fdd61e5aaf77821e3fec05f11b4
     (the arti 1.1.13 crate: 614ac83e...a0971).
 
-The newest overall release (2.8.0 at the time of writing) is deliberately
-not built. Each arti-client tarball is fetched and checksummed by the
+The newest overall release, 2.8.0, is built as well (see "Further
+variants" below). Each arti-client tarball is fetched and checksummed by the
 pipeline (Source.sha256 is crates.io's own checksum) and compiled through a
 `--config patch.crates-io.arti-client.path='.'` override, so the compiled
 arti-client is exactly the pinned source. Every other crate is pinned by
@@ -82,7 +82,8 @@ bundles SQLite (there is no system SQLite on the Windows targets and no
 32-bit one on the Linux host). Not covered: onion-service client and
 service, bridges and pluggable transports, the RPC server, the `arti` CLI
 and SOCKS/DNS proxy crate; those are non-default features of arti-client or
-the separate `arti` binary crate. The ELF builds link the system OpenSSL for
+the separate `arti` binary crate (both built since, as 2.3.0-full and
+2.3.0-cli; see "Further variants"). The ELF builds link the system OpenSSL for
 native-tls (libssl-dev, with the i386 multiarch copy for x86); the PE
 builds use Schannel through the OS and need nothing.
 
@@ -126,6 +127,78 @@ instructions; kept functions only):
     PicHashes): 0 for every ELF artefact; 2 to 4 for each PE artefact.
 
 The same counts are in each recipe's notes.
+**Further variants** (filed beside the two releases above, each under its
+own version slug so no two recipes share a provenance key; every leg pins
+its rustc with rustup; ELF and MinGW built on an ubuntu-24.04 runner, run
+42776058377 on scratch/s4-arti-linux, MSVC on windows-2022, runs 42776062997
+and 42781808840 on scratch/s4-arti-msvc):
+
+  * **2.8.0** - arti 2.8.0 (2026-11-04, the newest release; arti-client
+    0.48.0, crates.io sha256 5bb17a50...e70c; the arti 2.8.0 crate
+    34f021b3...d0b4), the same driver and features, rustc 1.97.0; the
+    driver lock is the release lock pruned to 508 packages, unchanged.
+  * **2.3.0-full** - arti-client 0.42.0 with its "full" feature (every
+    non-experimental feature: onion-service client and service,
+    bridge-client, pt-client, vanguards, async-std, memquota, rpc, keymgr)
+    plus static-sqlite, rustc 1.97.0; 553 packages from the release lock.
+  * **2.3.0-cli** - the `arti` binary crate itself (the arti 2.3.0 release
+    crate), the Tor client and SOCKS/DNS proxy, built with its own shipped
+    Cargo.lock --locked, its default features plus static-sqlite and
+    cargo's default release profile (what `cargo install arti --locked`
+    builds), rustc 1.97.0. Kept: the driver's namespaces plus arti:: and
+    arti_*::.
+  * **1.1.13-cli** - the arti 1.1.13 binary crate on its shipped lockfile,
+    rustc 1.75.0.
+  * **1.1.13-rust1.75** - the 1.1.13 driver on the release lockfile with
+    nothing raised (time 0.3.31), built with rustc 1.75.0, the stable
+    release when 1.1.13 shipped; time 0.3.31 compiles on it. rustc 1.75
+    rejects #[unsafe(no_mangle)], so this driver is src_legacy/lib.rs, the
+    same source with #[no_mangle].
+
+On MSVC the arti binary names only its public symbols in the PDB (cargo's
+default profile has no debug info): 36 to 44 percent of its functions of
+three instructions or more, so those four recipes set min_named_ratio to 0.3.
+The ELF component of the new driver images is libarti_driver.so (the file
+name) where the two releases above call it arti_driver.so.
+
+Measured, kept + glue + excluded = total:
+
+    artefact                 x86                           x64
+    2.8.0 ELF                3990 +  5 + 12565 = 16560     4008 +  6 + 12254 = 16268
+    2.8.0 MinGW              7375 + 93 + 34813 = 42281     6591 + 85 + 27470 = 34146
+    2.8.0 MSVC               4464 + 219 + 40202 = 44885    4466 + 201 + 35838 = 40505
+    2.3.0-full ELF           5349 +  5 + 15145 = 20499     5335 +  6 + 14807 = 20148
+    2.3.0-full MinGW         9097 + 95 + 42965 = 52157     8168 + 87 + 32879 = 41134
+    2.3.0-full MSVC          5369 + 220 + 48185 = 53774    5406 + 202 + 42702 = 48310
+    2.3.0-cli ELF            5219 +  5 + 23913 = 29137     5226 +  6 + 23542 = 28774
+    2.3.0-cli MinGW          8593 + 103 + 67066 = 75762    7652 + 96 + 45644 = 53392
+    2.3.0-cli MSVC           5309 + 243 + 122429 = 127981  5249 + 224 + 97584 = 103057
+    1.1.13-cli ELF           3025 +  5 + 19881 = 22911     3040 +  6 + 19918 = 22964
+    1.1.13-cli MinGW         4969 + 100 + 55292 = 60361    4114 + 93 + 37666 = 41873
+    1.1.13-cli MSVC          3290 + 247 + 91627 = 95164    3250 + 223 + 71633 = 75106
+    1.1.13-rust1.75 ELF      2027 +  5 + 12464 = 14496     2061 +  6 + 10461 = 12528
+    1.1.13-rust1.75 MinGW    3869 + 91 + 31017 = 34977     3263 + 82 + 22725 = 26070
+    1.1.13-rust1.75 MSVC     2305 + 219 + 33688 = 36212    2288 + 196 + 29769 = 32253
+
+PicHash overlap with the nearest sibling (distinct, 10+ instructions, kept
+functions), x86 / x64:
+
+  * 2.8.0 vs 2.3.0: ELF 43 of 3044 / 974 of 1770; MinGW 2029 of 3466 / 1494
+    of 2950; MSVC 1291 of 2989 / 1252 of 2935.
+  * 2.3.0-full vs 2.3.0: ELF 49 of 4121 / 1035 of 2279; MinGW 2135 of 4119 /
+    1589 of 3548; MSVC 1314 of 3511 / 1258 of 3473 (the 2.3.0 MSVC images
+    were built with the runner's rustc, the new ones with 1.97.0).
+  * 2.3.0-cli vs 2.3.0-full: ELF 60 of 4165 / 892 of 2522; MinGW 1831 of
+    4161 / 1379 of 3564; MSVC 1400 of 3502 / 1378 of 3456.
+  * 1.1.13-cli vs 1.1.13-rust1.75: ELF 36 of 2902 / 427 of 1738; MinGW 853
+    of 2699 / 619 of 2237; MSVC 667 of 2333 / 678 of 2326.
+  * 1.1.13-rust1.75 vs 1.1.13 (rustc 1.97, time raised): ELF 4 of 1934 / 43
+    of 1095; MinGW 153 of 1899 / 78 of 1595; MSVC 82 of 1643 / 74 of 1639.
+
+None is PicHash-identical to an existing image. Still not built: the
+releases between 2.3.0 and 2.8.0 (2.4.0, 2.5.0, 2.5.1, 2.6.0, 2.7.0), and
+arti's experimental features; the "modified Arti 1.1.x" of the sample, whose
+modifications are not published.
 """
 from ..recipe import Artifact, BuildStep, Recipe, Source
 
