@@ -115,6 +115,9 @@ def _tevador(flavor, toolchains):
     recipe.source = Source(git_url="https://github.com/tevador/equix.git",
                            git_ref=_TEVADOR_REF)
     recipe.build = [BuildStep(recipe.build[0].command + " --root .")]
+    if flavor == "msvc":
+        recipe.build_flags += ("; advapi32.lib as well (upstream's huge-page "
+                               "allocation calls the token privilege API)")
     recipe.notes = ("Compiled from upstream tevador/equix at fb00f156 with the "
                     "HashX submodule at bba97f9 (the pins of the tracker "
                     "issue), the same 14 translation units and HASHX_SIZE=8 as "

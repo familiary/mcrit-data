@@ -91,7 +91,11 @@ def build(args: argparse.Namespace) -> Path:
               "/OPT:NOICF", "/Brepro", "/INCREMENTAL:NO",
               "/OUT:" + str(output), "/PDB:" + str(linker_pdb),
               *[str(obj) for obj in objects], "vcruntime.lib", "ucrt.lib",
-              "kernel32.lib"], root)
+              "kernel32.lib"] + (
+                  # upstream's virtual_memory.c (huge pages) calls
+                  # OpenProcessToken, LookupPrivilegeValueA and
+                  # AdjustTokenPrivileges; Tor's copy does not.
+                  ["advapi32.lib"] if prefix == "." else []), root)
         return output
 
     compiler = shlex.split(args.cc)
