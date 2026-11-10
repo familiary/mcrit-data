@@ -11,7 +11,11 @@ already carries Git for Windows' usr\\bin, so sh, bash, perl, link, find and
 sort resolve to Git's copies there too, behind Strawberry, MSVC and System32.
 The MSYS2 tools are visible only inside the login shell these steps start.
 
-Releases. 3.6.0 has no MSVC build: there is no msvc/ directory at any 3.x tag.
+Releases. 3.6.0 has no msvc/ directory at any 3.x tag, so it is built with cl
+through its own configure and Makefile instead (jemalloc_3.6.0_msvc, at the
+end of this file). Measured kept + removed = total: x64 945 + 147 = 1092, x86
+949 + 143 = 1092 (run 42788175370); its PicHashes (10+ instructions) share 0
+with the 3.6.0 MinGW images and 0 (x86) / 13 of 444 (x64) with 4.5.0 MSVC.
 The four that do are all recorded - 4.5.0, 5.2.1, 5.3.0 and 5.4.0 - because
 each is a different allocator below the public entry points (see jemalloc.py),
 and because the source is the same tags the MinGW artefacts were built from,

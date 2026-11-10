@@ -27,7 +27,8 @@ solution can be opened and ``include/jemalloc/`` holds only ``.h.in``
 templates until autoconf and configure have run; neither the git tag nor
 ``jemalloc-5.3.0.tar.bz2`` ships a generated ``configure``. The workflow now
 installs autoconf for it, which is what that recipe's docstring records.
-3.6.0 has no MSVC counterpart: no 3.x tag has an msvc/ directory.
+3.6.0 has no msvc/ directory at any 3.x tag; its MSVC counterpart is built
+through its own configure and Makefile with CC=cl (jemalloc_msvc.py).
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
