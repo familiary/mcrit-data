@@ -4,7 +4,7 @@ Two jobs, both because c-toxcore's CMake build assumes things a bare
 windows-2022 runner does not provide, and neither can be solved by a CMake
 flag alone. Nothing here touches the upstream tree.
 
-prepare <libsodium-dir> <pthreads4w-dir> <out-dir> [legacy|pc]
+prepare <libsodium-dir> <pthreads4w-dir> <out-dir> [legacy] [pc|mp]
     Writes, under <out-dir>:
       * unofficial-sodium/unofficial-sodium-config.cmake, an imported target
         pointing at the libsodium this recipe built from the pinned release
@@ -101,22 +101,38 @@ def prepare(sodium_dir, pth_dir, out_dir, legacy, pc=False):
         if not pc:
             out.write('@if "%1"=="--version" (echo 0.29.2& exit /b 0)\r\n@exit /b 1\r\n')
         else:
-            # "pc" (v0.2.19 and v0.2.20 only): those releases require
-            # libsodium through pkg_search_module(... REQUIRED) on every
-            # platform before their MSVC find_package, so the stub answers
-            # for the module libsodium alone, with the pinned build's include
-            # directory and import library, and still reports every other
-            # module (opus, vpx, libconfig) as absent.
+            # "pc" (v0.2.19 and v0.2.20): those releases require libsodium
+            # through pkg_search_module(... REQUIRED) on every platform
+            # before their MSVC find_package, so the stub answers for the
+            # module libsodium with the pinned build's include directory and
+            # import library. "mp" (v0.2.16 and v0.2.17) adds msgpack, which
+            # those releases find only through pkg-config, from the msgpack-c
+            # the recipe installed under mp-inst. Every other module (opus,
+            # vpx, libconfig) is still reported absent.
+            modules = []
+            if "pc" in pc:
+                modules.append(("libsodium", "1.0.20", cm(sodium_inc),
+                                cm(os.path.dirname(sodium_lib)), "libsodium"))
+            if "mp" in pc:
+                mp = os.path.abspath("mp-inst")
+                modules.append(("msgpack", "3.3.0", cm(os.path.join(mp, "include")),
+                                cm(os.path.join(mp, "lib")), "msgpackc"))
             lines = ['@echo off',
-                     'if "%~1"=="--version" (echo 0.29.2& exit /b 0)',
-                     'echo %* | findstr /C:"libsodium" >nul || exit /b 1',
-                     'if "%~1"=="--modversion" (echo 1.0.20& exit /b 0)',
-                     'if "%%~1"=="--cflags-only-I" (echo -I%s& exit /b 0)' % cm(sodium_inc),
-                     'if "%%~1"=="--libs-only-L" (echo -L%s& exit /b 0)' % cm(os.path.dirname(sodium_lib)),
-                     'if "%~1"=="--libs-only-l" (echo -llibsodium& exit /b 0)',
-                     'if "%%~1"=="--variable=includedir" (echo %s& exit /b 0)' % cm(sodium_inc),
-                     'if "%%~1"=="--variable=libdir" (echo %s& exit /b 0)' % cm(os.path.dirname(sodium_lib)),
-                     'exit /b 0']
+                     'if "%~1"=="--version" (echo 0.29.2& exit /b 0)']
+            for name, ver, inc, libdir, lname in modules:
+                lines += [
+                    'echo %%* | findstr /C:"%s" >nul && goto %s' % (name, name)]
+            lines.append('exit /b 1')
+            for name, ver, inc, libdir, lname in modules:
+                lines += [
+                    ':%s' % name,
+                    'if "%%~1"=="--modversion" (echo %s& exit /b 0)' % ver,
+                    'if "%%~1"=="--cflags-only-I" (echo -I%s& exit /b 0)' % inc,
+                    'if "%%~1"=="--libs-only-L" (echo -L%s& exit /b 0)' % libdir,
+                    'if "%%~1"=="--libs-only-l" (echo -l%s& exit /b 0)' % lname,
+                    'if "%%~1"=="--variable=includedir" (echo %s& exit /b 0)' % inc,
+                    'if "%%~1"=="--variable=libdir" (echo %s& exit /b 0)' % libdir,
+                    'exit /b 0']
             out.write("\r\n".join(lines) + "\r\n")
     if legacy:
         plat = "x64" if os.path.basename(os.path.dirname(os.path.dirname(
@@ -208,13 +224,16 @@ def link(build_dir, out_dir, sodium_dir, pth_dir, arch):
         "/OUT:" + os.path.join(out_dir, "toxcore.dll"),
         "/IMPLIB:" + os.path.join(out_dir, "toxcore.lib"),
         "@" + os.path.join(out_dir, "objects.rsp")] + libs
-        + [sodium_lib, pth_lib, "iphlpapi.lib", "ws2_32.lib"])
+        + [sodium_lib, pth_lib, "iphlpapi.lib", "ws2_32.lib"]
+        # msgpack-c's import library, for v0.2.16 and v0.2.17 only.
+        + glob.glob(os.path.join("mp-inst", "lib", "msgpackc.lib")))
 
 
 if __name__ == "__main__":
-    if len(sys.argv) in (5, 6) and sys.argv[1] == "prepare":
-        prepare(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5:] == ["legacy"],
-                sys.argv[5:] == ["pc"])
+    if len(sys.argv) in (5, 6, 7) and sys.argv[1] == "prepare":
+        flags = set(sys.argv[5:])
+        prepare(sys.argv[2], sys.argv[3], sys.argv[4], "legacy" in flags,
+                flags & {"pc", "mp"})
     elif len(sys.argv) == 7 and sys.argv[1] == "link":
         link(*sys.argv[2:])
     else:

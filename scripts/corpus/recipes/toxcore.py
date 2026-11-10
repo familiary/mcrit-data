@@ -209,11 +209,11 @@ _MSGPACK_PE = ("mkdir -p mp-src-{arch} && tar xf {msgpack_src} -C mp-src-{arch} 
                "-DCMAKE_CXX_COMPILER={cxx} -DCMAKE_RC_COMPILER={windres} "
                "-DCMAKE_FIND_ROOT_PATH=/usr/{host} -DCMAKE_INSTALL_PREFIX=$PWD/sodium-{arch} "
                + _MSGPACK_OPTS + " && cmake --build mp-build-{arch} -j$(nproc) "
-               "--target msgpackc && cmake --install mp-build-{arch}")
+               "&& cmake --install mp-build-{arch}")
 _MSGPACK_ELF = ("mkdir -p mp-src-{arch} && tar xf {msgpack_src} -C mp-src-{arch} "
                 "--strip-components=1 && cmake -S mp-src-{arch} -B mp-build-{arch} "
                 "-DCMAKE_INSTALL_PREFIX=$PWD/sodium-{arch} " + _MSGPACK_OPTS +
-                " && cmake --build mp-build-{arch} -j$(nproc) --target msgpackc "
+                " && cmake --build mp-build-{arch} -j$(nproc) "
                 "&& cmake --install mp-build-{arch}")
 
 
@@ -304,7 +304,18 @@ _LDFLAGS = ('-DCMAKE_SHARED_LINKER_FLAGS_RELEASE='
             '"/INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF /OPT:NOICF"')
 
 
-def _msvc(version, ref, cmp=True, legacy=False, pc=False):
+_MSGPACK_MSVC = [
+    BuildStep("mkdir mp"),
+    BuildStep("tar -xf {msgpack_src} -C mp --strip-components=1"),
+    BuildStep('cmake -S mp -B mp-build -G "NMake Makefiles" '
+              '"-DCMAKE_INSTALL_PREFIX=%CD%\\mp-inst" ' + _MSGPACK_OPTS + ' '
+              '-DCMAKE_C_FLAGS_RELEASE="/MD /O2 /DNDEBUG"'),
+    BuildStep("cmake --build mp-build"),
+    BuildStep("cmake --install mp-build"),
+]
+
+
+def _msvc(version, ref, cmp=True, legacy=False, pc=False, msgpack=False):
     cmake = ('cmake -S . -B build-{arch} -G "NMake Makefiles" '
              '-DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON '
              '"-DCMAKE_PREFIX_PATH=%CD%\\tox-deps" '
@@ -315,8 +326,9 @@ def _msvc(version, ref, cmp=True, legacy=False, pc=False):
         family="c-toxcore", version=version,
         upstream="https://github.com/TokTok/c-toxcore", license="GPL-3.0-or-later",
         source=Source(git_url="https://github.com/TokTok/c-toxcore.git", git_ref=ref),
-        extra_sources={"libsodium_src": _SODIUM, "pthreads_src": _PTHREADS},
-        build_flags=_MSVC_FLAGS, notes=_NOTES,
+        extra_sources=dict({"libsodium_src": _SODIUM, "pthreads_src": _PTHREADS},
+                           **({"msgpack_src": _MSGPACK} if msgpack else {})),
+        build_flags=_MSVC_FLAGS + (_MP_NOTE if msgpack else ""), notes=_NOTES,
         build=[
             BuildStep("mkdir sodium pth"),
             BuildStep("tar -xf {libsodium_src} -C sodium --strip-components=1"),
@@ -328,8 +340,10 @@ def _msvc(version, ref, cmp=True, legacy=False, pc=False):
                       '/p:ForceImportBeforeCppTargets=%CD%\\msvcprops.props '
                       '/m /v:minimal'),
             BuildStep("nmake /nologo /E VC", cwd="pth"),
+            *(_MSGPACK_MSVC if msgpack else []),
             BuildStep(_HELPER + " prepare sodium pth tox-deps"
-                      + (" legacy" if legacy else "") + (" pc" if pc else "")),
+                      + (" legacy" if legacy else "") + (" pc" if pc else "")
+                      + (" mp" if msgpack else "")),
             BuildStep(cmake),
             BuildStep("type build-{arch}\\CMakeFiles\\toxcore_shared.dir\\flags.make",
                       allow_failure=True),
@@ -365,5 +379,6 @@ for _v in ("0.2.13", "0.2.14", "0.2.15", "0.2.16", "0.2.17", "0.2.19",
     # MSVC find_package ("None of the required 'libsodium' found" in run
     # 42780737122), so the helper's pkg-config stub answers for libsodium.
     RECIPES["c-toxcore_%s_msvc" % _v] = _msvc(
-        _v, "v" + _v, cmp=_cmp, legacy=not _cmp, pc=_v in ("0.2.19", "0.2.20"))
+        _v, "v" + _v, cmp=_cmp, legacy=not _cmp, pc=_v in ("0.2.19", "0.2.20"),
+        msgpack=_mp)
 
