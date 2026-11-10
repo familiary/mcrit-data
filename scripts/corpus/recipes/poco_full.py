@@ -27,6 +27,14 @@ and libpq client libraries built for the target first (see the README "not
 built" table), ApacheConnector (an Apache httpd module, needs APR and httpd
 headers) and DNSSD (needs the Bonjour SDK or Avahi).
 
+PDF compiles its own copy of zlib (PDF/src/zutil.c and the rest) beside the
+one Foundation compiles, and two whole archives holding the same zlib objects
+do not link ("multiple definition of `zError'; libPocoFoundation.a(zutil.c.obj)
+... first defined here"). The link therefore passes
+-Wl,--allow-multiple-definition, which keeps the first definition (Foundation's,
+which comes first in the archive list) and drops the duplicate; that is a link
+option, not a source change, and the dropped copy is the same zlib release.
+
 Same command-line settings as poco.py (CMAKE_MC_COMPILER, CMAKE_SYSTEM_PROCESSOR,
 RelWithDebInfo with Release's flags, -lmswsock); FindOpenSSL's MinGW branch
 reads LIB_EAY and SSL_EAY, which are preset to the import libraries so that
@@ -70,6 +78,7 @@ _CMAKE = (
 
 _LINK = ("printf 'int anchor(){return 0;}\\n' > anchor.cc && "
          "{cxx}-posix -std=c++20 -O2 -shared -o poco.dll anchor.cc "
+         "-Wl,--allow-multiple-definition "
          "-Wl,--whole-archive $(ls build-{arch}/lib/libPoco*.a | tr '\\n' ' ') "
          "-Wl,--no-whole-archive "
          "deps-{arch}/ssl/libssl.dll.a deps-{arch}/ssl/libcrypto.dll.a "
@@ -107,7 +116,8 @@ RECIPES = {
                     "flags overridden to Release's); static libraries linked "
                     "into one DLL with --whole-archive; Crypto, NetSSL, JWT, "
                     "NetSSL_Win, Data/ODBC, FastLogger, PDF and SevenZip on; "
-                    "OpenSSL 3.5.8 and odbc32 imported",
+                    "OpenSSL 3.5.8 and odbc32 imported; -Wl,--allow-multiple-"
+                    "definition for the second bundled zlib copy (PDF's)",
         notes="poco 1.15.4 with the components poco_1.15.4 leaves out: Crypto, "
               "NetSSL_OpenSSL and JWT against OpenSSL 3.5.8 DLLs built from "
               "the pinned release tarball (imported, not in the image), "
