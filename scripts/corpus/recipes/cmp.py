@@ -210,3 +210,11 @@ RECIPES["cmp_toktok_52bfcfa-toxcore"] = Recipe(
           "family's recipe splits it out of libtoxcore.dll. No c-toxcore "
           "code is in the image. Nothing patched.",
 )
+
+
+# The tags the first revision built only to measure and did not commit (v1,
+# v3, v5 for the old line, v17 to v19 beside v20): an overlap below 100% is
+# committed, and a tag whose image turns out PicHash-identical to one already
+# committed is not (see the docstring for the measurement).
+for _tag in ("1", "3", "5", "17", "18", "19"):
+    RECIPES["cmp_%s" % _tag] = _cmp(_tag, "v" + _tag)
