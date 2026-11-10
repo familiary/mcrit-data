@@ -302,8 +302,13 @@ _CFLAGS36 = "-nologo -Zi -MD -W3 -O2"
 # include guard is predefined so the header is skipped, and the four macros it
 # would have defined are given on the command line instead, which leaves bool
 # as cl's own _Bool. Nothing in the tree is edited.
+#
+# v143 also predefines __STDC_VERSION__ (C17), which sends jemalloc's
+# VARIABLE_ARRAY to a C99 variable-length array (src/ctl.c(619): error C2057:
+# expected constant expression); 3.x expects cl to take its pre-C99 branch,
+# _alloca from <malloc.h>, which -U__STDC_VERSION__ restores.
 _CPPFLAGS36 = ("-Iinclude/msvc_compat -Dstdbool_h -Dbool=_Bool -Dtrue=1 "
-               "-Dfalse=0 -D__bool_true_false_are_defined=1")
+               "-Dfalse=0 -D__bool_true_false_are_defined=1 -U__STDC_VERSION__")
 
 RECIPES["jemalloc_3.6.0_msvc"] = Recipe(
     family="jemalloc",
@@ -360,7 +365,8 @@ RECIPES["jemalloc_3.6.0_msvc"] = Recipe(
           "and the clone carries no tag), configure's -I include/msvc_compat "
           "is restated in CPPFLAGS, msvc_compat/stdbool.h's typedef of _Bool (which "
           "v143 rejects) is skipped by predefining its guard and its bool/true/"
-          "false macros, "
+          "false macros, __STDC_VERSION__ is undefined so VARIABLE_ARRAY takes the "
+          "_alloca branch 3.x wrote for cl, "
           "and je_cv_static_page_shift=12 is primed as in the MinGW recipe. "
           "Built against "
           "the DLL runtime, so the MSVC C runtime is imported.",
