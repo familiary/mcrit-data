@@ -191,6 +191,12 @@ class Cl:
         cmd += ["/I" + i for i in includes]
         cmd += ["/D" + d for d in defines]
         cmd += list(extra)
+        if USE_CLANG and src.endswith((".S", ".s")):
+            # GCC's preprocessor defines __STDC__ for assembler-with-cpp,
+            # clang in MSVC mode does not, and mpi/sysdep.h then takes its
+            # K&R branch, `_/**/name`, which becomes "_ name" (i386: "error:
+            # unexpected token" at every C_SYMBOL_NAME).
+            cmd.append("/D__STDC__=1")
         cmd += ["/Fo" + obj, src]
         return cmd
 
