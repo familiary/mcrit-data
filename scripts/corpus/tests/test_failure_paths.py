@@ -1819,6 +1819,33 @@ class ProvenanceToolchainTest(unittest.TestCase):
                           {"version": "1.0", "component": "f.dll"},
                           self._pair())
 
+    def _variants(self):
+        return [("Fam_1.0_msvc", _Recipe(["msvc_x86", "msvc_x64"],
+                                         [_Artifact("f")])),
+                ("Fam_1.0_msvc_mt", _Recipe(["msvc_x86"],
+                                            [_Artifact("f-mt")]))]
+
+    def test_the_component_separates_two_recipes_on_one_toolchain(self):
+        """A build variant beside the stock build, under its own component."""
+        recipe, artifact = self._resolve(
+            "Fam_1.0_msvc143_x86_f-mt",
+            {"version": "1.0", "component": "f-mt"}, self._variants())
+        self.assertEqual(recipe.toolchains, ["msvc_x86"])
+        self.assertEqual(artifact.component, "f-mt")
+        recipe, artifact = self._resolve(
+            "Fam_1.0_msvc143_x86_f",
+            {"version": "1.0", "component": "f"}, self._variants())
+        self.assertEqual(recipe.toolchains, ["msvc_x86", "msvc_x64"])
+
+    def test_the_same_component_on_one_toolchain_stays_ambiguous(self):
+        from refresh_provenance import Unmatched
+
+        candidates = [("A", _Recipe(["msvc_x86"], [_Artifact("f")])),
+                      ("B", _Recipe(["msvc_x86"], [_Artifact("f")]))]
+        with self.assertRaises(Unmatched):
+            self._resolve("Fam_1.0_msvc143_x86_f",
+                          {"version": "1.0", "component": "f"}, candidates)
+
     def test_a_blob_is_never_narrowed_by_its_slug(self):
         """Recipe.slug labels a blob "msvc" whatever toolchain extracted it.
 
@@ -2034,6 +2061,55 @@ class ElfReadmeRowTest(unittest.TestCase):
             readme._compiler_label(
                 self._entry("mingw13_x64", "x86_64-w64-mingw32-gcc (GCC) 13.2.0")),
             "MinGW-w64 GCC 13.2.0")
+
+
+class ExcludeFunctionsTest(unittest.TestCase):
+    """Recipe.exclude_functions removes by name and says how many.
+
+    The orion recipe uses one pattern, a negative lookahead on its own
+    namespace, so the cases here are that shape: the family's own functions
+    and its trait impls stay, core/alloc code and an unnamed function go.
+    """
+
+    PATTERN = r"^(?!<?orion::)"
+
+    def _report(self, names):
+        class _R(object):
+            pass
+        report = _R()
+        report.xcfg = {}
+        for index, name in enumerate(names):
+            function = _Function(10, name, index)
+            report.xcfg[index] = function
+        report._sorted_functions = "stale"
+        return report
+
+    def test_removes_only_what_the_pattern_matches(self):
+        from corpus import smdaify
+        names = ["orion::hazardous::hash::sha2::sha256::Sha256::digest",
+                 "<orion::Secret<X> as core::cmp::PartialEq>::eq",
+                 "core::fmt::write",
+                 "<u8 as core::fmt::Debug>::fmt",
+                 "<alloc::string::String as core::fmt::Write>::write_str",
+                 "orion_x_sha256",
+                 ""]
+        report = self._report(names)
+        with mock.patch.object(smdaify, "_recompute_statistics") as recompute:
+            removed = smdaify._drop_excluded(report, [self.PATTERN])
+        self.assertEqual(removed, 5)
+        self.assertEqual(sorted(f.function_name for f in report.xcfg.values()),
+                         sorted(names[:2]))
+        self.assertIsNone(report._sorted_functions)
+        recompute.assert_called_once_with(report)
+
+    def test_no_match_changes_nothing(self):
+        from corpus import smdaify
+        report = self._report(["orion::a", "orion::b"])
+        with mock.patch.object(smdaify, "_recompute_statistics") as recompute:
+            removed = smdaify._drop_excluded(report, [r"^zzz"])
+        self.assertEqual(removed, 0)
+        self.assertEqual(len(report.xcfg), 2)
+        recompute.assert_not_called()
 
 
 if __name__ == "__main__":

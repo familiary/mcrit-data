@@ -138,6 +138,18 @@ def _resolve(index, family, slug, entry):
         narrowed = [(name, recipe) for name, recipe in candidates
                     if wanted in {canonical_alias(t)
                                   for t in recipe.toolchains}]
+        if len(narrowed) > 1:
+            # Two recipes for one version on one toolchain: a build variant
+            # filed beside the stock build under its own component names
+            # (LibreSSL 3.1.0 /MD as libcrypto, /MT as libcrypto-mt). The
+            # pipeline records artifact.component verbatim, so the entry's
+            # component says which recipe produced it. Like the toolchain
+            # step this only narrows: two recipes that declare the same
+            # component stay ambiguous.
+            component = entry.get("component", "")
+            narrowed = [(name, recipe) for name, recipe in narrowed
+                        if any(a.component == component
+                               for a in recipe.artifacts)]
         if len(narrowed) == 1:
             candidates = narrowed
         else:
