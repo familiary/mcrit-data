@@ -330,9 +330,12 @@ mkdir -p "$CFG" "$OBJ" && cd "$CFG"
 # MSYS2's gcc is current (16.x on the runner), which defaults to C23, and
 # GMP's configure then rejects every compiler at "long long reliability test
 # 1" (its test programs are K&R C); -std=gnu17 is the dialect the MinGW legs'
-# GCC 13 defaults to.
-"$SRC/configure" --build=$TRIPLE --host=$TRIPLE --enable-shared --disable-static $FAT_OPTION CC="gcc -std=gnu17" > configure.out 2>&1 || {
-  echo "=== configure failed (exit $?)"; cat configure.out; tail -n 150 config.log; exit 91; }
+# GCC 13 defaults to, and -fpermissive turns GCC 14's new default errors
+# (implicit declarations, int conversions) back into the warnings GCC 13 gave.
+"$SRC/configure" --build=$TRIPLE --host=$TRIPLE --enable-shared --disable-static $FAT_OPTION CC="gcc -std=gnu17 -fpermissive" > configure.out 2>&1 || {
+  echo "=== configure failed (exit $?)"; cat configure.out
+  grep -n -B60 "doesn't seem to work\|could not find a working" config.log | grep -v "^[0-9]*-#define" | tail -n 80
+  tail -n 40 config.log; exit 91; }
 grep -E "^(checking (for assembler|ABI|compiler)|config.status: linking)" configure.out
 cd mpn
 # The .asm.lo rule of mpn/Makefile, through mpn/m4-ccas: m4 with the -D
