@@ -135,6 +135,15 @@ def _resolve(index, family, slug, entry):
         wanted = _toolchain_of(slug, family, version)
         if any(a.is_blob for _, recipe in candidates for a in recipe.artifacts):
             wanted = None
+        # A harvested prebuilt can carry the same producer alias as a
+        # source-build recipe of the family (msvc142 vs msvc_x64), so the
+        # recipes that declare the entry's component come first.
+        entry_component = entry.get("component", "")
+        declaring = [(name, recipe) for name, recipe in candidates
+                     if any(a.component == entry_component
+                            for a in recipe.artifacts)]
+        if declaring:
+            candidates = declaring
         narrowed = [(name, recipe) for name, recipe in candidates
                     if wanted in {canonical_alias(t)
                                   for t in recipe.toolchains}]
