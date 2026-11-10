@@ -601,3 +601,109 @@ RECIPES["ed25519-donna_2015-03-16-force32bit_linux"] = _ed25519_force32(True)
 for _lvl in ("-O0", "-O1", "-O3", "-Os"):
     RECIPES["ed25519-donna_2015-03-16%s" % _lvl] = _ed25519_opt(False, _lvl)
     RECIPES["ed25519-donna_2015-03-16%s_linux" % _lvl] = _ed25519_opt(True, _lvl)
+
+
+# --- Tor's real digest. The 2026-10-07-tor components above take the digest
+# from a stand-in shim (donna's reference SHA-512 in Tor's shape). This
+# version compiles Tor's own digest instead: src/lib/crypt_ops/
+# crypto_digest_openssl.c and crypto_digest.c (crypto_digest512_new,
+# crypto_digest_add_bytes, crypto_digest_get_digest, crypto_digest_free_,
+# crypto_digest512 and the rest of the file), Tor's keccak-tiny
+# (src/ext/keccak-tiny/keccak-tiny-unrolled.c, which crypto_digest uses for
+# SHA3), lib/malloc/malloc.c and lib/crypt_ops/crypto_util.c (memwipe), all
+# from the same pinned Tor tree and unmodified, built with -DENABLE_OPENSSL
+# against the pinned OpenSSL 3.0.15 (the tarball and sha256 data/OpenSSL
+# pins). OpenSSL is not compiled: `perl Configure <target> no-asm` and `make
+# build_generated` give its generated headers, and the image imports the 16
+# libcrypto functions Tor's digest calls (SHA1/SHA256/SHA512 and their
+# _Init/_Update/_Final, EVP_sha256, HMAC, OPENSSL_cleanse) from
+# libcrypto-3.dll / libcrypto-3-x64.dll through an import library dlltool
+# writes from a .def, or, on Linux, as undefined dynamic symbols, so no
+# OpenSSL code is in the image. What Tor's code still calls and is not built
+# (the random source and the assertion/bug reporters, whose real versions
+# pull in Tor's PRNG and logging) is in exercisers/ed25519_tor_shim/
+# ed25519_tor_openssl_shim.c, named, never run. No file of either tree is
+# edited.
+_OSSL = Source(
+    url="https://github.com/openssl/openssl/releases/download/openssl-3.0.15/"
+        "openssl-3.0.15.tar.gz",
+    sha256="23c666d0edf20f14249b3d8f0368acaee9ab585b09e1de82107c66e1f3ec9533")
+_OSSL_FUNCS = ("EVP_sha256 HMAC OPENSSL_cleanse SHA1 SHA1_Final SHA1_Init "
+               "SHA1_Update SHA256 SHA256_Final SHA256_Init SHA256_Update "
+               "SHA512 SHA512_Final SHA512_Init SHA512_Update")
+_TOR_DIGEST_SRC = ("src/ext/ed25519/donna/ed25519_tor.c "
+                   "src/lib/crypt_ops/crypto_digest_openssl.c "
+                   "src/lib/crypt_ops/crypto_digest.c "
+                   "src/ext/keccak-tiny/keccak-tiny-unrolled.c "
+                   "src/lib/malloc/malloc.c src/lib/crypt_ops/crypto_util.c "
+                   + _TOR_SHIM + "/ed25519_tor_openssl_shim.c")
+
+
+def _ed25519_tor_openssl(linux):
+    pic = _PIC if linux else ""
+    ext = "so" if linux else "dll"
+    if linux:
+        target = "if [ {bitness} = 64 ]; then T=linux-x86_64; else T=linux-x86; fi"
+        cross = ""
+        implib = "true"
+        libs = ""
+    else:
+        target = "if [ {bitness} = 64 ]; then T=mingw64; else T=mingw; fi"
+        cross = " --cross-compile-prefix={host}-"
+        implib = ("if [ {bitness} = 64 ]; then N=libcrypto-3-x64.dll; else "
+                  "N=libcrypto-3.dll; fi; printf 'LIBRARY %s\\nEXPORTS\\n' $N "
+                  "> crypto.def && for f in " + _OSSL_FUNCS + "; do echo $f "
+                  ">> crypto.def; done && {host}-dlltool -d crypto.def "
+                  "-l libcrypto.dll.a")
+        libs = " libcrypto.dll.a -lbcrypt"
+    ossl = ("mkdir -p ossl && tar xzf {openssl_src} -C ossl "
+            "--strip-components=1 && cd ossl && " + target + " && perl "
+            "Configure $T no-asm" + cross + " > /dev/null && make "
+            "build_generated > /dev/null")
+    flags = ("-O2 -fwrapv " + (_PIC + " " if linux else "") + _TOR_GLUE_FLAGS
+             + " -DENABLE_OPENSSL")
+    build = []
+    artifacts = []
+    for name, extra in (("ed25519_tor", ""),
+                        ("ed25519_tor-sse2", " -DED25519_SSE2 -msse2")):
+        out = "%s.%s" % (name, ext)
+        build.append(BuildStep(
+            "{cc} {archflag} " + flags + extra + " -shared -I" + _TOR_SHIM
+            + " -Iossl/include -Isrc -Isrc/ext -Isrc/ext/ed25519/donna -o "
+            + out + " " + _TOR_DIGEST_SRC + libs))
+        artifacts.append(Artifact(path=out, component=out,
+                                  build_flags=flags + extra))
+    return Recipe(
+        family="ed25519-donna",
+        version="2026-10-07-tor-openssl",
+        upstream="https://gitlab.torproject.org/tpo/core/tor",
+        license=RECIPES["ed25519-donna_2026-10-07-tor"].license,
+        source=Source(git_url="https://gitlab.torproject.org/tpo/core/tor.git",
+                      git_ref=_TOR_COMMIT),
+        extra_sources={"openssl_src": _OSSL},
+        build=[BuildStep(ossl), BuildStep(implib)] + build,
+        artifacts=artifacts,
+        toolchains=(["linux_x86", "linux_x64"] if linux
+                    else ["mingw_x86", "mingw_x64"]),
+        build_flags=flags,
+        notes="Tor's ed25519_tor.c at commit 8dbbbe6 with Tor's own digest "
+              "rather than the stand-in: src/lib/crypt_ops/"
+              "crypto_digest_openssl.c and crypto_digest.c (crypto_digest_t "
+              "over OpenSSL libcrypto), keccak-tiny, lib/malloc/malloc.c and "
+              "lib/crypt_ops/crypto_util.c from the same tree, compiled with "
+              "Tor's ed25519 flags plus -DENABLE_OPENSSL against the headers "
+              "of the pinned OpenSSL 3.0.15 (Configure no-asm, make "
+              "build_generated; nothing of OpenSSL is compiled), importing "
+              "its 16 libcrypto functions (" + ("undefined dynamic symbols"
+              if linux else "libcrypto-3[-x64].dll through a dlltool import "
+              "library") + "), so no OpenSSL code is in the image. The "
+              "random source and Tor's assertion/bug reporters come from "
+              "scripts/corpus/exercisers/ed25519_tor_shim/"
+              "ed25519_tor_openssl_shim.c, named and never run. Plain and "
+              "-DED25519_SSE2 -msse2 components, as for 2026-10-07-tor. No "
+              "file of either tree is edited.",
+    )
+
+
+RECIPES["ed25519-donna_2026-10-07-tor-openssl"] = _ed25519_tor_openssl(False)
+RECIPES["ed25519-donna_2026-10-07-tor-openssl_linux"] = _ed25519_tor_openssl(True)
