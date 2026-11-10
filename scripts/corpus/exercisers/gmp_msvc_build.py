@@ -327,7 +327,11 @@ pacman -Sy --noconfirm --needed m4 make diffutils "$GCC_PKG" || exit 90
 export PATH="$MINGW_PREFIX_DIR/bin:$PATH"
 echo "gcc: $(command -v gcc) $(gcc -dumpmachine) $(gcc -dumpversion)  as: $(as --version | head -1)  m4: $(m4 --version | head -1)"
 mkdir -p "$CFG" "$OBJ" && cd "$CFG"
-"$SRC/configure" --build=$TRIPLE --host=$TRIPLE --enable-shared --disable-static $FAT_OPTION > configure.out 2>&1 || {
+# MSYS2's gcc is current (16.x on the runner), which defaults to C23, and
+# GMP's configure then rejects every compiler at "long long reliability test
+# 1" (its test programs are K&R C); -std=gnu17 is the dialect the MinGW legs'
+# GCC 13 defaults to.
+"$SRC/configure" --build=$TRIPLE --host=$TRIPLE --enable-shared --disable-static $FAT_OPTION CC="gcc -std=gnu17" > configure.out 2>&1 || {
   echo "=== configure failed (exit $?)"; cat configure.out; tail -n 150 config.log; exit 91; }
 grep -E "^(checking (for assembler|ABI|compiler)|config.status: linking)" configure.out
 cd mpn
