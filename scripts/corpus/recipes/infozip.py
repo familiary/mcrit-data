@@ -266,3 +266,132 @@ RECIPES = {
     "infozip_unzip_6.0": _unzip(
         "6.0", "036d96991646d0449ed0aa952e4fbe21b476ce994abc276e49d30e686708bd37"),
 }
+
+
+# --- The other executables upstream's makefiles build, and the x86
+# assembler fast paths. The recipes above record zip.exe, unzip.exe and
+# funzip.exe only. zipcloak, zipnote and zipsplit are not zip.exe relinked:
+# each is its own main (zipcloak.c, zipnote.c, zipsplit.c) plus zipfile,
+# fileio, util and crc32 compiled again with -DUTIL, which drops the
+# compression code and changes the shared files; unzipsfx is unzip compiled
+# again with -DSFX, and unzip32.dll is the DLL API (windll.c, api.c) with
+# -DWINDLL -DDLL. Each is built by the same makefile with the same overrides
+# as the shipped recipes, as separate versions ("<v>-utils", "6.0-sfxdll")
+# so the shipped images are unchanged. The "-asm" versions are x86 only:
+# upstream's default x86 build with match.S and crc_i386.S assembled in,
+# which the shipped C-only recipes leave out for like-for-like x86/x64.
+_UTILS = ["zipcloak.exe", "zipnote.exe", "zipsplit.exe"]
+_ZIP30_UTILS_MAKE = _ZIP30_MAKE.replace(" zip.exe", " " + " ".join(_UTILS))
+_ZIP31_UTILS_MAKE = _ZIP31_MAKE.replace(" zip.exe", " " + " ".join(_UTILS))
+
+
+def _zip_utils(base):
+    import dataclasses
+    recipe = RECIPES[base]
+    beta = recipe.version != "3.0"
+    return dataclasses.replace(
+        recipe, version=recipe.version + "-utils",
+        build=[BuildStep("make -f win32/makefile.gcc clean",
+                         allow_failure=True),
+               BuildStep(_ZIP31_UTILS_MAKE if beta else _ZIP30_UTILS_MAKE)],
+        artifacts=[Artifact(path=u, component=u) for u in _UTILS],
+        notes=_NO_ZLIB.split(" so ")[0] + ". " +
+              (_note_beta(recipe.version) if beta else "") +
+              "zipcloak.exe, zipnote.exe and zipsplit.exe from the same "
+              "win32/makefile.gcc and overrides as zip.exe: each is its own "
+              "main plus zipfile, fileio, util and crc32 compiled with "
+              "-DUTIL (zipcloak adds crypt). Assembler fast paths disabled "
+              "(32-bit only).")
+
+
+for _base in ("infozip_zip_3.0", "infozip_zip_3.1a", "infozip_zip_3.1b",
+              "infozip_zip_3.1c"):
+    RECIPES[_base + "-utils"] = _zip_utils(_base)
+
+RECIPES["infozip_unzip_6.0-sfxdll"] = Recipe(
+    family="Info-ZIP",
+    version="6.0-sfxdll",
+    upstream="https://infozip.sourceforge.net/UnZip.html",
+    license=_NOTE_LICENSE,
+    source=RECIPES["infozip_unzip_6.0"].source,
+    build=[
+        BuildStep("make -f win32/Makefile.gcc clean", allow_failure=True),
+        BuildStep("make -f win32/Makefile.gcc CC={cc} RC={windres} NOASM=1 "
+                  "CC_CPU_OPT= LD_RELEASE_OPT= LOCAL_UNZIP='%s' "
+                  "unzipsfx.exe unzip32.dll" % _INCLUDE),
+    ],
+    artifacts=[Artifact(path="unzipsfx.exe", component="unzipsfx.exe"),
+               Artifact(path="unzip32.dll", component="unzip32.dll")],
+    toolchains=["mingw_x86", "mingw_x64"],
+    build_flags="-O2 (win32/Makefile.gcc default), NOASM",
+    notes="unzipsfx.exe (the self-extractor stub, unzip's sources compiled "
+          "again with -DSFX) and unzip32.dll (the DLL API, windll.c and "
+          "api.c with the extraction core compiled with -DWINDLL -DDLL), "
+          "from the same unzip 6.0 tarball, win32/Makefile.gcc and "
+          "overrides as unzip.exe. unzip does not use zlib at any point. "
+          "Assembler CRC disabled (32-bit only).",
+)
+
+# x86 only: the assembler fast paths in. zip 3.0's makefile.gcc assembles
+# match.S and crc_i386.S by default (OBJA, CRCA_O) and the betas unless
+# NOASM=1; unzip's Makefile.gcc assembles crc_i386.S unless NOASM=1.
+RECIPES["infozip_zip_3.0-asm"] = Recipe(
+    family="Info-ZIP",
+    version="3.0-asm",
+    upstream="https://infozip.sourceforge.net/Zip.html",
+    license=_NOTE_LICENSE,
+    source=RECIPES["infozip_zip_3.0"].source,
+    build=[BuildStep("make -f win32/makefile.gcc clean", allow_failure=True),
+           BuildStep("make -f win32/makefile.gcc CC={cc} RC={windres} "
+                     "LDFLAGS='-o$@' LOCAL_ZIP='%s' zip.exe" % _INCLUDE)],
+    artifacts=[Artifact(path="zip.exe", component="zip.exe")],
+    toolchains=["mingw_x86"],
+    build_flags="-O2 (win32/makefile.gcc default), assembler match.S and "
+                "crc_i386.S (upstream default on x86)",
+    notes=_NO_ZLIB + "zip.exe with upstream's default x86 assembler fast "
+          "paths: longest_match from match.S and crc32 from crc_i386.S "
+          "instead of the C versions the zip 3.0 recipe builds. x86 only, "
+          "because both files are 32-bit assembly.",
+)
+RECIPES["infozip_zip_3.1c-asm"] = Recipe(
+    family="Info-ZIP",
+    version="3.1c-asm",
+    upstream="https://infozip.sourceforge.net/Zip.html",
+    license=_NOTE_LICENSE,
+    source=RECIPES["infozip_zip_3.1c"].source,
+    build=[BuildStep("make -f win32/makefile.gcc clean", allow_failure=True),
+           BuildStep("make -f win32/makefile.gcc CC={cc} RC={windres} "
+                     "LDFLAGS='-o$@' LOCAL_ZIP='%s' zip.exe" % _INCLUDE)],
+    artifacts=[Artifact(path="zip.exe", component="zip.exe")],
+    toolchains=["mingw_x86"],
+    build_flags="-O3 (win32/makefile.gcc default), assembler match.S and "
+                "crc_i386.S (upstream default on x86)",
+    notes=_NO_ZLIB + _note_beta("3.1c") + "zip.exe with upstream's default "
+          "x86 assembler fast paths (NOASM not given). x86 only.",
+)
+RECIPES["infozip_unzip_6.0-asm"] = Recipe(
+    family="Info-ZIP",
+    version="6.0-asm",
+    upstream="https://infozip.sourceforge.net/UnZip.html",
+    license=_NOTE_LICENSE,
+    source=RECIPES["infozip_unzip_6.0"].source,
+    build=[BuildStep("make -f win32/Makefile.gcc clean", allow_failure=True),
+           BuildStep("make -f win32/Makefile.gcc CC={cc} RC={windres} "
+                     "CC_CPU_OPT= LD_RELEASE_OPT= LOCAL_UNZIP='%s' "
+                     "unzip.exe funzip.exe" % _INCLUDE)],
+    artifacts=[Artifact(path="unzip.exe", component="unzip.exe"),
+               Artifact(path="funzip.exe", component="funzip.exe")],
+    toolchains=["mingw_x86"],
+    build_flags="-O2 (win32/Makefile.gcc default), assembler crc_i386.S "
+                "(upstream default on x86)",
+    notes="unzip.exe and funzip.exe with upstream's default x86 assembler "
+          "CRC (crc_i386.S; NOASM not given). x86 only. unzip does not use "
+          "zlib at any point.",
+)
+for _beta in ("3.1a", "3.1b"):
+    import dataclasses as _dc
+    RECIPES["infozip_zip_%s-asm" % _beta] = _dc.replace(
+        RECIPES["infozip_zip_3.1c-asm"], version=_beta + "-asm",
+        source=RECIPES["infozip_zip_" + _beta].source,
+        notes=_NO_ZLIB + _note_beta(_beta) + "zip.exe with upstream's "
+              "default x86 assembler fast paths (NOASM not given). x86 only.")
