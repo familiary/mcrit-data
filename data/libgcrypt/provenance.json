@@ -1218,7 +1218,7 @@
     "architecture": "x64",
     "build_flags": "C and assembly compiled by clang-cl (LLVM, MSVC ABI) with /clang:-fgnuc-version=4.2.1, /MD /O2 /Z7 (no /GL), assembler modules on (no --disable-asm); /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link (link.exe); configure by upstream, no make; no source edits; libgpg-error built with cl",
     "built_artifact": "msvc-x64/gc/src/libgcrypt-20.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "clang-cl (LLVM, MSVC ABI, as installed with Visual Studio 2022 on the windows-2022 runner; exact version not recorded) for every libgcrypt translation unit, linked with link.exe; the paired libgpg-error is compiled by Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "libgcrypt-20.dll",
     "dependencies": {
       "gpg_error": {
@@ -1232,7 +1232,7 @@
     "is_blob": false,
     "license": "LGPL-2.1-or-later (library), GPL-2.0-or-later (tests and tools)",
     "mcrit": "data/libgcrypt/x64/mcrit/libgcrypt_1.11.3-clangcl_msvc143_x64_libgcrypt-20.dll.mcrit",
-    "notes": "Shared libgcrypt from the signed GnuPG release tarball with its assembler modules and hardware acceleration, for the MSVC ABI and the DLL runtime. cl cannot build this configuration: the C code that dispatches to the assembly is gated on GCC's predefined macros and the inline-assembly files are GCC syntax, so every libgcrypt translation unit, C and assembly, is compiled by clang-cl presenting itself as GCC 4.2.1; the provenance compiler field names the toolchain's cl, which built the paired libgpg-error 1.61. No upstream file is edited. See scripts/corpus/exercisers/gnupg_cl.py.",
+    "notes": "Shared libgcrypt from the signed GnuPG release tarball with its assembler modules and hardware acceleration, for the MSVC ABI and the DLL runtime. cl cannot build this configuration: the C code that dispatches to the assembly is gated on GCC's predefined macros and the inline-assembly files are GCC syntax, so every libgcrypt translation unit, C and assembly, is compiled by clang-cl presenting itself as GCC 4.2.1; the paired libgpg-error 1.61 is compiled by cl. No upstream file is edited. See scripts/corpus/exercisers/gnupg_cl.py.",
     "num_functions": 1656,
     "removed_runtime_functions": [
       "CloseHandle",
@@ -2220,7 +2220,7 @@
     "architecture": "x64",
     "build_flags": "C and assembly compiled by clang-cl (LLVM, MSVC ABI) with /clang:-fgnuc-version=4.2.1, /MD /O2 /Z7 (no /GL), assembler modules on (no --disable-asm); /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link (link.exe); configure by upstream, no make; no source edits; libgpg-error built with cl",
     "built_artifact": "msvc-x64/gc/src/libgcrypt-20.dll",
-    "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
+    "compiler": "clang-cl (LLVM, MSVC ABI, as installed with Visual Studio 2022 on the windows-2022 runner; exact version not recorded) for every libgcrypt translation unit, linked with link.exe; the paired libgpg-error is compiled by Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "libgcrypt-20.dll",
     "dependencies": {
       "gpg_error": {
@@ -2234,7 +2234,7 @@
     "is_blob": false,
     "license": "LGPL-2.1-or-later (library), GPL-2.0-or-later (tests and tools)",
     "mcrit": "data/libgcrypt/x64/mcrit/libgcrypt_1.8.14-clangcl_msvc143_x64_libgcrypt-20.dll.mcrit",
-    "notes": "Shared libgcrypt from the signed GnuPG release tarball with its assembler modules and hardware acceleration, for the MSVC ABI and the DLL runtime. cl cannot build this configuration: the C code that dispatches to the assembly is gated on GCC's predefined macros and the inline-assembly files are GCC syntax, so every libgcrypt translation unit, C and assembly, is compiled by clang-cl presenting itself as GCC 4.2.1; the provenance compiler field names the toolchain's cl, which built the paired libgpg-error 1.35. No upstream file is edited. See scripts/corpus/exercisers/gnupg_cl.py.",
+    "notes": "Shared libgcrypt from the signed GnuPG release tarball with its assembler modules and hardware acceleration, for the MSVC ABI and the DLL runtime. cl cannot build this configuration: the C code that dispatches to the assembly is gated on GCC's predefined macros and the inline-assembly files are GCC syntax, so every libgcrypt translation unit, C and assembly, is compiled by clang-cl presenting itself as GCC 4.2.1; the paired libgpg-error 1.35 is compiled by cl. No upstream file is edited. See scripts/corpus/exercisers/gnupg_cl.py.",
     "num_functions": 1277,
     "removed_runtime_functions": [
       "CloseHandle",

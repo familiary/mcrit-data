@@ -248,8 +248,8 @@ def _gc_asm(version):
         "dispatches to the assembly is gated on GCC's predefined macros and the "
         "inline-assembly files are GCC syntax, so every libgcrypt translation "
         "unit, C and assembly, is compiled by clang-cl "
-        "presenting itself as GCC 4.2.1; the provenance compiler field names "
-        "the toolchain's cl, which built the paired libgpg-error %s. No "
+        "presenting itself as GCC 4.2.1; the paired libgpg-error %s is "
+        "compiled by cl. No "
         "upstream file is edited. See scripts/corpus/exercisers/gnupg_cl.py."
         % PAIRING[version])
     return recipe
