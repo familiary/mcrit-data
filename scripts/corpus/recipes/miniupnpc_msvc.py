@@ -134,9 +134,10 @@ def _steps(version):
         objs = _OBJS if old else _OBJS + ["addr_is_reserved"]
     includes = "/I." if old else "/Iinclude /I."
     # 1.9.20150917's minissdpc.c includes <strings.h> and <unistd.h> before
-    # its _WIN32 branch (later tarballs move them into the POSIX branch); it
-    # uses nothing from either on Windows, so the build tree gets two empty
-    # headers of those names. No upstream file is edited.
+    # its _WIN32 branch (later tarballs move them into the POSIX branch) and
+    # uses ssize_t, which MinGW's unistd.h supplies; the build tree gets an
+    # empty strings.h and a unistd.h with only `typedef SSIZE_T ssize_t;`
+    # (the SDK's own type). No upstream file is edited.
     shim = version == "1.9.20150917"
     if shim:
         includes += " /Icorpus-shim"
@@ -150,7 +151,9 @@ def _steps(version):
                 " /Foobj-{arch}\\ /Fdbuild-{arch}\\miniupnpc.pdb " + sources)
     pre = [BuildStep("if not exist corpus-shim mkdir corpus-shim", cwd=cwd),
            BuildStep("type nul > corpus-shim\\strings.h", cwd=cwd),
-           BuildStep("type nul > corpus-shim\\unistd.h", cwd=cwd)] if shim else []
+           BuildStep("echo #include ^<basetsd.h^> > corpus-shim\\unistd.h", cwd=cwd),
+           BuildStep("echo typedef SSIZE_T ssize_t; >> corpus-shim\\unistd.h",
+                     cwd=cwd)] if shim else []
     return pre + [
         BuildStep("if not exist obj-{arch} mkdir obj-{arch}",
                   cwd=cwd),
@@ -205,10 +208,10 @@ def _miniupnpc_msvc(version, git_ref):
     )
     if version == "1.9.20150917":
         r.notes += (" minissdpc.c of this tarball includes <strings.h> and "
-                    "<unistd.h> ahead of its _WIN32 branch and uses nothing "
-                    "from them on Windows; two empty headers of those names "
-                    "are written into the build tree for cl. No upstream file "
-                    "is edited.")
+                    "<unistd.h> ahead of its _WIN32 branch and uses ssize_t; an "
+                    "empty strings.h and a unistd.h holding only typedef SSIZE_T "
+                    "ssize_t are written into the build tree for cl. No upstream "
+                    "file is edited.")
     if tarball:
         # A dated release tarball, not a git tag; see miniupnpc.py.
         r.source = Source(
