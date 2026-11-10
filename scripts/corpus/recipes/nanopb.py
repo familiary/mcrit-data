@@ -386,3 +386,157 @@ RECIPES = {
     "nanopb_0.4.5": _nanopb("0.4.5", generated=True),
     "nanopb_0.4.9.2": _nanopb("0.4.9.2", generated=True),
 }
+
+
+# --- Every other combination of the four PB_* defines the tracker names
+# (#38), and size-optimised builds of the three shipped sets. The shipped
+# recipes above carry three combinations (-all, -small, -big) at -O2 and -Os
+# for the default runtime only; these recipes add, for each version, the
+# runtime plus the generated driver.pb.c with each of the other twelve
+# non-empty subsets of {PB_FIELD_32BIT, PB_NO_ERRMSG, PB_BUFFER_ONLY,
+# PB_ENABLE_MALLOC} plus the empty set with the driver, at -O2, and the
+# -all, -small and -big sets at -Os. Separate versions ("<tag>-defines") so
+# the shipped images are unchanged. A combination whose image turns out
+# PicHash-identical to one already committed is not committed (see the
+# notes of each version for the measurement).
+_DEFINE_NAMES = [("field32", "PB_FIELD_32BIT"), ("noerrmsg", "PB_NO_ERRMSG"),
+                 ("bufferonly", "PB_BUFFER_ONLY"), ("malloc", "PB_ENABLE_MALLOC")]
+_SHIPPED = {(0, 1, 2, 3), (1, 2), (0, 3)}
+
+
+def _combinations():
+    import itertools
+    combos = []
+    for size in range(0, 5):
+        for subset in itertools.combinations(range(4), size):
+            if subset in _SHIPPED:
+                continue
+            tag = "-".join(_DEFINE_NAMES[i][0] for i in subset) or "driver"
+            defines = " ".join("-D" + _DEFINE_NAMES[i][1] for i in subset)
+            combos.append((tag, defines))
+    return combos
+
+
+DEFINE_COMBINATIONS = _combinations()
+SIZE_SETS = [("all", _CONFIGS[0][1]), ("small", _CONFIGS[1][1]),
+             ("big", _CONFIGS[2][1])]
+
+
+def _nanopb_defines(version, keep=None):
+    steps = [BuildStep("mkdir -p build-{arch}")] + _generate_steps(version)
+    artifacts = []
+    tools = _GENERATORS[version][0]
+    how = " (nanopb_generator.py %s, protoc from %s)" % (version, tools)
+    for tag, defines in DEFINE_COMBINATIONS:
+        component = "libprotobuf-nanopb-%s.dll" % tag
+        if keep is not None and component not in keep:
+            continue
+        steps.append(BuildStep(
+            "{cc} {cflags} -I. -Igen %s -shared -o build-{arch}/%s "
+            "pb_common.c pb_decode.c pb_encode.c gen/driver.pb.c"
+            % (defines, component)))
+        artifacts.append(Artifact(
+            path="build-{arch}/" + component, component=component,
+            build_flags="-O2 (toolchain default) %s, runtime plus generated "
+                        "driver.pb.c%s" % (defines or "no PB_* defines", how)))
+    for tag, defines in SIZE_SETS:
+        component = "libprotobuf-nanopb-%s-Os.dll" % tag
+        if keep is not None and component not in keep:
+            continue
+        steps.append(BuildStep(
+            "{cc} -Os -I. -Igen %s -shared -o build-{arch}/%s "
+            "pb_common.c pb_decode.c pb_encode.c gen/driver.pb.c"
+            % (defines, component)))
+        artifacts.append(Artifact(
+            path="build-{arch}/" + component, component=component,
+            build_flags="-Os %s, runtime plus generated driver.pb.c%s"
+                        % (defines, how)))
+    return Recipe(
+        family="nanopb",
+        version=version + "-defines",
+        upstream="https://github.com/nanopb/nanopb",
+        license="Zlib",
+        source=Source(git_url="https://github.com/nanopb/nanopb.git",
+                      git_ref="nanopb-" + version),
+        build=steps,
+        artifacts=artifacts,
+        toolchains=["mingw_x86", "mingw_x64"],
+        build_flags="-O2 (toolchain default) or -Os, PB_* defines per "
+                    "artefact, runtime plus generated driver.pb.c",
+        notes="Tag nanopb-%s, the same tree, generator and driver.proto as "
+              "the %s recipe. The other combinations of the four build-time "
+              "defines the tracker names (PB_FIELD_32BIT, PB_NO_ERRMSG, "
+              "PB_BUFFER_ONLY, PB_ENABLE_MALLOC) beside the shipped -all, "
+              "-small and -big, plus -Os builds of those three sets; each "
+              "artefact's defines are in its build_flags. Nothing patched. "
+              "Evidence for inclusion is naming only." % (version, version),
+    )
+
+
+for _v in ("0.3.9.10", "0.4.5", "0.4.9.2"):
+    RECIPES["nanopb_%s-defines" % _v] = _nanopb_defines(_v)
+
+
+# --- Upstream's own CMake, which the recipes above do not use because it
+# needs a protoc at configure time. Here a real protoc is supplied: the
+# protoc 21.12 release binary for the build host, fetched by sha256 as a
+# pinned extra source (0.4.9.2 aborts at configure with "protoc compiler not
+# found" without one; 0.3.9.10 and 0.4.5 call it only for the generator).
+# The generator is switched off (nanopb_BUILD_GENERATOR=OFF; it would only
+# compile nanopb.proto into Python) and BUILD_SHARED_LIBS=ON selects
+# upstream's protobuf-nanopb shared target. No CMAKE_BUILD_TYPE is given,
+# which is how upstream's CMake builds when nothing is passed: GCC then gets
+# no -O flag at all, so these images are unoptimised by upstream's default,
+# not by this recipe's choice. Versions "<tag>-cmake".
+_PROTOC_LINUX = Source(
+    url="https://github.com/protocolbuffers/protobuf/releases/download/"
+        "v21.12/protoc-21.12-linux-x86_64.zip",
+    sha256="3a4c1e5f2516c639d3079b1586e703fc7bcfa2136d58bda24d1d54f949c315e8")
+
+
+def _nanopb_cmake(version):
+    return Recipe(
+        family="nanopb",
+        version=version + "-cmake",
+        upstream="https://github.com/nanopb/nanopb",
+        license="Zlib",
+        source=Source(git_url="https://github.com/nanopb/nanopb.git",
+                      git_ref="nanopb-" + version),
+        extra_sources={"protoc_zip": _PROTOC_LINUX},
+        build=[
+            BuildStep("rm -rf protoc-bin && mkdir protoc-bin && "
+                      "python3 -c \"import zipfile,sys; "
+                      "zipfile.ZipFile(sys.argv[1]).extractall('protoc-bin')\" "
+                      "{protoc_zip} && chmod +x protoc-bin/bin/protoc"),
+            BuildStep("cmake -S . -B build-{arch} "
+                      "-DCMAKE_POLICY_VERSION_MINIMUM=3.5 "
+                      "-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER={cc} "
+                      "-DCMAKE_CXX_COMPILER={cxx} "
+                      "-DCMAKE_RC_COMPILER={windres} "
+                      "-DCMAKE_FIND_ROOT_PATH=/usr/{host} "
+                      "-DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=OFF "
+                      "-Dnanopb_BUILD_GENERATOR=OFF "
+                      "-Dnanopb_PROTOC_PATH=$PWD/protoc-bin/bin/protoc"),
+            BuildStep("cmake --build build-{arch} -j$(nproc)"),
+            BuildStep("ls -la build-{arch}"),
+        ],
+        artifacts=[Artifact(path="build-{arch}/libprotobuf-nanopb.dll",
+                            component="libprotobuf-nanopb.dll")],
+        toolchains=["mingw_x86", "mingw_x64"],
+        build_flags="upstream CMake, no CMAKE_BUILD_TYPE (upstream default, "
+                    "no -O flag), BUILD_SHARED_LIBS=ON, "
+                    "nanopb_BUILD_GENERATOR=OFF, protoc 21.12 release binary "
+                    "as nanopb_PROTOC_PATH",
+        notes="Tag nanopb-%s built through upstream's own CMakeLists.txt "
+              "(protobuf-nanopb shared target), which the %s recipe "
+              "replaces with a direct compile because the CMake needs a "
+              "protoc at configure time; a pinned protoc 21.12 release "
+              "binary is supplied for that. Built as upstream's CMake builds "
+              "with nothing passed: no build type, so no optimisation flag. "
+              "Nothing patched. Evidence for inclusion is naming only."
+              % (version, version),
+    )
+
+
+for _v in ("0.3.9.10", "0.4.5", "0.4.9.2"):
+    RECIPES["nanopb_%s-cmake" % _v] = _nanopb_cmake(_v)
