@@ -650,7 +650,9 @@ def build_gcrypt(arch, src, work, prefix):
     env = dict(os.environ, MSYS2_PATH_TYPE="inherit",
                GNUPG_EXTRA_PATH=os.path.join(prefix, "bin"))
     if ASM:
-        env["GNUPG_CL_CC"] = fwd(clang_cl())
+        # by name: its directory goes first on PATH below, and the full path
+        # ("C:/Program Files/...") would be split by configure at the space
+        env["GNUPG_CL_CC"] = "clang-cl"
         env["GNUPG_CL_CCARGS"] = " ".join(CLANG_ARGS + (["-m32"] if arch == "x86" else []))
         # clang-cl's directory first, then what gnupg_cl.sh puts on PATH.
         env["GNUPG_EXTRA_PATH"] = os.path.dirname(clang_cl()) + os.pathsep + \
