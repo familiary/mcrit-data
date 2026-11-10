@@ -713,12 +713,13 @@ Generated with `scripts/build_corpus.py`; see `data/LuaJIT/provenance.json` for 
 
 ### Duktape<a id='duktape'></a>
 
-Duktape is an embeddable ECMAScript engine, 2.6.0 is the version MeshAgent vendors and 2.7.0 the last 2.x release. It is built from the upstream release tarball's own `src/duktape.c` as a MinGW DLL, with no driver; the DLL carries the whole engine rather than only what a given host links in.  
+Duktape is an embeddable ECMAScript engine, 2.6.0 is the version MeshAgent vendors and 2.7.0 the last 2.x release. It is built from the upstream release tarball's own `src/duktape.c` as a MinGW DLL, with no driver; the DLL carries the whole engine rather than only what a given host links in. `duktape.dll` is built at upstream's `-Os`; for 2.6.0 a second DLL, `duktape-O2.dll`, is the same source at `-O2`.  
 Generated with `scripts/build_corpus.py`; see `data/Duktape/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Duktape -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| Duktape | 2.6.0 | MinGW-w64 GCC 13 | [x86 PE](data/Duktape/x86/mcrit/Duktape_2.6.0_mingw13_x86_duktape-O2.dll.mcrit) / [x64 PE](data/Duktape/x64/mcrit/Duktape_2.6.0_mingw13_x64_duktape-O2.dll.mcrit) | [x86 PE](data/Duktape/x86/smda/Duktape_2.6.0_mingw13_x86_duktape-O2.dll.7z) / [x64 PE](data/Duktape/x64/smda/Duktape_2.6.0_mingw13_x64_duktape-O2.dll.7z) |
 | Duktape | 2.6.0 | MinGW-w64 GCC 13 | [x86 PE](data/Duktape/x86/mcrit/Duktape_2.6.0_mingw13_x86_duktape.dll.mcrit) / [x64 PE](data/Duktape/x64/mcrit/Duktape_2.6.0_mingw13_x64_duktape.dll.mcrit) | [x86 PE](data/Duktape/x86/smda/Duktape_2.6.0_mingw13_x86_duktape.dll.7z) / [x64 PE](data/Duktape/x64/smda/Duktape_2.6.0_mingw13_x64_duktape.dll.7z) |
 | Duktape | 2.7.0 | MinGW-w64 GCC 13 | [x86 PE](data/Duktape/x86/mcrit/Duktape_2.7.0_mingw13_x86_duktape.dll.mcrit) / [x64 PE](data/Duktape/x64/mcrit/Duktape_2.7.0_mingw13_x64_duktape.dll.mcrit) | [x86 PE](data/Duktape/x86/smda/Duktape_2.7.0_mingw13_x86_duktape.dll.7z) / [x64 PE](data/Duktape/x64/smda/Duktape_2.7.0_mingw13_x64_duktape.dll.7z) |
 <!-- /generated -->
