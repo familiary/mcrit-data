@@ -86,6 +86,64 @@ The two new builds carry the same gaps (``printf``/``snprintf``/``sscanf``/
 ``fprintf`` instantiations, ``___chkstk_ms`` unnamed, ``_Unwind_Resume``).
 
 No MSVC recipe: not trivial to verify without cl on this host.
+
+Second pass: every other TinyXML release on SourceForge and the TinyXML2
+tags 8.0.0 and 10.0.0, as versions of their own (flags per release in the
+comment above TINYXML_RELEASES; nothing patched). Kept + removed = total (no
+exclusions):
+
+    1.2.4        tinyxml.dll            x86 121 + 123 = 244, x64 111 + 121 = 232
+    2.1.1        tinyxml.dll            x86 163 + 64 = 227, x64 123 + 64 = 187
+    2.1.1        tinyxml_stl.dll        x86 177 + 127 = 304, x64 148 + 123 = 271
+    2.1.2        tinyxml.dll            x86 163 + 64 = 227, x64 123 + 64 = 187
+    2.1.2        tinyxml_stl.dll        x86 165 + 124 = 289, x64 136 + 120 = 256
+    2.1.3        tinyxml.dll            x86 167 + 64 = 231, x64 124 + 64 = 188
+    2.1.3        tinyxml_stl.dll        x86 174 + 124 = 298, x64 140 + 120 = 260
+    2.1.4        tinyxml.dll            x86 172 + 64 = 236, x64 124 + 64 = 188
+    2.1.4        tinyxml_stl.dll        x86 177 + 124 = 301, x64 140 + 120 = 260
+    2.1.5        tinyxml.dll            x86 172 + 62 = 234, x64 124 + 63 = 187
+    2.1.5        tinyxml_stl.dll        x86 177 + 124 = 301, x64 140 + 120 = 260
+    2.2.0-beta   tinyxml.dll            x86 179 + 155 = 334, x64 141 + 152 = 293
+    2.2.0-beta   tinyxml_stl.dll        x86 194 + 158 = 352, x64 162 + 154 = 316
+    2.2.1        tinyxml.dll            x86 179 + 155 = 334, x64 141 + 152 = 293
+    2.2.1        tinyxml_stl.dll        x86 194 + 158 = 352, x64 162 + 154 = 316
+    2.3.0-beta   tinyxml.dll            x86 179 + 156 = 335, x64 147 + 154 = 301
+    2.3.0-beta   tinyxml_stl.dll        x86 190 + 158 = 348, x64 165 + 155 = 320
+    2.3.1-beta   tinyxml.dll            x86 201 + 156 = 357, x64 162 + 154 = 316
+    2.3.1-beta   tinyxml_stl.dll        x86 223 + 158 = 381, x64 186 + 155 = 341
+    2.3.2        tinyxml.dll            x86 201 + 156 = 357, x64 162 + 154 = 316
+    2.3.2        tinyxml_stl.dll        x86 223 + 158 = 381, x64 186 + 155 = 341
+    2.3.3        tinyxml.dll            x86 211 + 156 = 367, x64 172 + 154 = 326
+    2.3.3        tinyxml_stl.dll        x86 232 + 158 = 390, x64 197 + 155 = 352
+    2.3.4        tinyxml.dll            x86 205 + 156 = 361, x64 170 + 154 = 324
+    2.3.4        tinyxml_stl.dll        x86 234 + 157 = 391, x64 199 + 154 = 353
+    2.4.0        tinyxml.dll            x86 206 + 157 = 363, x64 171 + 154 = 325
+    2.4.0        tinyxml_stl.dll        x86 237 + 157 = 394, x64 198 + 154 = 352
+    2.4.1        tinyxml.dll            x86 211 + 157 = 368, x64 173 + 154 = 327
+    2.4.1        tinyxml_stl.dll        x86 237 + 157 = 394, x64 198 + 154 = 352
+    2.4.2        tinyxml.dll            x86 210 + 157 = 367, x64 172 + 154 = 326
+    2.4.2        tinyxml_stl.dll        x86 236 + 157 = 393, x64 197 + 154 = 351
+    2.4.3        tinyxml.dll            x86 241 + 157 = 398, x64 194 + 154 = 348
+    2.4.3        tinyxml_stl.dll        x86 276 + 158 = 434, x64 225 + 155 = 380
+    2.5.0-beta   tinyxml.dll            x86 246 + 157 = 403, x64 200 + 154 = 354
+    2.5.0-beta   tinyxml_stl.dll        x86 278 + 158 = 436, x64 226 + 155 = 381
+    2.5.1        tinyxml.dll            x86 219 + 158 = 377, x64 189 + 155 = 344
+    2.5.1        tinyxml_stl.dll        x86 271 + 159 = 430, x64 224 + 156 = 380
+    2.5.3        tinyxml.dll            x86 223 + 158 = 381, x64 190 + 155 = 345
+    2.5.3        tinyxml_stl.dll        x86 272 + 159 = 431, x64 224 + 156 = 380
+    2.6.0        tinyxml.dll            x86 223 + 158 = 381, x64 192 + 155 = 347
+    2.6.0        tinyxml_stl.dll        x86 262 + 159 = 421, x64 221 + 156 = 377
+    2.6.1        tinyxml.dll            x86 223 + 158 = 381, x64 191 + 155 = 346
+    2.6.1        tinyxml_stl.dll        x86 261 + 159 = 420, x64 221 + 156 = 377
+    8.0.0        tinyxml2.dll           x86 279 + 156 = 435, x64 272 + 152 = 424
+    10.0.0       tinyxml2.dll           x86 283 + 156 = 439, x64 293 + 155 = 448
+
+Against the nearest other TinyXML image of the same architecture, between 6%
+(2.3.4 x64, 7 of 118) and 97% (2.4.2 x86, 130 of 134) of the PicHashes of ten
+instructions or more are shared, never the whole image. 2.5.2 is not
+committed: PicHash-identical to 2.5.1, default and STL, both architectures.
+TinyXML2 8.0.0 and 10.0.0 were dropped from the first revision for 79 to 88%
+overlap with a kept neighbour; an overlap below 100% is committed.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -256,8 +314,12 @@ def _tinyxml_old(version):
     )
 
 
+# 2.5.2 is left out: its images, default and STL, both architectures, are
+# PicHash-identical to 2.5.1's under MinGW and under MSVC, so they would add
+# nothing.
 for _v in TINYXML_RELEASES:
-    RECIPES["TinyXML_%s" % _v] = _tinyxml_old(_v)
+    if _v != "2.5.2":
+        RECIPES["TinyXML_%s" % _v] = _tinyxml_old(_v)
 
 # Measured and dropped in the first revision for overlapping a kept
 # neighbour by 79 to 88%; an overlap below 100% is committed.
