@@ -138,8 +138,29 @@ twelve new images mentions the driver.
 
 The compiler flags matter far more: against the -O2 default, -O3 shares 21 /
 23, -Os 1 / 2 and -O0 1 / 1 (and is 77 / 78 functions rather than 43 / 40).
-Embedded code is commonly built -Os, so a real nanopb sample is more likely
-to match this family by MinHash than by PicHash.
+Embedded code is commonly built -Os, so that build is shipped too.
+
+The size-optimised build. Every version has a fifth DLL,
+``libprotobuf-nanopb-Os.dll``: the default runtime (three files, no defines,
+no driver) compiled with -Os in place of -O2 and nothing else changed. Kept +
+removed = image total, x86 / x64, with the -O2 default beside it:
+
+              -Os                               -O2
+  0.3.9.10    64 + 49 = 113 / 73 + 50 = 123     62 + 49 = 111 / 71 + 50 = 121
+  0.4.5       51 + 49 = 100 / 60 + 50 = 110     48 + 50 = 98 / 57 + 51 = 108
+  0.4.9.2     52 + 49 = 101 / 61 + 50 = 111     50 + 51 = 101 / 59 + 52 = 111
+
+-Os keeps two or three more functions (less inlining) and removes one or two
+fewer at 0.4.x: memset (and at 0.4.9.2 memcpy) is not linked at -Os, where GCC
+expands those calls inline. PicHash overlap of the -Os image with the -O2
+default of the same version, functions of 10+ instructions, x86 / x64, as
+shared of distinct -Os / -O2 hashes: 0.3.9.10 1 of 55 / 57 and 2 of 47 / 55;
+0.4.5 1 of 47 / 42 and 2 of 41 / 39; 0.4.9.2 1 of 47 / 43 and 2 of 41 / 40.
+So the -Os images share almost nothing with the -O2 ones and are separate
+data. They carry the same unnamed stack probe as the default build (see the
+last paragraph). Only the default configuration is built at -Os; the -all,
+-small and -big define sets remain -O2 only, so an -Os sample built with
+other PB_* options is still more likely to match by MinHash than by PicHash.
 
 Versions, measured by PicHash overlap on functions of 10+ instructions
 (x86 / x64, % of the smaller set):
@@ -158,7 +179,7 @@ hold 62 / 71 (0.3.9.10), 48 / 57 (0.4.5) and 50 / 59 (0.4.9.2) functions on
 x86 / x64, so the corpus floor is met without min_functions.
 
 Known baseline gap, left to the baseline: libgcc's stack probe
-(`___chkstk_ms`, 15 instructions) is carried unnamed in all six artefacts,
+(`___chkstk_ms`, 15 instructions) is carried unnamed in every artefact,
 PicHash dfe3cea2dbb80872 on x86 and ae8f920c3b4e652a on x64.
 """
 
@@ -307,6 +328,17 @@ def _nanopb(version, generated=False):
     ]
     artifacts = [Artifact(path="build-{arch}/libprotobuf-nanopb.dll",
                           component="libprotobuf-nanopb.dll")]
+    # The default runtime again, size-optimised: embedded code is commonly
+    # built -Os, and against -O2 that changes nearly every function body.
+    # No {cflags}, so -Os is the only optimisation flag on the line.
+    steps.append(BuildStep("{cc} -Os -I. -shared "
+                           "-o build-{arch}/libprotobuf-nanopb-Os.dll "
+                           "pb_common.c pb_decode.c pb_encode.c"))
+    artifacts.append(Artifact(
+        path="build-{arch}/libprotobuf-nanopb-Os.dll",
+        component="libprotobuf-nanopb-Os.dll",
+        build_flags="-Os, no PB_* defines (upstream default), linked "
+                    "directly from pb_common.c, pb_decode.c, pb_encode.c"))
     notes = ("Three source files built as one DLL; upstream CMake needs "
              "protoc even for the runtime, so it is not used. Evidence for "
              "inclusion is naming only.")
