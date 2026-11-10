@@ -456,7 +456,7 @@ class CrossFamilyFloorTest(TempCase):
                       "B": [("deadbeef", 40)],
                       "C": [("deadbeef", 40)]})
         self.assertEqual(validate.find_cross_family_functions(self.data),
-                         {"deadbeef": (["A", "B", "C"], 40, [])})
+                         {"deadbeef": (["A", "B", "C"], 40, [], [])})
 
     def test_zero_counts_everything_for_investigating_by_hand(self):
         from corpus import validate
@@ -466,7 +466,7 @@ class CrossFamilyFloorTest(TempCase):
                       "C": [("deadbeef", 3)]})
         found = validate.find_cross_family_functions(self.data,
                                                      min_instructions=0)
-        self.assertEqual(found, {"deadbeef": (["A", "B", "C"], 3, [])})
+        self.assertEqual(found, {"deadbeef": (["A", "B", "C"], 3, [], [])})
 
     def test_two_families_are_below_the_family_threshold(self):
         from corpus import validate
@@ -1693,12 +1693,12 @@ class MinimumFunctionsTest(unittest.TestCase):
         self.assertIn("only 7 functions", str(caught.exception))
 
     def test_the_default_floor_admits_eight(self):
-        report, _, _ = self._run(8)
+        report, _, _, _ = self._run(8)
         self.assertEqual(report.num_functions, 8)
 
     def test_an_override_admits_exactly_its_own_value(self):
         """Obfuscator's case: seven functions, all seven of them real."""
-        report, _, _ = self._run(7, min_functions=7)
+        report, _, _, _ = self._run(7, min_functions=7)
         self.assertEqual(report.num_functions, 7)
 
     def test_an_override_does_not_admit_anything_below_it(self):
@@ -1716,7 +1716,7 @@ class MinimumFunctionsTest(unittest.TestCase):
     def test_an_override_above_the_default_is_used_as_given(self):
         """Not clamped to MIN_USEFUL_FUNCTIONS in either direction."""
         self.assertRaises(Exception, self._run, 20, 32)
-        report, _, _ = self._run(32, min_functions=32)
+        report, _, _, _ = self._run(32, min_functions=32)
         self.assertEqual(report.num_functions, 32)
 
     def test_none_means_the_shared_constant(self):
@@ -2420,6 +2420,193 @@ class VendoredLibraryTest(TempCase):
                 removed = smdaify._drop_vendored(report, ["libzlib"])
         self.assertEqual(removed, ["putShortMSB"])
         self.assertEqual(list(report.xcfg), [0])
+
+
+class RuntimeReferenceCollisionTest(unittest.TestCase):
+    """The fifth collision kind, carved out of leakage rather than added beside it.
+
+    The guard in the whole cross-family check is the symbol name. is_glue drops
+    a function when its name *and* its PicHash match the baseline and refuses
+    to touch an unnamed one, so that a project keeping its own version of a
+    runtime symbol keeps it. A leakage finding is therefore actionable exactly
+    when some generated family names the function - there is a symbol for a
+    baseline round to match. When the only name in the corpus comes from
+    data/MinGW or another family this tooling does not generate, the artefacts
+    carry the body unnamed and nothing can act on it.
+
+    Measured over the whole corpus with ext_server_stdapi present, this
+    reclassifies 1 of 26 leakage findings. The other 25 all have a generated
+    family supplying the name.
+    """
+
+    def test_a_name_from_a_reference_family_alone_is_not_failed_on(self):
+        from corpus import validate
+
+        with mock.patch.object(validate, "is_generated_family",
+                               side_effect=lambda f: f not in ("MinGW",)):
+            kind = validate.classify_collision(
+                ["_Unwind_ForcedUnwind_Phase2"], (),
+                naming_families=["MinGW"],
+                families=["7-Zip", "Meterpreter", "MinGW"])
+        self.assertEqual(kind, validate.RUNTIME_REFERENCE)
+
+    def test_a_generated_family_naming_it_still_fails(self):
+        """The regression guard, and the reason this is not a weakening.
+
+        __cxa_init_primary_exception was named in 7-Zip, so it stayed a failure
+        under this rule and had to be fixed properly - by making the C++ probe
+        reach it. A rule that had silenced that one would have been a
+        weakening; this one cannot.
+        """
+        from corpus import validate
+
+        with mock.patch.object(validate, "is_generated_family",
+                               side_effect=lambda f: f not in ("MinGW",)):
+            kind = validate.classify_collision(
+                ["__cxa_init_primary_exception"], (),
+                naming_families=["7-Zip", "MinGW"],
+                families=["7-Zip", "Meterpreter", "MinGW"])
+        self.assertEqual(kind, validate.LEAKAGE)
+
+    def test_leakage_among_reference_families_alone_is_untouched(self):
+        """The older, separate case this must not swallow.
+
+        data/MSVC sharing a symbol with data/Golang is somebody else's data and
+        already has its own handling: reported as a note and attributed to the
+        family it came from. It stays LEAKAGE so that path still runs.
+        """
+        from corpus import validate
+
+        with mock.patch.object(validate, "is_generated_family",
+                               side_effect=lambda f: f not in ("MSVC", "Golang",
+                                                               "MinGW")):
+            kind = validate.classify_collision(
+                ["_floor"], (), naming_families=["MSVC"],
+                families=["MSVC", "Golang", "MinGW"])
+        self.assertEqual(kind, validate.LEAKAGE)
+
+    def test_saying_nothing_keeps_the_old_answer(self):
+        """Every caller that does not pass the two new arguments is unchanged."""
+        from corpus import validate
+
+        self.assertEqual(validate.classify_collision(["_floor"]),
+                         validate.LEAKAGE)
+
+    def test_the_census_records_which_family_supplied_each_name(self):
+        """naming_families has to be populated or the rule can never fire."""
+        from corpus import validate
+
+        collision = validate.Collision(["A", "B"], 40, ["x"], ["A"])
+        self.assertEqual(collision.naming_families, ["A"])
+        self.assertEqual(validate.Collision(["A"], 1, []).naming_families, ())
+
+
+class _HashFunction(object):
+    """Enough of an SmdaFunction for the audited-PicHash pass."""
+
+    def __init__(self, pichash, function_name="", offset=0):
+        self._pichash = pichash
+        self.pic_hash = b"\x00" if pichash is not None else b""
+        self.function_name = function_name
+        self.offset = offset
+
+    def getPicHashAsLong(self):
+        return self._pichash
+
+
+class ExcludedPicHashTest(unittest.TestCase):
+    """Dropping individually audited PicHashes from a report with no symbols.
+
+    The case this exists for: the harvested Meterpreter gem carries 2
+    recovered symbols across 28,892 functions, because Rapid7 publishes no
+    PDBs. Both symbol-based passes - drop_crt_glue and vendors - match a
+    symbol *and* a PicHash, which is exactly what stops them deleting a
+    project's own function that merely resembles a library's, so neither can
+    reach an unnamed body. Four functions in the x86 leg are 32-bit MSVC CRT
+    and zlib, and nothing automatic could remove them.
+
+    These tests pin the two properties that keep a hash-keyed pass from being
+    a hole in the gate: it never touches a named function, and it never
+    touches a hash the recipe did not list.
+    """
+
+    def _drop(self, functions, excluded):
+        from corpus import smdaify
+
+        report = mock.Mock()
+        report.xcfg = {f.offset: f for f in functions}
+        with mock.patch.object(smdaify, "_recompute_statistics"):
+            removed = smdaify._drop_excluded_pichashes(report, excluded)
+        return report, removed
+
+    def test_an_audited_hash_on_an_unnamed_function_is_dropped(self):
+        report, removed = self._drop(
+            [_HashFunction(111, offset=0x10)],
+            {111: "data/MSVC:__twoToTOS"})
+        self.assertEqual(removed, [(111, "data/MSVC:__twoToTOS")])
+        self.assertEqual(report.xcfg, {})
+
+    def test_a_named_function_survives_its_hash_being_listed(self):
+        """The guard. A symbol means the symbol-based passes govern it.
+
+        Without this, a recipe could delete named project code by listing a
+        hash, which is the misattribution the whole mechanism is meant to
+        prevent rather than cause.
+        """
+        report, removed = self._drop(
+            [_HashFunction(111, function_name="project_own", offset=0x10)],
+            {111: "data/MSVC:__twoToTOS"})
+        self.assertEqual(removed, [])
+        self.assertEqual(list(report.xcfg), [0x10])
+
+    def test_an_unlisted_hash_survives(self):
+        report, removed = self._drop(
+            [_HashFunction(222, offset=0x10)],
+            {111: "data/MSVC:__twoToTOS"})
+        self.assertEqual(removed, [])
+        self.assertEqual(list(report.xcfg), [0x10])
+
+    def test_a_function_with_no_pichash_survives(self):
+        report, removed = self._drop([_HashFunction(None, offset=0x10)],
+                                     {111: "data/MSVC:__twoToTOS"})
+        self.assertEqual(removed, [])
+        self.assertEqual(list(report.xcfg), [0x10])
+
+    def test_the_reason_is_carried_out_for_the_audit_trail(self):
+        """The value is the record of what a person checked, so it must survive.
+
+        provenance writes it verbatim; a pass that returned only hashes would
+        leave the file saying four numbers went and nothing about why.
+        """
+        _, removed = self._drop(
+            [_HashFunction(111, offset=0x10), _HashFunction(222, offset=0x20)],
+            {111: "data/MSVC:__EH_prolog", 222: "data/libzlib:_putShortMSB"})
+        self.assertEqual(sorted(reason for _, reason in removed),
+                         ["data/MSVC:__EH_prolog", "data/libzlib:_putShortMSB"])
+
+    def test_the_pass_runs_after_both_symbol_based_passes(self):
+        """Order is load-bearing and only the call order in smdaify holds it.
+
+        A function the symbol-based passes can reach should be attributed by
+        them, because matching a symbol and a hash is the stronger claim; the
+        hash-only pass is the last resort and must see only what they left.
+        """
+        import inspect
+        from corpus import smdaify
+
+        body = inspect.getsource(smdaify.smdaify)
+        self.assertLess(body.index("_drop_crt_glue(report"),
+                        body.index("_drop_excluded_pichashes"))
+        self.assertLess(body.index("_drop_vendored(report"),
+                        body.index("_drop_excluded_pichashes"))
+
+    def test_a_recipe_declares_none_by_default(self):
+        from corpus.recipe import Recipe, Source
+
+        recipe = Recipe(family="F", version="1", upstream="u", license="l",
+                        source=Source(url="u", sha256="s"),
+                        build=[], artifacts=[], toolchains=[])
+        self.assertEqual(recipe.exclude_pichashes, {})
 
 
 class HarvestedCompilerFieldTest(unittest.TestCase):

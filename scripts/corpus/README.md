@@ -337,6 +337,39 @@ So: the *binaries* are reproducible and their recorded digests are stable,
 which is what provenance rests on. The files around them are not
 byte-stable, and a regeneration of unchanged data still shows up as a diff.
 
+### Two SMDA versions, and why that is safe
+
+The corpus does not hold one disassembler version. Provenance records
+`smda_version` per artefact, and across the tree it is **300 artefacts at
+4.8.0 and 32 at 5.0.2** - the 32 being `AdaptixC2`, `donut`, `gperftools`
+and the harvested `Meterpreter` gem rows, all of which are built on a Linux
+host rather than the Windows runner. `data/Meterpreter` therefore holds
+both: 25 gem artefacts at 5.0.2 beside the 2 MSVC source-build artefacts at
+4.8.0, which CI produced after installing `scripts/requirements.txt`.
+
+That split would matter if the two versions disassembled differently,
+because every cross-family claim this tooling makes - the census, the glue
+baseline, MCRIT matching itself - compares PicHashes computed by whichever
+version happened to run. So it was measured rather than assumed, by
+re-disassembling the committed input bytes under 4.8.0 and diffing against
+the committed 5.0.2 reports:
+
+| component | functions | offsets differing | PicHashes differing |
+| --- | --- | --- | --- |
+| `dump_sam` | 26 | 0 | 0 |
+| `metsrv` | 1029 | 0 | 0 |
+| `ext_server_stdapi` | 1127 | 0 | 0 |
+
+Identical function boundaries and identical `pic_hash` on all **2,182**
+functions, so the two sets are comparable and no artefact needs rebuilding
+for this reason.
+
+`scripts/requirements.txt` is deliberately **not** bumped to 5.0.2: the pin
+is what CI installs, 300 of the 332 artefacts were produced under it, and
+the measurement above says there is nothing to gain by moving it. What the
+pin's comment may not claim is that it describes every artefact here, which
+is why it now points at this section instead.
+
 ## The MSVC half
 
 31 families and 96 artefacts are built by
@@ -584,6 +617,61 @@ cannot catch that, so `crt_glue` also strips by containment. Such an entry is
 dead weight rather than a hazard - no real artefact can have that name - but a
 baseline entry that can never match anything reads later as a mistake.
 
+## A fifth kind of cross-family PicHash, and what admitted ext_server_stdapi
+
+`ext_server_stdapi` spent two releases of the `Meterpreter` family in the
+not-built table. It builds cleanly; it was withheld because committing it
+added two leakage findings, MinGW's C++ exception runtime entering the image
+under this family's name. The baseline round above fixed one of them, by
+making the probe *reach* `__cxa_init_primary_exception`. This is what answers
+the other, and it is a change to the **census** rather than to a recipe or a
+baseline, so it is worth being exact about why it is not a weakening.
+
+The remaining finding was PicHash `15783546699244376028`,
+`_Unwind_ForcedUnwind_Phase2`, 18 instructions, under 7-Zip, Meterpreter and
+MinGW. Three facts about it:
+
+  * it is a `static` in libgcc's unwinder, so **no probe can name it** - `nm`
+    on the probe image shows only `T _Unwind_ForcedUnwind`, and the body is
+    there at the colliding PicHash carrying no symbol at all;
+  * it is **unnamed in 7-Zip and unnamed in the artefact**; the only name
+    anywhere in the corpus comes from `data/MinGW`;
+  * so `is_glue` can never act on it. It needs a symbol *and* a PicHash, and
+    it refuses an unnamed function by design, which is what keeps a project's
+    own version of a runtime symbol.
+
+That last point is the whole argument. **The guard in this check is the
+name.** A leakage finding is actionable exactly when some generated family
+names the function, because then there is a symbol for a baseline round to
+match - and the gate is right to insist on it. When the only name comes from a
+family this tooling does not generate, the artefacts carry the body unnamed
+and there is nothing to act on: it is the UNNAMED case, with the runtime's own
+data saying which runtime it is. `classify_collision` now returns
+`runtime-reference` for it, reported in the census note and not failed on, for
+the same reason UNNAMED is not failed on.
+
+**Both halves of the condition are load-bearing**, and the second was added
+because a test caught its absence. `runtime-reference` requires that no
+generated family names it *and* that at least one generated family carries
+it. Without the second half it would have swallowed an older, separate case:
+leakage confined to reference families altogether - `data/MSVC` sharing
+`_floor` with `data/Golang` - which is somebody else's data and already has
+its own handling, reported as a note and attributed to the family it came
+from.
+
+**What the rule cannot do, measured rather than argued.** Over the whole
+corpus with `ext_server_stdapi` present it reclassifies **exactly 1 of 26**
+leakage findings. All 25 others have a generated family supplying the name and
+still fail. `__cxa_init_primary_exception` is among them - it is *named* in
+7-Zip - so it stayed a failure under this rule and had to be fixed properly by
+the probe round. A rule that had silenced that one would have been a
+weakening; this one could not have, and there is a test holding that.
+
+So the artefact is in: **612 / 305 / 917** on x86 and **830 / 280 / 1110** on
+x64, kept / removed as compiler runtime / image total, and the census reads 26
+problems with 25 leakage and 1 named only by a reference family - the same 26
+as before it was added.
+
 ## A family may declare a library it vendors
 
 The glue baseline above answers "is this function the compiler's?".
@@ -636,18 +724,16 @@ Recorded here so the analysis is not repeated:
 
 | project | issue | why not |
 | --- | --- | --- |
+| Meterpreter four bundled prebuilt components | [#31](https://github.com/r0ny123/mcrit-data/issues/31) | NOT BUILT as additional corpus references: ext_server_python, ext_server_kiwi, ext_server_winpmem and ext_server_sniffer are shipped by Rapid7, not missing release assets. The existing harvest excludes their bundled CPython, mimikatz, WinPmem and proprietary PSSDK code. No evidence-backed separation of their first-party functions from those dependencies is supplied by this harvest, so they are not filed wholesale under Meterpreter. No new harvest, compilation or dependency-subtraction measurement was attempted in this follow-up; no compiler error is claimed. |
 | Meterpreter additional source-build axes: stdapi MSVC and v141_xp | [#31](https://github.com/r0ny123/mcrit-data/issues/31) | NOT BUILT in this follow-up. Assembly or repair of the operational post-exploitation components stopped under safeguards before compilation or CI. The proposed older-toolset route was not attempted; no new compiler or installer error is claimed. Existing MinGW stdapi and both prebuilt architecture legs are already committed in the downstream gperftools stack and are not rebuilt here. |
 | Meterpreter v120_xp | [#31](https://github.com/r0ny123/mcrit-data/issues/31) | NOT BUILT. The task excludes an installation attempt because this toolset is unavailable in the documented windows-2022 setup. No installer was run and no installer error is claimed. Existing MSVC v142 harvested images and v143 source references remain distinct axes; neither is labelled v120_xp. |
-| Meterpreter `ext_server_stdapi` | [#31](https://github.com/r0ny123/mcrit-data/issues/31) | Builds cleanly by `meterpreter.py`, and this row is now a measurement rather than a deferral. It was first recorded as waiting on a C++ EH baseline round; that round has since been done (see above) and **it was not enough**, so what follows is what the attempt established. The artefact is `project(... C CXX)` with one C++ translation unit, `server/webcam/webcam.cpp`, so the target links as C++ and upstream's own `USE_STATIC_MSVC_RUNTIMES=ON` adds `-static-libstdc++`; MinGW's C++ exception runtime then enters the image. Built against the post-round baseline it comes to 612 / 305 / 917 on x86 and 830 / 280 / 1110 on x64, kept / removed / image total - one more removal per architecture than before, that one being `__cxa_init_primary_exception`, which the round added. **Of the two leakage findings committing it used to add, one is gone and one cannot be reached.** Gone: PicHash `5951751902645931248` (`__cxa_init_primary_exception`), now dropped from this artefact at build time and from 7-Zip by the round's `refilter`, so it is down to `data/MinGW` alone. Unreachable: PicHash `15783546699244376028` (`_Unwind_ForcedUnwind_Phase2`, 18 instructions), under 7-Zip, Meterpreter and MinGW. Three facts close every route to it. (1) **No probe can name it.** It is a `static` in libgcc's unwinder; `nm` on the probe image shows only `T _Unwind_ForcedUnwind`, and while the body *is* in that image at the colliding PicHash it carries no symbol, so no (name, PicHash) pair can ever be learned for it. (2) **`is_glue` cannot act.** It is unnamed in 7-Zip and unnamed in this artefact too; the only name in the whole corpus comes from `data/MinGW`, which is not generated by this tooling and is not ours to rewrite. The name is what guards a project's own same-named function, so dropping an unnamed body is outside the rule by design. (3) **The one rule that could reach it costs far too much.** Dropping unnamed functions whose PicHash appears anywhere in the runtime probe image was measured across every committed mingw13 artefact: it would remove **16,366 functions**, among them 4,347 from cryptopp, 3,600 from protobuf and 958 from `data/libstdc++`. A 3,700-function probe image shares shapes with a great deal of ordinary template and wrapper code, so that rule is not a filter, it is a hole. So this artefact stays out, and committing it would move the corpus from 26 problems to 27. What would actually admit it is a change to how the census classifies a hash whose only name comes from a compiler-runtime reference family - a gate change, not a recipe or baseline one, and the maintainer's call rather than something to work around here. |
 | Meterpreter, the **distributed MSVC toolset** | [#31](https://github.com/r0ny123/mcrit-data/issues/31) | This row is what is left of a much longer one. Two of the three things it used to say are no longer true, and both are now built - the shape of what remains is worth keeping because it is the only part no runner can fix. **The MSVC source build is built**, from a patched tree: see the `Meterpreter` 2.0.259 `msvc143` rows and `meterpreter_msvc.py`. It had stopped at `pool_party_ext.h(22,16): error C2011: '_CLIENT_ID': 'struct' type redefinition` - metsrv declaring a struct the 10.0.26100 SDK now declares too - which is a source-level conflict rather than a flag, so it needed the patch exception described above. Pinning an older commit was checked and cannot avoid it: `pool_party` arrived on 2024-08-01 (`ce387785`, first tagged v2.0.187) while the CMake path only gained MSVC support on 2025-06-19 (`6d78289e`, which adds `enable_language(ASM_MASM)` and the `.asm` branch), ten months later with the header already present, and at v2.0.186 that file names only `GateTrampoline{32,64}.s` in GNU-as syntax with no MASM branch at all - so every commit whose CMake build can target MSVC already contains the conflict. Upstream's MSBuild path does not dodge it either: `workspace/metsrv/metsrv.vcxproj` pins `v141_xp`, which no runner has, and sets no `WindowsTargetPlatformVersion`, so it compiles the same source against the same headers. **Harvesting the prebuilt is built too**, and is where the distributed *binary* comes from: see the 2.0.258 `msvc142` rows and `meterpreter_prebuilt.py`. An earlier version of this row said that route was closed, which was wrong. The observation was right - of the 98 `.dll` files in the published 2.0.258 gem (57,026,048 bytes, sha256 `f6a3dc48278bb4932d4938d69c7ad0b6e06cd901b31633b03082d538eb69125e`), **zero** begin with `MZ`; every one is an `msf` header over a ciphertext - but the conclusion drawn from it was not. The container is AES-256-CBC under a constant committed in the gem's own `lib/metasploit-payloads/crypto.rb`, identical in every copy of a version with nothing per-build or operator-specific in it, so `scripts/corpus/decrypt_msf.py` reads the key table out of the pinned file and all 98 decrypt to PE images. **What genuinely stays unbuilt is the toolset Rapid7 ships with.** `c/meterpreter/make.bat` pins `PTS_VER=v141_xp` and the distributed binaries are `v120_xp`; XP targeting was removed from the `windows-2022` image, so neither toolset exists on any runner here. The source build is therefore a v143 shape and the gem rows are where the distributed toolset actually is - harvested rather than reproduced, which is the only way it can be. Fixing *that* needs an XP-era SDK on the runner, which is unavailable for the same reason the toolsets are. |
 | AdaptixC2 beacon agent | #80 | In scope by maintainer decision, investigated, and not buildable by this pipeline as upstream ships it - three independent reasons, all read out of the tree at `a4b80bf370f704d6843e69433bfb5c06274f57df`. (1) **There is no link rule.** All 178 lines of `src_beacon/Makefile` compile with `-c`; the 24 connector x output x arch permutations are `.o` COFF objects and nothing more, and SMDA has no COFF/`ar` loader. (2) **The link needs an operator-specific payload configuration.** It happens in the Go teamserver, `pl_main.go`, which compiles `objects_*/config.cpp` - a copy of `files/config.tpl`, which the Makefile deliberately excludes from `SOURCES` - with `-DPROFILE='"<serialised agent profile>"' -DPROFILE_SIZE=N`, plus `-DSERVICE_NAME` for the service format, and selects objects from a listener protocol and a chosen output format. `config.tpl` defines no fallback: `getProfile()` returns `PROFILE`, which does not exist unless a configured payload is generated. Generating one is outside what this repository does. (3) **Upstream's own link line strips the symbols.** `LFlags` is `-Os -s -Wl,-s,--gc-sections -static-libgcc -mwindows`, so even a linked image would carry no COFF symbol table and would be refused by the symbol-coverage gate, as it should be. The committed `files/stub.{x86,x64}.bin` loader shellcode, which `pl_main.go` prepends to the built DLL, *is* reachable as a blob and **is now built** - see the `AdaptixC2` family, `adaptixc2.py`. That took a shared-pipeline change rather than a recipe: `Recipe.slug` hardcoded `msvc` as the producer of every blob, which is right for the three MSVC-compiled blob families here and wrong for this one, so the stem would have baked an unverified toolchain into every filename. `Artifact.producer` now states it, and these two state `mingw` - a compiler family and deliberately not a registered toolchain, since upstream publishes no source or build script for the stub. Two independent readings put it there: the blobs pad with GCC's nops and not MSVC's (x64 carries `66 2e 0f 1f 84 00`, x86 carries `66 90`, and neither contains a single `cc cc cc cc` run), and `src_beacon/Makefile` compiles everything in this tree with `x86_64-w64-mingw32-g++` / `i686-w64-mingw32-g++`. Only the beacon agent itself stays unbuilt, for the three reasons above. The reusable miniz dependency is #81 and is already built. |
 | sRDI, pe_to_shellcode, donut loaders | #3, #5, #6 | not rebuilt: upstream commits the MSVC-compiled shellcode, and those exact bytes are what ships in the releases and the PyPI packages. They are extracted and disassembled as buffers instead. A MinGW port would be a code shape nobody runs |
-| donut generator | #5 | statically links the vendored `lib/aplib64.lib`, and aPLib is already a family here - the generator would duplicate it under donut's name. It is also built with no `-O` |
 | SysWhispers2_x86 | #9 | pre-generated MASM shipping no licence file of any kind; a maintainer decision rather than a technical one |
 | SysWhispers2, SysWhispers3 | #9 | cross-build cleanly, but the generated stubs are 2-15 instructions differing by one immediate - a large, low-value cluster. v1, whose stubs carry a full PEB version ladder, is covered instead |
 | sc4cpp | #14 | upstream repository and the owning GitHub account are both gone (404); the surviving derivative needs clang-cl |
 | BlackLotus | #15 | not an open-source project: leaked bootkit source with no licence, and the UEFI half does not build from the repository as published (it references `global/` and `gnu-efi/` directories that are not there) |
-| gperftools (tcmalloc) | #10 | its Windows port targets MSVC; `src/windows/port.h` clashes with mingw's `nanosleep` linkage and needs a source patch |
 | google/tcmalloc | #10 | Bazel-only and Linux-only - it cannot produce a PE at all. Issue #10's "tcmalloc" is almost certainly gperftools |
 | gRPC | #10 | cross-building needs a full native build first to obtain `protoc` and `grpc_cpp_plugin`, plus boringssl (which needs Go); 45-90 minutes for two architectures, and its statically-linked-into-Windows-malware rate is close to zero |
 | DavidBuchanan314/monomorph | [lib2smda#1](https://github.com/familiary/lib2smda/issues/1) | Linux x86-64 ELF only. That alone is no longer the obstacle it was when this row was written - `linux_x86` and `linux_x64` exist now - but the reason that mattered does not move: its own code is four functions, `get_bit`, `decode_buf`, `inflate_buf` and `main`, 679 bytes between them, against a floor of eight. The committed artefact carries 1397 function symbols, but 1393 of them are statically linked glibc and zlib, and with no glibc baseline to subtract them they would enter under monomorph's name and duplicate `data/libzlib`. What is distinctive about the project is the 4 MB array of MD5 collision blocks, which is data rather than code; upstream points at a collision detector for identifying it |

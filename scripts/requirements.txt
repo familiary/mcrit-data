@@ -1,4 +1,12 @@
 # Analysis dependencies for scripts/build_corpus.py.
-# Pinned to the versions the current reference data was generated with.
+#
+# These are the versions CI installs, and the versions 300 of the 332
+# committed artefacts were generated with. They are NOT the only versions in
+# the corpus: 32 artefacts built on a Linux host carry smda 5.0.2, and
+# provenance.json records smda_version per artefact so the difference is
+# always readable. The two versions were measured to produce identical
+# function boundaries and identical PicHashes - see "Two SMDA versions, and
+# why that is safe" in scripts/corpus/README.md - so the pin stays here
+# rather than moving to 5.0.2.
 smda==4.8.0
 mcrit==1.9.0

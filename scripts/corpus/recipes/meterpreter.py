@@ -121,6 +121,7 @@ _CMAKE = ("cmake -S workspace -B build-{arch} "
           "-DCMAKE_BUILD_TYPE=Release "
           "-DBUILD_ALL=OFF "
           "-DBUILD_METSRV=ON "
+          "-DBUILD_EXT_STDAPI=ON "
           "-DBUILD_ARCH={msbuild_platform}")
 
 _BUILD = "cmake --build build-{arch} -j$(nproc)"
@@ -140,6 +141,9 @@ RECIPES = {
         artifacts=[
             Artifact(path="c/meterpreter/build-{arch}/metsrv/metsrv.{arch}.dll",
                      component="metsrv.dll"),
+            Artifact(path="c/meterpreter/build-{arch}/ext_server_stdapi/"
+                          "ext_server_stdapi.{arch}.dll",
+                     component="ext_server_stdapi.dll"),
         ],
         toolchains=["mingw_x86", "mingw_x64"],
         requires=["cmake", "make"],

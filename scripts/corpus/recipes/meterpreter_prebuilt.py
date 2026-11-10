@@ -96,6 +96,30 @@ _COMPONENTS = (
     "ext_server_unhook",
 )
 
+# The four PicHashes that kept the x86 leg out for two releases of this
+# recipe, each audited by hand against the single symbol the census reports
+# it under. Three are the statically linked 32-bit MSVC C runtime - upstream
+# sets USE_STATIC_MSVC_RUNTIMES, and these are its x87 helpers, which is why
+# only the 32-bit leg has them - and one is zlib's, out of metsrv's vendored
+# 1.0.4P fork.
+#
+# What makes these admissible where the automatic rule was not: every one is
+# reported by `validate --deep` under a *single* symbol ("appears under 3
+# families as the same symbol X"), so the hash identifies one function rather
+# than a shape shared by dozens of trivial bodies. That is the distinction
+# the long comment below turns on, and it is the reason this list is written
+# out by hand instead of being derived.
+#
+# _putShortMSB is the same function `vendors=["libzlib"]` removes from the
+# MSVC *source* build in meterpreter_msvc.py; it is listed here because these
+# reports have no symbol for that filter to match.
+_EXCLUDED_PICHASHES = {
+    18136989794466017840: "data/MSVC:__twoToTOS",
+    11007584211390772839: "data/MSVC:__CIpow_pentium4",
+    17085667784515999986: "data/MSVC:__EH_prolog",
+    17596394674013296920: "data/libzlib:_putShortMSB",
+}
+
 _CRYPTO_RB = "lib/metasploit-payloads/crypto.rb"
 _DECRYPT = ("python3 {repo}/scripts/corpus/decrypt_msf.py " + _CRYPTO_RB +
             " data/meterpreter/%(component)s.{arch}.dll"
@@ -165,14 +189,103 @@ RECIPES = {
         # a PicHash both match a probe, so a baseline round - the fix that
         # ext_server_stdapi's MinGW C++ EH residue waits on - cannot reach
         # these at all. Lowering MIN_CROSS_FAMILY_INSTRUCTIONS to hide them
-        # would be lowering a gate to admit data. So the x86 leg is recorded
-        # in README's not-built table with these numbers and left out.
+        # would be lowering a gate to admit data. So the x86 leg was held
+        # back for two releases of this recipe while three routes to it were
+        # measured and closed, and it is in now by a fourth - the audited
+        # `exclude_pichashes` list above, which is the one mechanism none of
+        # the three could substitute for. The three are kept on the record
+        # below because each is a thing a reader will otherwise try.
+        #
+        # Re-measured after the RUNTIME_REFERENCE collision class landed, on
+        # the theory that three of the four would reclassify: they are named
+        # only by MSVC, and validate.is_generated_family is False for the
+        # IDA-derived data/MSVC, which is exactly that class's condition. The
+        # theory was wrong and the leg still costs four findings - the census
+        # goes 26 -> 30 problems with all 21 x86 components built (15,835
+        # functions). Two separate reasons, both worth recording because each
+        # closes a route someone will otherwise try:
+        #
+        #   * `(unknown)` in those three rows is data/MSVC itself. Its
+        #     2015_Pro_x86 and VC6_Express_x86 exports carry no `family`
+        #     field - validate NOTEs this already - so one MSVC export
+        #     resolves to `MSVC` and another to `(unknown)`, and
+        #     is_generated_family("(unknown)") is True by design, for a tree
+        #     checked out from somewhere other than data/. So the class does
+        #     not fire. Making it fire by filling that field in would drop
+        #     those collisions from three families to two, under
+        #     find_cross_family_functions' threshold=3, and they would leave
+        #     the census by disappearing rather than by being classified -
+        #     hiding a true finding instead of explaining it, while the CRT
+        #     bodies stay filed under Meterpreter.
+        #   * _putShortMSB is a genuine three-family finding (MSVC,
+        #     Meterpreter, libzlib) that no metadata change touches, and
+        #     `vendors` cannot reach it either: that filter needs a symbol,
+        #     and these reports have none.
+        #
+        # The harm these three would have left behind is concrete rather than
+        # bookkeeping, which is why none of them was taken: __twoToTOS is in
+        # 20 of the 21 x86 artefacts, so admitting the leg *with the bodies
+        # still in it* files 32-bit MSVC CRT under Meterpreter across nearly
+        # all of it, and any sample carrying that CRT would match this
+        # family. That is the false-attribution the gate exists to catch, and
+        # the gate was right every time. What changed is not the gate but the
+        # artefact: the four bodies are now removed by name-checked hash and
+        # keep the families they belong to.
+        #
+        # A third route was measured and is also closed, and it is the
+        # interesting one because it looks obviously right. corpus.baseline
+        # needs a symbol only because it matches a *probe*; data/MSVC already
+        # *names* these bodies, so a filter that dropped an unnamed function
+        # whose PicHash a non-generated reference family names would seem to
+        # be the same act with MSVC's symbol standing in for the probe's. Its
+        # blast radius is even reassuringly small: 207 functions corpus-wide
+        # at the MIN_CROSS_FAMILY_INSTRUCTIONS floor, 204 of them in these 21
+        # symbol-less x64 artefacts.
+        #
+        # It does not work, because the mapping is one PicHash to *many*
+        # reference names. A single hash here matches about 28 MSVC symbols
+        # at once - ??0bad_alloc@std@@, ??0bad_typeid@std@@,
+        # ??0out_of_range@std@@ and a dozen Concurrency:: types - because
+        # every one of them is an exception-class copy constructor with the
+        # same trivial body. The hash identifies a *shape*, not a function.
+        # The tell is that the same shapes also matched 7-Zip and
+        # libtomcrypt, two unrelated projects: a signal that fires on three
+        # unrelated codebases is not identifying a runtime.
+        #
+        # So the filter could not tell MSVC's bad_alloc copy constructor from
+        # any other trivial copy constructor, Meterpreter's own included, and
+        # would delete possibly-project code on an ambiguous match. Some of
+        # the 204 are certainly CRT - fegetenv, sprintf_s, __CxxFrameHandler4
+        # and UnwindNestedFrames are in there - but "some of these are CRT"
+        # is not a rule. This is what the symbol half of is_glue's condition
+        # is *for*: it disambiguates a generic shape, and dropping it is not
+        # a relaxation but a loss of the only thing that made the match mean
+        # anything. Correspondingly, the 204 must not be read as 204
+        # misattributed functions: sharing a many-to-one hash is not evidence
+        # of misattribution, and nothing here says the committed x64 data is
+        # wrong.
         #
         # Otherwise a toolchain selects nothing here but which machine runs
         # the decryption - the command is python3 either way, as sRDI's
         # extraction is - and the architecture in the stem comes from the PE
         # header.
-        toolchains=["mingw_x64"],
+        #
+        # **Both legs, as of the fourth attempt at this.** What finally
+        # answers it is none of the three routes above but the pass they each
+        # pointed at: `exclude_pichashes`, a hand-audited list rather than an
+        # inferred rule. The four bodies are removed and keep data/MSVC's and
+        # data/libzlib's families, the census returns to its baseline, and
+        # 15,835 functions of the 32-bit build - the one a WOW64 or older
+        # target actually runs - stop being absent for the sake of four
+        # functions out of 15,835.
+        toolchains=["mingw_x86", "mingw_x64"],
+        # Audited one at a time; see _EXCLUDED_PICHASHES above. Declared for
+        # both legs, and the x64 one loses nothing: its CRT has no x87
+        # helpers and its copy of putShortMSB hashes differently, exactly as
+        # `vendors` finds nothing on the x64 source build. provenance records
+        # the declaration either way, so "the pass ran and matched nothing"
+        # stays distinguishable from "no pass was applied".
+        exclude_pichashes=_EXCLUDED_PICHASHES,
         build_flags="MSVC v142 (as distributed by Rapid7); exact flags not published",
         min_named_ratio=0,
         notes="Decrypted from the published metasploit-payloads gem with "

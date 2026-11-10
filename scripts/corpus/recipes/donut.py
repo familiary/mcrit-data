@@ -44,6 +44,17 @@ def _donut(version, git_ref):
                       "loader_exe_x86.h donut_loader_x86.bin"),
             BuildStep("python3 {repo}/scripts/corpus/extract_blob.py carray "
                       "loader_exe_x64.h donut_loader_x64.bin"),
+            # Upstream's own donut.exe line out of Makefile.mingw, verbatim and
+            # on its own. The `donut` target it belongs to cannot be used
+            # wholesale: it also rebuilds the loader with -DBYPASS_AMSI_B
+            # -DBYPASS_WLDP_A -DBYPASS_ETW_B and runs exe2h to regenerate
+            # loader_exe_{x86,x64}.h - which would select evasion behaviour at
+            # compile time and overwrite the very headers the two blob
+            # artefacts above are extracted from. This single compile needs
+            # neither exe2h nor the loader stage.
+            BuildStep("{cc} -Wall -fpack-struct=8 -DDONUT_EXE -I include "
+                      "donut.c hash.c encrypt.c format.c loader/clib.c "
+                      "lib/aplib64.lib -odonut.exe"),
         ],
         artifacts=[
             Artifact(path="donut_loader_x86.bin", component="loader_x86",
@@ -54,11 +65,35 @@ def _donut(version, git_ref):
                      is_blob=True, bitness=64,
                      build_flags="MSVC -Zp8 -Gy -Os -O1 -GR- -EHa -Oi -GS- "
                                  "(Makefile.msvc, as committed upstream)"),
+            # The generator. Not a blob and not shellcode: an ordinary PE
+            # that runs on the operator's machine. Its reference value is
+            # lower than the loaders' and the recipe says so rather than
+            # implying otherwise - 242 functions of which the glue filter
+            # removes 137, and no -O on upstream's line, so what remains is
+            # unoptimised.
+            # No is_library=False here, though it is a program rather than a
+            # library and that is what the name suggests. The flag is MCRIT's
+            # reference-vs-malware marker, not a statement about linkage, and
+            # everything in this corpus is reference data - validate refuses an
+            # artefact that clears it. tsh and tshd were refused for exactly
+            # this once already.
+            Artifact(path="donut.exe", component="donut.exe",
+                     build_flags="no -O (Makefile.mingw's donut.exe line, "
+                                 "as upstream wrote it)"),
         ],
         # Nothing is compiled here - the blobs come out of the repository as
         # upstream committed them - but the pipeline still needs one
         # toolchain entry to run under.
         toolchains=["mingw_x64"],
+        # True, and recorded even though it removes nothing: the generator does
+        # statically link aPLib, and a reader should see that the filter ran
+        # rather than guess. It drops 0 functions because data/aPLib carries
+        # the assembly depackers and packer out of aplib.lib and aplib.a, which
+        # share no PicHash with aplib64.lib's C compressor - and the filter
+        # needs a symbol *and* a PicHash. So aP_pack, aP_max_packed_size and
+        # aP_workmem_size do stay under the donut name; nothing mechanical can
+        # move them, and that is a fact about this artefact worth knowing.
+        vendors=["aPLib"],
         build_flags="see the per-artefact flags",
         notes="The loader blobs committed upstream in loader_exe_x86.h and "
               "loader_exe_x64.h, which is the code donut embeds in its "
