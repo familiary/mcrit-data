@@ -441,3 +441,30 @@ RECIPES = {
     "ed25519-donna_2026-10-07-tor_msvc": _ed25519_tor_glue(),
     "curve25519-donna_1.3_msvc": _curve25519(),
 }
+
+
+# ED25519_FORCE_32BIT on x64 (see donna.py): the plain component with the
+# 32-bit field code forced, x64 only, a separate version so the committed
+# images are unchanged.
+RECIPES["ed25519-donna_2015-03-16-force32bit_msvc"] = Recipe(
+    family="ed25519-donna",
+    version="2015-03-16-force32bit",
+    upstream="https://github.com/floodyberry/ed25519-donna",
+    license=RECIPES["ed25519-donna_2015-03-16_msvc"].license,
+    source=Source(git_url="https://github.com/floodyberry/ed25519-donna.git",
+                  git_ref=_ED_COMMIT),
+    build=_ed_steps("ed25519-donna", "obj-generic", "/DED25519_FORCE_32BIT "),
+    artifacts=[Artifact(path="ed25519-donna.dll", component="ed25519-donna.dll",
+                        pdb="ed25519-donna.pdb")],
+    toolchains=["msvc_x64"],
+    build_flags="/O2 /MD /Zi -DED25519_REFHASH -DED25519_CUSTOMRANDOM "
+                "-DED25519_FORCE_32BIT; /DEBUG /Brepro /INCREMENTAL:NO "
+                "/OPT:NOREF /OPT:NOICF at link",
+    notes="The same commit as the MSVC plain ed25519-donna component, with "
+          "-DED25519_FORCE_32BIT: on x64 the 32-bit field arithmetic "
+          "(curve25519-donna-32bit.h) replaces the _umul128 64-bit code. "
+          "x64 only, because on x86 the 32-bit code is already the default. "
+          "Exports from scripts/corpus/exercisers/ed25519_donna.def; "
+          "ed25519_randombytes_unsafe is the memset stub and must never run. "
+          "No upstream file is patched.",
+)
