@@ -1330,7 +1330,7 @@ MINGW_NAMES = {
 }
 
 
-def patterns(mingw=False, prefix=""):
+def patterns(mingw=False, prefix="", optional_prefix=""):
     """One anchored alternation per library, for Recipe.exclude_functions.
 
     With ``mingw`` the MinGW additions are folded into their library's
@@ -1339,6 +1339,9 @@ def patterns(mingw=False, prefix=""):
     blake2s ``_blake2s``), so the x86 MinGW recipe passes "_". The x86
     archives of that build, read with i686-w64-mingw32-nm, define exactly
     the names of this table with that underscore and nothing beyond it.
+    ``optional_prefix`` makes the same underscore optional, for the MSVC
+    recipe, whose one definition serves the x86 images (decorated) and the
+    x64 images (not).
     """
     out = []
     for k in NAMES:
@@ -1346,6 +1349,8 @@ def patterns(mingw=False, prefix=""):
         if mingw:
             names += [n for n in MINGW_NAMES.get(k, ()) if n not in names]
         if names:
-            out.append("^%s(?:%s)$" % (re.escape(prefix),
+            out.append("^%s%s(?:%s)$" % (re.escape(prefix),
+                                      "(?:%s)?" % re.escape(optional_prefix)
+                                      if optional_prefix else "",
                                        "|".join(re.escape(n) for n in names)))
     return out

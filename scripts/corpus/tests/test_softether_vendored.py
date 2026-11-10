@@ -87,8 +87,13 @@ class RecipeWiringTest(unittest.TestCase):
         found = [recipe for recipe in recipes.all_recipes().values()
                  if recipe.family == "SoftEtherVPN"
                  and recipe.version.startswith("5.")]
-        self.assertEqual(len(found), 4)
+        self.assertEqual(len(found), 5)
         for recipe in found:
+            if recipe.toolchains[0].startswith("msvc"):
+                # one recipe serves x86 (C names decorated with "_") and x64
+                self.assertEqual(recipe.exclude_functions,
+                                 v5.patterns(optional_prefix="_"))
+                continue
             mingw = recipe.toolchains[0].startswith("mingw")
             prefix = "_" if recipe.toolchains[0] == "mingw_x86" else ""
             self.assertEqual(recipe.exclude_functions,
@@ -97,6 +102,10 @@ class RecipeWiringTest(unittest.TestCase):
         self.assertTrue(any(rx.search("_blake2s") for rx in x86))
         self.assertFalse(any(rx.search("blake2s") for rx in x86))
         self.assertFalse(any(rx.search("__blake2s") for rx in x86))
+        msvc = [re.compile(p) for p in v5.patterns(optional_prefix="_")]
+        for name in ("blake2s", "_blake2s"):
+            self.assertTrue(any(rx.search(name) for rx in msvc), name)
+        self.assertFalse(any(rx.search("__blake2s") for rx in msvc))
         # The MinGW additions extend the table; the Linux patterns are the
         # table alone, so their provenance does not move.
         for plain, extended in zip(v5.patterns(), v5.patterns(mingw=True)):

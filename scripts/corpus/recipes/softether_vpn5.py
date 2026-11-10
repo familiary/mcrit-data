@@ -419,6 +419,95 @@ def _mingw_recipe(arch, processor, extra_cflags, build_flags, notes, prefix=""):
         notes=notes,
     )
 
+
+# MSVC: upstream's own Windows route, CMake with vcpkg (src/BUILD_WINDOWS.md),
+# on the windows-2022 runner. vcpkg is pinned to the 2026.01.16 release tag
+# (the commit below), which fixes the port versions for the manifest at the
+# source root (vcpkg.json lists libsodium, openssl and zlib and carries no
+# baseline of its own): OpenSSL 3.6.0#3, libsodium 1.0.21 and zlib 1.3.1, as
+# DLLs through an overlay triplet. Nothing in the source tree is edited:
+# scripts/corpus/softether5_msvc.py writes the overlay triplet and a
+# CMAKE_PROJECT_INCLUDE file that restores /MD (upstream's CMakeLists.txt
+# shadows the cache variable with its own static-CRT setting), and the rest
+# is on the command line.
+_VCPKG = Source(git_url="https://github.com/microsoft/vcpkg.git",
+                git_ref="66c0373dc7fca549e5803087b9487edfe3aca0a1")
+# /Z7 rather than RelWithDebInfo's /Zi so no shared compiler PDB is needed
+# (Ninja compiles in parallel); /MD stated because liboqs and oqs-provider
+# declare an older cmake_minimum_required, under which the runtime comes from
+# the flags and not from CMAKE_MSVC_RUNTIME_LIBRARY. The link line is the
+# corpus mandate: no /GL, no /LTCG, /OPT:NOREF /OPT:NOICF /Brepro
+# /INCREMENTAL:NO. Upstream's own /Qspectre, /guard:cf, /DYNAMICBASE and
+# /CETCOMPAT are kept.
+_MSVC_C = '"/MD /O2 /Ob1 /DNDEBUG /Z7"'
+_MSVC_CONFIGURE = (
+    "cmake -S . -B build-{arch} -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo "
+    "-DCMAKE_TOOLCHAIN_FILE={vcpkg}\\scripts\\buildsystems\\vcpkg.cmake "
+    "-DVCPKG_TARGET_TRIPLET=se-{arch}-windows-release "
+    "-DVCPKG_OVERLAY_TRIPLETS={source_root}\\vcpkg-triplets "
+    "-DVCPKG_APPLOCAL_DEPS=OFF "
+    "-DCMAKE_PROJECT_INCLUDE={source_root}\\se-msvc-runtime.cmake "
+    "-DCMAKE_C_FLAGS_RELWITHDEBINFO=" + _MSVC_C + " "
+    "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=" + _MSVC_C + " "
+    '-DCMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO="/DEBUG /INCREMENTAL:NO '
+    '/OPT:NOREF /OPT:NOICF /Brepro"')
+
+_MSVC_BUILD_FLAGS = (
+    "upstream's CMake + vcpkg route, RelWithDebInfo with /MD /O2 /Ob1 /Z7 "
+    "(upstream's /Qspectre /guard:cf kept, no /GL or /LTCG); link /DEBUG "
+    "/DYNAMICBASE /CETCOMPAT (upstream) /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF "
+    "/Brepro; /MD instead of upstream's /MT through CMAKE_PROJECT_INCLUDE; "
+    "vcpkg 2026.01.16 dynamic release triplet (OpenSSL 3.6.0, libsodium "
+    "1.0.21, zlib 1.3.1 as DLLs)")
+_MSVC_NOTES = (
+    "The Developer Edition 5.x (tag 5.2.5189) built with MSVC v143 through "
+    "upstream's own CMake + vcpkg route on the GitHub windows-2022 runner. "
+    "No upstream source or CMake file is edited, so no build-tree patch is "
+    "applied; the build differs from upstream's own Windows release in "
+    "settings only: /MD (upstream: /MT), cl and /Z7 (CMakeSettings.json: "
+    "clang-cl, RelWithDebInfo /Zi), the corpus link flags, and dynamic vcpkg "
+    "ports pinned to the vcpkg 2026.01.16 release (upstream: x64-windows-"
+    "static, unpinned). OpenSSL, zlib and libsodium are DLLs, so none of their "
+    "code is in the image. Cedar and Mayaqua are static on Windows, so the "
+    "program is the image and only vpnserver.exe is taken. liboqs, the OQS "
+    "provider and blake2s are linked statically and excluded by exact name "
+    "(_softether5_vendored.py). ")
+
+
+def _msvc_recipe():
+    return Recipe(
+        family="SoftEtherVPN",
+        version="5.2.5189",
+        upstream="https://github.com/SoftEtherVPN/SoftEtherVPN",
+        license="Apache-2.0",
+        source=_SOURCE,
+        extra_sources={"vcpkg": _VCPKG},
+        build=[
+            BuildStep("call {vcpkg}\\bootstrap-vcpkg.bat -disableMetrics"),
+            BuildStep("python {repo}/scripts/corpus/softether5_msvc.py prepare "
+                      "{source_root} {arch}"),
+            BuildStep(_MSVC_CONFIGURE),
+            BuildStep("cmake --build build-{arch} --target vpnserver"),
+            # Evidence for the exclusion table, read from this build's own
+            # static libraries; see softether5_msvc.py. Never fails the build.
+            BuildStep("python {repo}/scripts/corpus/softether5_msvc.py names "
+                      "build-{arch}", allow_failure=True),
+            BuildStep("dumpbin /nologo /dependents build-{arch}\\vpnserver.exe",
+                      allow_failure=True),
+        ],
+        artifacts=[Artifact(path="build-{arch}/vpnserver.exe",
+                            component="vpnserver",
+                            pdb="build-{arch}/vpnserver.pdb")],
+        toolchains=["msvc_x86", "msvc_x64"],
+        requires=["cmake", "ninja", "python"],
+        # i686 COFF decorates C names with a leading underscore (the x86
+        # images name blake2s "_blake2s"); x64 names carry none.
+        exclude_functions=_vendored.patterns(optional_prefix="_"),
+        build_flags=_MSVC_BUILD_FLAGS,
+        notes=_MSVC_NOTES,
+    )
+
+
 RECIPES = {
     "softether_vpn_5.2.5189_linux": Recipe(
         family="SoftEtherVPN",
@@ -494,4 +583,5 @@ RECIPES = {
     "softether_vpn_5.2.5189_mingw_x86": _mingw_recipe(
         "x86", "x86", "-msse2", _MINGW_BUILD_FLAGS + "; x86 adds -msse2",
         _MINGW_NOTES_X86, prefix="_"),
+    "softether_vpn_5.2.5189_msvc": _msvc_recipe(),
 }
