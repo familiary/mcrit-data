@@ -42,8 +42,8 @@ last commit that touches ``source/``; the three commits after it, up to
 6446d7f on 2026-04-09, change README.md only. Which version the QuickFox
 operators used is unknown, and this is not a claim that it was this one.
 
-Which project, and why not the .NET Framework one
--------------------------------------------------
+Which projects, and why not the .NET Framework console
+------------------------------------------------------
 
 ``source/`` holds three projects over the same engine:
 
@@ -55,13 +55,33 @@ Which project, and why not the .NET Framework one
   encrypted by a DLP client. It cannot be built without writing a project
   file of our own, which would be a source modification.
 * ``JIEJIE.NET.GUI.csproj`` - legacy-format, .NET Framework 4.0, WinForms.
-  Intact, but its resx carries System.Drawing bitmaps, which the .NET SDK's
-  MSBuild refuses (MSB3822/MSB3823) without changing how resources are
-  generated; it needs full-Framework MSBuild on Windows plus v4.0 reference
-  assemblies. Not built. What it would add was measured on upstream's own
-  prebuilts: their Framework console shares 641 of its 685 functions of ten
-  instructions or more with this recipe's Debug artefact by PicHash, so the
-  DOTNETCORE split costs a few dozen bodies, not the family.
+  Built by the same recipe (components gui_debug, gui_release) with the SDK's
+  MSBuild. Its resx carries System.Drawing bitmaps, which the SDK's MSBuild
+  refuses (MSB3822: non-string resources require
+  GenerateResourceUsePreserializedResources; MSB3823: they then need
+  System.Resources.Extensions among the references). The recipe sets
+  ``-p:GenerateResourceUsePreserializedResources=true``, adds a reference to
+  System.Resources.Extensions 5.0.0 (nuget, sha256 pinned) through a targets
+  file it writes beside the checkout and passes as
+  ``-p:CustomAfterMicrosoftCommonTargets``, and takes the v4.0 reference
+  assemblies from Microsoft.NETFramework.ReferenceAssemblies.net40 1.0.3
+  (``-p:FrameworkPathOverride``). No upstream file is changed, but the
+  assembly references a library the project does not declare and its
+  .resources are in the preserialized format, so the image is NOT
+  byte-identical to a build of unmodified upstream with full-Framework
+  MSBuild. The compiled methods come from the project's own sources and
+  configurations (Debug defines DCSoftInner). Both configurations, 905
+  methods each (77,240 instructions Debug, 53,907 Release), nothing
+  filtered: kept + removed + excluded = 905 + 0 + 0. Against the Core
+  console of the same configuration, by distinct PicHash of ten
+  instructions or more: Debug 633 of 691 shared (with 663 in the console),
+  Release 562 of 616 (591); the 58 and 54 left are the form
+  (``frmJieJieNetGUI``: InitializeComponent, the button and menu handlers,
+  the BackgroundWorker), code the Core build compiles differently under
+  DOTNETCORE, and renumbered closures. Debug against Release shares 7. What the Framework
+  console would add was measured on upstream's own prebuilts: their
+  Framework console shares 641 of its 685 functions of ten instructions or
+  more with this recipe's Core Debug artefact by PicHash.
 
 Debug and Release, both
 -----------------------
@@ -87,7 +107,7 @@ Function counts
 ---------------
 
 SMDA's CIL backend emits one function per MethodDef with an IL body, so the
-count is checkable against metadata exactly. Both artefacts have 858, and
+count is checkable against metadata exactly. Both console artefacts have 858, and
 they partition the same way, read from the TypeDef/NestedClass tables:
 
     858 = 799 in namespace JIEJIE        (the engine and console; 37 of
@@ -160,9 +180,72 @@ _NOTES = (
     "match the injected copies was not measured. Upstream's committed "
     "binaries are Debug builds, so both configurations are built. Pinned to "
     "f28e1d2, the last commit touching source/; the version the attackers "
-    "used is unknown. The .NET Framework projects are not built: the console "
-    "project file is committed E-SafeNet-encrypted and the GUI needs "
-    "full-Framework MSBuild.")
+    "used is unknown. The .NET Framework console is not built: its project "
+    "file is committed E-SafeNet-encrypted.")
+
+# The .NET Framework 4.0 GUI (JIEJIE.NET.GUI.csproj, legacy format), built
+# with the same SDK's MSBuild. Two things full-Framework MSBuild would supply
+# come from pinned packages instead: the v4.0 reference assemblies
+# (FrameworkPathOverride) and, because the SDK's MSBuild cannot run
+# ResXResourceReader over the form's System.Drawing bitmaps (MSB3822/MSB3823),
+# System.Resources.Extensions, which GenerateResourceUsePreserializedResources
+# requires as a reference. That reference is added by a targets file the
+# recipe writes beside the checkout and hands to MSBuild with
+# CustomAfterMicrosoftCommonTargets; no upstream file is changed.
+_NET40_REFS_URL = ("https://api.nuget.org/v3-flatcontainer/"
+                   "microsoft.netframework.referenceassemblies.net40/1.0.3/"
+                   "microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg")
+_NET40_REFS_SHA256 = "54d6e20a1b61caf79395d6d71d091265e81f5a5705ac4ae52af45ca143c3c694"
+_SRE_URL = ("https://api.nuget.org/v3-flatcontainer/system.resources.extensions/"
+            "5.0.0/system.resources.extensions.5.0.0.nupkg")
+_SRE_SHA256 = "d2766cfee9b78efbc1f93a5198b9bbc40a70d5e24db42ce11fc44f6c2f6f5f6c"
+_GUI_PROJECT = "JIEJIE.NET.GUI.csproj"
+_GUI_REFS = "{source_root}/corpus-pkgs/net40/build/.NETFramework/v4.0"
+_GUI_SRE = "{source_root}/corpus-pkgs/sre/lib/netstandard2.0/System.Resources.Extensions.dll"
+_GUI_TARGETS = "{source_root}/corpus-pkgs/corpus-sre.targets"
+_GUI_BUILD = [
+    BuildStep("mkdir -p corpus-pkgs/net40 corpus-pkgs/sre && "
+              "unzip -q -o {net40_refs} -d corpus-pkgs/net40 && "
+              "unzip -q -o {sre_package} -d corpus-pkgs/sre && "
+              "printf '%%s\\n' '<Project><ItemGroup>' "
+              "'<Reference Include=\"System.Resources.Extensions\">' "
+              "'<HintPath>%s</HintPath></Reference>' '</ItemGroup></Project>' "
+              "> %s" % (_GUI_SRE, _GUI_TARGETS)),
+] + [
+    BuildStep("dotnet msbuild %s -restore -nologo -p:Configuration=%s "
+              "-p:FrameworkPathOverride=%s "
+              "-p:GenerateResourceUsePreserializedResources=true "
+              "-p:CustomAfterMicrosoftCommonTargets=%s "
+              "-p:PathMap={source_root}=/_/ -p:OutputPath=corpus-out/GUI-%s/"
+              % (_GUI_PROJECT, configuration, _GUI_REFS, _GUI_TARGETS, configuration),
+              cwd="source")
+    for configuration in ("Debug", "Release")
+]
+
+_GUI_FLAGS = ("dotnet msbuild %s -p:Configuration=%%s (upstream's configuration: "
+              "Optimize=%%s), .NET Framework v4.0 reference assemblies "
+              "(Microsoft.NETFramework.ReferenceAssemblies.net40 1.0.3) via "
+              "FrameworkPathOverride, GenerateResourceUsePreserializedResources=true "
+              "with a System.Resources.Extensions 5.0.0 reference added through "
+              "CustomAfterMicrosoftCommonTargets, -p:PathMap=<checkout>=/_/" % _GUI_PROJECT)
+
+_GUI_NOTES = (
+    "Components gui_debug and gui_release: the .NET Framework 4.0 WinForms "
+    "GUI of the same engine and commit (JIEJIE.NET.GUI.csproj), built with the .NET SDK's MSBuild. The SDK "
+    "MSBuild refuses the form's embedded System.Drawing bitmaps (MSB3822/"
+    "MSB3823) unless resources are generated preserialized, which needs a "
+    "System.Resources.Extensions reference: the recipe adds one (package "
+    "5.0.0, pinned) through a targets file passed with "
+    "CustomAfterMicrosoftCommonTargets, and takes the v4.0 reference "
+    "assemblies from Microsoft.NETFramework.ReferenceAssemblies.net40 1.0.3. "
+    "No upstream file is modified, but the build adds a reference the project "
+    "does not declare and writes the .resources in the preserialized format, "
+    "so the gui images are NOT byte-identical to a build of unmodified upstream "
+    "with full-Framework MSBuild. Upstream's committed binaries are Debug "
+    "builds, so both configurations are built. 905 methods in each; of the "
+    "Debug image's 691 distinct PicHashes of ten instructions or more, 633 "
+    "are in the Core console Debug artefact (Release: 562 of 616 in the "
+    "console Release).")
 
 RECIPES = {
     "jiejie_2026-01-01": Recipe(
@@ -171,7 +254,12 @@ RECIPES = {
         source=Source(
             git_url="https://github.com/dcsoft-yyf/JIEJIE.NET.git",
             git_ref="f28e1d2ad78da7160a00197725f8bd42783b9f8c"),
-        build=_BUILD,
+        # The GUI's two packages; the console needs neither.
+        extra_sources={
+            "net40_refs": Source(url=_NET40_REFS_URL, sha256=_NET40_REFS_SHA256),
+            "sre_package": Source(url=_SRE_URL, sha256=_SRE_SHA256),
+        },
+        build=_BUILD + _GUI_BUILD,
         artifacts=[
             Artifact("source/corpus-out/Debug/JIEJIENETForCore.Console.dll",
                      component="console_debug",
@@ -179,15 +267,21 @@ RECIPES = {
             Artifact("source/corpus-out/Release/JIEJIENETForCore.Console.dll",
                      component="console_release",
                      build_flags=_FLAGS % ("Release", "true")),
+        ] + [
+            Artifact("source/corpus-out/GUI-%s/JIEJIE.NET.GUI.exe" % configuration,
+                     component="gui_" + configuration.lower(),
+                     build_flags=_GUI_FLAGS % (configuration, optimize))
+            for configuration, optimize in (("Debug", "false"), ("Release", "true"))
         ],
         toolchains=["dotnet_cil"],
         upstream="https://github.com/dcsoft-yyf/JIEJIE.NET",
         license="GPL-2.0",
-        notes=_NOTES,
+        notes=_NOTES + " " + _GUI_NOTES,
         # No managed glue baseline exists (crt_glue refuses this toolchain),
         # and none is needed here: the assembly carries no
         # <PrivateImplementationDetails> type, so no compiler-runtime body.
         drop_crt_glue=False,
-        build_flags=_FLAGS % ("Debug|Release", "false|true"),
+        build_flags=(_FLAGS % ("Debug|Release", "false|true")) + "; GUI: "
+                    + (_GUI_FLAGS % ("Debug|Release", "false|true")),
     ),
 }

@@ -10,7 +10,7 @@
     "is_blob": false,
     "license": "GPL-2.0",
     "mcrit": "data/JIEJIE.NET/cil/mcrit/JIEJIE.NET_2026-01-01_dotnet8_cil_console_debug.mcrit",
-    "notes": "The obfuscator's own code, not its output. FortiGuard Labs (2026-08-04) says the generation-2 FDMTP loader Microsoft.ServiceHosting.Tools.dll in the QuickFox supply-chain attack 'is obfuscated using the JieJie .NET Protector tool'; that sentence is the only evidence, no code comparison is shown, and nothing here was checked against that sample. A protected assembly does not contain this engine, so this family recognises JIEJIE.NET itself. 59 of the 858 methods are namespace __DC20211119 (JIEJIEHelper, JIEJIEPerformanceCounter), the C# source of the helpers the tool injects into protected assemblies as IL text; whether they match the injected copies was not measured. Upstream's committed binaries are Debug builds, so both configurations are built. Pinned to f28e1d2, the last commit touching source/; the version the attackers used is unknown. The .NET Framework projects are not built: the console project file is committed E-SafeNet-encrypted and the GUI needs full-Framework MSBuild.",
+    "notes": "The obfuscator's own code, not its output. FortiGuard Labs (2026-08-04) says the generation-2 FDMTP loader Microsoft.ServiceHosting.Tools.dll in the QuickFox supply-chain attack 'is obfuscated using the JieJie .NET Protector tool'; that sentence is the only evidence, no code comparison is shown, and nothing here was checked against that sample. A protected assembly does not contain this engine, so this family recognises JIEJIE.NET itself. 59 of the 858 methods are namespace __DC20211119 (JIEJIEHelper, JIEJIEPerformanceCounter), the C# source of the helpers the tool injects into protected assemblies as IL text; whether they match the injected copies was not measured. Upstream's committed binaries are Debug builds, so both configurations are built. Pinned to f28e1d2, the last commit touching source/; the version the attackers used is unknown. The .NET Framework console is not built: its project file is committed E-SafeNet-encrypted. Components gui_debug and gui_release: the .NET Framework 4.0 WinForms GUI of the same engine and commit (JIEJIE.NET.GUI.csproj), built with the .NET SDK's MSBuild. The SDK MSBuild refuses the form's embedded System.Drawing bitmaps (MSB3822/MSB3823) unless resources are generated preserialized, which needs a System.Resources.Extensions reference: the recipe adds one (package 5.0.0, pinned) through a targets file passed with CustomAfterMicrosoftCommonTargets, and takes the v4.0 reference assemblies from Microsoft.NETFramework.ReferenceAssemblies.net40 1.0.3. No upstream file is modified, but the build adds a reference the project does not declare and writes the .resources in the preserialized format, so the gui images are NOT byte-identical to a build of unmodified upstream with full-Framework MSBuild. Upstream's committed binaries are Debug builds, so both configurations are built. 905 methods in each; of the Debug image's 691 distinct PicHashes of ten instructions or more, 633 are in the Core console Debug artefact (Release: 562 of 616 in the console Release).",
     "num_functions": 858,
     "sha256": "9d476fd833b83dc3b04767769ce6615026a4fda3cfa080a03b10de79002c6281",
     "smda": "data/JIEJIE.NET/cil/smda/JIEJIE.NET_2026-01-01_dotnet8_cil_console_debug.7z",
@@ -35,10 +35,84 @@
     "is_blob": false,
     "license": "GPL-2.0",
     "mcrit": "data/JIEJIE.NET/cil/mcrit/JIEJIE.NET_2026-01-01_dotnet8_cil_console_release.mcrit",
-    "notes": "The obfuscator's own code, not its output. FortiGuard Labs (2026-08-04) says the generation-2 FDMTP loader Microsoft.ServiceHosting.Tools.dll in the QuickFox supply-chain attack 'is obfuscated using the JieJie .NET Protector tool'; that sentence is the only evidence, no code comparison is shown, and nothing here was checked against that sample. A protected assembly does not contain this engine, so this family recognises JIEJIE.NET itself. 59 of the 858 methods are namespace __DC20211119 (JIEJIEHelper, JIEJIEPerformanceCounter), the C# source of the helpers the tool injects into protected assemblies as IL text; whether they match the injected copies was not measured. Upstream's committed binaries are Debug builds, so both configurations are built. Pinned to f28e1d2, the last commit touching source/; the version the attackers used is unknown. The .NET Framework projects are not built: the console project file is committed E-SafeNet-encrypted and the GUI needs full-Framework MSBuild.",
+    "notes": "The obfuscator's own code, not its output. FortiGuard Labs (2026-08-04) says the generation-2 FDMTP loader Microsoft.ServiceHosting.Tools.dll in the QuickFox supply-chain attack 'is obfuscated using the JieJie .NET Protector tool'; that sentence is the only evidence, no code comparison is shown, and nothing here was checked against that sample. A protected assembly does not contain this engine, so this family recognises JIEJIE.NET itself. 59 of the 858 methods are namespace __DC20211119 (JIEJIEHelper, JIEJIEPerformanceCounter), the C# source of the helpers the tool injects into protected assemblies as IL text; whether they match the injected copies was not measured. Upstream's committed binaries are Debug builds, so both configurations are built. Pinned to f28e1d2, the last commit touching source/; the version the attackers used is unknown. The .NET Framework console is not built: its project file is committed E-SafeNet-encrypted. Components gui_debug and gui_release: the .NET Framework 4.0 WinForms GUI of the same engine and commit (JIEJIE.NET.GUI.csproj), built with the .NET SDK's MSBuild. The SDK MSBuild refuses the form's embedded System.Drawing bitmaps (MSB3822/MSB3823) unless resources are generated preserialized, which needs a System.Resources.Extensions reference: the recipe adds one (package 5.0.0, pinned) through a targets file passed with CustomAfterMicrosoftCommonTargets, and takes the v4.0 reference assemblies from Microsoft.NETFramework.ReferenceAssemblies.net40 1.0.3. No upstream file is modified, but the build adds a reference the project does not declare and writes the .resources in the preserialized format, so the gui images are NOT byte-identical to a build of unmodified upstream with full-Framework MSBuild. Upstream's committed binaries are Debug builds, so both configurations are built. 905 methods in each; of the Debug image's 691 distinct PicHashes of ten instructions or more, 633 are in the Core console Debug artefact (Release: 562 of 616 in the console Release).",
     "num_functions": 858,
     "sha256": "2842a975a8b85a8a49bb94a700136da7ee13447f9b1841c09a3999a464199a63",
     "smda": "data/JIEJIE.NET/cil/smda/JIEJIE.NET_2026-01-01_dotnet8_cil_console_release.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "f28e1d2ad78da7160a00197725f8bd42783b9f8c",
+      "git_ref": "f28e1d2ad78da7160a00197725f8bd42783b9f8c",
+      "git_url": "https://github.com/dcsoft-yyf/JIEJIE.NET.git"
+    },
+    "toolchain": "dotnet8_cil",
+    "upstream": "https://github.com/dcsoft-yyf/JIEJIE.NET",
+    "version": "2026-01-01"
+  },
+  "JIEJIE.NET_2026-01-01_dotnet8_cil_gui_debug": {
+    "architecture": "cil",
+    "build_flags": "dotnet msbuild JIEJIE.NET.GUI.csproj -p:Configuration=Debug (upstream's configuration: Optimize=false), .NET Framework v4.0 reference assemblies (Microsoft.NETFramework.ReferenceAssemblies.net40 1.0.3) via FrameworkPathOverride, GenerateResourceUsePreserializedResources=true with a System.Resources.Extensions 5.0.0 reference added through CustomAfterMicrosoftCommonTargets, -p:PathMap=<checkout>=/_/",
+    "built_artifact": "source/corpus-out/GUI-Debug/JIEJIE.NET.GUI.exe",
+    "compiler": "dotnet SDK 8.0.133, csc 4.8.0-7.25569.25 (38896ab4)",
+    "component": "gui_debug",
+    "dependencies": {
+      "net40_refs": {
+        "archive": "microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg",
+        "sha256": "54d6e20a1b61caf79395d6d71d091265e81f5a5705ac4ae52af45ca143c3c694",
+        "url": "https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net40/1.0.3/microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg"
+      },
+      "sre_package": {
+        "archive": "system.resources.extensions.5.0.0.nupkg",
+        "sha256": "d2766cfee9b78efbc1f93a5198b9bbc40a70d5e24db42ce11fc44f6c2f6f5f6c",
+        "url": "https://api.nuget.org/v3-flatcontainer/system.resources.extensions/5.0.0/system.resources.extensions.5.0.0.nupkg"
+      }
+    },
+    "family": "JIEJIE.NET",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "GPL-2.0",
+    "mcrit": "data/JIEJIE.NET/cil/mcrit/JIEJIE.NET_2026-01-01_dotnet8_cil_gui_debug.mcrit",
+    "notes": "The obfuscator's own code, not its output. FortiGuard Labs (2026-08-04) says the generation-2 FDMTP loader Microsoft.ServiceHosting.Tools.dll in the QuickFox supply-chain attack 'is obfuscated using the JieJie .NET Protector tool'; that sentence is the only evidence, no code comparison is shown, and nothing here was checked against that sample. A protected assembly does not contain this engine, so this family recognises JIEJIE.NET itself. 59 of the 858 methods are namespace __DC20211119 (JIEJIEHelper, JIEJIEPerformanceCounter), the C# source of the helpers the tool injects into protected assemblies as IL text; whether they match the injected copies was not measured. Upstream's committed binaries are Debug builds, so both configurations are built. Pinned to f28e1d2, the last commit touching source/; the version the attackers used is unknown. The .NET Framework console is not built: its project file is committed E-SafeNet-encrypted. Components gui_debug and gui_release: the .NET Framework 4.0 WinForms GUI of the same engine and commit (JIEJIE.NET.GUI.csproj), built with the .NET SDK's MSBuild. The SDK MSBuild refuses the form's embedded System.Drawing bitmaps (MSB3822/MSB3823) unless resources are generated preserialized, which needs a System.Resources.Extensions reference: the recipe adds one (package 5.0.0, pinned) through a targets file passed with CustomAfterMicrosoftCommonTargets, and takes the v4.0 reference assemblies from Microsoft.NETFramework.ReferenceAssemblies.net40 1.0.3. No upstream file is modified, but the build adds a reference the project does not declare and writes the .resources in the preserialized format, so the gui images are NOT byte-identical to a build of unmodified upstream with full-Framework MSBuild. Upstream's committed binaries are Debug builds, so both configurations are built. 905 methods in each; of the Debug image's 691 distinct PicHashes of ten instructions or more, 633 are in the Core console Debug artefact (Release: 562 of 616 in the console Release).",
+    "num_functions": 905,
+    "sha256": "2a7c10500aa9aa8cc60c844df7f8b45f6617da3027c7bf7970d277d88c65f6dd",
+    "smda": "data/JIEJIE.NET/cil/smda/JIEJIE.NET_2026-01-01_dotnet8_cil_gui_debug.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "commit": "f28e1d2ad78da7160a00197725f8bd42783b9f8c",
+      "git_ref": "f28e1d2ad78da7160a00197725f8bd42783b9f8c",
+      "git_url": "https://github.com/dcsoft-yyf/JIEJIE.NET.git"
+    },
+    "toolchain": "dotnet8_cil",
+    "upstream": "https://github.com/dcsoft-yyf/JIEJIE.NET",
+    "version": "2026-01-01"
+  },
+  "JIEJIE.NET_2026-01-01_dotnet8_cil_gui_release": {
+    "architecture": "cil",
+    "build_flags": "dotnet msbuild JIEJIE.NET.GUI.csproj -p:Configuration=Release (upstream's configuration: Optimize=true), .NET Framework v4.0 reference assemblies (Microsoft.NETFramework.ReferenceAssemblies.net40 1.0.3) via FrameworkPathOverride, GenerateResourceUsePreserializedResources=true with a System.Resources.Extensions 5.0.0 reference added through CustomAfterMicrosoftCommonTargets, -p:PathMap=<checkout>=/_/",
+    "built_artifact": "source/corpus-out/GUI-Release/JIEJIE.NET.GUI.exe",
+    "compiler": "dotnet SDK 8.0.133, csc 4.8.0-7.25569.25 (38896ab4)",
+    "component": "gui_release",
+    "dependencies": {
+      "net40_refs": {
+        "archive": "microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg",
+        "sha256": "54d6e20a1b61caf79395d6d71d091265e81f5a5705ac4ae52af45ca143c3c694",
+        "url": "https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net40/1.0.3/microsoft.netframework.referenceassemblies.net40.1.0.3.nupkg"
+      },
+      "sre_package": {
+        "archive": "system.resources.extensions.5.0.0.nupkg",
+        "sha256": "d2766cfee9b78efbc1f93a5198b9bbc40a70d5e24db42ce11fc44f6c2f6f5f6c",
+        "url": "https://api.nuget.org/v3-flatcontainer/system.resources.extensions/5.0.0/system.resources.extensions.5.0.0.nupkg"
+      }
+    },
+    "family": "JIEJIE.NET",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "GPL-2.0",
+    "mcrit": "data/JIEJIE.NET/cil/mcrit/JIEJIE.NET_2026-01-01_dotnet8_cil_gui_release.mcrit",
+    "notes": "The obfuscator's own code, not its output. FortiGuard Labs (2026-08-04) says the generation-2 FDMTP loader Microsoft.ServiceHosting.Tools.dll in the QuickFox supply-chain attack 'is obfuscated using the JieJie .NET Protector tool'; that sentence is the only evidence, no code comparison is shown, and nothing here was checked against that sample. A protected assembly does not contain this engine, so this family recognises JIEJIE.NET itself. 59 of the 858 methods are namespace __DC20211119 (JIEJIEHelper, JIEJIEPerformanceCounter), the C# source of the helpers the tool injects into protected assemblies as IL text; whether they match the injected copies was not measured. Upstream's committed binaries are Debug builds, so both configurations are built. Pinned to f28e1d2, the last commit touching source/; the version the attackers used is unknown. The .NET Framework console is not built: its project file is committed E-SafeNet-encrypted. Components gui_debug and gui_release: the .NET Framework 4.0 WinForms GUI of the same engine and commit (JIEJIE.NET.GUI.csproj), built with the .NET SDK's MSBuild. The SDK MSBuild refuses the form's embedded System.Drawing bitmaps (MSB3822/MSB3823) unless resources are generated preserialized, which needs a System.Resources.Extensions reference: the recipe adds one (package 5.0.0, pinned) through a targets file passed with CustomAfterMicrosoftCommonTargets, and takes the v4.0 reference assemblies from Microsoft.NETFramework.ReferenceAssemblies.net40 1.0.3. No upstream file is modified, but the build adds a reference the project does not declare and writes the .resources in the preserialized format, so the gui images are NOT byte-identical to a build of unmodified upstream with full-Framework MSBuild. Upstream's committed binaries are Debug builds, so both configurations are built. 905 methods in each; of the Debug image's 691 distinct PicHashes of ten instructions or more, 633 are in the Core console Debug artefact (Release: 562 of 616 in the console Release).",
+    "num_functions": 905,
+    "sha256": "68b4c390bd0d11ad54acf1037228f31521b1b72a3b5588ff79a3ec21555a8d4f",
+    "smda": "data/JIEJIE.NET/cil/smda/JIEJIE.NET_2026-01-01_dotnet8_cil_gui_release.7z",
     "smda_version": "5.0.2",
     "source": {
       "commit": "f28e1d2ad78da7160a00197725f8bd42783b9f8c",
