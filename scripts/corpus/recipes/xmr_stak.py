@@ -147,7 +147,12 @@ def _stak_x86():
             BuildStep("cmake -S . -B build-{arch} " + _CONFIG + " "
                       + deps.linux_dep_options(uv=False)
                       + " -DCMAKE_CXX_FLAGS='-include cstdio -include "
-                      "{repo}/scripts/corpus/exercisers/xmr_stak_x86_compat.h'",
+                      "{repo}/scripts/corpus/exercisers/xmr_stak_x86_compat.h'"
+                      # CMake's ASM language does not take -m32 from CC, so
+                      # the stub .S files were assembled as x86-64 ("i386:x86-64
+                      # architecture of input file ... is incompatible with
+                      # i386 output").
+                      " -DCMAKE_ASM_FLAGS=-m32",
                       env={"CFLAGS": "", "CXXFLAGS": ""}),
             BuildStep("cmake --build build-{arch} -j$(nproc)"),
         ],
