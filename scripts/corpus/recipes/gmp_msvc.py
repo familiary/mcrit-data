@@ -149,7 +149,7 @@ def _cxx_recipe(version):
     """libgmpxx with cl: the C++ wrapper, linked against this build's libgmp."""
     return Recipe(
         family="GMP",
-        version=version,
+        version=version + "-cxx",
         upstream="https://gmplib.org/",
         license="LGPL-3.0-or-later OR GPL-2.0-or-later (dual, licensee's choice)",
         source=Source(url="https://ftp.gnu.org/gnu/gmp/gmp-%s.tar.xz" % version,
