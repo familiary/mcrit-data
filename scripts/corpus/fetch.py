@@ -112,7 +112,11 @@ def _extract_unchecked(archive, destination):
         with zipfile.ZipFile(archive) as zf:
             _reject_escaping_paths(zf.namelist(), destination)
             zf.extractall(destination)
-    elif archive.endswith((".7z", ".lzma")):
+    elif archive.endswith((".7z", ".lzma", ".msi", ".exe")):
+        # 7z also reads a Windows Installer package and a PE installer as
+        # containers: an MSI's files come out as streams named after their
+        # File-table key, an installer's sections and resources as files,
+        # unmodified and without running anything.
         subprocess.run(["7z", "x", "-y", "-o%s" % destination, archive],
                        check=True, stdout=subprocess.DEVNULL)
     else:

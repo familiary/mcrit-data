@@ -138,6 +138,21 @@ def _resolve(index, family, slug, entry):
         narrowed = [(name, recipe) for name, recipe in candidates
                     if wanted in {canonical_alias(t)
                                   for t in recipe.toolchains}]
+        if len(narrowed) != 1:
+            # A harvested prebuilt's producer is the upstream compiler
+            # (msvc142, go1.26.6), which names no toolchain alias, or names
+            # the alias of a sibling source-build recipe. The artefact's own
+            # component and the architecture in the slug still identify a
+            # recipe whose toolchain list is a single architecture.
+            component = entry.get("component", "")
+            arch = re.search(r"_(x86|x64)_", slug[len(family) + len(version or "") + 2:] + "_")
+            by_component = [
+                (name, recipe) for name, recipe in candidates
+                if any(a.component == component for a in recipe.artifacts)
+                and arch and all(canonical_alias(t).endswith("_" + arch.group(1))
+                                 for t in recipe.toolchains)]
+            if len(by_component) == 1:
+                narrowed = by_component
         if len(narrowed) == 1:
             candidates = narrowed
         else:
