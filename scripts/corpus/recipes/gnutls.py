@@ -302,3 +302,59 @@ RECIPES = {}
 for _version in _VERSIONS:
     RECIPES["GnuTLS_%s" % _version] = _recipe(_version, linux=False)
     RECIPES["GnuTLS_%s_linux" % _version] = _recipe(_version, linux=True)
+
+
+# The final sweep: GnuTLS 3.8.13 with the optional back ends and the other
+# libraries and programs of the tree, Linux ELF. The plain recipe above turns
+# all of that off, so none of the code is in its images: PKCS #11 (p11-kit),
+# IDNA (libidn2), certificate compression (zlib, brotli, zstd), TPM 2.0
+# (tss2), the C++ wrapper libgnutlsxx, libgnutls-dane (unbound) and the tools
+# (gnutls-cli, gnutls-serv, certtool, ocsptool, psktool, p11tool, danetool,
+# gnutls-cli-debug). The back-end libraries are Ubuntu 24.04's -dev packages,
+# linked dynamically and so not in any image (versions in the notes);
+# GMP and Nettle are the static helpers of the plain recipe and are excluded
+# by name as there. x64 also builds the Guile bindings (guile-3.0-dev) and
+# TPM 2.0. Not in this variant: TPM 1.2 (trousers/libtspi has no Ubuntu
+# 24.04 package), and on x86 Guile and TPM 2.0 (no i386 guile-3.0-dev /
+# libtss2-dev packages are installed).
+_FULL_OPTS = ("--enable-shared --disable-static --with-included-libtasn1 "
+              "--with-included-unistring --with-p11-kit --with-idn --with-zlib "
+              "--with-brotli --with-zstd --without-tpm --disable-doc "
+              "--disable-tests --enable-tools --enable-cxx --enable-libdane "
+              "--disable-nls")
+
+
+def _full_linux(version):
+    recipe = _recipe(version, linux=True)
+    gnutls = recipe.build[3].command
+    configure_tail = gnutls[gnutls.index("--enable-shared"):]
+    gnutls = gnutls.replace(configure_tail, _FULL_OPTS + " "
+                            "$([ {bitness} = 64 ] && echo '--with-tpm2 --enable-guile' "
+                            "|| echo '--without-tpm2 --disable-guile')")
+    recipe.version = version + "-full"
+    recipe.build[3] = BuildStep(gnutls)
+    recipe.build[4] = BuildStep("make -j$(nproc)", cwd="build-{arch}")
+    lib = "build-{arch}/lib/.libs/"
+    recipe.artifacts = [
+        Artifact(path=lib + "libgnutls.so", component="libgnutls.so"),
+        Artifact(path=lib + "libgnutlsxx.so", component="libgnutlsxx.so"),
+        Artifact(path="build-{arch}/libdane/.libs/libgnutls-dane.so",
+                 component="libgnutls-dane.so"),
+    ] + [Artifact(path="build-{arch}/src/.libs/%s" % tool, component=tool)
+         for tool in ("gnutls-cli", "gnutls-serv", "certtool", "ocsptool",
+                      "psktool", "p11tool", "danetool", "gnutls-cli-debug")]
+    recipe.build_flags = (_FULL_OPTS + ", x64 also --with-tpm2 --enable-guile; "
+                          "GMP 6.3.0 and Nettle 3.10.2 as static helper "
+                          "libraries as in the plain recipe; back ends from "
+                          "Ubuntu 24.04 packages, linked dynamically")
+    recipe.notes = (_NOTES + " The full variant: every optional back end this "
+                    "host provides (p11-kit 0.25.3, libidn2 2.3.7, zlib, brotli "
+                    "1.1.0, zstd 1.5.5, tss2 4.0.1 on x64, unbound 1.19.2, "
+                    "guile 3.0.9 on x64; Ubuntu 24.04 packages, imported, not "
+                    "contained), libgnutlsxx, libgnutls-dane and the tools. "
+                    "TPM 1.2 is off (no trousers package).")
+    return recipe
+
+
+RECIPES["GnuTLS_3.8.13_full_linux"] = _full_linux("3.8.13")
+
