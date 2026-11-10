@@ -9,8 +9,8 @@
  * ed25519_tor_shim.c. What Tor's code still calls and that build does not
  * compile is here: the random source (Tor's crypto_rand.c pulls in the whole
  * of its PRNG and OpenSSL/NSS RAND machinery) and the assertion and bug
- * reporters of lib/log/util_bug.c and lib/err/torerr.c (which pull in Tor's
- * logging). None of these is Tor's code, each is named so it can be set
+ * reporters of lib/log/util_bug.c and lib/err/torerr.c and log_fn_ of
+ * lib/log/log.c (which pull in Tor's logging). None of these is Tor's code, each is named so it can be set
  * aside, and none must ever run: this file exists only so the image links.
  */
 #include "orconfig.h"
@@ -60,6 +60,14 @@ tor_assertion_failed_(const char *fname, unsigned int line,
 {
 	(void)fname; (void)line; (void)func; (void)expr; (void)fmt;
 	abort();
+}
+
+/* lib/log/log.c; crypto_digest_get_digest logs through it on a bad call. */
+void
+log_fn_(int severity, uint64_t domain, const char *funcname,
+        const char *format, ...)
+{
+	(void)severity; (void)domain; (void)funcname; (void)format;
 }
 
 void
