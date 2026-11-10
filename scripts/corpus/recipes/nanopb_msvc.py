@@ -461,3 +461,133 @@ RECIPES = {
     "nanopb_0.4.5_msvc": _nanopb_msvc("0.4.5", generated=True),
     "nanopb_0.4.9.2_msvc": _nanopb_msvc("0.4.9.2", generated=True),
 }
+
+
+# --- The other PB_* define combinations, /O1 of the shipped sets, and
+# upstream's CMake: the MSVC counterparts of the "<tag>-defines" and
+# "<tag>-cmake" recipes in nanopb.py (see there for why). Separate versions
+# so the shipped images are unchanged.
+from .nanopb import DEFINE_COMBINATIONS as _COMBOS
+
+_SIZE_SETS = [(tag, dll, defines) for tag, dll, defines in _CONFIGS]
+
+
+def _config_steps_opt(tag, dll, defines, opt):
+    d = "cfg-%s-{arch}" % tag
+    return [
+        BuildStep("if not exist %s mkdir %s" % (d, d)),
+        BuildStep("cl /nologo /c %s /MD /Zi /I. /Igen %s /Fo%s\\ /Fd%s\\%s.pdb "
+                  "pb_common.c pb_decode.c pb_encode.c gen\\driver.pb.c"
+                  % (opt, defines, d, d, dll)),
+        _def_from_objects(d),
+        BuildStep("link /nologo /DLL /DEBUG /Brepro /INCREMENTAL:NO "
+                  "/OPT:NOREF /OPT:NOICF /DEF:%s\\nanopb.def /PDB:%s\\%s.pdb "
+                  "/OUT:%s\\%s.dll %s\\*.obj" % (d, d, dll, d, dll, d)),
+    ]
+
+
+def _nanopb_msvc_defines(version, keep=None):
+    steps = list(_generate_steps(version))
+    artifacts = []
+    how = (" (nanopb_generator.py %s, protoc from %s)"
+           % (version, _GENERATORS[version][0]))
+    jobs = [(tag, "protobuf-nanopb-" + tag,
+             defines.replace("-D", "/D"), "/O2") for tag, defines in _COMBOS]
+    jobs += [(tag + "-O1", dll + "-O1", defines, "/O1")
+             for tag, dll, defines in _SIZE_SETS]
+    for tag, dll, defines, opt in jobs:
+        if keep is not None and dll + ".dll" not in keep:
+            continue
+        steps += _config_steps_opt(tag, dll, defines, opt)
+        artifacts.append(Artifact(
+            path="cfg-%s-{arch}/%s.dll" % (tag, dll),
+            component=dll + ".dll",
+            pdb="cfg-%s-{arch}/%s.pdb" % (tag, dll),
+            build_flags="%s /MD /Zi %s, runtime plus generated driver.pb.c%s; "
+                        "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF "
+                        "at link, exports from a /DEF generated from the "
+                        "objects" % (opt, defines or "no PB_* defines", how)))
+    steps.append(BuildStep("dir", allow_failure=True))
+    return Recipe(
+        family="nanopb",
+        version=version + "-defines",
+        upstream="https://github.com/nanopb/nanopb",
+        license="Zlib",
+        source=Source(git_url="https://github.com/nanopb/nanopb.git",
+                      git_ref="nanopb-" + version),
+        build=steps,
+        artifacts=artifacts,
+        toolchains=["msvc_x86", "msvc_x64"],
+        build_flags="/O2 or /O1 /MD /Zi, PB_* defines per artefact, runtime "
+                    "plus generated driver.pb.c; /DEBUG /Brepro "
+                    "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link",
+        notes="Tag nanopb-%s, the same tree, generator and driver.proto as "
+              "the %s MSVC recipe. The other combinations of the four "
+              "build-time defines the tracker names (PB_FIELD_32BIT, "
+              "PB_NO_ERRMSG, PB_BUFFER_ONLY, PB_ENABLE_MALLOC) beside the "
+              "shipped -all, -small and -big, plus /O1 builds of those three "
+              "sets; each artefact's defines are in its build_flags. Nothing "
+              "patched. Evidence for inclusion is naming only."
+              % (version, version),
+    )
+
+
+_PROTOC_WIN = Source(
+    url="https://github.com/protocolbuffers/protobuf/releases/download/"
+        "v21.12/protoc-21.12-win64.zip",
+    sha256="71852a30cf62975358edfcbbff93086e8857a079c8e4d6904881aa968d65c7f9")
+
+
+def _nanopb_msvc_cmake(version):
+    return Recipe(
+        family="nanopb",
+        version=version + "-cmake",
+        upstream="https://github.com/nanopb/nanopb",
+        license="Zlib",
+        source=Source(git_url="https://github.com/nanopb/nanopb.git",
+                      git_ref="nanopb-" + version),
+        extra_sources={"protoc_zip": _PROTOC_WIN},
+        build=[
+            BuildStep('python -c "import zipfile,sys; '
+                      "zipfile.ZipFile(sys.argv[1]).extractall('protoc-bin')\" "
+                      "{protoc_zip}"),
+            BuildStep('cmake -S . -B build-{arch} -G "NMake Makefiles" '
+                      "-DCMAKE_POLICY_VERSION_MINIMUM=3.5 "
+                      "-DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=OFF "
+                      "-Dnanopb_BUILD_GENERATOR=OFF "
+                      "-Dnanopb_MSVC_STATIC_RUNTIME=OFF "
+                      "-DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON "
+                      '-DCMAKE_C_FLAGS="/DWIN32 /D_WINDOWS /Zi" '
+                      '-DCMAKE_SHARED_LINKER_FLAGS="/DEBUG /Brepro '
+                      '/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF" '
+                      "-Dnanopb_PROTOC_PATH=%CD%/protoc-bin/bin/protoc.exe"),
+            BuildStep("cmake --build build-{arch}"),
+            BuildStep("dir build-{arch}", allow_failure=True),
+        ],
+        artifacts=[Artifact(path="build-{arch}/protobuf-nanopb.dll",
+                            component="protobuf-nanopb.dll",
+                            pdb="build-{arch}/protobuf-nanopb.pdb")],
+        toolchains=["msvc_x86", "msvc_x64"],
+        build_flags="upstream CMake (NMake Makefiles), no CMAKE_BUILD_TYPE "
+                    "(upstream default, no /O flag, so cl's /Od), "
+                    "BUILD_SHARED_LIBS=ON, nanopb_BUILD_GENERATOR=OFF, "
+                    "nanopb_MSVC_STATIC_RUNTIME=OFF (/MD instead of upstream's "
+                    "default /MT), CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON, /Zi; "
+                    "/DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at "
+                    "link; protoc 21.12 release binary as nanopb_PROTOC_PATH",
+        notes="Tag nanopb-%s built through upstream's own CMakeLists.txt "
+              "(protobuf-nanopb shared target) with a pinned protoc 21.12 "
+              "release binary for its configure-time check. No build type, "
+              "so unoptimised as upstream's CMake builds with nothing passed. "
+              "Two settings differ from upstream's defaults, both required "
+              "by this corpus: nanopb_MSVC_STATIC_RUNTIME=OFF (upstream "
+              "defaults to /MT; the corpus links /MD) and "
+              "CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON (nanopb's headers carry "
+              "no dllexport, so cl's DLL would export nothing). Nothing "
+              "patched. Evidence for inclusion is naming only." % version,
+    )
+
+
+for _v in ("0.3.9.10", "0.4.5", "0.4.9.2"):
+    RECIPES["nanopb_%s-defines_msvc" % _v] = _nanopb_msvc_defines(_v)
+    RECIPES["nanopb_%s-cmake_msvc" % _v] = _nanopb_msvc_cmake(_v)
