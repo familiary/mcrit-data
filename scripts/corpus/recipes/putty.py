@@ -42,7 +42,9 @@ psftp.exe, each other tool adds, x64 / x86:
 putty.exe already holds nearly all of the SSH client. psftp.exe adds the SFTP
 client (sftp.c, psftp.c, psftpcommon.c). The tracker issue (#65) names six
 executables, so plink, pscp, pageant and puttygen are built as well although
-they add little beyond putty and psftp; puttytel is not built. Measured on
+they add little beyond putty and psftp. puttytel and psocks, the two
+Windows programs left, are built by PuTTY_0.77_puttytel_psocks (see
+puttytel and psocks below). Measured on
 the images as committed (distinct PicHashes of 10+ instructions, x64 / x86),
 the share of each new tool already in putty.exe + psftp.exe: plink 98.9% /
 99.2% (12 / 10 new hashes), pscp 97.7% / 97.9% (26 / 27), pageant 86.9% /
@@ -57,6 +59,21 @@ with the committed counts, x86 with 2 more kept functions each (putty
 2046+203, psftp 1716+200, against the committed 2044+203 and 1714+200), and
 every sha256 differs, the build directory being part of the image.
 
+puttytel and psocks. Same tarball, toolchain and flags, a recipe of its own
+so the six images above are not rebuilt. Kept + removed = image, functions of
+10+ instructions / distinct PicHashes, and the share of those hashes already
+in the six MinGW images of the same architecture:
+
+    x64  puttytel 1245+183=1428  666/660  98.2% (12 new; 645 in putty.exe)
+         psocks    499+181=680   289/285  87.7% (35 new)
+    x86  puttytel 1020+184=1204  727/715  99.4% (4 new; 710 in putty.exe)
+         psocks    491+181=672   328/318  90.6% (30 new)
+
+puttytel is putty.exe without the SSH backends, so nearly all of it is
+already in putty.exe; it is a separate shipped binary and its PicHash set
+is not identical to any committed image, so it is kept with that overlap
+stated. psocks adds the SOCKS front end (psocks.c, windows/psocks.c).
+
 Linux. PuTTY's SSH core is portable and ships on Linux (Debian's
 putty-tools: plink, pscp, psftp, puttygen), so the same tree was built with the
 host gcc for both ELF architectures and measured. It shares no PicHash with
@@ -65,9 +82,63 @@ or more instructions) and 84 of 1452 / 80 of 1490 on x86, because the ABI
 changes every function: a different reference value, so plink and psftp are
 kept (PuTTY_0.77_linux). In the Linux set psftp is the base and plink adds 81
 functions on x64 (the Unix console front end, uxplink.c); pscp adds 28 beyond
-those two and puttygen 77 (a key tool, not the SSH client), and neither is
-built. The GTK putty and pterm need GTK, which this host does not have, so
-there is no Linux build of the GUI.
+those two and puttygen 77 (a key tool, not the SSH client). Both are built by
+PuTTY_0.77_linux_pscp_puttygen, same tarball and flags, a recipe of its own
+so plink and psftp are not rebuilt; like those two they were configured on a
+host without GTK (NOT_X_WINDOWS on). Kept + removed = image, functions of 10+
+instructions / distinct PicHashes, share of those hashes already in the
+committed Linux plink + psftp of the same architecture:
+
+    x64  pscp     2053+5=2058  1309/1254  97.8% (28 new)
+         puttygen  994+5=999    656/631   87.8% (77 new)
+    x86  pscp     2053+7=2060  1497/1476   9.7% (1333 new)
+         puttygen  998+9=1007   750/742   12.5% (649 new)
+
+The x86 figures are low for the 32-bit PIC reason given below (a function that
+touches a global embeds this image's own GOT delta), not because the code
+differs. None is PicHash-identical to a committed image. The GTK programs are
+the GTK paragraph below.
+
+GTK. PuTTY_0.77_linux_gtk builds the four GTK 3 programs, putty, pterm,
+puttytel and pageant (Linux pageant needs GTK for its passphrase prompt),
+from the same tarball and flags. GTK is not installed on the build host: apt
+cannot co-install libgtk-3-dev for amd64 and i386 there
+("libglib2.0-dev:i386 : Depends: libglib2.0-dev-bin:i386", which would
+replace the host's amd64 python3), and a host-wide install would also turn
+NOT_X_WINDOWS off for every other Linux build on that machine, the console
+tools above included. Instead each leg downloads the Ubuntu 24.04 packages
+listed in putty_gtk_sysroot.txt (the Depends closure of libgtk-3-dev and
+libglib2.0-dev, GTK 3.24.41, GLib 2.80.0, Pango 1.52.1, cairo 1.18.0, libX11
+1.8.7, each pinned by the sha256 of the archive index), checks every digest,
+unpacks them into a private sysroot, and configures with PKG_CONFIG_SYSROOT_DIR
+and CMAKE_PREFIX_PATH pointing there, -DPUTTY_GTK_VERSION=3, and
+-L/-rpath-link to the sysroot's libdir (without -L upstream's
+check_symbol_exists probes for pango_font_family_is_monospace and
+pango_font_map_list_families fail to link and silently select the fallback
+code; with it both are found, as on a distribution host). GDK's X11 backend
+is found, so NOT_X_WINDOWS is off. PuTTY's tree is not modified; only the
+sysroot's absolute symlinks are re-pointed inside it.
+
+Kept + removed = image, functions of 10+ instructions / distinct PicHashes,
+then the share of those hashes in the committed Linux console tools of the
+same architecture and in the GTK putty:
+
+    x64  putty    3302+5=3307  1665/1621  73.5% in console tools (430 new)
+         pterm    1905+5=1910   682/671   33.7%; 96.9% in GTK putty
+         puttytel 2179+5=2184   821/808   46.7%; 99.9% in GTK putty (807)
+         pageant  1519+5=1524   828/797   89.5%; 87.0% in GTK putty
+    x86  putty    3302+7=3309  1893/1872   8.2% in console tools
+         pterm    1916+5=1921   780/779    4.1%;  7.3% in GTK putty
+         puttytel 2187+5=2192   944/943    5.2%;  7.8% in GTK putty
+         pageant  1526+7=1533   958/948   10.2%; 10.2% in GTK putty
+
+The x86 shares are low for the 32-bit PIC reason below, not because the code
+differs. puttytel on x64 is putty without the SSH backends and shares 807 of
+its 808 hashes with putty; it is kept as a separate shipped program with that
+overlap stated, since no image here is PicHash-identical to another. Removed
+as glue: the five crtstuff/_init functions on x64; on x86 frame_dummy and the
+four __x86.get_pc_thunk.* helpers, plus __divdi3 and __udivdi3 in putty and
+pageant.
 
 Linking is dynamic, as in the distribution package, so glibc is not in the
 image and about 280 functions per artefact are unnamed one- to three-
@@ -105,8 +176,10 @@ ___chkstk_ms; no new baseline gap.
 MSVC. putty_msvc.py builds the same six with cl (v143) against the DLL
 runtime. Upstream's own release script (Buildscr) builds the shipped binaries
 with clang-cl, Release, /MT /O2 (-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded),
-so the C runtime is linked statically there; neither clang-cl nor /MT is
-covered. MinGW is itself an upstream-supported configuration: Buildscr
+so the C runtime is linked statically there. That build is not reproduced;
+putty_prebuilt.py harvests upstream's own signed w32/w64 release binaries
+instead, which share at most 0.4% of their PicHashes with anything built
+here. MinGW is itself an upstream-supported configuration: Buildscr
 test-builds it with cmake/toolchain-mingw.cmake.
 """
 
@@ -122,9 +195,10 @@ _TOOLS = ("putty", "psftp", "plink", "pscp", "pageant", "puttygen")
 
 _NOTES = ("MinGW build of the unmodified 0.77 source. Upstream's own "
           "release binaries are built with clang-cl and a static C "
-          "runtime, which is not covered here (the MSVC /MD build is "
-          "putty_msvc.py). Six executables: putty, psftp, plink, pscp, "
-          "pageant and puttygen; puttytel is not built.")
+          "runtime; they are harvested as distributed by putty_prebuilt.py "
+          "(the MSVC /MD build is putty_msvc.py). Six executables: putty, "
+          "psftp, plink, pscp, pageant and puttygen; puttytel and psocks "
+          "come from the PuTTY_0.77_puttytel_psocks recipe.")
 
 
 def _putty(version, sha256, tools=_TOOLS, notes=_NOTES):
@@ -163,7 +237,8 @@ def _putty(version, sha256, tools=_TOOLS, notes=_NOTES):
 _CMAKE_LINUX = "cmake -S . -B build-{arch} -DCMAKE_BUILD_TYPE=Release"
 
 
-_LINUX_NOTES = ("Console tools only; the GTK programs are not built. Same "
+_LINUX_NOTES = ("Console tools only; the GTK programs are built by "
+                "PuTTY_0.77_linux_gtk. Same "
                 "tarball as the Windows artefacts. The glibc dependency is "
                 "dynamic, so about 280 functions per artefact are unnamed "
                 ".plt stubs.")
@@ -208,6 +283,85 @@ _LINUX_EXTRA_NOTES = (
     "unnamed.")
 
 
+# The GTK programs. Ubuntu cannot co-install libgtk-3-dev for amd64 and i386
+# (libglib2.0-dev:i386 needs libglib2.0-dev-bin:i386, which would replace
+# the host's amd64 python3), and installing it on the shared build host would
+# also flip NOT_X_WINDOWS for every other Linux build there. So each leg
+# unpacks the pinned .debs of putty_gtk_sysroot.txt into a private sysroot,
+# verifies every one against the sha256 the Ubuntu archive index lists, and
+# points pkg-config and CMake at it. Nothing in PuTTY's tree is touched; the
+# sysroot's absolute symlinks are re-pointed inside it.
+_GTK_SYSROOT = (
+    "A=$([ {bitness} = 64 ] && echo amd64 || echo i386) && "
+    "mkdir -p debs sysroot && : > debs/SHA256SUMS && "
+    "grep -E \"_($A|all)\\.deb \" {repo}/scripts/corpus/recipes/putty_gtk_sysroot.txt | "
+    "while read name version file sha; do "
+    "curl -sSfL --retry 5 --retry-all-errors -o debs/$(basename $file) "
+    "https://archive.ubuntu.com/ubuntu/$file || exit 1; "
+    "echo \"$sha  debs/$(basename $file)\" >> debs/SHA256SUMS; done && "
+    "sha256sum -c --quiet debs/SHA256SUMS && wc -l < debs/SHA256SUMS && "
+    "for d in debs/*.deb; do dpkg-deb -x $d sysroot || exit 1; done && "
+    "find sysroot -type l -lname '/*' | while read l; do "
+    "ln -sfn \"$PWD/sysroot$(readlink $l)\" $l; done && rm -rf debs")
+
+_GTK_CMAKE = (
+    "T=$([ {bitness} = 64 ] && echo x86_64-linux-gnu || echo i386-linux-gnu) && "
+    "S=$PWD/sysroot && "
+    "PKG_CONFIG_SYSROOT_DIR=$S "
+    "PKG_CONFIG_LIBDIR=$S/usr/lib/$T/pkgconfig:$S/usr/share/pkgconfig "
+    "cmake -S . -B build-{arch} -DCMAKE_BUILD_TYPE=Release "
+    "-DPUTTY_GTK_VERSION=3 -DCMAKE_LIBRARY_ARCHITECTURE=$T "
+    "-DCMAKE_PREFIX_PATH=$S/usr "
+    "-DCMAKE_EXE_LINKER_FLAGS=\"-L$S/usr/lib/$T "
+    "-Wl,-rpath-link,$S/usr/lib/$T\" && "
+    "grep -E '^GTK_FOUND:INTERNAL=1$' build-{arch}/CMakeCache.txt && "
+    "grep -E '^X11_X11_LIB:|^HAVE_PANGO|^HAVE_GDK|^GTK_VERSION:' "
+    "build-{arch}/CMakeCache.txt")
+
+_GTK_TOOLS = ("putty", "pterm", "puttytel", "pageant")
+
+_GTK_NOTES = (
+    "GTK 3 programs (putty, pterm, puttytel, pageant) from the unmodified "
+    "0.77 tarball, same -O3 Release flags as the console recipes, linked "
+    "dynamically against GTK 3.24.41 / GLib 2.80.0 / X11 from Ubuntu 24.04 "
+    "packages unpacked into a private sysroot, each .deb pinned by the sha256 "
+    "of the archive index (scripts/corpus/recipes/putty_gtk_sysroot.txt). "
+    "With GDK's X11 backend present NOT_X_WINDOWS is off, as in a "
+    "distribution build. Not the console tools' configuration, which had no "
+    "GTK and so NOT_X_WINDOWS on.")
+
+
+def _putty_gtk(version, sha256):
+    return Recipe(
+        family="PuTTY",
+        version=version,
+        upstream="https://www.chiark.greenend.org.uk/~sgtatham/putty/",
+        license="MIT",
+        source=Source(
+            url="https://www.chiark.greenend.org.uk/~sgtatham/putty/%s/"
+                "putty-%s.tar.gz" % (version, version),
+            sha256=sha256),
+        build=[
+            BuildStep(_GTK_SYSROOT),
+            BuildStep(_GTK_CMAKE, env={"CFLAGS": ""}),
+            BuildStep("cmake --build build-{arch} -j$(nproc) --target %s"
+                      % " ".join(_GTK_TOOLS)),
+            # The sysroot is several hundred MB and nothing reads it after
+            # the link.
+            BuildStep("rm -rf sysroot"),
+        ],
+        artifacts=[Artifact(path="build-{arch}/%s" % tool, component=tool)
+                   for tool in _GTK_TOOLS],
+        toolchains=["linux_x86", "linux_x64"],
+        requires=["dpkg-deb", "pkg-config", "curl"],
+        build_flags="-O3 (CMake Release; upstream's cmake/setup.cmake removes "
+                    "-DNDEBUG so assertions stay enabled), PIE, dynamic glibc, "
+                    "GTK 3.24.41 and X11 from a pinned Ubuntu 24.04 sysroot "
+                    "(-DPUTTY_GTK_VERSION=3, NOT_X_WINDOWS off)",
+        notes=_GTK_NOTES,
+    )
+
+
 RECIPES = {
     "PuTTY_0.77": _putty(
         "0.77",
@@ -229,4 +383,8 @@ RECIPES = {
         "419a76f45238fd45f2c76b42438993056e74fa78374f136052aaa843085beae5",
         tools=("pscp", "puttygen"),
         notes=_LINUX_EXTRA_NOTES),
+    # The GTK programs, Linux ELF, against a pinned private GTK 3 sysroot.
+    "PuTTY_0.77_linux_gtk": _putty_gtk(
+        "0.77",
+        "419a76f45238fd45f2c76b42438993056e74fa78374f136052aaa843085beae5"),
 }

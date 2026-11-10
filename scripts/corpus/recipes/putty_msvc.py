@@ -6,7 +6,11 @@ separate registry entry, for the reason in sqlite3_msvc.py: one Recipe has
 one build list and these steps are cmd.exe.
 
 Executables: putty, plink, pscp, psftp, pageant and puttygen - the six the
-tracker issue names. puttytel, pterm and psocks are not built.
+tracker issue names. puttytel and psocks are built by the second recipe,
+PuTTY_0.77_msvc_puttytel_psocks, so the six images are not rebuilt. The
+Windows pterm.exe (added by windows/CMakeLists.txt only when the SDK has
+ConPTY, HAVE_CONPTY; upstream does ship it as w32/w64 pterm.exe) is not
+attempted here.
 
 Build. Upstream's own CMake tree (0.77 has no Makefile.vc), configured with
 the NMake Makefiles generator inside the developer environment the workflow
@@ -63,6 +67,21 @@ invoke_main (11, 8721064936966453011), WinMainCRTStartup (2,
 13477325577764728392), __scrt_winmain_policy::set_app_type (4,
 2389322068591341037), plus a 10-instruction __scrt_common_main_seh$+0x124
 fragment (PicHash 13184720424441161382) on x86 in pageant and puttygen.
+puttytel and psocks (scratch run 42775226328, same runner image and
+compiler, wide-stdio glue baseline merged on the scratch branch only), kept +
+removed = image, functions of 10+ instructions / distinct PicHashes, and the
+share of those hashes already in the six MSVC images of the same
+architecture:
+
+    x64  puttytel 1810+192=2002  965/936   93.4% (62 new; 874 in putty.exe)
+         psocks    773+195=968   413/394   87.1% (51 new)
+    x86  puttytel 1823+183=2006  1017/971  99.4% (6 new; 965 in putty.exe)
+         psocks    777+189=966   432/413   94.4% (23 new)
+
+None is PicHash-identical to a committed image. puttytel keeps the same five
+WinMain startup functions as putty.exe, with the same PicHashes listed
+below; psocks is a console program and keeps no CRT name.
+
 These are Microsoft's code; a
 WinMain probe in the baseline would remove them. Not done here (baseline.py
 is shared tooling).
