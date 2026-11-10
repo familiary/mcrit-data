@@ -134,10 +134,20 @@ _SHA256 = {
     "1.8.14": "9608d222917e3747336993a24ef9e18bf5aa6b2d35c67a13219f9172b5b84a77",
     "1.10.4": "d6d2f835a79711ceba54b53d1081d388d24fb0341d79a268a6557e12908a90a0",
     "1.11.3": "2c6d562e894b2b06eefbc427d12d51ee9d3e50e90012ad6596b4cb3e421a95f2",
+    # Measured and left out as near-duplicates (1.10.3 vs 1.10.4 99.2% MinGW,
+    # 1.8.5 vs 1.8.14 95.8%), carried since the final sweep, which commits
+    # every image whose PicHash set is not identical to an existing one.
+    # .sig verified: 1.10.3 good signatures by Werner Koch (dist signing
+    # 2020) and Niibe Yutaka; 1.8.5 by Werner Koch (dist sig) and NIIBE Yutaka
+    # with their expired RSA keys from keyserver.ubuntu.com.
+    "1.10.3": "8b0870897ac5ac67ded568dcfadf45969cfa8a6beb0fd60af2a9eadc2a3272aa",
+    "1.8.5": "3b4a2a94cb637eff5bdebbcaf46f4d95c4f25206f459809339cdada0eb577ac3",
 }
-_SO = {"1.8.14": "20.2.15", "1.10.4": "20.4.4", "1.11.3": "20.6.1"}
+_SO = {"1.8.14": "20.2.15", "1.10.4": "20.4.4", "1.11.3": "20.6.1",
+       "1.10.3": "20.4.3", "1.8.5": "20.2.5"}
 # libgcrypt version -> the libgpg-error it is built against.
-PAIRING = {"1.8.14": "1.35", "1.10.4": "1.61", "1.11.3": "1.61"}
+PAIRING = {"1.8.14": "1.35", "1.10.4": "1.61", "1.11.3": "1.61",
+           "1.10.3": "1.61", "1.8.5": "1.35"}
 
 # Subdirectories of the top-level Makefile.am minus doc and tests: neither
 # contributes to the shared object.

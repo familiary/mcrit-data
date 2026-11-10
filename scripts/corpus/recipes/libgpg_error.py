@@ -117,9 +117,14 @@ _BASE = "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-%s.tar.bz2"
 _SHA256 = {
     "1.35": "cbd5ee62a8a8c88d48c158fff4fc9ead4132aacd1b4a56eb791f9f997d07e067",
     "1.61": "7a85413f2bc354f4f8aa832b718af122e48965e9e0eb9012ee659c13c6385c93",
+    # 1.47 was measured and left out (80% / 77% overlap with 1.61); it is
+    # carried since the final sweep, which commits every image whose PicHash
+    # set is not identical to an existing one. .sig verified: good signature,
+    # Werner Koch (dist signing 2020).
+    "1.47": "9e3c670966b96ecc746c28c2c419541e3bcb787d1a73930f5e5f5e1bcbbb9bdb",
 }
 # libtool file name of the ELF shared object: major 0, then AGE.REVISION.
-_SO = {"1.35": "0.26.1", "1.61": "0.42.1"}
+_SO = {"1.35": "0.26.1", "1.61": "0.42.1", "1.47": "0.34.0"}
 
 # One spelling of the options for this recipe and for the libgcrypt recipes,
 # which build the same release as their dependency: the bytes in the two
