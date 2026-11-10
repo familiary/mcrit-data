@@ -122,6 +122,20 @@ and 12930795469493728535, x86 7892978127956841229 and 4477995129465285485) and
 one-instruction import thunks (operator new/delete, __gxx_personality_seh0,
 ___cxa_throw_bad_array_new_length, ___register_frame_info,
 ___deregister_frame_info), all PicHash 1253497258561142223.
+
+All-copiers variants (second pass). The Itanium, ARM and ARM64 offline
+copiers that the seven-object builds leave out are built as their own
+versions, "2026-09-29-allcopiers" and "4.0.1-allcopiers", linking all ten
+objects of src/Makefile (the seven above plus disolia64, disolarm and
+disolarm64), so the seven-object images are unchanged. The 4.0.1 variant uses
+the same patched tree as Detours_4.0.1 and is NOT byte-identical to a build of
+unmodified upstream. Kept + removed = total (no exclusions), and PicHashes of
+ten instructions or more against the seven-object build of the same version:
+2026-09-29 x86 389 + 53 = 442 (203, all 128 of the seven-object build's
+included), x64 389 + 54 = 443 (177, all 117 included); 4.0.1 x86 318 + 53 =
+371 (188, all 115 included), x64 360 + 54 = 414 (164, all 106 included). The
+extra hashes are the CDetourDisIA64/ARM/ARM64 copiers and
+DetourCopyInstructionIA64/ARM/ARM64.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

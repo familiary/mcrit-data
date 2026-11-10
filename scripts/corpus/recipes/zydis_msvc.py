@@ -61,12 +61,11 @@ does not mask. hidden.py takes the 94 out of Hidden.sys by exact name (tier
 P) and the 9 by the same name and identical opcode sequence (tier W-opcode,
 labelled as such there).
 
-Zycore is not a family of its own. It cannot be built into a PE by itself
-without becoming a second copy of the same functions: a Zycore DLL and a Zydis
-DLL that links it statically both carry ZyanString and ZyanVector under two
-family names, which is what validate --deep fails on. It is part of the Zydis
-image here, and its functions are the Zyan* names (144 to 176 of an x64
-image).
+Zycore is also a family of its own now (zycore.py, MSVC included): the
+three Zycore commits these images carry, built standalone. The Zydis image
+still whole-archives Zycore, so the two share those functions by design; two
+families are below the three a cross-family finding of validate --deep
+needs.
 
 How it is built. Zydis's CMake builds libZydis and libZycore as static
 archives, and SMDA cannot read an archive, so one DLL is linked from both with

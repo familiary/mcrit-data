@@ -37,6 +37,28 @@ minimum.
 
 Measured (kept + removed = total) and the PicHash overlap with the Zydis
 image of the same Zycore commit and toolchain are in each recipe's notes.
+
+Measured (kept + removed = total, no exclusions; x86 / x64), and PicHashes of
+ten instructions or more shared with the Zydis image of the same toolchain
+that whole-archives the same Zycore commit:
+
+  2020-01-12-3435866  MinGW 173 + 114 = 287 / 195 + 109 = 304   (144 of 144 / 126 of 126 in Zydis 3.1.0)
+                      MSVC  186 + 159 = 345 / 184 + 150 = 334   (136 of 136 / 125 of 126)
+                      ELF   237 + 5 = 242   / 226 + 6 = 232     (x64 129 of 129)
+  2021-07-29-4f3746f  MinGW 174 + 114 = 288 / 198 + 109 = 307   (145 of 145 / 127 of 127 in Zydis 3.1.0-6a17c48)
+                      MSVC  189 + 159 = 348 / 187 + 150 = 337   (138 of 138 / 126 of 127)
+                      ELF   240 + 5 = 245   / 229 + 6 = 235     (x64 127 of 130 in Zydis 3.1.0)
+  1.5.2               MinGW 174 + 114 = 288 / 198 + 109 = 307   (145 of 145 / 126 of 126 in Zydis 4.1.1)
+                      MSVC  189 + 144 = 333 / 187 + 150 = 337   (138 of 138 / 125 of 126)
+                      ELF   240 + 5 = 245   / 229 + 6 = 235     (x64 129 of 129)
+
+So on PE and on ELF x64 the Zycore image is, as expected, the Zycore part of
+the Zydis image of the same commit, and none is PicHash-identical to any
+committed image (each Zydis image carries the Zydis decoder beside it). On
+ELF x86 only 56 hashes are shared with the Zydis or the other Zycore images:
+32-bit PIC bakes the image's own GOT delta into every body that touches
+global data, so the PicHashes move with the image. Zycore and Zydis are two
+families, below the three a cross-family finding of validate --deep needs.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source

@@ -72,6 +72,17 @@ baseline now removes _vsnwprintf on x64, and _vsnprintf, _vsnwprintf and
 __local_stdio_printf_options on x86; _vsnprintf on x64 and the _l pair on both
 architectures still survive. _vsnprintf and _vsnwprintf share one PicHash
 because they are the same body.
+
+All-copiers variants (second pass, scoped run 42775238766): the same three
+builds with all ten src/Makefile objects linked (adding disolia64, disolarm
+and disolarm64), as versions "2026-09-29-allcopiers", "4.0.1-allcopiers" and
+"2026-09-29-nmake-allcopiers", so the seven-object images are unchanged.
+Kept + removed = total (no exclusions), ten-instruction PicHashes in
+brackets with the share of the seven-object build of the same version:
+
+  commit /O2        x86 481 + 176 = 657 (257; 166 of 166)  x64 482 + 181 = 663 (237; 158 of 164)
+  v4.0.1 /O2        x86 444 + 175 = 619 (240; 149 of 149)  x64 445 + 180 = 625 (218; 145 of 145)
+  commit nmake /Od  x86 540 + 174 = 714 (348; 207 of 209)  x64 485 + 176 = 661 (323; 205 of 205)
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
