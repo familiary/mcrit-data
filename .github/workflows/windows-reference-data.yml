@@ -21,6 +21,18 @@ name: Windows reference data
 # declares toolchains=["msvc_x64"], so it appears in the x64 leg's list and
 # not in the x86 one, from the recipe's own declaration.
 #
+# What a push builds. A push builds the recipes defined in the recipe files
+# that push changed, and nothing else: rebuilding every MSVC recipe in the
+# repository (about seventy per architecture, an hour a leg) because one
+# recipe was added made each PR's own check re-do work its neighbours had
+# already done. A change to the pipeline itself - toolchain.py, build.py,
+# pipeline.py, baseline.py, smdaify.py, recipe.py, config.py, build_corpus.py
+# or the recipe registry - still rebuilds everything, since it can change what
+# every artefact contains. A change to this file alone builds nothing (run it
+# by hand to exercise it), and so does a push to a recipe that no MSVC leg
+# declares. workflow_dispatch is unchanged: a space-separated list, or
+# all-msvc.
+#
 # The same scripts/build_corpus.py drives this as the Linux side; only the
 # toolchain differs. Results are uploaded as artifacts rather than committed,
 # so a maintainer reviews them before they enter the corpus.
@@ -160,6 +172,83 @@ jobs:
           Probe "netio.lib (APICallProxy's WSK socket layer)" `
                 "$kits\*\km\*\netio.lib"
 
+      # Decides what the Build step builds; see the note at the top of the file.
+      # Any doubt - the compare call failing, a push with no usable base - falls
+      # back to everything, because building too much costs minutes and
+      # building too little leaves a recipe with no Windows CI at all.
+      - name: Select recipes
+        id: select
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          BEFORE: ${{ github.event.before }}
+          FIRST: ${{ github.event.commits[0].id }}
+          HEAD_SHA: ${{ github.sha }}
+          REQUESTED: ${{ github.event.inputs.recipes }}
+        run: |
+          function Emit($recipes, $skipped) {
+            Add-Content -Path $env:GITHUB_OUTPUT -Value "recipes=$recipes"
+            Add-Content -Path $env:GITHUB_OUTPUT -Value "skipped=$skipped"
+          }
+          if ($env:EVENT -eq "workflow_dispatch") {
+            if (-not $env:REQUESTED) { Emit "all-msvc" "false" } else { Emit $env:REQUESTED "false" }
+            exit 0
+          }
+          $base = $env:BEFORE
+          if (-not $base -or $base -match '^0+$') {
+            # A new branch. The commits this push brought are the ones new to
+            # the repository; the parent of the first is the last thing the
+            # branch shares with the rest of it.
+            if ($env:FIRST) {
+              $base = gh api "repos/$env:REPO/commits/$env:FIRST" --jq '.parents[0].sha'
+              if ($LASTEXITCODE -ne 0) { $base = "" }
+            } else { $base = "" }
+          }
+          $files = @()
+          if ($base) {
+            $files = @(gh api "repos/$env:REPO/compare/$base...$env:HEAD_SHA" `
+                         --paginate --jq '.files[].filename')
+            if ($LASTEXITCODE -ne 0) { $files = @(); $base = "" }
+          }
+          if (-not $base) {
+            Write-Host "::notice::could not tell what this push changed; building every MSVC recipe"
+            Emit "all-msvc" "false"
+            exit 0
+          }
+          Write-Host "this push changed $($files.Count) file(s)"
+          $core = @("scripts/corpus/toolchain.py", "scripts/corpus/build.py",
+                    "scripts/corpus/pipeline.py", "scripts/corpus/baseline.py",
+                    "scripts/corpus/smdaify.py", "scripts/corpus/recipe.py",
+                    "scripts/corpus/config.py", "scripts/build_corpus.py",
+                    "scripts/corpus/recipes/__init__.py")
+          $hit = @($files | Where-Object { $core -contains $_ })
+          if ($hit) {
+            Write-Host "::notice::pipeline code changed ($($hit -join ', ')); building every MSVC recipe"
+            Emit "all-msvc" "false"
+            exit 0
+          }
+          $modules = @($files | Where-Object { $_ -like "scripts/corpus/recipes/*.py" })
+          if (-not $modules) {
+            Write-Host "::notice::no recipe file changed in this push; nothing to build"
+            Emit "" "true"
+            exit 0
+          }
+          $names = python scripts/build_corpus.py list `
+            --toolchain msvc_${{ matrix.arch }} --names-only --modules $modules
+          $code = $LASTEXITCODE
+          if ($code -eq 3) {
+            Write-Host "::notice::the changed recipe file(s) define nothing for msvc_${{ matrix.arch }}; nothing to build"
+            Emit "" "true"
+            exit 0
+          }
+          if ($code -ne 0) { throw "could not select the changed recipes" }
+          $recipes = @($names | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+          Write-Host "changed recipe files: $($modules -join ', ')"
+          Write-Host "selected $($recipes.Count) recipe(s): $($recipes -join ' ')"
+          Emit ($recipes -join " ") "false"
+
       # Does NOT fail the job when a recipe fails. Everything this leg did
       # build is still scoped, validated and uploaded by the steps below, and
       # the job is failed at the very end instead - see "Fail the job if any
@@ -169,7 +258,12 @@ jobs:
         id: build
         shell: pwsh
         run: |
-          $requested = "${{ github.event.inputs.recipes }}"
+          if ("${{ steps.select.outputs.skipped }}" -eq "true") {
+            Write-Host "nothing selected for this push; not building"
+            Add-Content -Path $env:GITHUB_OUTPUT -Value "exit-code=0"
+            exit 0
+          }
+          $requested = "${{ steps.select.outputs.recipes }}"
           if (-not $requested -or $requested -eq "all-msvc") {
             # Asked of the recipe registry rather than listed here, and asked
             # about what the recipes DECLARE rather than what this runner
@@ -218,7 +312,7 @@ jobs:
       # upload and to Validate.
       - name: Scope the artefacts to what this job produced
         id: scope
-        if: success()
+        if: ${{ success() && steps.select.outputs.skipped != 'true' }}
         shell: pwsh
         run: |
           $families = python scripts/build_corpus.py list `
@@ -326,7 +420,7 @@ jobs:
       # tree holds only what this job built, so this validates the run's own
       # output rather than whatever the checkout carried.
       - name: Validate
-        if: success()
+        if: ${{ success() && steps.select.outputs.skipped != 'true' }}
         shell: pwsh
         run: |
           $families = @("${{ steps.scope.outputs.families }}".Split(" ") |
@@ -349,7 +443,7 @@ jobs:
       # scripts/import_ci_artifacts.py reads the architecture off it and
       # refuses any record that does not match.
       - name: Upload reference data
-        if: success()
+        if: ${{ success() && steps.select.outputs.skipped != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: reference-data-${{ matrix.arch }}
@@ -363,6 +457,7 @@ jobs:
       # has failed yet.
       - name: Show build logs
         if: ${{ !cancelled() && steps.build.conclusion != 'skipped'
+             && steps.select.outputs.skipped != 'true'
              && (failure() || steps.build.outputs.exit-code != '0') }}
         shell: pwsh
         run: |
@@ -383,7 +478,8 @@ jobs:
       # diagnosable after the fact. The function count printed by the build
       # step is what says a build is worth looking into.
       - name: Upload build logs
-        if: ${{ !cancelled() && steps.build.conclusion != 'skipped' }}
+        if: ${{ !cancelled() && steps.build.conclusion != 'skipped'
+             && steps.select.outputs.skipped != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: build-logs-${{ matrix.arch }}
