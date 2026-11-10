@@ -176,3 +176,8 @@ RECIPES = {
     # in miniz.py.
     "miniz_3.1.0_trim_msvc": _miniz_msvc("3.1.0", "3.1.0", trimmed=True),
 }
+
+# The two later tags of the 3.1 line, default and trimmed (see miniz.py).
+for _v in ("3.1.1", "3.1.2"):
+    RECIPES["miniz_%s_msvc" % _v] = _miniz_msvc(_v, _v)
+    RECIPES["miniz_%s_trim_msvc" % _v] = _miniz_msvc(_v, _v, trimmed=True)
