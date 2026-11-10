@@ -125,7 +125,15 @@ project does - and 12 others, all of them the driver's frame rather than
 Zydis: DriverEntry (the two-instruction stub), GsDriverEntry,
 __GSHandlerCheckCommon, RtlFailFast, three __report_*failure stubs, three
 __castguard_* functions and two string-literal COMDATs (??_C@_01...), which
-are data in the code section.
+are data in the code section. Four of those are WDK runtime with ten
+instructions or more that APICallProxy, BlackBoneDrv and Hidden carry with
+the same PicHash: __GSHandlerCheckCommon,
+__castguard_slow_path_check_os_handled and
+__castguard_check_failure_os_handled, which validate --deep already reports
+as leakage under those three families and which this image makes four, and
+GsDriverEntry (FxDriverEntry in APICallProxy), reported as a symbol-name
+difference. The glue baseline is user-mode ucrt/vcruntime and cannot remove
+kernel runtime; no finding is new.
 
 Glue survivors, by name and PicHash: _fileno, _get_osfhandle and _isatty
 (__fileno, __get_osfhandle, __isatty on x86) are one-instruction import

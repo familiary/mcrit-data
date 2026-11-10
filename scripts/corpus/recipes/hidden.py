@@ -89,49 +89,71 @@ log and recorded. TargetVersion is pinned to Windows10 on the command line
 for the same reason blackbonedrv.py pins it.
 
 Zydis is compiled into the driver. Hidden/Disasm/ carries a vendored copy of
-Zydis 3.1.0 and Zycore 1.0.0 (ZYDIS_VERSION 0x0003000100000000,
-ZYCORE_VERSION 0x0001000000000000), built into the .sys with
-ZYCORE_STATIC_DEFINE, ZYDIS_STATIC_DEFINE and ZYAN_NO_LIBC, and used by
-KernelAnalyzer.c. Two consequences worth stating rather than discovering
-later: a meaningful share of Hidden.sys's functions are Zydis's and not this
-project's, and because ZYAN_NO_LIBC changes what Zydis compiles, they will
-not necessarily match a Zydis built the ordinary way. The notes say so, and
-this is a good argument for adding Zydis as a family in its own right.
-That family now exists (data/Zydis, issue 45 of the tracker, built by
-zydis_msvc.py among others). Measured against this recipe's Hidden.sys: all
-103 of the functions here carrying a Zydis, Zyan or Zycore name are present
-by name in the MSVC builds of Zydis 3.1.0, with and without ZYAN_NO_LIBC, so the
-vendored copy is 3.1.0 by name; exact PicHash agreement is only 3 of the 91
-that are ten instructions or more (ZydisFormatterBufferGetString,
-ZydisFormatterTokenNext, ZydisIsFeatureEnabled), because the WDK compiles the
-driver with different flags from the user-mode cl line.
+Zydis and Zycore whose version macros read 3.1.0 and 1.0.0
+(ZYDIS_VERSION 0x0003000100000000, ZYCORE_VERSION 0x0001000000000000),
+built into the .sys with ZYCORE_STATIC_DEFINE, ZYDIS_STATIC_DEFINE and
+ZYAN_NO_LIBC, and used by KernelAnalyzer.c. Two consequences worth stating
+rather than discovering later: a meaningful share of Hidden.sys's functions
+are Zydis's and not this project's, and because ZYAN_NO_LIBC changes what
+Zydis compiles, they will not necessarily match a Zydis built the ordinary
+way. That is why Zydis is a family in its own right (data/Zydis, issue 45 of
+the tracker). Measured against this recipe's Hidden.sys: 103 functions here
+carry a Zydis name (none a Zyan or Zycore one), 91 of them ten instructions
+or more, and all 103 names are present in the MSVC builds of tag 3.1.0; but
+exact PicHash agreement with the tag builds is only 3 of those 91.
 
-Six of them now leave the image by exact name (Recipe.exclude_functions),
-under the evidence rule the miner stack's _stack_vendored.py and SoftEther's
-_softether_vendored.py use, and only six because that rule allows no more:
+The vendored copy is not tag v3.1.0. Compared file by file with upstream,
+it is Zydis master at commit 6a17c48 (2021-07-29, v3.1.0-75-g6a17c48) with
+the Zycore commit it pins, 4f3746f - identical apart from the generated
+tables renamed .inc to .inc.h and their #include lines - and Hidden added
+it on 2021-08-11, when that commit was master's head (the "Hidden's commit"
+paragraph of zydis_msvc.py has the comparison). data/Zydis now carries that
+commit as version 3.1.0-6a17c48: MinGW, MSVC with and without ZYAN_NO_LIBC,
+and 3.1.0-6a17c48-wdk, compiled as a WDM driver on the WDK's kernel-mode
+toolset with Hidden.vcxproj's defines and this recipe's msbuild properties
+and props file, which is how Hidden.sys compiles it.
+
+The Zydis functions that leave the image do so by exact name
+(Recipe.exclude_functions), under the evidence rule the miner stack's
+_stack_vendored.py and SoftEther's _softether_vendored.py use:
 
   P  the function's PicHash equals that of a same-named function in the
-     library's own family. In data/Zydis's Hidden.sys comparison that holds
-     for ZydisFormatterBufferGetString (17 instructions),
-     ZydisFormatterTokenNext (18) and ZydisIsFeatureEnabled (11), and for
-     three below the ten-instruction floor: ZydisGetInstructionEncodingInfo
-     (7), ZydisFormatterIntelFormatInstructionMASM and ZydisGetVersion (2
-     each). The matches are in Zydis 3.1.0 MSVC x64 with and without
-     ZYAN_NO_LIBC, 4.1.1 MSVC x64 and, for ZydisGetVersion, 3.1.0 MinGW x64.
+     library's own family. Against data/Zydis that now holds for 94 of the
+     103 (82 of the 91 of ten instructions or more): 84 of them match the
+     3.1.0-6a17c48-wdk image and nothing else, 10 also match the 6a17c48
+     MSVC builds, and 6 of those 10 the tag builds as well - the six this
+     recipe excluded first (ZydisFormatterBufferGetString,
+     ZydisFormatterTokenNext, ZydisIsFeatureEnabled,
+     ZydisGetInstructionEncodingInfo,
+     ZydisFormatterIntelFormatInstructionMASM, ZydisGetVersion). They are
+     listed in _ZYDIS_P below.
   W  a same-named function at least 80% similar in opcode sequence - but
      only for an identifier that another function in the same recipe already
      shows to be P. Every Zydis identifier occurs once in this recipe (one
      x64 driver; HiddenCLI.exe carries none), so W can never apply here.
   N  by namespace, only where no corpus family carries the library. Zydis
-     and Zycore are a family now, so N does not apply either.
+     has a family, so N does not apply either.
 
-So the other 97 Zydis, Zyan and Zycore functions stay filed under Hidden:
-the evidence that they are Zydis's is the name alone, which the rule does
-not accept where a family exists to compare against. The image was
-re-derived from its committed .7z archive, not rebuilt: the six are removed
-from the report and the export, and provenance gains exclude_functions,
-excluded_function_count and num_functions_before_exclusion, so kept +
-removed as runtime + excluded is still the image total of 507.
+The other 9 stay filed under Hidden: ZydisCheckErrorConditions (230
+instructions), ZydisDecodeInstruction (567), ZydisDecodeOperandMemory (179),
+ZydisDecodeOperands (509), ZydisFormatterBasePrintPrefixes (339),
+ZydisRegisterGetLargestEnclosing (63), ZydisSetAVXInformation (406),
+ZydisSetAttributes (255) and ZydisStringAppendHexU64 (105). Each has the
+instruction count and the mnemonic sequence of its namesake in the -wdk
+image (difflib ratio 1.0), and the operands differ only in branch and call
+targets, RIP-relative offsets and table displacements taken relative to the
+image base (lea r, [rip - X] then [r + rax*8 + RVA]) - layout, which
+PicHash masks for absolute addresses but not for these RVAs. That is
+strong evidence that they are the same code, but it is the W tier's
+evidence, and W needs a P sibling of the same name that this recipe cannot
+have, so the rule keeps them here.
+
+The image was re-derived from its committed .7z archive, not rebuilt: the
+94 are removed from the report and the export, and provenance carries
+exclude_functions, excluded_function_count (94) and
+num_functions_before_exclusion (507, the count after the runtime filter), so
+kept + removed as runtime + excluded is still the image total: 413 + 19 + 94
+= 526.
 
 x64 only, and not because the project says so. All five projects declare
 Debug|Win32, Debug|x64, Release|Win32 and Release|x64, and nothing in the
@@ -215,6 +237,9 @@ Open risks, in the order they would bite. Round 3 has not run yet.
      validate --deep PicHash sweep. Nothing in the corpus carries Zydis
      today, so there is nothing for it to collide with yet - but adding a
      Zydis family later would light this up, and the notes say so.
+     Since settled: data/Zydis exists, the 94 functions it proves by
+     PicHash are excluded from Hidden.sys (above), and the 9 that remain
+     match no data/Zydis PicHash, so they collide with nothing.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -369,15 +394,103 @@ _LICENSE = ("No licence of any kind: no LICENSE or COPYING file and no "
             "stronger evidence in any case")
 
 # The Zydis functions of Hidden.sys whose PicHash equals a same-named
-# function of data/Zydis (tier P, see the module docstring). Exact names,
-# anchored, so nothing else in the driver can match.
+# function of data/Zydis (tier P, see the module docstring): 94 of its 103.
+# Exact names, anchored, so nothing else in the driver can match.
 _ZYDIS_P = (
+    "ZydisCalcAbsoluteAddress",
+    "ZydisCalcAbsoluteAddressEx",
+    "ZydisCalcRegisterId",
+    "ZydisCategoryGetString",
+    "ZydisCollectOptionalPrefixes",
+    "ZydisDecodeEVEX",
+    "ZydisDecodeMVEX",
+    "ZydisDecodeOperandRegister",
+    "ZydisDecodeOptionalInstructionParts",
+    "ZydisDecodeVEX",
+    "ZydisDecodeXOP",
+    "ZydisDecoderDecodeBuffer",
+    "ZydisDecoderEnableMode",
+    "ZydisDecoderInit",
+    "ZydisDecoderTreeGetChildNode",
+    "ZydisFormatterATTFormatInstruction",
+    "ZydisFormatterATTFormatOperandMEM",
+    "ZydisFormatterATTPrintDISP",
+    "ZydisFormatterATTPrintIMM",
+    "ZydisFormatterATTPrintMnemonic",
+    "ZydisFormatterATTPrintRegister",
+    "ZydisFormatterBaseFormatOperandIMM",
+    "ZydisFormatterBaseFormatOperandPTR",
+    "ZydisFormatterBaseFormatOperandREG",
+    "ZydisFormatterBasePrintAddressABS",
+    "ZydisFormatterBasePrintAddressREL",
+    "ZydisFormatterBasePrintDecorator",
+    "ZydisFormatterBasePrintIMM",
+    "ZydisFormatterBasePrintSegment",
+    "ZydisFormatterBufferAppend",
+    "ZydisFormatterBufferAppendPredefined",
     "ZydisFormatterBufferGetString",
+    "ZydisFormatterBufferGetToken",
+    "ZydisFormatterBufferInit",
+    "ZydisFormatterBufferInitTokenized",
+    "ZydisFormatterBufferRemember",
+    "ZydisFormatterBufferRestore",
+    "ZydisFormatterFormatInstruction",
+    "ZydisFormatterFormatInstructionEx",
+    "ZydisFormatterFormatOperand",
+    "ZydisFormatterFormatOperandEx",
+    "ZydisFormatterHelperGetExplicitSize",
+    "ZydisFormatterInit",
+    "ZydisFormatterIntelFormatInstruction",
     "ZydisFormatterIntelFormatInstructionMASM",
+    "ZydisFormatterIntelFormatOperandMEM",
+    "ZydisFormatterIntelPrintAddressMASM",
+    "ZydisFormatterIntelPrintDISP",
+    "ZydisFormatterIntelPrintMnemonic",
+    "ZydisFormatterIntelPrintRegister",
+    "ZydisFormatterIntelPrintTypecast",
+    "ZydisFormatterSetHook",
+    "ZydisFormatterSetProperty",
+    "ZydisFormatterTokenGetValue",
     "ZydisFormatterTokenNext",
+    "ZydisFormatterTokenizeInstruction",
+    "ZydisFormatterTokenizeInstructionEx",
+    "ZydisFormatterTokenizeOperand",
+    "ZydisFormatterTokenizeOperandEx",
+    "ZydisGetAccessedFlags",
+    "ZydisGetAccessedFlagsByAction",
+    "ZydisGetAccessedFlagsRead",
+    "ZydisGetAccessedFlagsWritten",
+    "ZydisGetElementInfo",
+    "ZydisGetInstructionDefinition",
     "ZydisGetInstructionEncodingInfo",
+    "ZydisGetInstructionSegments",
+    "ZydisGetOperandDefinitions",
     "ZydisGetVersion",
+    "ZydisISAExtGetString",
+    "ZydisISASetGetString",
+    "ZydisInputNext",
+    "ZydisInputNextBytes",
     "ZydisIsFeatureEnabled",
+    "ZydisMnemonicGetString",
+    "ZydisMnemonicGetStringWrapped",
+    "ZydisNodeHandlerModrmMod",
+    "ZydisNodeHandlerOpcode",
+    "ZydisReadDisplacement",
+    "ZydisReadImmediate",
+    "ZydisRegisterClassGetWidth",
+    "ZydisRegisterEncode",
+    "ZydisRegisterGetClass",
+    "ZydisRegisterGetId",
+    "ZydisRegisterGetString",
+    "ZydisRegisterGetStringWrapped",
+    "ZydisRegisterGetWidth",
+    "ZydisSetOperandSizeAndElementInfo",
+    "ZydisStringAppendDecS",
+    "ZydisStringAppendDecU",
+    "ZydisStringAppendDecU64",
+    "ZydisStringAppendHexS",
+    "ZydisStringAppendHexU",
+    "ZydisStringAppendShortCase",
 )
 _EXCLUDE = [r"^(?:%s)$" % "|".join(_ZYDIS_P)]
 
@@ -491,15 +604,17 @@ RECIPES = {
               "functions will not necessarily agree with a Zydis built the "
               "ordinary way - a reason to carry Zydis as a family of its own "
               "rather than to read it through this one - which data/Zydis "
-              "now is: all 103 Zydis, Zyan and Zycore functions here are "
-              "present by name in its 3.1.0 MSVC builds. Six whose PicHash "
-              "equals a same-named data/Zydis function (three of ten "
-              "instructions or more: ZydisFormatterBufferGetString, "
-              "ZydisFormatterTokenNext, ZydisIsFeatureEnabled; and "
-              "ZydisGetInstructionEncodingInfo, "
-              "ZydisFormatterIntelFormatInstructionMASM, ZydisGetVersion) are "
-              "excluded by exact name, so Hidden.sys keeps 501 of its 507; "
-              "the other 97 are evidenced by name only and remain filed "
+              "now is. By content the vendored copy is Zydis master at commit "
+              "6a17c48 with Zycore 4f3746f (its version macros read 3.1.0 "
+              "and 1.0.0), which data/Zydis builds as 3.1.0-6a17c48, "
+              "including once with the WDK the way this driver compiles it. "
+              "94 of the 103 Zydis-named functions here have the PicHash of "
+              "a same-named data/Zydis function (82 of the 91 of ten "
+              "instructions or more, 84 of the 94 in the WDK build only) and "
+              "are excluded by exact name, so Hidden.sys keeps 413 of its "
+              "507; the other 9 have the same mnemonic sequence as the WDK "
+              "build's and differ only in image-relative offsets, but have "
+              "no PicHash match and remain filed "
               "under this family. The image also "
               "carries whatever kernel-mode runtime the WDK links in, which "
               "the compiler-runtime filter cannot recognise because the "
