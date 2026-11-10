@@ -30,6 +30,7 @@ Libraries
 * [libzlib](#libzlib)
 * [bzip2](#bzip2)
 * [cJSON](#cjson)
+* [Jansson](#jansson)
 * [libcurl](#libcurl)
 * [libevent](#libevent)
 * [liblzma](#liblzma)
@@ -323,6 +324,22 @@ Generated with `scripts/build_corpus.py`; see `data/cJSON/provenance.json` for s
 | cJSON | 1.7.15 | MinGW-w64 GCC 13 | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.7.15_mingw13_x86_libcjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.7.15_mingw13_x64_libcjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.7.15_mingw13_x86_libcjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.7.15_mingw13_x64_libcjson.dll.7z) |
 | cJSON | 1.7.19 | MinGW-w64 GCC 13 | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.7.19_mingw13_x86_libcjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.7.19_mingw13_x64_libcjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.7.19_mingw13_x86_libcjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.7.19_mingw13_x64_libcjson.dll.7z) |
 | cJSON | 1.7.19 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.7.19_msvc143_x86_cjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.7.19_msvc143_x64_cjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.7.19_msvc143_x86_cjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.7.19_msvc143_x64_cjson.dll.7z) |
+<!-- /generated -->
+
+### Jansson<a id='jansson'></a>
+
+Jansson is a C library for encoding, decoding and manipulating JSON, widely vendored into C software and shipped by Linux distributions. The 2.14 rows, the release between the two (and the last before the vendored `dtoa.c` of 2.15.0), were added in a second pass.  
+Generated with `scripts/build_corpus.py`; see `data/Jansson/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: Jansson -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| Jansson | 2.13.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/Jansson/x86/mcrit/Jansson_2.13.1_gcc13_x86_libjansson.so.mcrit) / [x64 ELF](data/Jansson/x64/mcrit/Jansson_2.13.1_gcc13_x64_libjansson.so.mcrit) | [x86 ELF](data/Jansson/x86/smda/Jansson_2.13.1_gcc13_x86_libjansson.so.7z) / [x64 ELF](data/Jansson/x64/smda/Jansson_2.13.1_gcc13_x64_libjansson.so.7z) |
+| Jansson | 2.13.1 | MinGW-w64 GCC 13 | [x86 PE](data/Jansson/x86/mcrit/Jansson_2.13.1_mingw13_x86_libjansson.dll.mcrit) / [x64 PE](data/Jansson/x64/mcrit/Jansson_2.13.1_mingw13_x64_libjansson.dll.mcrit) | [x86 PE](data/Jansson/x86/smda/Jansson_2.13.1_mingw13_x86_libjansson.dll.7z) / [x64 PE](data/Jansson/x64/smda/Jansson_2.13.1_mingw13_x64_libjansson.dll.7z) |
+| Jansson | 2.14 | GCC 13 (Linux, glibc) | [x86 ELF](data/Jansson/x86/mcrit/Jansson_2.14_gcc13_x86_libjansson.so.mcrit) / [x64 ELF](data/Jansson/x64/mcrit/Jansson_2.14_gcc13_x64_libjansson.so.mcrit) | [x86 ELF](data/Jansson/x86/smda/Jansson_2.14_gcc13_x86_libjansson.so.7z) / [x64 ELF](data/Jansson/x64/smda/Jansson_2.14_gcc13_x64_libjansson.so.7z) |
+| Jansson | 2.14 | MinGW-w64 GCC 13 | [x86 PE](data/Jansson/x86/mcrit/Jansson_2.14_mingw13_x86_libjansson.dll.mcrit) / [x64 PE](data/Jansson/x64/mcrit/Jansson_2.14_mingw13_x64_libjansson.dll.mcrit) | [x86 PE](data/Jansson/x86/smda/Jansson_2.14_mingw13_x86_libjansson.dll.7z) / [x64 PE](data/Jansson/x64/smda/Jansson_2.14_mingw13_x64_libjansson.dll.7z) |
+| Jansson | 2.15.1 | GCC 13 (Linux, glibc) | [x86 ELF](data/Jansson/x86/mcrit/Jansson_2.15.1_gcc13_x86_libjansson.so.mcrit) / [x64 ELF](data/Jansson/x64/mcrit/Jansson_2.15.1_gcc13_x64_libjansson.so.mcrit) | [x86 ELF](data/Jansson/x86/smda/Jansson_2.15.1_gcc13_x86_libjansson.so.7z) / [x64 ELF](data/Jansson/x64/smda/Jansson_2.15.1_gcc13_x64_libjansson.so.7z) |
+| Jansson | 2.15.1 | MinGW-w64 GCC 13 | [x86 PE](data/Jansson/x86/mcrit/Jansson_2.15.1_mingw13_x86_libjansson.dll.mcrit) / [x64 PE](data/Jansson/x64/mcrit/Jansson_2.15.1_mingw13_x64_libjansson.dll.mcrit) | [x86 PE](data/Jansson/x86/smda/Jansson_2.15.1_mingw13_x86_libjansson.dll.7z) / [x64 PE](data/Jansson/x64/smda/Jansson_2.15.1_mingw13_x64_libjansson.dll.7z) |
 <!-- /generated -->
 
 ### libcurl<a id='libcurl'></a>
