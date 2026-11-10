@@ -107,6 +107,19 @@ link line was not examined (the AdaptixC2 repository is not reachable from the
 build host), so this is a statement about the toolchain, not about the HTTP
 variant itself; the issue's suggested test, looking for tinfl_decompress in a
 built HTTP beacon, is still the one that settles it.
+
+Second pass (kept + removed = total, no exclusions; ten-instruction
+PicHashes in brackets). 3.1.2: default x86 148 + 62 = 210 (126), x64 163 + 66
+= 229 (118), sharing 119 of 127 and 111 of 119 with 3.1.0; trimmed x86 55 +
+52 = 107 (43), x64 64 + 53 = 117 (42). 3.1.1 is not committed: PicHash-
+identical to 3.1.0, default and trimmed, both architectures.
+``3.1.0-amalg-trim-O0``: the 3.1.0 release asset's amalgamated miniz.c,
+compiled as C++ by g++ with no -O flag and the MINIZ_TRIM_FLAGS, the shape
+issue #81 records for the beacon's miniz.cpp: x86 78 + 52 = 130 (50), x64 86
++ 53 = 139 (58). It shares 1 hash with the -O3 multi-file trimmed build on
+each architecture, so the unoptimised C++ form is a reference of its own and
+the -O3 one says little about it. The beacon's own object and link line were
+not compared.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -173,10 +186,11 @@ RECIPES = {
 }
 
 
-# --- The two later tags of the 3.1 line, default and trimmed, which the
-# first revision did not build; separate versions as for 3.1.0.
-RECIPES["miniz_3.1.1"] = _miniz("3.1.1", "3.1.1")
-RECIPES["miniz_3.1.1_trim"] = _miniz("3.1.1", "3.1.1", trimmed=True)
+# --- The later tags of the 3.1 line, default and trimmed, which the first
+# revision did not build; separate versions as for 3.1.0. 3.1.1 was built and
+# is not a recipe: its default and trimmed images are PicHash-identical, every
+# function at every size, to 3.1.0's on both architectures (MinGW, and MSVC in
+# run 42777108622), so it would add nothing.
 RECIPES["miniz_3.1.2"] = _miniz("3.1.2", "3.1.2")
 RECIPES["miniz_3.1.2_trim"] = _miniz("3.1.2", "3.1.2", trimmed=True)
 
