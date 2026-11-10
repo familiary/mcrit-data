@@ -722,6 +722,7 @@ Generated with `scripts/build_corpus.py`; see `data/Duktape/provenance.json` for
 | Duktape | 2.6.0 | MinGW-w64 GCC 13 | [x86 PE](data/Duktape/x86/mcrit/Duktape_2.6.0_mingw13_x86_duktape-O2.dll.mcrit) / [x64 PE](data/Duktape/x64/mcrit/Duktape_2.6.0_mingw13_x64_duktape-O2.dll.mcrit) | [x86 PE](data/Duktape/x86/smda/Duktape_2.6.0_mingw13_x86_duktape-O2.dll.7z) / [x64 PE](data/Duktape/x64/smda/Duktape_2.6.0_mingw13_x64_duktape-O2.dll.7z) |
 | Duktape | 2.6.0 | MinGW-w64 GCC 13 | [x86 PE](data/Duktape/x86/mcrit/Duktape_2.6.0_mingw13_x86_duktape.dll.mcrit) / [x64 PE](data/Duktape/x64/mcrit/Duktape_2.6.0_mingw13_x64_duktape.dll.mcrit) | [x86 PE](data/Duktape/x86/smda/Duktape_2.6.0_mingw13_x86_duktape.dll.7z) / [x64 PE](data/Duktape/x64/smda/Duktape_2.6.0_mingw13_x64_duktape.dll.7z) |
 | Duktape | 2.7.0 | MinGW-w64 GCC 13 | [x86 PE](data/Duktape/x86/mcrit/Duktape_2.7.0_mingw13_x86_duktape.dll.mcrit) / [x64 PE](data/Duktape/x64/mcrit/Duktape_2.7.0_mingw13_x64_duktape.dll.mcrit) | [x86 PE](data/Duktape/x86/smda/Duktape_2.7.0_mingw13_x86_duktape.dll.7z) / [x64 PE](data/Duktape/x64/smda/Duktape_2.7.0_mingw13_x64_duktape.dll.7z) |
+| Duktape | 2.7.0-O2 | MinGW-w64 GCC 13 | [x86 PE](data/Duktape/x86/mcrit/Duktape_2.7.0-O2_mingw13_x86_duktape-O2.dll.mcrit) / [x64 PE](data/Duktape/x64/mcrit/Duktape_2.7.0-O2_mingw13_x64_duktape-O2.dll.mcrit) | [x86 PE](data/Duktape/x86/smda/Duktape_2.7.0-O2_mingw13_x86_duktape-O2.dll.7z) / [x64 PE](data/Duktape/x64/smda/Duktape_2.7.0-O2_mingw13_x64_duktape-O2.dll.7z) |
 <!-- /generated -->
 
 ### q3vm<a id='q3vm'></a>
