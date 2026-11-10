@@ -423,14 +423,16 @@ Generated with `scripts/build_corpus.py`; see `data/libxml2/provenance.json` for
 
 ### llhttp<a id='llhttp'></a>
 
-llhttp is the HTTP/1.x parser inside Node.js and undici, and is vendored by XMRig. It is here to fill the corpus's missing HTTP-parser category, on structural evidence only: nothing has been matched against a sample containing it. Built from the pre-generated C on upstream's `release/v9.3.0` tag; the llparse toolchain is not run.  
+llhttp is the HTTP/1.x parser inside Node.js and undici, and is vendored by XMRig. It is here to fill the corpus's missing HTTP-parser category, on structural evidence only: nothing has been matched against a sample containing it. Built from the pre-generated C on upstream's `release/v9.3.0` tag, pinned by the SHA-256 of GitHub's archive of that tag (the v9.3.0 release's own source archives hold the generator, not the generated `llhttp.c`); the llparse toolchain is not run. Releases 9.2.1 and 9.4.3, either side of the pinned 9.3.0, were added in a second pass; 9.3.1 is PicHash-identical to 9.3.0 and is not repeated.  
 Generated with `scripts/build_corpus.py`; see `data/llhttp/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: llhttp -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
+| llhttp | 9.2.1 | MinGW-w64 GCC 13 | [x86 PE](data/llhttp/x86/mcrit/llhttp_9.2.1_mingw13_x86_libllhttp.dll.mcrit) / [x64 PE](data/llhttp/x64/mcrit/llhttp_9.2.1_mingw13_x64_libllhttp.dll.mcrit) | [x86 PE](data/llhttp/x86/smda/llhttp_9.2.1_mingw13_x86_libllhttp.dll.7z) / [x64 PE](data/llhttp/x64/smda/llhttp_9.2.1_mingw13_x64_libllhttp.dll.7z) |
 | llhttp | 9.3.0 | MinGW-w64 GCC 13 | [x86 PE](data/llhttp/x86/mcrit/llhttp_9.3.0_mingw13_x86_libllhttp.dll.mcrit) / [x64 PE](data/llhttp/x64/mcrit/llhttp_9.3.0_mingw13_x64_libllhttp.dll.mcrit) | [x86 PE](data/llhttp/x86/smda/llhttp_9.3.0_mingw13_x86_libllhttp.dll.7z) / [x64 PE](data/llhttp/x64/smda/llhttp_9.3.0_mingw13_x64_libllhttp.dll.7z) |
 | llhttp | 9.3.0 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/llhttp/x86/mcrit/llhttp_9.3.0_msvc143_x86_llhttp.dll.mcrit) / [x64 PE](data/llhttp/x64/mcrit/llhttp_9.3.0_msvc143_x64_llhttp.dll.mcrit) | [x86 PE](data/llhttp/x86/smda/llhttp_9.3.0_msvc143_x86_llhttp.dll.7z) / [x64 PE](data/llhttp/x64/smda/llhttp_9.3.0_msvc143_x64_llhttp.dll.7z) |
+| llhttp | 9.4.3 | MinGW-w64 GCC 13 | [x86 PE](data/llhttp/x86/mcrit/llhttp_9.4.3_mingw13_x86_libllhttp.dll.mcrit) / [x64 PE](data/llhttp/x64/mcrit/llhttp_9.4.3_mingw13_x64_libllhttp.dll.mcrit) | [x86 PE](data/llhttp/x86/smda/llhttp_9.4.3_mingw13_x86_libllhttp.dll.7z) / [x64 PE](data/llhttp/x64/smda/llhttp_9.4.3_mingw13_x64_libllhttp.dll.7z) |
 <!-- /generated -->
 
 ### lz4<a id='lz4'></a>
