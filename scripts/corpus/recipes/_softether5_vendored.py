@@ -1330,11 +1330,15 @@ MINGW_NAMES = {
 }
 
 
-def patterns(mingw=False):
+def patterns(mingw=False, prefix=""):
     """One anchored alternation per library, for Recipe.exclude_functions.
 
     With ``mingw`` the MinGW additions are folded into their library's
-    alternation.
+    alternation. ``prefix`` is the symbol decoration of the target: i686
+    COFF prepends an underscore to every C name (the x86 MinGW report names
+    blake2s ``_blake2s``), so the x86 MinGW recipe passes "_". The x86
+    archives of that build, read with i686-w64-mingw32-nm, define exactly
+    the names of this table with that underscore and nothing beyond it.
     """
     out = []
     for k in NAMES:
@@ -1342,5 +1346,6 @@ def patterns(mingw=False):
         if mingw:
             names += [n for n in MINGW_NAMES.get(k, ()) if n not in names]
         if names:
-            out.append("^(?:%s)$" % "|".join(re.escape(n) for n in names))
+            out.append("^%s(?:%s)$" % (re.escape(prefix),
+                                       "|".join(re.escape(n) for n in names)))
     return out

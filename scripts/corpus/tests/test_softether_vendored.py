@@ -90,7 +90,13 @@ class RecipeWiringTest(unittest.TestCase):
         self.assertEqual(len(found), 4)
         for recipe in found:
             mingw = recipe.toolchains[0].startswith("mingw")
-            self.assertEqual(recipe.exclude_functions, v5.patterns(mingw=mingw))
+            prefix = "_" if recipe.toolchains[0] == "mingw_x86" else ""
+            self.assertEqual(recipe.exclude_functions,
+                             v5.patterns(mingw=mingw, prefix=prefix))
+        x86 = [re.compile(p) for p in v5.patterns(mingw=True, prefix="_")]
+        self.assertTrue(any(rx.search("_blake2s") for rx in x86))
+        self.assertFalse(any(rx.search("blake2s") for rx in x86))
+        self.assertFalse(any(rx.search("__blake2s") for rx in x86))
         # The MinGW additions extend the table; the Linux patterns are the
         # table alone, so their provenance does not move.
         for plain, extended in zip(v5.patterns(), v5.patterns(mingw=True)):

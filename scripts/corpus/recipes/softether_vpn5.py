@@ -316,7 +316,7 @@ _MINGW_NOTES_X64 = _MINGW_NOTES
 _MINGW_NOTES_X86 = _MINGW_NOTES + "x86 adds -msse2 (blake2s.c requires SSE2)."
 
 
-def _mingw_recipe(arch, processor, extra_cflags, build_flags, notes):
+def _mingw_recipe(arch, processor, extra_cflags, build_flags, notes, prefix=""):
     return Recipe(
         family="SoftEtherVPN",
         version="5.2.5189",
@@ -337,7 +337,7 @@ def _mingw_recipe(arch, processor, extra_cflags, build_flags, notes):
         artifacts=[Artifact(path="build/vpnserver.exe", component="vpnserver")],
         toolchains=["mingw_%s" % arch],
         requires=["cmake", "make", "perl", "pkg-config", "python"],
-        exclude_functions=_vendored.patterns(mingw=True),
+        exclude_functions=_vendored.patterns(mingw=True, prefix=prefix),
         build_flags=build_flags,
         notes=notes,
     )
@@ -416,5 +416,5 @@ RECIPES = {
         "x64", "AMD64", "", _MINGW_BUILD_FLAGS, _MINGW_NOTES_X64),
     "softether_vpn_5.2.5189_mingw_x86": _mingw_recipe(
         "x86", "x86", "-msse2", _MINGW_BUILD_FLAGS + "; x86 adds -msse2",
-        _MINGW_NOTES_X86),
+        _MINGW_NOTES_X86, prefix="_"),
 }
