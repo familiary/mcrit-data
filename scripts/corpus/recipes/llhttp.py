@@ -6,13 +6,39 @@ here to close that category gap, and the honest statement of what it is worth
 is that the case is structural rather than measured. Nothing in the corpus
 has been checked against a sample that contains llhttp; the claim is only
 that XMRig vendors it and that a miner or loader embedding it is otherwise
-unrepresented. Upstream publishes no checksums, hence the git tag.
+unrepresented. Upstream publishes no checksums of its own; 9.3.0, the
+version the tracker names, is pinned by the SHA-256 of a release tarball (see
+below), the neighbouring versions by their git tags.
 
 llhttp's parser is *generated* (by llparse, TypeScript), and the sources a
 build needs are not in the development tree. The ``release/vX.Y.Z`` tag is
 the exception: it is a commit holding only the generated ``src/llhttp.c``,
 ``src/api.c``, ``src/http.c`` and ``include/llhttp.h`` plus ``CMakeLists.txt``,
 and that is what is built. No npm, no llparse, nothing patched.
+
+The 9.3.0 tarball. The v9.3.0 release on GitHub has no uploaded assets, only
+the two archives GitHub generates of the tag v9.3.0 (commit 36151b9), and
+that tag is the generator tree: it has no ``src/llhttp.c`` and no
+``include/llhttp.h`` (llparse writes both at release time), and its
+``src/native/api.c`` and ``src/native/http.c`` are the same blobs as the
+release tag's ``src/api.c`` and ``src/http.c``. It cannot be built without
+running llparse. The generated sources exist only on the tag release/v9.3.0
+(commit 86b83a5, tree 2c10300), so the pin is GitHub's archive of that tag,
+``archive/refs/tags/release/v9.3.0.tar.gz``, by SHA-256: the same commit the
+git pin named, as a file with a digest. The digest was established with
+``git archive --format=tar --prefix=llhttp-release-v9.3.0/ release/v9.3.0 |
+gzip -n``, which reproduces GitHub's archives byte for byte: the same command
+gives Homebrew's pinned SHA-256 of the release/v9.4.3 archive
+(1eb813c7...9f36c39) and vcpkg's pinned SHA-512 of the release/v9.3.1
+archive. Built from the tarball, the 9.3.0 images are PicHash-identical to
+the ones built from the git tag on both architectures: the same 124 (x86)
+and 136 (x64) functions, the same name, instruction count and PicHash for
+every one, and the same 114 and 109 removed. The DLLs' own digests differ
+only because -g writes the absolute build directory into the debug
+information, and the unpacked tarball sits at a different path from the
+checkout. So the committed images are the ones built from the git tag, and
+only the source pin in their provenance was changed to the tarball (their
+sha256 field is still the digest of the DLL that was disassembled).
 
 Built with upstream's own CMake rather than a direct ``-shared`` compile of
 the three files. The two produce the same code - the CMake target is just
@@ -59,14 +85,20 @@ _CMAKE = ("cmake -S . -B build-{arch} -DCMAKE_SYSTEM_NAME=Windows "
           "-DBUILD_SHARED_LIBS=ON")
 
 
-def _llhttp(version, git_ref):
+_TARBALL_9_3_0 = Source(
+    url="https://github.com/nodejs/llhttp/archive/refs/tags/release/"
+        "v9.3.0.tar.gz",
+    sha256="1a2b45cb8dda7082b307d336607023aa65549d6f060da1d246b1313da22b685a")
+
+
+def _llhttp(version, git_ref, source=None):
     return Recipe(
         family="llhttp",
         version=version,
         upstream="https://github.com/nodejs/llhttp",
         license="MIT",
-        source=Source(git_url="https://github.com/nodejs/llhttp.git",
-                      git_ref=git_ref),
+        source=source or Source(git_url="https://github.com/nodejs/llhttp.git",
+                                git_ref=git_ref),
         build=[
             BuildStep(_CMAKE),
             BuildStep("cmake --build build-{arch} -j$(nproc)"),
@@ -82,7 +114,8 @@ def _llhttp(version, git_ref):
 
 
 RECIPES = {
-    "llhttp_9.3.0": _llhttp("9.3.0", "release/v9.3.0"),
+    # The release tarball of the tag release/v9.3.0 (commit 86b83a5).
+    "llhttp_9.3.0": _llhttp("9.3.0", "release/v9.3.0", _TARBALL_9_3_0),
 }
 
 # The neighbouring releases the first revision built only to measure and

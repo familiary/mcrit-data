@@ -404,9 +404,9 @@
     "smda": "data/llhttp/x64/smda/llhttp_9.3.0_mingw13_x64_libllhttp.dll.7z",
     "smda_version": "5.0.2",
     "source": {
-      "commit": "86b83a59786caebd581f38d613c64c9e8c52c79e",
-      "git_ref": "release/v9.3.0",
-      "git_url": "https://github.com/nodejs/llhttp.git"
+      "archive": "v9.3.0.tar.gz",
+      "sha256": "1a2b45cb8dda7082b307d336607023aa65549d6f060da1d246b1313da22b685a",
+      "url": "https://github.com/nodejs/llhttp/archive/refs/tags/release/v9.3.0.tar.gz"
     },
     "toolchain": "mingw13_x64",
     "upstream": "https://github.com/nodejs/llhttp",
@@ -545,9 +545,9 @@
     "smda": "data/llhttp/x86/smda/llhttp_9.3.0_mingw13_x86_libllhttp.dll.7z",
     "smda_version": "5.0.2",
     "source": {
-      "commit": "86b83a59786caebd581f38d613c64c9e8c52c79e",
-      "git_ref": "release/v9.3.0",
-      "git_url": "https://github.com/nodejs/llhttp.git"
+      "archive": "v9.3.0.tar.gz",
+      "sha256": "1a2b45cb8dda7082b307d336607023aa65549d6f060da1d246b1313da22b685a",
+      "url": "https://github.com/nodejs/llhttp/archive/refs/tags/release/v9.3.0.tar.gz"
     },
     "toolchain": "mingw13_x86",
     "upstream": "https://github.com/nodejs/llhttp",

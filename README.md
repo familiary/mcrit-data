@@ -423,7 +423,7 @@ Generated with `scripts/build_corpus.py`; see `data/libxml2/provenance.json` for
 
 ### llhttp<a id='llhttp'></a>
 
-llhttp is the HTTP/1.x parser inside Node.js and undici, and is vendored by XMRig. It is here to fill the corpus's missing HTTP-parser category, on structural evidence only: nothing has been matched against a sample containing it. Built from the pre-generated C on upstream's `release/v9.3.0` tag; the llparse toolchain is not run. Releases 9.2.1 and 9.4.3, either side of the pinned 9.3.0, were added in a second pass; 9.3.1 is PicHash-identical to 9.3.0 and is not repeated.  
+llhttp is the HTTP/1.x parser inside Node.js and undici, and is vendored by XMRig. It is here to fill the corpus's missing HTTP-parser category, on structural evidence only: nothing has been matched against a sample containing it. Built from the pre-generated C on upstream's `release/v9.3.0` tag, pinned by the SHA-256 of GitHub's archive of that tag (the v9.3.0 release's own source archives hold the generator, not the generated `llhttp.c`); the llparse toolchain is not run. Releases 9.2.1 and 9.4.3, either side of the pinned 9.3.0, were added in a second pass; 9.3.1 is PicHash-identical to 9.3.0 and is not repeated.  
 Generated with `scripts/build_corpus.py`; see `data/llhttp/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: llhttp -->
