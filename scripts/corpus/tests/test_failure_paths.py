@@ -315,6 +315,41 @@ class SlugTest(unittest.TestCase):
         own = Artifact(path="x.dll", component="x.dll")
         self.assertTrue(recipe.slug("mingw13_x64", own).startswith("Host_1.0_"))
 
+    def test_producer_overrides_the_running_toolchain(self):
+        """A harvested prebuilt is named for what compiled it, not for us."""
+        from corpus.recipe import Artifact, Recipe, Source
+
+        recipe = Recipe(family="Host", version="1.0", source=Source(),
+                        build=[], artifacts=[], toolchains=["linux_x64"])
+        # Extracted on this Linux host, but built by VS2019 wherever upstream
+        # publishes it. Naming it gcc13 would misdescribe the artefact.
+        harvested = Artifact(path="x.dll", component="x.dll",
+                             producer="msvc142")
+        self.assertEqual(recipe.slug("linux_x64", harvested),
+                         "Host_1.0_msvc142_x64_x.dll")
+
+    def test_producer_overrides_the_blob_default(self):
+        """is_blob's hardcoded msvc is a default, not a verdict."""
+        from corpus.recipe import Artifact, Recipe, Source
+
+        recipe = Recipe(family="Host", version="1.0", source=Source(),
+                        build=[], artifacts=[], toolchains=["mingw13_x64"])
+        blob = Artifact(path="s.bin", component="s", is_blob=True, bitness=64)
+        self.assertIn("_msvc_", recipe.slug("mingw13_x64", blob))
+        gcc_blob = Artifact(path="s.bin", component="s", is_blob=True,
+                            bitness=64, producer="mingw13")
+        self.assertIn("_mingw13_", recipe.slug("mingw13_x64", gcc_blob))
+
+    def test_absent_producer_changes_nothing(self):
+        """The default path stays exactly what it was."""
+        from corpus.recipe import Artifact, Recipe, Source
+
+        recipe = Recipe(family="Host", version="1.0", source=Source(),
+                        build=[], artifacts=[], toolchains=["mingw13_x64"])
+        own = Artifact(path="x.dll", component="x.dll")
+        self.assertEqual(recipe.slug("mingw13_x64", own),
+                         "Host_1.0_mingw13_x64_x.dll")
+
     def test_hostile_characters_still_raise(self):
         from corpus.recipe import Artifact, Recipe, Source
 
@@ -1837,6 +1872,29 @@ class ProvenanceToolchainTest(unittest.TestCase):
             self._resolve("Fam_1.0_msvc_x64_b",
                           {"version": "1.0", "component": "b"}, candidates)
 
+    def test_a_harvested_prebuilt_is_told_apart_by_its_component(self):
+        """A prebuilt runs on MinGW and its slug names MSVC.
+
+        Both directions used to go wrong: the MinGW rebuild's entries matched
+        two recipes declaring mingw_x86, and the prebuilt's own msvc143 slug
+        narrowed onto the MSVC rebuild, whose artefacts do not include the
+        prebuilt's component.
+        """
+        prebuilt = _Artifact("f_bin.dll")
+        prebuilt.producer = "msvc143"
+        candidates = self._pair() + [
+            ("Fam_1.0_prebuilt", _Recipe(["mingw_x86", "mingw_x64"],
+                                         [prebuilt]))]
+        recipe, artifact = self._resolve(
+            "Fam_1.0_msvc143_x64_f_bin.dll",
+            {"version": "1.0", "component": "f_bin.dll"}, candidates)
+        self.assertIs(artifact, prebuilt)
+        recipe, artifact = self._resolve(
+            "Fam_1.0_mingw13_x86_f.dll",
+            {"version": "1.0", "component": "f.dll"}, candidates)
+        self.assertEqual(recipe.toolchains, ["mingw_x86", "mingw_x64"])
+        self.assertEqual(artifact.component, "f.dll")
+
     def test_an_unreadable_slug_stays_ambiguous(self):
         from refresh_provenance import Unmatched
 
@@ -2034,6 +2092,122 @@ class ElfReadmeRowTest(unittest.TestCase):
             readme._compiler_label(
                 self._entry("mingw13_x64", "x86_64-w64-mingw32-gcc (GCC) 13.2.0")),
             "MinGW-w64 GCC 13.2.0")
+
+
+
+class ProducerLabelTest(unittest.TestCase):
+    """The Compiler column for an artefact this pipeline did not compile.
+
+    The column is the only place a reader is told whether a row is upstream's
+    own build or a reproduction of it, which decides what a match against it
+    means. It used to come off the toolchain that ran, so a harvested MSVC
+    artefact was labelled with the Linux host that unpacked it.
+    """
+
+    def _entry(self, stem, toolchain, compiler="", is_blob=False):
+        return {"toolchain": toolchain, "compiler": compiler, "version": "1.0",
+                "component": "c", "architecture": "x64", "is_blob": is_blob,
+                "mcrit": "data/F/x64/mcrit/%s.mcrit" % stem,
+                "smda": "data/F/x64/smda/%s.7z" % stem}
+
+    def test_a_harvested_prebuilt_names_the_compiler_that_built_it(self):
+        from corpus import readme
+
+        # Decrypted on this Linux host under the mingw toolchain, built by
+        # Rapid7 with v142. The toolchain must not reach the column.
+        label = readme._compiler_label(self._entry(
+            "Meterpreter_2.0.258_msvc142_x64_metsrv", "mingw13_x64",
+            "x86_64-w64-mingw32-gcc (GCC) 13.2.0"))
+        self.assertEqual(label,
+                         "MSVC v142 (Visual Studio 2019), as distributed upstream")
+
+    def test_a_blob_can_say_it_is_not_msvc(self):
+        from corpus import readme
+
+        label = readme._compiler_label(self._entry(
+            "AdaptixC2_2026-03-04_mingw_x64_stub_x64", "", is_blob=True))
+        self.assertEqual(label, "MinGW-w64 GCC (as committed upstream)")
+
+    def test_a_blob_with_no_producer_field_keeps_the_old_default(self):
+        from corpus import readme
+
+        label = readme._compiler_label(self._entry(
+            "sRDI_2018-05-27_msvc_x64_ShellcodeRDI_x64", "", is_blob=True))
+        self.assertEqual(label, "MSVC (as committed upstream)")
+
+    def test_an_artefact_compiled_here_is_unchanged(self):
+        """The regression guard: producer == toolchain, so nothing happens."""
+        from corpus import readme
+
+        label = readme._compiler_label(self._entry(
+            "libzlib_1.3.1_mingw13_x64_zlib1.dll", "mingw13_x64",
+            "x86_64-w64-mingw32-gcc (GCC) 13.2.0"))
+        self.assertEqual(label, "MinGW-w64 GCC 13.2.0")
+
+    def test_an_unreadable_stem_falls_through_rather_than_claiming_unknown(self):
+        """A filename the producer parser cannot read must not win.
+
+        This is not hypothetical: the first version of this code returned
+        "unknown (as distributed upstream)" for any entry whose stem did not
+        parse, which is every synthetic entry in these tests and would be any
+        hand-placed file in data/.
+        """
+        from corpus import readme
+
+        entry = self._entry("f", "gcc13_x64",
+                            "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0")
+        self.assertEqual(readme._producer_of(entry), "")
+        self.assertEqual(readme._compiler_label(entry), "GCC 13 (Linux, glibc)")
+
+    def test_an_unrecognised_toolset_number_is_not_given_a_year(self):
+        from corpus import readme
+
+        self.assertEqual(readme._producer_label("msvc199", False),
+                         "MSVC v199, as distributed upstream")
+
+
+class HarvestedCompilerFieldTest(unittest.TestCase):
+    """provenance.json must not say the unpacking host compiled a prebuilt.
+
+    A harvested DLL built by upstream with MSVC was recorded with the MinGW
+    GCC version string of the Linux host that unpacked it, because the field
+    was filled from the toolchain leg that ran.
+    """
+
+    def _toolchain(self):
+        import types
+        return types.SimpleNamespace(short_id="mingw13", id="mingw13_x64")
+
+    def _artifact(self, producer=None, is_blob=False):
+        import types
+        return types.SimpleNamespace(producer=producer, is_blob=is_blob)
+
+    def test_a_harvested_prebuilt_does_not_claim_the_host_compiler(self):
+        from corpus import pipeline
+
+        value = pipeline.recorded_compiler(
+            self._artifact("msvc141"), self._toolchain(),
+            "x86_64-w64-mingw32-gcc (GCC) 13-win32")
+        self.assertTrue(value.startswith("not compiled here"))
+        self.assertIn("producer msvc141", value)
+        self.assertIn("extracted on a host with x86_64-w64-mingw32-gcc", value)
+
+    def test_a_local_build_keeps_its_own_version_string(self):
+        from corpus import pipeline
+
+        for producer in (None, "mingw13"):
+            self.assertEqual(
+                pipeline.recorded_compiler(
+                    self._artifact(producer), self._toolchain(), "gcc 13"),
+                "gcc 13")
+
+    def test_a_blob_is_unchanged(self):
+        from corpus import pipeline
+
+        self.assertEqual(
+            pipeline.recorded_compiler(
+                self._artifact(is_blob=True), self._toolchain(), "gcc 13"),
+            "MSVC (upstream, exact version unknown)")
 
 
 if __name__ == "__main__":

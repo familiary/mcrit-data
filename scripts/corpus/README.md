@@ -123,12 +123,13 @@ misattribution; it is not a collision fix, and the two numbers move for
 different reasons.
 
 **What remains is one finding.** `__scrt_common_main_seh`, the MSVC CRT's
-x64 entry-point wrapper, at 99 instructions in Lua, MemoryModule and bzip2.
-It is unambiguously Microsoft's code and the baseline ought to catch it; it
+x64 entry-point wrapper, at 99 instructions in Lua, MemoryModule, bzip2 and -
+since the MSVC Cronos artefact arrived - Cronos. It is unambiguously
+Microsoft's code and the baseline ought to catch it; it
 does catch every one of its neighbours - `__scrt_initialize_crt`,
 `__scrt_acquire_startup_lock`, `__scrt_fastfail` and eleven more are removed
 from 98 artefacts each. What is known: it is x64 only, absent from every x86
-EXE; it has two bodies in this corpus, 99 instructions in those three and 98
+EXE; it has two bodies in this corpus, 99 instructions in those four and 98
 in q3vm, which builds with whole-program optimisation; and the EXE probe
 emits neither, though it links and runs like every other. The cause needs
 MSVC in front of it, so it is recorded here rather than guessed at, and
@@ -194,8 +195,12 @@ counted here. A refilter round is a misattribution fix, not a collision
 fix, and the two are measured separately on purpose. What did move since
 this paragraph was last written is three hashes, all of them in the
 differing-names bucket. The leakage count did not: it is the same single
-`__scrt_common_main_seh` across Lua, MemoryModule and bzip2, unchanged
-through the last imports and through 510 functions leaving 67 artefacts.
+`__scrt_common_main_seh`, unchanged through the last imports and through 510
+functions leaving 67 artefacts - though the family list it spans has since
+grown from Lua, MemoryModule and bzip2 to include Cronos, which is the fourth
+MSVC EXE here and behaves exactly like the other three. That is one more
+artefact carrying the same single unresolved finding rather than a new
+finding, and it does not move the leakage count, which counts hashes.
 
 That last step is the useful control. It added six MSVC families and eight
 ELF artefacts, among them five separate implementations of the same WOW64
@@ -550,6 +555,63 @@ Recorded here so the analysis is not repeated:
 | google/tcmalloc | #10 | Bazel-only and Linux-only - it cannot produce a PE at all. Issue #10's "tcmalloc" is almost certainly gperftools |
 | gRPC | #10 | cross-building needs a full native build first to obtain `protoc` and `grpc_cpp_plugin`, plus boringssl (which needs Go); 45-90 minutes for two architectures, and its statically-linked-into-Windows-malware rate is close to zero |
 | DavidBuchanan314/monomorph | [lib2smda#1](https://github.com/familiary/lib2smda/issues/1) | Linux x86-64 ELF only. That alone is no longer the obstacle it was when this row was written - `linux_x86` and `linux_x64` exist now - but the reason that mattered does not move: its own code is four functions, `get_bit`, `decode_buf`, `inflate_buf` and `main`, 679 bytes between them, against a floor of eight. The committed artefact carries 1397 function symbols, but 1393 of them are statically linked glibc and zlib, and with no glibc baseline to subtract them they would enter under monomorph's name and duplicate `data/libzlib`. What is distinctive about the project is the 4 MB array of MD5 collision blocks, which is data rather than code; upstream points at a collision detector for identifying it |
+
+Ekko, Cronos and Foliage were on this list and are not any more, and they are
+the entry here that left on a maintainer decision rather than because the
+projects changed. All three are below the eight-function floor on an honest
+count - Ekko is 2, Cronos 7, Foliage 9 of which only 2 are the technique - and
+all three are now built, each with `min_functions` set to the count that was
+measured. That is what `Recipe.min_functions` is for: a project that genuinely
+contains that few functions, as opposed to a build that produced too few. The
+floor itself has not moved, and none of the three was combined with the others
+to clear it, which would have been an arithmetic trick - a hash matching Ekko
+reported under a family name that also claimed Cronos and Foliage is exactly
+the misattribution this corpus exists to avoid.
+
+What each is worth is uneven, and the recipes say so rather than implying the
+three are equivalent:
+
+* **Ekko** is 2 functions and that is the entire repository. `main` is a
+  7-instruction loop around one call and sits below the ten-instruction
+  census floor, so the family's whole matchable contribution is `EkkoObf` -
+  one 236-instruction body carrying six memcpy'd `CONTEXT` structures and the
+  register assignments that turn each into a call frame.
+* **Cronos** is 7, and every one of the seven clears the ten-instruction
+  census floor, which neither of the other two manages. The reusable part is
+  not the timer code but `findGadget`, `findInModule`, `findPattern` and
+  `bCompare` - an `EnumProcessModules` walk and a masked signature scan, a
+  shape that propagates into other tooling far more often than the sleep
+  technique does. It is now the only one of the three with both compilers:
+  upstream's makefile drives `cl`, and `src/asm/rop.asm` is NASM syntax that
+  `ml64` will not assemble, so the MSVC artefact waited on nasm reaching the
+  `windows-2022` image - which it now does, installed by the workflow and
+  deliberately kept **off PATH**, exposed as `$env:NASM`. That shape is not
+  fussiness: OpenSSL's `vc_win64a_info` probes `nasm -v` *before* its
+  `$disabled{asm}` branch, so a nasm on PATH would be chosen despite
+  `openssl_msvc.py` passing `no-asm`, switching its uplink shim from
+  ml64/masm to nasm/nasm. Keeping nasm unreachable by name leaves every
+  existing recipe configuring exactly as before, and the workflow asserts it
+  rather than trusting it. The MSVC artefact is 18 functions against the
+  MinGW build's 35, all seven own bodies present in both; `QuadSleep` has the
+  same PicHash in both, because a hand-written assembly routine assembled by
+  the same nasm cannot depend on which C compiler linked it.
+* **Foliage** is the cleanest artefact of the three and the muddiest
+  provenance. All 10 functions in its image are the project's own - 7 C
+  bodies plus 3 assembly routines, no CRT and no import thunks at all, since
+  it is `-nostdlib` and resolves APIs by hash. But the upstream the technique
+  is named for, `SecIdiot/FOLIAGE`, is a 404 today, so what is built is the
+  `y11en` mirror; there is no licence file of any kind; and the project is a
+  DNS-over-HTTPS persistence stager whose sleep routine is one part, so 7 of
+  its 9 functions are generic PIC-stager furniture rather than the technique.
+  `foliage.py` records all three facts.
+
+None of this makes the three a substitute for detecting the technique. What an
+analyst meets is an API sequence - `CreateTimerQueueTimer` or
+`SetWaitableTimer` or `NtQueueApcThread`, driving `NtContinue` over a captured
+`CONTEXT` with `SystemFunction032` in the middle - and that is a behavioural
+signature for a YARA rule or a sandbox trace rather than something code
+similarity finds. Cronos ships its own `Cronos.yara` for exactly that. The
+reference value here is the surrounding code, not the trick.
 
 VX-API (#4), BlackBone (#8) and SysWhispers v1 (#9) were on this list and are
 not any more: they need ATL, the DIA SDK or MASM, none of which exists for
