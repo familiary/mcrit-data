@@ -1,0 +1,66 @@
+{
+  "miniLZO_2.10_gcc13_x64_libminilzo.so": {
+    "architecture": "x64",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden (minilzo.c compiled directly with -shared)",
+    "built_artifact": "libminilzo.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libminilzo.so",
+    "family": "miniLZO",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "GPL-2.0-or-later",
+    "mcrit": "data/miniLZO/x64/mcrit/miniLZO_2.10_gcc13_x64_libminilzo.so.mcrit",
+    "notes": "miniLZO 2.10 (minilzo.c 213674 bytes, the size the tracker reports for UltraVNC's vendored lzo/minilzo.c), from the minilzo-2.10 tarball, as its own family per tracker #59. The lzo family carries the same build as its minilzo-2.10 artefact; every miniLZO function is also in the full liblzo2. Linux ELF shared object, the axis the lzo family does not have; with hidden visibility nothing is exported and the names are in .symtab.",
+    "num_functions": 32,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_fini",
+      "_init",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "17e709a0ddfc201b7edee99632ac971003d7109d37b3c76c4c0e345082f94c2f",
+    "smda": "data/miniLZO/x64/smda/miniLZO_2.10_gcc13_x64_libminilzo.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "minilzo-2.10.tar.gz",
+      "sha256": "eb4ce543aad19533c83550746e0e9d7bcf716b35a42429e3ba17d60fa0f3e47a",
+      "url": "https://www.oberhumer.com/opensource/lzo/download/minilzo-2.10.tar.gz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://www.oberhumer.com/opensource/lzo/",
+    "version": "2.10"
+  },
+  "miniLZO_2.10_gcc13_x86_libminilzo.so": {
+    "architecture": "x86",
+    "build_flags": "-O2 -fPIC -fvisibility=hidden (minilzo.c compiled directly with -shared)",
+    "built_artifact": "libminilzo.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libminilzo.so",
+    "family": "miniLZO",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "GPL-2.0-or-later",
+    "mcrit": "data/miniLZO/x86/mcrit/miniLZO_2.10_gcc13_x86_libminilzo.so.mcrit",
+    "notes": "miniLZO 2.10 (minilzo.c 213674 bytes, the size the tracker reports for UltraVNC's vendored lzo/minilzo.c), from the minilzo-2.10 tarball, as its own family per tracker #59. The lzo family carries the same build as its minilzo-2.10 artefact; every miniLZO function is also in the full liblzo2. Linux ELF shared object, the axis the lzo family does not have; with hidden visibility nothing is exported and the names are in .symtab.",
+    "num_functions": 38,
+    "removed_runtime_functions": [
+      "__x86.get_pc_thunk.ax",
+      "__x86.get_pc_thunk.bx",
+      "__x86.get_pc_thunk.dx",
+      "frame_dummy"
+    ],
+    "sha256": "23353df7670cbc22980500e45b06a67edb9f3f752f99051b0f53324c90070b32",
+    "smda": "data/miniLZO/x86/smda/miniLZO_2.10_gcc13_x86_libminilzo.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "minilzo-2.10.tar.gz",
+      "sha256": "eb4ce543aad19533c83550746e0e9d7bcf716b35a42429e3ba17d60fa0f3e47a",
+      "url": "https://www.oberhumer.com/opensource/lzo/download/minilzo-2.10.tar.gz"
+    },
+    "toolchain": "gcc13_x86",
+    "upstream": "https://www.oberhumer.com/opensource/lzo/",
+    "version": "2.10"
+  }
+}
