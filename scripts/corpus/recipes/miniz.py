@@ -171,3 +171,42 @@ RECIPES = {
     "miniz_3.1.0": _miniz("3.1.0", "3.1.0"),
     "miniz_3.1.0_trim": _miniz("3.1.0", "3.1.0", trimmed=True),
 }
+
+
+# --- The two later tags of the 3.1 line, default and trimmed, which the
+# first revision did not build; separate versions as for 3.1.0.
+RECIPES["miniz_3.1.1"] = _miniz("3.1.1", "3.1.1")
+RECIPES["miniz_3.1.1_trim"] = _miniz("3.1.1", "3.1.1", trimmed=True)
+RECIPES["miniz_3.1.2"] = _miniz("3.1.2", "3.1.2")
+RECIPES["miniz_3.1.2_trim"] = _miniz("3.1.2", "3.1.2", trimmed=True)
+
+# The beacon's form of the trimmed build: upstream's own amalgamated
+# miniz.c (the release asset miniz-3.1.0.zip, which is what a project
+# vendoring "miniz.c/miniz.h" copies; AdaptixC2 keeps it as miniz.cpp)
+# compiled as C++ by g++ with no -O flag, which is what issue #81 records
+# for the beacon, and the same MINIZ_TRIM_FLAGS. `-x c++` compiles the
+# unmodified miniz.c as C++ instead of renaming it. A DLL of the one
+# translation unit, so every global function is exported as with the
+# CMake shared build; nothing patched.
+RECIPES["miniz_3.1.0-amalg-trim-O0"] = Recipe(
+    family="miniz",
+    version="3.1.0-amalg-trim-O0",
+    upstream="https://github.com/richgel999/miniz",
+    license="MIT",
+    source=Source(url="https://github.com/richgel999/miniz/releases/download/"
+                      "3.1.0/miniz-3.1.0.zip",
+                  sha256="f9d3e769ec5fd5583955a3c22eea457fe806be0d507805966d1a5b0410c77dda"),
+    build=[BuildStep("{cxx} -x c++ %s -shared -o miniz.dll miniz.c"
+                     % _TRIM_FLAGS)],
+    artifacts=[Artifact(path="miniz.dll", component="miniz.dll")],
+    toolchains=["mingw_x86", "mingw_x64"],
+    build_flags="g++ -x c++, no -O flag (GCC's -O0 default), " + _TRIM_FLAGS
+                + ", the amalgamated miniz.c of the 3.1.0 release asset",
+    notes="The 3.1.0 release asset miniz-3.1.0.zip (sha256 computed from the "
+          "download), whose miniz.c is upstream's amalgamation of the four "
+          "source files, compiled as C++ with g++ and no optimisation flag, "
+          "with AdaptixC2's MINIZ_TRIM_FLAGS: the shape issue #81 records "
+          "for the beacon's vendored miniz.cpp. The beacon's own link line "
+          "and source were not compared; this is upstream's code in that "
+          "build shape, not a copy of the beacon's object. Nothing patched.",
+)
