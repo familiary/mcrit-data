@@ -296,6 +296,14 @@ RECIPES = {
 # the tests are not needed.
 _LINK36 = "-link -DEBUG -Brepro -INCREMENTAL:NO -OPT:NOREF -OPT:NOICF"
 _CFLAGS36 = "-nologo -Zi -MD -W3 -O2"
+# include/msvc_compat/stdbool.h does `typedef BOOL _Bool;`, written for cl
+# versions without C99's _Bool; v143 has the keyword and rejects the typedef
+# (stdbool.h(8): error C2628: 'BOOL' followed by 'bool' is illegal). Its
+# include guard is predefined so the header is skipped, and the four macros it
+# would have defined are given on the command line instead, which leaves bool
+# as cl's own _Bool. Nothing in the tree is edited.
+_CPPFLAGS36 = ("-Iinclude/msvc_compat -Dstdbool_h -Dbool=_Bool -Dtrue=1 "
+               "-Dfalse=0 -D__bool_true_false_are_defined=1")
 
 RECIPES["jemalloc_3.6.0_msvc"] = Recipe(
     family="jemalloc",
@@ -323,7 +331,7 @@ RECIPES["jemalloc_3.6.0_msvc"] = Recipe(
                   '/tmp/jegit/git && chmod +x /tmp/jegit/git && '
                   'PATH=/tmp/jegit:$PATH je_cv_static_page_shift=12 CC=cl '
                   'CFLAGS=\'' + _CFLAGS36 + '\' '
-                  'CPPFLAGS=\'-Iinclude/msvc_compat\' sh ./autogen.sh '
+                  'CPPFLAGS=\'' + _CPPFLAGS36 + '\' sh ./autogen.sh '
                   '--host=$([ {bitness} = 64 ] && echo x86_64 || echo i686)'
                   '-w64-mingw32"',
                   env=_ENV, allow_failure=True),
@@ -350,7 +358,9 @@ RECIPES["jemalloc_3.6.0_msvc"] = Recipe(
           "corpus link options. configure's git describe is answered by a "
           "one-line git shim on that shell's PATH (3.x has no --with-version "
           "and the clone carries no tag), configure's -I include/msvc_compat "
-          "is restated in CPPFLAGS, "
+          "is restated in CPPFLAGS, msvc_compat/stdbool.h's typedef of _Bool (which "
+          "v143 rejects) is skipped by predefining its guard and its bool/true/"
+          "false macros, "
           "and je_cv_static_page_shift=12 is primed as in the MinGW recipe. "
           "Built against "
           "the DLL runtime, so the MSVC C runtime is imported.",
