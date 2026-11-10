@@ -31,6 +31,8 @@ Libraries
 * [musl](#musl)
 * [libiptc](#libiptc)
 * [ntpd](#ntpd)
+* [BusyBox](#busybox)
+* [toybox](#toybox)
 * [aPLib](#aplib)
 * [libzlib](#libzlib)
 * [bzip2](#bzip2)
@@ -1038,6 +1040,7 @@ Generated with `scripts/build_corpus.py`; see `data/obfstr/provenance.json` for 
 4g3nt47/Obfuscator is not a compile-time obfuscator at all, and is here for contrast as much as for coverage: it is a standalone command-line tool that opens an already-built binary, finds every string prefixed with the marker `[OBFS_ENC]`, XORs it with a rolling key and writes a new file. Nothing of it is ever linked into the program it protects. The only part that propagates downstream is a copy-pasted ten-line `obfs_decode()`, which the upstream README asks you to paste into your own source, so it appears in whatever shape your own compiler gives it rather than in the shape recorded here. What this family identifies is the tool binary itself.  
 Seven functions is the whole project - `obfs_encode`, `obfs_decode`, `obfs_find_offset`, `obfs_filecpy`, `obfs_read_until_null`, `obfs_run` and `main` - so the recipe sets `min_functions=7` against the corpus-wide floor of eight, and the runtime residue it used to clear that floor on is now measured by a baseline probe instead. Built at `-O0`, not upstream's `-Os`: `obfs_decode` is byte-identical to `obfs_encode`, so identical-code folding reduces it to a one-instruction tail jump at `-Os` and `-O2`. Compiled directly rather than through upstream's Makefile, which hardcodes `-s` on the link line, never creates the `bin/` directory it writes objects to, and installs a `bin/main` that no rule builds.  
 
+Bootlin's prebuilt uClibc-ng toolchains add two more generations, harvested the same way (libgcc.a + libgcc_eh.a linked whole, entry zero): GCC 6.4.0 from stable-2018.02-1 (x86-i686, and x86-64-core-i7 for x64, since Bootlin publishes no generic x86-64 toolchain before 2021.11) and GCC 10.3.0 from stable-2021.11, the toolchains the uClibc-ng images come from. Kept + removed = total: 6.4.0 x86 234 + 0, x64 235 + 0; 10.3.0 x86 235 + 0, x64 261 + 0. The two share 10 (x86) and 7 (x64) PicHashes of ten instructions or more, and nothing with the 13.x images.  
 Generated with `scripts/build_corpus.py`; see `data/Obfuscator4g3nt47/provenance.json` for source digests, compiler and flags.
 
 <!-- generated: Obfuscator4g3nt47 -->
@@ -1055,10 +1058,13 @@ Built with `scripts/build_corpus.py`; source digests, producer details and link 
 <!-- generated: libgcc -->
 | Name     | Version | Compiler | MCRIT | SMDA |
 |----------|---------|----------|-------|------|
-| libgcc | 13.2.0-mingw-w64 | MinGW-w64 GCC 13 | [x86 PE](data/libgcc/x86/mcrit/libgcc_13.2.0-mingw-w64_mingw13_x86_libgcc.dll.mcrit) / [x64 PE](data/libgcc/x64/mcrit/libgcc_13.2.0-mingw-w64_mingw13_x64_libgcc.dll.mcrit) | [x86 PE](data/libgcc/x86/smda/libgcc_13.2.0-mingw-w64_mingw13_x86_libgcc.dll.7z) / [x64 PE](data/libgcc/x64/smda/libgcc_13.2.0-mingw-w64_mingw13_x64_libgcc.dll.7z) |
-| libgcc | 13.3.0-ubuntu24.04 | GCC 13 (Linux, glibc) | [x86 ELF](data/libgcc/x86/mcrit/libgcc_13.3.0-ubuntu24.04_gcc13_x86_libgcc.elf.mcrit) / [x64 ELF](data/libgcc/x64/mcrit/libgcc_13.3.0-ubuntu24.04_gcc13_x64_libgcc.elf.mcrit) | [x86 ELF](data/libgcc/x86/smda/libgcc_13.3.0-ubuntu24.04_gcc13_x86_libgcc.elf.7z) / [x64 ELF](data/libgcc/x64/smda/libgcc_13.3.0-ubuntu24.04_gcc13_x64_libgcc.elf.7z) |
 | libgcc | 4.1.2-uclibc0.9.30.1 | GCC 14 (Linux, glibc) | [x86 ELF](data/libgcc/x86/mcrit/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x86_libgcc.elf.mcrit) / [x64 ELF](data/libgcc/x64/mcrit/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x64_libgcc.elf.mcrit) | [x86 ELF](data/libgcc/x86/smda/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x86_libgcc.elf.7z) / [x64 ELF](data/libgcc/x64/smda/libgcc_4.1.2-uclibc0.9.30.1_gcc14_x64_libgcc.elf.7z) |
 | libgcc | 4.2.1-aboriginal1.4.4 | GCC 14 (Linux, glibc) | [x86 ELF](data/libgcc/x86/mcrit/libgcc_4.2.1-aboriginal1.4.4_gcc14_x86_libgcc.elf.mcrit) / [x64 ELF](data/libgcc/x64/mcrit/libgcc_4.2.1-aboriginal1.4.4_gcc14_x64_libgcc.elf.mcrit) | [x86 ELF](data/libgcc/x86/smda/libgcc_4.2.1-aboriginal1.4.4_gcc14_x86_libgcc.elf.7z) / [x64 ELF](data/libgcc/x64/smda/libgcc_4.2.1-aboriginal1.4.4_gcc14_x64_libgcc.elf.7z) |
+| libgcc | 6.4.0-bootlin2018.02-1 | GCC 13 (Linux, glibc) | [x86 ELF](data/libgcc/x86/mcrit/libgcc_6.4.0-bootlin2018.02-1_gcc13_x86_libgcc.elf.mcrit) / [x64 ELF](data/libgcc/x64/mcrit/libgcc_6.4.0-bootlin2018.02-1_gcc13_x64_libgcc.elf.mcrit) | [x86 ELF](data/libgcc/x86/smda/libgcc_6.4.0-bootlin2018.02-1_gcc13_x86_libgcc.elf.7z) / [x64 ELF](data/libgcc/x64/smda/libgcc_6.4.0-bootlin2018.02-1_gcc13_x64_libgcc.elf.7z) |
+| libgcc | 10.3.0-bootlin2021.11-1 | GCC 13 (Linux, glibc) | [x86 ELF](data/libgcc/x86/mcrit/libgcc_10.3.0-bootlin2021.11-1_gcc13_x86_libgcc.elf.mcrit) | [x86 ELF](data/libgcc/x86/smda/libgcc_10.3.0-bootlin2021.11-1_gcc13_x86_libgcc.elf.7z) |
+| libgcc | 10.3.0-bootlin2021.11-5 | GCC 13 (Linux, glibc) | [x64 ELF](data/libgcc/x64/mcrit/libgcc_10.3.0-bootlin2021.11-5_gcc13_x64_libgcc.elf.mcrit) | [x64 ELF](data/libgcc/x64/smda/libgcc_10.3.0-bootlin2021.11-5_gcc13_x64_libgcc.elf.7z) |
+| libgcc | 13.2.0-mingw-w64 | MinGW-w64 GCC 13 | [x86 PE](data/libgcc/x86/mcrit/libgcc_13.2.0-mingw-w64_mingw13_x86_libgcc.dll.mcrit) / [x64 PE](data/libgcc/x64/mcrit/libgcc_13.2.0-mingw-w64_mingw13_x64_libgcc.dll.mcrit) | [x86 PE](data/libgcc/x86/smda/libgcc_13.2.0-mingw-w64_mingw13_x86_libgcc.dll.7z) / [x64 PE](data/libgcc/x64/smda/libgcc_13.2.0-mingw-w64_mingw13_x64_libgcc.dll.7z) |
+| libgcc | 13.3.0-ubuntu24.04 | GCC 13 (Linux, glibc) | [x86 ELF](data/libgcc/x86/mcrit/libgcc_13.3.0-ubuntu24.04_gcc13_x86_libgcc.elf.mcrit) / [x64 ELF](data/libgcc/x64/mcrit/libgcc_13.3.0-ubuntu24.04_gcc13_x64_libgcc.elf.mcrit) | [x86 ELF](data/libgcc/x86/smda/libgcc_13.3.0-ubuntu24.04_gcc13_x86_libgcc.elf.7z) / [x64 ELF](data/libgcc/x64/smda/libgcc_13.3.0-ubuntu24.04_gcc13_x64_libgcc.elf.7z) |
 <!-- /generated -->
 
 ### uClibc<a id='uclibc'></a>
@@ -1119,3 +1125,25 @@ Built with `scripts/build_corpus.py`; source digests, producer details and link 
 | ntpd | 4.2.2 | GCC 14 (Linux, glibc) | [x86 ELF](data/ntpd/x86/mcrit/ntpd_4.2.2_gcc14_x86_ntpd.mcrit) / [x64 ELF](data/ntpd/x64/mcrit/ntpd_4.2.2_gcc14_x64_ntpd.mcrit) | [x86 ELF](data/ntpd/x86/smda/ntpd_4.2.2_gcc14_x86_ntpd.7z) / [x64 ELF](data/ntpd/x64/smda/ntpd_4.2.2_gcc14_x64_ntpd.7z) |
 | ntpd | 4.2.8p18 | GCC 14 (Linux, glibc) | [x86 ELF](data/ntpd/x86/mcrit/ntpd_4.2.8p18_gcc14_x86_ntpd.mcrit) / [x64 ELF](data/ntpd/x64/mcrit/ntpd_4.2.8p18_gcc14_x64_ntpd.mcrit) | [x86 ELF](data/ntpd/x86/smda/ntpd_4.2.8p18_gcc14_x86_ntpd.7z) / [x64 ELF](data/ntpd/x64/smda/ntpd_4.2.8p18_gcc14_x64_ntpd.7z) |
 <!-- /generated -->
+### BusyBox<a id='busybox'></a>
+
+Harvested, not rebuilt, from Aboriginal Linux 1.4.4's `root-filesystem-i686.tar.gz` (sha256 `e9e2d054ece79bdbf3eaed7dc25b1d010a0c5aafb06508e2023eafdaf25de5a5`) and `root-filesystem-x86_64.tar.gz` (`541c51684af6cef532ea67ca7d64c9a9a45ddb9ac9a524d2d0a2b89e89fbcafe`), as the Internet Archive holds them; the archives' MANIFEST names BusyBox 1.24.1, toybox 0.6.1, uClibc 0.9.33.2 and GCC 4.2.1, built 2016-01-06. Both binaries are static and stripped, so no function is named, the statically linked uClibc and libgcc are in the image beside the program, and no glue filter applies (`min_named_ratio` 0). Kept = total: x86 1,281, x64 1,273. BusyBox and toybox share 314 (x86) and 292 (x64) PicHashes of ten instructions or more, nearly all of it the uClibc both link; each shares 5 to 7 with the uClibc 0.9.33.2 (Aboriginal 1.2.0) libc images.  
+Generated with `scripts/build_corpus.py`; see `data/busybox/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: busybox -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| busybox | 1.24.1-aboriginal1.4.4 | GCC 13 (Linux, glibc) | [x86 ELF](data/busybox/x86/mcrit/busybox_1.24.1-aboriginal1.4.4_gcc13_x86_busybox.elf.mcrit) / [x64 ELF](data/busybox/x64/mcrit/busybox_1.24.1-aboriginal1.4.4_gcc13_x64_busybox.elf.mcrit) | [x86 ELF](data/busybox/x86/smda/busybox_1.24.1-aboriginal1.4.4_gcc13_x86_busybox.elf.7z) / [x64 ELF](data/busybox/x64/smda/busybox_1.24.1-aboriginal1.4.4_gcc13_x64_busybox.elf.7z) |
+<!-- /generated -->
+
+### toybox<a id='toybox'></a>
+
+Harvested, not rebuilt, from Aboriginal Linux 1.4.4's `root-filesystem-i686.tar.gz` (sha256 `e9e2d054ece79bdbf3eaed7dc25b1d010a0c5aafb06508e2023eafdaf25de5a5`) and `root-filesystem-x86_64.tar.gz` (`541c51684af6cef532ea67ca7d64c9a9a45ddb9ac9a524d2d0a2b89e89fbcafe`), as the Internet Archive holds them; the archives' MANIFEST names BusyBox 1.24.1, toybox 0.6.1, uClibc 0.9.33.2 and GCC 4.2.1, built 2016-01-06. Both binaries are static and stripped, so no function is named, the statically linked uClibc and libgcc are in the image beside the program, and no glue filter applies (`min_named_ratio` 0). Kept = total: x86 1,068, x64 1,067 (0BSD).  
+Generated with `scripts/build_corpus.py`; see `data/toybox/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: toybox -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| toybox | 0.6.1-aboriginal1.4.4 | GCC 13 (Linux, glibc) | [x86 ELF](data/toybox/x86/mcrit/toybox_0.6.1-aboriginal1.4.4_gcc13_x86_toybox.elf.mcrit) / [x64 ELF](data/toybox/x64/mcrit/toybox_0.6.1-aboriginal1.4.4_gcc13_x64_toybox.elf.mcrit) | [x86 ELF](data/toybox/x86/smda/toybox_0.6.1-aboriginal1.4.4_gcc13_x86_toybox.elf.7z) / [x64 ELF](data/toybox/x64/smda/toybox_0.6.1-aboriginal1.4.4_gcc13_x64_toybox.elf.7z) |
+<!-- /generated -->
+

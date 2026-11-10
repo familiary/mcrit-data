@@ -27,6 +27,16 @@ Named link/glue survivors (name, PicHash, instruction count):
   libgcc_4.1.2-uclibc0.9.30.1_gcc14_x86_libgcc.elf: none.
   libgcc_4.2.1-aboriginal1.4.4_gcc14_x64_libgcc.elf: none.
   libgcc_4.2.1-aboriginal1.4.4_gcc14_x86_libgcc.elf: none.
+Bootlin (Buildroot) uClibc-ng toolchains, GCC 6.4.0 (stable-2018.02-1) and
+10.3.0 (stable-2021.11), built on an ubuntu-24.04 runner (run 42777365618,
+scratch/s4-libgcc-linux), so the link driver is the runner's GCC 13:
+  libgcc_6.4.0-bootlin2018.02-1_gcc13_x86_libgcc.elf: 234 kept + 0 removed = 234; 170 unique hashes >=10 instructions.
+  libgcc_6.4.0-bootlin2018.02-1_gcc13_x64_libgcc.elf: 235 kept + 0 removed = 235; 158 unique hashes.
+  libgcc_10.3.0-bootlin2021.11-1_gcc13_x86_libgcc.elf: 235 kept + 0 removed = 235; 170 unique hashes.
+  libgcc_10.3.0-bootlin2021.11-5_gcc13_x64_libgcc.elf: 261 kept + 0 removed = 261; 171 unique hashes.
+  6.4.0 vs 10.3.0: 10 shared on x86, 7 on x64; 6.4.0 vs 4.2.1: 0 on x86, 2 on
+  x64; neither shares any with the Ubuntu 13.3.0 images.
+
 Unnamed import/PLT stubs remain where the host link needs them; these are
 below the 10-instruction comparison floor. The runtime families deliberately
 keep their own runtime code; no startup driver is added to those images.
