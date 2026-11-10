@@ -33,6 +33,27 @@ class ToolchainUnusable(RuntimeError):
     """A toolchain this host does register, but cannot actually run."""
 
 
+def recorded_compiler(artifact, toolchain, compiler_version):
+    """What provenance.json records as ``compiler`` for one artefact.
+
+    For everything compiled here that is the toolchain's own version string.
+    A blob or a harvested prebuilt was compiled by someone else, and the host
+    compiler never touched it: recording the host's version string there made
+    an MSVC-built DLL say it came from MinGW GCC. Those records name the
+    producer instead and keep the host only as what ran the extraction.
+    ``toolchain`` is left as the leg that ran, because refilter.py needs it to
+    re-run the filter and readme.py tells a harvest apart by it differing from
+    the producer in the filename.
+    """
+    if artifact.is_blob:
+        return "MSVC (upstream, exact version unknown)"
+    if artifact.producer and artifact.producer != toolchain.short_id:
+        return ("not compiled here: harvested as distributed upstream "
+                "(producer %s, see build_flags); extracted on a host with %s"
+                % (artifact.producer, compiler_version))
+    return compiler_version
+
+
 def _prepare_toolchain(toolchain):
     """Return the compiler banner, or raise if the toolchain cannot be used.
 
@@ -179,8 +200,8 @@ def run_recipe(recipe, toolchain_ids=None, dry_run=False):
                 # only what ran the extraction and must not be recorded as the
                 # thing that produced the code.
                 "toolchain": None if artifact.is_blob else toolchain.id,
-                "compiler": ("MSVC (upstream, exact version unknown)"
-                             if artifact.is_blob else compiler_version),
+                "compiler": recorded_compiler(
+                    artifact, toolchain, compiler_version),
                 "build_flags": artifact.build_flags or recipe.build_flags,
                 "upstream": recipe.upstream,
                 "license": recipe.license,
