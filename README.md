@@ -326,6 +326,23 @@ Generated with `scripts/build_corpus.py`; see `data/cJSON/provenance.json` for s
 | cJSON | 1.7.19 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/cJSON/x86/mcrit/cJSON_1.7.19_msvc143_x86_cjson.dll.mcrit) / [x64 PE](data/cJSON/x64/mcrit/cJSON_1.7.19_msvc143_x64_cjson.dll.mcrit) | [x86 PE](data/cJSON/x86/smda/cJSON_1.7.19_msvc143_x86_cjson.dll.7z) / [x64 PE](data/cJSON/x64/smda/cJSON_1.7.19_msvc143_x64_cjson.dll.7z) |
 <!-- /generated -->
 
+### cmp<a id='cmp'></a>
+
+cmp is a single-file C implementation of MessagePack, vendored into c-toxcore and through it into the Crytox ransomware. Versions 10 and 20 are camgunz/cmp tags built with upstream's defaults; `toktok-52bfcfa` is the TokTok/cmp commit c-toxcore vendors, built with `-DCMP_NO_FLOAT=1`: `cmp.dll` at `-O2` like the rest of the family and `cmp-O3.dll` with the flags of c-toxcore's CMake Release build (`-O3 -DNDEBUG -std=c11`).  
+Generated with `scripts/build_corpus.py`; see `data/cmp/provenance.json` for source digests, compiler and flags.
+
+<!-- generated: cmp -->
+| Name     | Version | Compiler | MCRIT | SMDA |
+|----------|---------|----------|-------|------|
+| cmp | 10 | MinGW-w64 GCC 13 | [x86 PE](data/cmp/x86/mcrit/cmp_10_mingw13_x86_cmp.dll.mcrit) / [x64 PE](data/cmp/x64/mcrit/cmp_10_mingw13_x64_cmp.dll.mcrit) | [x86 PE](data/cmp/x86/smda/cmp_10_mingw13_x86_cmp.dll.7z) / [x64 PE](data/cmp/x64/smda/cmp_10_mingw13_x64_cmp.dll.7z) |
+| cmp | 10 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/cmp/x86/mcrit/cmp_10_msvc143_x86_cmp.dll.mcrit) / [x64 PE](data/cmp/x64/mcrit/cmp_10_msvc143_x64_cmp.dll.mcrit) | [x86 PE](data/cmp/x86/smda/cmp_10_msvc143_x86_cmp.dll.7z) / [x64 PE](data/cmp/x64/smda/cmp_10_msvc143_x64_cmp.dll.7z) |
+| cmp | 20 | MinGW-w64 GCC 13 | [x86 PE](data/cmp/x86/mcrit/cmp_20_mingw13_x86_cmp.dll.mcrit) / [x64 PE](data/cmp/x64/mcrit/cmp_20_mingw13_x64_cmp.dll.mcrit) | [x86 PE](data/cmp/x86/smda/cmp_20_mingw13_x86_cmp.dll.7z) / [x64 PE](data/cmp/x64/smda/cmp_20_mingw13_x64_cmp.dll.7z) |
+| cmp | 20 | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/cmp/x86/mcrit/cmp_20_msvc143_x86_cmp.dll.mcrit) / [x64 PE](data/cmp/x64/mcrit/cmp_20_msvc143_x64_cmp.dll.mcrit) | [x86 PE](data/cmp/x86/smda/cmp_20_msvc143_x86_cmp.dll.7z) / [x64 PE](data/cmp/x64/smda/cmp_20_msvc143_x64_cmp.dll.7z) |
+| cmp | toktok-52bfcfa | MinGW-w64 GCC 13 | [x86 PE](data/cmp/x86/mcrit/cmp_toktok-52bfcfa_mingw13_x86_cmp-O3.dll.mcrit) / [x64 PE](data/cmp/x64/mcrit/cmp_toktok-52bfcfa_mingw13_x64_cmp-O3.dll.mcrit) | [x86 PE](data/cmp/x86/smda/cmp_toktok-52bfcfa_mingw13_x86_cmp-O3.dll.7z) / [x64 PE](data/cmp/x64/smda/cmp_toktok-52bfcfa_mingw13_x64_cmp-O3.dll.7z) |
+| cmp | toktok-52bfcfa | MinGW-w64 GCC 13 | [x86 PE](data/cmp/x86/mcrit/cmp_toktok-52bfcfa_mingw13_x86_cmp.dll.mcrit) / [x64 PE](data/cmp/x64/mcrit/cmp_toktok-52bfcfa_mingw13_x64_cmp.dll.mcrit) | [x86 PE](data/cmp/x86/smda/cmp_toktok-52bfcfa_mingw13_x86_cmp.dll.7z) / [x64 PE](data/cmp/x64/smda/cmp_toktok-52bfcfa_mingw13_x64_cmp.dll.7z) |
+| cmp | toktok-52bfcfa | MSVC 19.44 (Visual Studio 2022, v143) | [x86 PE](data/cmp/x86/mcrit/cmp_toktok-52bfcfa_msvc143_x86_cmp.dll.mcrit) / [x64 PE](data/cmp/x64/mcrit/cmp_toktok-52bfcfa_msvc143_x64_cmp.dll.mcrit) | [x86 PE](data/cmp/x86/smda/cmp_toktok-52bfcfa_msvc143_x86_cmp.dll.7z) / [x64 PE](data/cmp/x64/smda/cmp_toktok-52bfcfa_msvc143_x64_cmp.dll.7z) |
+<!-- /generated -->
+
 ### libcurl<a id='libcurl'></a>
 
 libcurl is commonly statically linked into downloaders and droppers. Built against the Schannel TLS backend, which shapes the emitted code more than the version does.  
