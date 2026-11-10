@@ -468,3 +468,103 @@ RECIPES["ed25519-donna_2015-03-16-force32bit_msvc"] = Recipe(
           "ed25519_randombytes_unsafe is the memset stub and must never run. "
           "No upstream file is patched.",
 )
+
+
+# Tor's real digest over the pinned OpenSSL 3.0.15 (see donna.py,
+# "2026-10-07-tor-openssl"): the cl counterpart. OpenSSL's headers come from
+# `perl Configure VC-WIN32|VC-WIN64A no-asm` and `nmake build_generated` in
+# the pinned tarball (nothing of OpenSSL is compiled), and libcrypto is
+# imported through an import library lib.exe writes from a .def of the 16
+# functions Tor's digest calls (libcrypto-3.dll / libcrypto-3-x64.dll).
+_OSSL = Source(
+    url="https://github.com/openssl/openssl/releases/download/openssl-3.0.15/"
+        "openssl-3.0.15.tar.gz",
+    sha256="23c666d0edf20f14249b3d8f0368acaee9ab585b09e1de82107c66e1f3ec9533")
+_OSSL_FUNCS = ("EVP_sha256 HMAC OPENSSL_cleanse SHA1 SHA1_Final SHA1_Init "
+               "SHA1_Update SHA256 SHA256_Final SHA256_Init SHA256_Update "
+               "SHA512 SHA512_Final SHA512_Init SHA512_Update")
+_OSSL_HEADERS = (
+    'python -c "'
+    "import subprocess;"
+    "t='VC-WIN64A' if '{arch}'=='x64' else 'VC-WIN32';"
+    "subprocess.check_call(['perl','Configure',t,'no-asm'],cwd='ossl');"
+    "subprocess.check_call(['nmake','/nologo','build_generated'],cwd='ossl')"
+    '"')
+_OSSL_IMPLIB = (
+    'python -c "'
+    "import subprocess;"
+    "x='{arch}'=='x64';"
+    "n='libcrypto-3-x64.dll' if x else 'libcrypto-3.dll';"
+    "open('crypto.def','w').write('LIBRARY '+n+chr(10)+'EXPORTS'+chr(10)+"
+    "chr(10).join('" + _OSSL_FUNCS + "'.split())+chr(10));"
+    "subprocess.check_call(['lib','/nologo','/def:crypto.def',"
+    "'/machine:'+('X64' if x else 'X86'),'/out:libcrypto.lib'])"
+    '"')
+_TOR_DIGEST_SRC = ("src/ext/ed25519/donna/ed25519_tor.c "
+                   "src/lib/crypt_ops/crypto_digest_openssl.c "
+                   "src/lib/crypt_ops/crypto_digest.c "
+                   "src/ext/keccak-tiny/keccak-tiny-unrolled.c "
+                   "src/lib/malloc/malloc.c src/lib/crypt_ops/crypto_util.c "
+                   "%s/ed25519_tor_openssl_shim.c" % _TOR_SHIM)
+_TOR_DIGEST_OBJS = ("ed25519_tor.obj crypto_digest_openssl.obj "
+                    "crypto_digest.obj keccak-tiny-unrolled.obj malloc.obj "
+                    "crypto_util.obj ed25519_tor_openssl_shim.obj")
+
+
+def _tor_openssl_steps(name, objdir, defines):
+    return [
+        BuildStep("if not exist %s mkdir %s" % (objdir, objdir)),
+        BuildStep("%s /Fd%s.pdb %s /DENABLE_OPENSSL %s/I%s /Iossl/include "
+                  "/Isrc /Isrc/ext /Isrc/ext/ed25519/donna /Fo%s\\ %s"
+                  % (_CL, name, _TOR_GLUE_DEFINES, defines, _TOR_SHIM,
+                     objdir, _TOR_DIGEST_SRC)),
+        BuildStep("%s /DEF:%s /PDB:%s.pdb /OUT:%s.dll %s libcrypto.lib "
+                  "bcrypt.lib"
+                  % (_LINK, _TOR_GLUE_DEF, name, name,
+                     " ".join("%s\\%s" % (objdir, o)
+                              for o in _TOR_DIGEST_OBJS.split()))),
+    ]
+
+
+RECIPES["ed25519-donna_2026-10-07-tor-openssl_msvc"] = Recipe(
+    family="ed25519-donna",
+    version="2026-10-07-tor-openssl",
+    upstream="https://gitlab.torproject.org/tpo/core/tor",
+    license=RECIPES["ed25519-donna_2026-10-07-tor_msvc"].license,
+    source=Source(git_url="https://gitlab.torproject.org/tpo/core/tor.git",
+                  git_ref=_TOR_COMMIT),
+    extra_sources={"openssl_src": _OSSL},
+    build=[BuildStep("mkdir ossl"),
+           BuildStep("tar -xzf {openssl_src} -C ossl --strip-components=1"),
+           BuildStep(_OSSL_HEADERS), BuildStep(_OSSL_IMPLIB)]
+    + _tor_openssl_steps("ed25519_tor", "obj-tor-ossl", "")
+    + _tor_openssl_steps("ed25519_tor-sse2", "obj-tor-ossl-sse2",
+                         "/DED25519_SSE2 "),
+    artifacts=[
+        Artifact(path="ed25519_tor.dll", component="ed25519_tor.dll",
+                 pdb="ed25519_tor.pdb"),
+        Artifact(path="ed25519_tor-sse2.dll", component="ed25519_tor-sse2.dll",
+                 pdb="ed25519_tor-sse2.pdb",
+                 build_flags="/O2 /MD /Zi -DED25519_CUSTOMRANDOM "
+                             "-DED25519_CUSTOMHASH -DED25519_SUFFIX=_donna "
+                             "-DENABLE_OPENSSL -DED25519_SSE2; /DEBUG /Brepro "
+                             "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link, "
+                             "libcrypto.lib (import library) bcrypt.lib"),
+    ],
+    toolchains=["msvc_x86", "msvc_x64"],
+    build_flags="/O2 /MD /Zi -DED25519_CUSTOMRANDOM -DED25519_CUSTOMHASH "
+                "-DED25519_SUFFIX=_donna -DENABLE_OPENSSL; /DEBUG /Brepro "
+                "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF at link, libcrypto.lib "
+                "(import library) bcrypt.lib",
+    notes="Tor's ed25519_tor.c at commit 8dbbbe6 built with cl together with "
+          "Tor's own digest (crypto_digest_openssl.c, crypto_digest.c, "
+          "keccak-tiny, lib/malloc/malloc.c, lib/crypt_ops/crypto_util.c) "
+          "against the headers of the pinned OpenSSL 3.0.15 (Configure "
+          "no-asm, nmake build_generated; nothing of OpenSSL compiled), "
+          "importing libcrypto-3[-x64].dll through an import library made "
+          "from a .def of the 16 functions it calls. Random source and "
+          "assertion reporters from scripts/corpus/exercisers/"
+          "ed25519_tor_shim/ed25519_tor_openssl_shim.c, never run. Exports "
+          "from scripts/corpus/exercisers/ed25519_tor.def. No file of either "
+          "tree is edited.",
+)
