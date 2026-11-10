@@ -1,0 +1,52 @@
+{
+  "GnuTLS_3.8.13_gcc13_x64_libgnutls.so": {
+    "architecture": "x64",
+    "build_flags": "--enable-shared --disable-static --with-included-libtasn1 --with-included-unistring --without-p11-kit --without-idn --without-zlib --without-brotli --without-zstd --without-tpm --without-tpm2 --disable-doc --disable-tests --disable-tools --disable-cxx --disable-libdane --disable-nls --disable-guile; GMP 6.3.0 (--enable-fat --with-pic) and Nettle 3.10.2 (with GMP, --disable-shared, -fPIC) built as static helper libraries in the build tree and linked into libgnutls",
+    "built_artifact": "build-x64/lib/.libs/libgnutls.so",
+    "compiler": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "component": "libgnutls.so",
+    "dependencies": {
+      "gmp_archive": {
+        "archive": "gmp-6.3.0.tar.xz",
+        "sha256": "a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898",
+        "url": "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz"
+      },
+      "nettle_archive": {
+        "archive": "nettle-3.10.2.tar.gz",
+        "sha256": "fe9ff51cb1f2abb5e65a6b8c10a92da0ab5ab6eaf26e7fc2b675c45f1fb519b5",
+        "url": "https://ftp.gnu.org/gnu/nettle/nettle-3.10.2.tar.gz"
+      }
+    },
+    "exclude_functions": [
+      "^_?_?(?:nettle_(?!tls1[02]_prf$|write_be32$)|gmp)|^_?_?mp[nzqf]_(?!get_base256$|set_base256$|seed_sizeinbase_256_u$)|^ecc_",
+      "^_?(?:\\.rc|LPSX|_camellia256_set_encrypt_key|_siv_s2v|abs_sub_add_n|abs_sub_n|base16_decode_length|base16_encode_final|base16_encode_init|base16_encode_length|base16_encode_update_wrapper|base64_decode_length|base64_encode_length|base64url_decode_length|base64url_encode_length|bc_bin_uiui|block_resieve|ccm_build_iv|check_length\\.part\\.0|ctr_fill|ctr_fill16|div2|drbg_ctr_aes256_output|eax_aes128_set_nonce_wrapper|ecdsa_in_range|ed25519_dom|ed448_dom|encode_raw|equal_h|fat_init|findnext|format_prefix|g|gcd_hook|gcm_aes128_set_nonce_wrapper|gcm_aes192_set_nonce_wrapper|gcm_aes256_set_nonce_wrapper|gcm_camellia128_set_nonce_wrapper|gcm_camellia256_set_nonce_wrapper|gcm_fill|gcm_hash|gcm_sm4_set_nonce_wrapper|get|gost_block_compress|gost_compute_sum_and_hash|gosthash94_update_int\\.part\\.0|gosthash94_write_digest|h|h_byte|hash|hgcd_hook|hgcd_jacobi_hook|hgcd_jacobi_step|hgcd_matrix_apply|hmac_gosthash94_set_key_wrapper|hmac_gosthash94cp_set_key_wrapper|hmac_md5_set_key_wrapper|hmac_ripemd160_set_key_wrapper|hmac_sha1_set_key_wrapper|hmac_sha224_set_key_wrapper|hmac_sha256_set_key_wrapper|hmac_sha384_set_key_wrapper|hmac_sha512_set_key_wrapper|hmac_sm3_set_key_wrapper|hmac_streebog256_set_key_wrapper|hmac_streebog512_set_key_wrapper|ibcrypt\\.constprop\\.0|is_kth_power|jacobi_hook|lc\\.isra\\.0|md2_transform|md4_compress|md4_transform|miller_rabin_pocklington\\.part\\.0|millerrabin|mod\\.part\\.0|mod_eq_m1\\.isra\\.0|mord_2exp\\.isra\\.0|mul1|mul2|mul3|mul4|mul5|mul6|mul7|mul8|ocb_checksum_n|ocb_crypt_n|ocb_fill_n|omac_update|pad_block|perfpow|poly128_mul|poly1305_pad|poly64_mul\\.part\\.0|posmpz_dec_ui|posmpz_inc_ui|pow_equals|randclear_lc|randget_lc|randiset_lc|randseed_lc|randseed_mt|redcify|reduce|rek_raising_fac4|scan|sec_mod_mul|sec_powm|set_xkey|sexp_iterator_parse|sexp_iterator_simple|sha256_write_digest|sha512_write_digest|siv_gcm_authenticate|siv_gcm_derive_keys\\.constprop\\.0|siv_gcm_fill|siv_ghash_pad_update|skip_white|sm3_compress|sm4_set_key|sm4_t_non_lin_sub|step|streebog512_compress|streebog512_write_digest\\.part\\.0|streebog_final|submul|umac_kdf|unget)$"
+    ],
+    "excluded_function_count": 1181,
+    "family": "GnuTLS",
+    "generated": "2026-11-10",
+    "is_blob": false,
+    "license": "LGPL-2.1-or-later",
+    "mcrit": "data/GnuTLS/x64/mcrit/GnuTLS_3.8.13_gcc13_x64_libgnutls.so.mcrit",
+    "notes": "Nettle, hogweed and GMP code linked in statically is removed by name (Recipe.exclude_functions) because the Nettle and GMP families carry it; libtasn1 and libunistring are GnuTLS's bundled copies and stay in. Source tarballs are sha256-pinned and were checked against the upstream GPG signatures. No source is patched.",
+    "num_functions": 3871,
+    "num_functions_before_exclusion": 5052,
+    "removed_runtime_functions": [
+      "__do_global_dtors_aux",
+      "_init",
+      "deregister_tm_clones",
+      "frame_dummy",
+      "register_tm_clones"
+    ],
+    "sha256": "32b6cb226e1ca29af3fbe8f78d47ddd014810554681ee9c2a53f40cb11309fa3",
+    "smda": "data/GnuTLS/x64/smda/GnuTLS_3.8.13_gcc13_x64_libgnutls.so.7z",
+    "smda_version": "5.0.2",
+    "source": {
+      "archive": "gnutls-3.8.13.tar.xz",
+      "sha256": "ffed8ec1bf09c2426d4f14aae377de4753b53e537d685e604e99a8b16ca9c97e",
+      "url": "https://www.gnupg.org/ftp/gcrypt/gnutls/v3.8/gnutls-3.8.13.tar.xz"
+    },
+    "toolchain": "gcc13_x64",
+    "upstream": "https://www.gnutls.org/",
+    "version": "3.8.13"
+  }
+}
