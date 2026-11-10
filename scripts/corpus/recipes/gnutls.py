@@ -179,7 +179,7 @@ _GNUTLS = ("D=$PWD/deps-{arch} && mkdir -p build-{arch} && cd build-{arch} && "
            "NETTLE_LIBS=\"-L$D/lib -lnettle\" NETTLE_CFLAGS=-I$D/include "
            "HOGWEED_LIBS=\"-L$D/lib -lhogweed -lnettle -lgmp\" HOGWEED_CFLAGS=-I$D/include "
            "CPPFLAGS=-I$D/include LDFLAGS=-L$D/lib "
-           "{source_root}/configure{gmp_host} --enable-shared --disable-static "
+           "{lt_env}{source_root}/configure{gmp_host} --enable-shared --disable-static "
            "--with-included-libtasn1 --with-included-unistring --without-p11-kit "
            "--without-idn --without-zlib --without-brotli --without-zstd "
            "--without-tpm --without-tpm2 --disable-doc --disable-tests "
@@ -206,7 +206,8 @@ def _recipe(version, linux):
     unpack = _UNPACK
     gmp = _GMP.replace("{gmp_abi}", abi).replace("{gmp_host}", host)
     nettle = _NETTLE.replace("{gmp_host}", host)
-    gnutls = _GNUTLS.replace("{gmp_host}", host)
+    gnutls = _GNUTLS.replace("{gmp_host}", host).replace(
+        "{lt_env}", "" if linux else "lt_cv_deplibs_check_method=pass_all ")
     return Recipe(
         family="GnuTLS",
         version=version,
