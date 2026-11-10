@@ -274,3 +274,73 @@ RECIPES = {
         "Current release, and the only tag whose solution is upstream's own "
         "vc2022 (v143) one, kept beside 5.3.0 rather than replacing it. "),
 }
+
+
+# jemalloc 3.6.0, the last 3.x release. No 3.x tag ships an msvc/ solution,
+# but 3.x builds with cl through its own configure and Makefile: configure.ac
+# detects cl (je_cv_msvc), adds include/msvc_compat, and for a *-mingw* host
+# sets DSO_LDFLAGS=-LD, -Fe/-Fo targets, lib as the archiver and an import
+# library. That is the route 3.x documents for MSVC (configure run with
+# CC=cl from an MSYS shell), so it is used here as it stands:
+#
+#   * --host <cpu>-w64-mingw32 selects that pecoff branch;
+#   * CFLAGS is given, so configure does not add its default -Zi -MT -W3 -O2;
+#     the same flags with /MD in place of /MT are passed instead, as every
+#     MSVC recipe here requires;
+#   * EXTRA_LDFLAGS, which configure sets to "-link -DEBUG", is overridden on
+#     the make command line to carry the corpus link policy after -link;
+#   * GNU make comes from the same MSYS2 installation as autoconf, installed
+#     with its pacman in this step and kept off PATH like the rest of it.
+#
+# Only the shared library is built (build_lib_shared); the static archive and
+# the tests are not needed.
+_LINK36 = "-link -DEBUG -Brepro -INCREMENTAL:NO -OPT:NOREF -OPT:NOICF"
+_CFLAGS36 = "-nologo -Zi -MD -W3 -O2"
+
+RECIPES["jemalloc_3.6.0_msvc"] = Recipe(
+    family="jemalloc",
+    version="3.6.0",
+    upstream="https://github.com/jemalloc/jemalloc",
+    license="BSD-2-Clause",
+    source=Source(git_url="https://github.com/jemalloc/jemalloc.git",
+                  git_ref="3.6.0"),
+    build=[
+        BuildStep(_CHECK_BASH),
+        BuildStep('"%AUTOTOOLS_BASH%" -lc "pacman -S --noconfirm --needed make"',
+                  env=_ENV),
+        # 3.x has no --with-version: configure writes VERSION with git
+        # describe when there is a .git and otherwise reads the file, so the
+        # file is written first with what git describe prints on the tag.
+        BuildStep('python -c "open(\'VERSION\',\'w\').write('
+                  "'3.6.0-0-g46c0af68bd248b04df75e4f92d5fb804c3d75340\\n')\""),
+        BuildStep(_SH + 'je_cv_static_page_shift=12 CC=cl CFLAGS=\''
+                  + _CFLAGS36 + '\' sh ./autogen.sh '
+                  '--host=$([ {bitness} = 64 ] && echo x86_64 || echo i686)'
+                  '-w64-mingw32"',
+                  env=_ENV, allow_failure=True),
+        _TAIL,
+        BuildStep(_CHECK_HEADERS),
+        BuildStep(_SH + 'make build_lib_shared EXTRA_LDFLAGS=\'' + _LINK36
+                  + '\'"', env=_ENV),
+        BuildStep("dumpbin /dependents lib\\jemalloc.dll", allow_failure=True),
+        BuildStep("dir lib", allow_failure=True),
+    ],
+    artifacts=[Artifact(path="lib/jemalloc.dll", component="jemalloc.dll",
+                        pdb="lib/jemalloc.pdb")],
+    toolchains=["msvc_x86", "msvc_x64"],
+    build_flags="cl " + _CFLAGS36 + " (configure's own MSVC flags with /MD "
+                "for /MT); " + _LINK36.replace("-link ", "") + " at link; "
+                "configure/make with CC=cl, --host <cpu>-w64-mingw32",
+    notes="Last of the 3.x line (chunk-and-run internals), the same tag as "
+          "the MinGW artefact. 3.x ships no msvc/ solution; it is built with "
+          "cl through its own configure/Makefile (the MSVC route configure.ac "
+          "implements for a *-mingw* host: include/msvc_compat, -LD, an "
+          "import library), from MSYS2's bash with autoconf and make kept off "
+          "PATH. configure's default -MT is replaced by -MD by passing the "
+          "rest of its MSVC CFLAGS explicitly, and its -link -DEBUG gets the "
+          "corpus link options. VERSION is written before configure (3.x has "
+          "no --with-version and cannot run git under the runner's shell), "
+          "and je_cv_static_page_shift=12 is primed as in the MinGW recipe. "
+          "Built against "
+          "the DLL runtime, so the MSVC C runtime is imported.",
+)
