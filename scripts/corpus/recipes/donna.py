@@ -248,6 +248,40 @@ limb handling (`curve25519_mul`, `curve25519_square_times` against `fproduct`,
 What is not covered, honestly: Mach-O, the digest Tor really uses, and the -O3 and -Os builds of either. (MSVC is donna_msvc.py.) Everything stripped by a malware author is
 also not covered: these are unstripped, with symbols, like the rest of the
 corpus.
+
+Second pass, separate versions so the images above are unchanged (kept +
+removed = total, no exclusions; ten-instruction PicHashes in brackets).
+
+ED25519_FORCE_32BIT on x64 ("2015-03-16-force32bit", the plain component
+with the 32-bit field code forced): MinGW x64 44 + 52 = 96 (33), Linux x64
+42 + 6 = 48 (31). Against the default x64 build only 8 of 31 (MinGW) and 7 of
+30 (Linux) hashes are shared, and none with the x86 build, whose field code
+is the same source but whose calling convention is not.
+
+The optimisation levels the first revision measured and dropped, plain
+component ("2015-03-16-O0", "-O1", "-O3", "-Os"):
+
+    -O0  MinGW x86 68 + 52 = 120 (65)  x64 73 + 53 = 126 (63)  Linux x86 83 + 4 = 87 (70)  x64 73 + 6 = 79 (63)
+    -O1  MinGW x86 39 + 52 = 91 (38)   x64 45 + 53 = 98 (34)   Linux x86 58 + 5 = 63 (42)  x64 47 + 6 = 53 (33)
+    -O3  MinGW x86 36 + 52 = 88 (34)   x64 48 + 52 = 100 (37)  Linux x86 55 + 5 = 60 (38)  x64 48 + 6 = 54 (36)
+    -Os  MinGW x86 41 + 50 = 91 (39)   x64 47 + 51 = 98 (33)   Linux x86 53 + 5 = 58 (42)  x64 43 + 6 = 49 (32)
+
+The nearest other image of the same target shares at most 14 of their
+hashes (-O3 against -O2 on MinGW x86) and -O0 at most 1, so each level is a
+reference of its own.
+
+Tor's real digest ("2026-10-07-tor-openssl", above): Tor's ed25519_tor.c with
+Tor's own crypto_digest code over the pinned OpenSSL 3.0.15 libcrypto, plain
+and SSE2. Kept + removed = total (no exclusions; ten-instruction PicHashes in
+brackets): MinGW x86 112 + 55 = 167 (82), SSE2 115 + 54 = 169 (85); x64
+107 + 55 = 162 (70), SSE2 112 + 55 = 167 (74); Linux x86 175 + 5 = 180 (103),
+SSE2 188 + 5 = 193 (105); x64 169 + 6 = 175 (85), SSE2 176 + 5 = 181 (91).
+Against the stand-in-digest 2026-10-07-tor component of the same target 41
+of 82 (MinGW x86), 39 of 70 (MinGW x64), 24 of 103 (Linux x86) and 38 of 85
+(Linux x64) are shared: the donna arithmetic and the Tor API, while the
+digest functions (crypto_digest512_new, crypto_digest_add_bytes,
+crypto_digest_get_digest and the rest of crypto_digest_openssl.c,
+crypto_digest.c and keccak-tiny) are Tor's own and new.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
