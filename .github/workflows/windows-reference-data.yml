@@ -80,7 +80,7 @@ jobs:
           go version
 
       - name: Show recipe
-        run: python scripts/build_corpus.py list | grep -F "${{ matrix.recipe }} "
+        run: python scripts/build_corpus.py list | grep -F "${{ matrix.recipe }}" || true
 
       - name: Build
         env:
@@ -89,7 +89,12 @@ jobs:
         run: |
           mkdir -p build
           set +e
-          python scripts/build_corpus.py build "${{ matrix.recipe }}" --toolchain mingw_$ARCH --toolchain linux_$ARCH 2>&1 | tee build/build-output.txt
+          # Only the toolchains the recipe declares for this architecture:
+          # build_corpus.py passes --toolchain through to run_recipe as given.
+          TCS=$(python -c "import sys; sys.path.insert(0,'scripts'); from corpus import recipes; r=recipes.get(sys.argv[1]); print(' '.join('--toolchain '+t for t in r.toolchains if t.endswith('_'+sys.argv[2]) and t.split('_')[0] in ('mingw','linux')))" "${{ matrix.recipe }}" "$ARCH")
+          echo "toolchains: $TCS"
+          if [ -z "$TCS" ]; then echo "nothing to build for $ARCH"; exit 0; fi
+          python scripts/build_corpus.py build "${{ matrix.recipe }}" $TCS 2>&1 | tee build/build-output.txt
           echo "exit ${PIPESTATUS[0]}"
           for f in build/*.log; do echo "== $f"; tail -60 "$f"; done
           exit 0
