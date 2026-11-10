@@ -203,6 +203,12 @@ def _miniupnpc_msvc(version, git_ref):
               "miniupnpc.def. Links ws2_32 and iphlpapi dynamically; the C "
               "runtime is imported (/MD).",
     )
+    if version == "1.9.20150917":
+        r.notes += (" minissdpc.c of this tarball includes <strings.h> and "
+                    "<unistd.h> ahead of its _WIN32 branch and uses nothing "
+                    "from them on Windows; two empty headers of those names "
+                    "are written into the build tree for cl. No upstream file "
+                    "is edited.")
     if tarball:
         # A dated release tarball, not a git tag; see miniupnpc.py.
         r.source = Source(
