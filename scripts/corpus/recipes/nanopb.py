@@ -181,6 +181,68 @@ x86 / x64, so the corpus floor is met without min_functions.
 Known baseline gap, left to the baseline: libgcc's stack probe
 (`___chkstk_ms`, 15 instructions) is carried unnamed in every artefact,
 PicHash dfe3cea2dbb80872 on x86 and ae8f920c3b4e652a on x64.
+
+Second pass: the other define combinations and -Os of the shipped sets, as
+versions "<tag>-defines" so the images above are unchanged. Per tag, the
+runtime plus generated driver.pb.c with each of the twelve non-empty subsets
+of {PB_FIELD_32BIT, PB_NO_ERRMSG, PB_BUFFER_ONLY, PB_ENABLE_MALLOC} not
+already shipped (libprotobuf-nanopb-<field32, noerrmsg, bufferonly, malloc
+joined by "-">.dll) at -O2, and -all, -small and -big at -Os
+(libprotobuf-nanopb-<set>-Os.dll). Kept + removed = total (no exclusions):
+
+    0.3.9.10-defines libprotobuf-nanopb-all-Os.dll x86 67 + 49 = 116, x64 76 + 50 = 126
+    0.3.9.10-defines libprotobuf-nanopb-big-Os.dll x86 69 + 49 = 118, x64 78 + 50 = 128
+    0.3.9.10-defines libprotobuf-nanopb-bufferonly-malloc.dll x86 64 + 49 = 113, x64 73 + 50 = 123
+    0.3.9.10-defines libprotobuf-nanopb-bufferonly.dll x86 60 + 49 = 109, x64 69 + 50 = 119
+    0.3.9.10-defines libprotobuf-nanopb-field32-bufferonly-malloc.dll x86 64 + 51 = 115, x64 73 + 52 = 125
+    0.3.9.10-defines libprotobuf-nanopb-field32-bufferonly.dll x86 60 + 51 = 111, x64 69 + 52 = 121
+    0.3.9.10-defines libprotobuf-nanopb-field32-noerrmsg-bufferonly.dll x86 61 + 51 = 112, x64 70 + 52 = 122
+    0.3.9.10-defines libprotobuf-nanopb-field32-noerrmsg-malloc.dll x86 65 + 51 = 116, x64 74 + 52 = 126
+    0.3.9.10-defines libprotobuf-nanopb-field32-noerrmsg.dll x86 63 + 51 = 114, x64 72 + 52 = 124
+    0.3.9.10-defines libprotobuf-nanopb-field32.dll x86 62 + 51 = 113, x64 71 + 52 = 123
+    0.3.9.10-defines libprotobuf-nanopb-malloc.dll x86 66 + 49 = 115, x64 75 + 50 = 125
+    0.3.9.10-defines libprotobuf-nanopb-noerrmsg-bufferonly-malloc.dll x86 63 + 49 = 112, x64 72 + 50 = 122
+    0.3.9.10-defines libprotobuf-nanopb-noerrmsg-malloc.dll x86 65 + 49 = 114, x64 74 + 50 = 124
+    0.3.9.10-defines libprotobuf-nanopb-noerrmsg.dll x86 63 + 49 = 112, x64 72 + 50 = 122
+    0.3.9.10-defines libprotobuf-nanopb-small-Os.dll x86 62 + 49 = 111, x64 71 + 50 = 121
+    0.4.5-defines libprotobuf-nanopb-all-Os.dll x86 53 + 49 = 102, x64 62 + 50 = 112
+    0.4.5-defines libprotobuf-nanopb-big-Os.dll x86 55 + 49 = 104, x64 64 + 50 = 114
+    0.4.5-defines libprotobuf-nanopb-bufferonly-malloc.dll x86 49 + 50 = 99, x64 58 + 51 = 109
+    0.4.5-defines libprotobuf-nanopb-bufferonly.dll x86 46 + 50 = 96, x64 55 + 51 = 106
+    0.4.5-defines libprotobuf-nanopb-field32-bufferonly-malloc.dll x86 49 + 50 = 99, x64 58 + 51 = 109
+    0.4.5-defines libprotobuf-nanopb-field32-bufferonly.dll x86 46 + 50 = 96, x64 55 + 51 = 106
+    0.4.5-defines libprotobuf-nanopb-field32-noerrmsg-bufferonly.dll x86 47 + 50 = 97, x64 57 + 51 = 108
+    0.4.5-defines libprotobuf-nanopb-field32-noerrmsg-malloc.dll x86 50 + 50 = 100, x64 60 + 51 = 111
+    0.4.5-defines libprotobuf-nanopb-field32-noerrmsg.dll x86 49 + 50 = 99, x64 59 + 51 = 110
+    0.4.5-defines libprotobuf-nanopb-field32.dll x86 48 + 50 = 98, x64 57 + 51 = 108
+    0.4.5-defines libprotobuf-nanopb-malloc.dll x86 51 + 50 = 101, x64 60 + 51 = 111
+    0.4.5-defines libprotobuf-nanopb-noerrmsg-bufferonly-malloc.dll x86 48 + 50 = 98, x64 58 + 51 = 109
+    0.4.5-defines libprotobuf-nanopb-noerrmsg-malloc.dll x86 50 + 50 = 100, x64 60 + 51 = 111
+    0.4.5-defines libprotobuf-nanopb-noerrmsg.dll x86 49 + 50 = 99, x64 59 + 51 = 110
+    0.4.5-defines libprotobuf-nanopb-small-Os.dll x86 49 + 49 = 98, x64 58 + 50 = 108
+    0.4.9.2-defines libprotobuf-nanopb-all-Os.dll x86 53 + 49 = 102, x64 62 + 50 = 112
+    0.4.9.2-defines libprotobuf-nanopb-big-Os.dll x86 55 + 49 = 104, x64 64 + 50 = 114
+    0.4.9.2-defines libprotobuf-nanopb-bufferonly-malloc.dll x86 50 + 51 = 101, x64 59 + 52 = 111
+    0.4.9.2-defines libprotobuf-nanopb-bufferonly.dll x86 48 + 51 = 99, x64 57 + 52 = 109
+    0.4.9.2-defines libprotobuf-nanopb-field32-bufferonly-malloc.dll x86 50 + 51 = 101, x64 59 + 52 = 111
+    0.4.9.2-defines libprotobuf-nanopb-field32-bufferonly.dll x86 48 + 51 = 99, x64 57 + 52 = 109
+    0.4.9.2-defines libprotobuf-nanopb-field32-noerrmsg-bufferonly.dll x86 48 + 51 = 99, x64 58 + 52 = 110
+    0.4.9.2-defines libprotobuf-nanopb-field32-noerrmsg-malloc.dll x86 50 + 51 = 101, x64 60 + 52 = 112
+    0.4.9.2-defines libprotobuf-nanopb-field32-noerrmsg.dll x86 50 + 51 = 101, x64 60 + 52 = 112
+    0.4.9.2-defines libprotobuf-nanopb-field32.dll x86 50 + 51 = 101, x64 59 + 52 = 111
+    0.4.9.2-defines libprotobuf-nanopb-malloc.dll x86 52 + 51 = 103, x64 61 + 52 = 113
+    0.4.9.2-defines libprotobuf-nanopb-noerrmsg-bufferonly-malloc.dll x86 48 + 51 = 99, x64 58 + 52 = 110
+    0.4.9.2-defines libprotobuf-nanopb-noerrmsg-malloc.dll x86 50 + 51 = 101, x64 60 + 52 = 112
+    0.4.9.2-defines libprotobuf-nanopb-noerrmsg.dll x86 50 + 51 = 101, x64 60 + 52 = 112
+    0.4.9.2-defines libprotobuf-nanopb-small-Os.dll x86 50 + 49 = 99, x64 59 + 50 = 109
+
+Not committed, because the images were PicHash-identical (every function at
+every size) to committed ones: the empty define set with the driver
+(identical to libprotobuf-nanopb.dll of the same tag and architecture, all
+six targets) and upstream's CMake build (see the comment at the end of this
+file). Against the nearest other image of the same tag and architecture the
+committed images share between 43% and 93% of their PicHashes of ten
+instructions or more.
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
@@ -407,7 +469,11 @@ _SHIPPED = {(0, 1, 2, 3), (1, 2), (0, 3)}
 def _combinations():
     import itertools
     combos = []
-    for size in range(0, 5):
+    # The empty set with the driver is not built: its image is
+    # PicHash-identical to the committed default build of the same tag and
+    # architecture (driver.pb.c is a descriptor table with no function),
+    # measured with MinGW and MSVC on all three tags.
+    for size in range(1, 5):
         for subset in itertools.combinations(range(4), size):
             if subset in _SHIPPED:
                 continue
@@ -477,66 +543,15 @@ for _v in ("0.3.9.10", "0.4.5", "0.4.9.2"):
     RECIPES["nanopb_%s-defines" % _v] = _nanopb_defines(_v)
 
 
-# --- Upstream's own CMake, which the recipes above do not use because it
-# needs a protoc at configure time. Here a real protoc is supplied: the
-# protoc 21.12 release binary for the build host, fetched by sha256 as a
-# pinned extra source (0.4.9.2 aborts at configure with "protoc compiler not
-# found" without one; 0.3.9.10 and 0.4.5 call it only for the generator).
-# The generator is switched off (nanopb_BUILD_GENERATOR=OFF; it would only
-# compile nanopb.proto into Python) and BUILD_SHARED_LIBS=ON selects
-# upstream's protobuf-nanopb shared target. No CMAKE_BUILD_TYPE is given,
-# which is how upstream's CMake builds when nothing is passed: GCC then gets
-# no -O flag at all, so these images are unoptimised by upstream's default,
-# not by this recipe's choice. Versions "<tag>-cmake".
-_PROTOC_LINUX = Source(
-    url="https://github.com/protocolbuffers/protobuf/releases/download/"
-        "v21.12/protoc-21.12-linux-x86_64.zip",
-    sha256="3a4c1e5f2516c639d3079b1586e703fc7bcfa2136d58bda24d1d54f949c315e8")
-
-
-def _nanopb_cmake(version):
-    return Recipe(
-        family="nanopb",
-        version=version + "-cmake",
-        upstream="https://github.com/nanopb/nanopb",
-        license="Zlib",
-        source=Source(git_url="https://github.com/nanopb/nanopb.git",
-                      git_ref="nanopb-" + version),
-        extra_sources={"protoc_zip": _PROTOC_LINUX},
-        build=[
-            BuildStep("rm -rf protoc-bin && mkdir protoc-bin && "
-                      "python3 -c \"import zipfile,sys; "
-                      "zipfile.ZipFile(sys.argv[1]).extractall('protoc-bin')\" "
-                      "{protoc_zip} && chmod +x protoc-bin/bin/protoc"),
-            BuildStep("cmake -S . -B build-{arch} "
-                      "-DCMAKE_POLICY_VERSION_MINIMUM=3.5 "
-                      "-DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER={cc} "
-                      "-DCMAKE_CXX_COMPILER={cxx} "
-                      "-DCMAKE_RC_COMPILER={windres} "
-                      "-DCMAKE_FIND_ROOT_PATH=/usr/{host} "
-                      "-DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=OFF "
-                      "-Dnanopb_BUILD_GENERATOR=OFF "
-                      "-Dnanopb_PROTOC_PATH=$PWD/protoc-bin/bin/protoc"),
-            BuildStep("cmake --build build-{arch} -j$(nproc)"),
-            BuildStep("ls -la build-{arch}"),
-        ],
-        artifacts=[Artifact(path="build-{arch}/libprotobuf-nanopb.dll",
-                            component="libprotobuf-nanopb.dll")],
-        toolchains=["mingw_x86", "mingw_x64"],
-        build_flags="upstream CMake, no CMAKE_BUILD_TYPE (upstream default, "
-                    "no -O flag), BUILD_SHARED_LIBS=ON, "
-                    "nanopb_BUILD_GENERATOR=OFF, protoc 21.12 release binary "
-                    "as nanopb_PROTOC_PATH",
-        notes="Tag nanopb-%s built through upstream's own CMakeLists.txt "
-              "(protobuf-nanopb shared target), which the %s recipe "
-              "replaces with a direct compile because the CMake needs a "
-              "protoc at configure time; a pinned protoc 21.12 release "
-              "binary is supplied for that. Built as upstream's CMake builds "
-              "with nothing passed: no build type, so no optimisation flag. "
-              "Nothing patched. Evidence for inclusion is naming only."
-              % (version, version),
-    )
-
-
-for _v in ("0.3.9.10", "0.4.5", "0.4.9.2"):
-    RECIPES["nanopb_%s-cmake" % _v] = _nanopb_cmake(_v)
+# --- Upstream's own CMake (the gap the direct compile above left open) was
+# built and measured and is not a recipe on this axis: configured with a
+# pinned protoc 21.12 release binary (protoc-21.12-linux-x86_64.zip, sha256
+# 3a4c1e5f2516c639d3079b1586e703fc7bcfa2136d58bda24d1d54f949c315e8, which
+# 0.4.9.2's CMakeLists needs at configure time) and nanopb_BUILD_GENERATOR=
+# OFF, BUILD_SHARED_LIBS=ON and no CMAKE_BUILD_TYPE, upstream's
+# protobuf-nanopb target compiles the same three files with the toolchain's
+# own -O2 (CMake takes it from CFLAGS when no build type adds flags) and the
+# resulting libprotobuf-nanopb.dll is PicHash-identical, every function at
+# every size, to the committed direct build at all three tags on both
+# architectures, so it would add nothing. The MSVC CMake build differs on
+# x64 and is in nanopb_msvc.py.
