@@ -211,7 +211,7 @@ _LEGACY_FLAGS = (
     "(versions in paths.targets)")
 
 
-def _sweep_recipe(tag, commit, programs, exclude=()):
+def _sweep_recipe(tag, commit, programs, exclude=(), prep_args=""):
     """Another Win32-OpenSSH tag, added in the final sweep.
 
     v10.0.0.0 has a vcpkg manifest and goes through exactly the same steps as
@@ -223,6 +223,8 @@ def _sweep_recipe(tag, commit, programs, exclude=()):
     recipe = _recipe("Win32_" + tag, commit, exclude)
     targets = " ".join(programs)
     recipe.build[2] = BuildStep(_HELPER % "msbuild" + " " + targets)
+    if prep_args:
+        recipe.build[0] = BuildStep(_HELPER % "prep" + " " + prep_args)
     recipe.artifacts = [Artifact(path="corpusout\\%s.exe" % name,
                                  component="%s.exe" % name,
                                  pdb="corpusout\\%s.pdb" % name)
@@ -267,5 +269,14 @@ for _tag, _commit, _programs in (
         ("8.9.0.0", "bd0d488a3c4bca55626909d81ac766f2aa278791", _PRE98),
         ("8.6.0.0", "75835a2462e1d8caf614cdb7011e45da929dc142", _PRE89),
         ("8.1.0.0", "ee11c8e15eb11c48afbe98270080c728243c4300", _PRE89)):
+    # Tags before 9.4 name v140/v141 projects; their win32compat macros need
+    # the SDK's POSIX-name declarations off (run 42775680583, C2373), and
+    # 8.1.0.0's paths.targets asks for a zlib release with no asset.
+    _args = ""
+    if _tag.split(".")[:2] < ["9", "4"] and int(_tag.split(".")[0]) < 10:
+        _args = "nonstdc"
+    if _tag == "8.1.0.0":
+        _args += (" zlib=V1.2.11:"
+                  "67ac5ccdbfdc64c275b7ad3d70fcf702f5f8086b10f2c7a91d8f71709f8a7339")
     RECIPES["OpenSSH_Win32_%s_msvc" % _tag] = _sweep_recipe(
-        _tag, _commit, _programs, [zlib_functions()])
+        _tag, _commit, _programs, [zlib_functions()], prep_args=_args)
