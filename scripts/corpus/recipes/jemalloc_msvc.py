@@ -308,13 +308,22 @@ RECIPES["jemalloc_3.6.0_msvc"] = Recipe(
         BuildStep(_CHECK_BASH),
         BuildStep('"%AUTOTOOLS_BASH%" -lc "pacman -S --noconfirm --needed make"',
                   env=_ENV),
-        # 3.x has no --with-version: configure writes VERSION with git
-        # describe when there is a .git and otherwise reads the file, so the
-        # file is written first with what git describe prints on the tag.
-        BuildStep('python -c "open(\'VERSION\',\'w\').write('
-                  "'3.6.0-0-g46c0af68bd248b04df75e4f92d5fb804c3d75340\\n')\""),
-        BuildStep(_SH + 'je_cv_static_page_shift=12 CC=cl CFLAGS=\''
-                  + _CFLAGS36 + '\' sh ./autogen.sh '
+        # 3.x has no --with-version: when the tree has a .git, configure runs
+        # `git describe --long --abbrev=40 > VERSION` and reads the file, and
+        # the clone here carries no tag for describe to find ("fatal: No
+        # names found"), which leaves VERSION empty. A one-line `git` on the
+        # front of this shell's PATH prints what describe prints on the tag
+        # instead; nothing in the tree is touched.
+        #
+        # CPPFLAGS restates configure's -I include/msvc_compat, which it adds
+        # only when CFLAGS is unset (the same block that adds -MT); without it
+        # strings.h's ffsl is not found ("Cannot build without ffsl(3)").
+        BuildStep(_SH + 'mkdir -p /tmp/jegit && printf \'#!/bin/sh\\necho '
+                  '3.6.0-0-g46c0af68bd248b04df75e4f92d5fb804c3d75340\\n\' > '
+                  '/tmp/jegit/git && chmod +x /tmp/jegit/git && '
+                  'PATH=/tmp/jegit:$PATH je_cv_static_page_shift=12 CC=cl '
+                  'CFLAGS=\'' + _CFLAGS36 + '\' '
+                  'CPPFLAGS=\'-Iinclude/msvc_compat\' sh ./autogen.sh '
                   '--host=$([ {bitness} = 64 ] && echo x86_64 || echo i686)'
                   '-w64-mingw32"',
                   env=_ENV, allow_failure=True),
@@ -338,8 +347,10 @@ RECIPES["jemalloc_3.6.0_msvc"] = Recipe(
           "import library), from MSYS2's bash with autoconf and make kept off "
           "PATH. configure's default -MT is replaced by -MD by passing the "
           "rest of its MSVC CFLAGS explicitly, and its -link -DEBUG gets the "
-          "corpus link options. VERSION is written before configure (3.x has "
-          "no --with-version and cannot run git under the runner's shell), "
+          "corpus link options. configure's git describe is answered by a "
+          "one-line git shim on that shell's PATH (3.x has no --with-version "
+          "and the clone carries no tag), configure's -I include/msvc_compat "
+          "is restated in CPPFLAGS, "
           "and je_cv_static_page_shift=12 is primed as in the MinGW recipe. "
           "Built against "
           "the DLL runtime, so the MSVC C runtime is imported.",
