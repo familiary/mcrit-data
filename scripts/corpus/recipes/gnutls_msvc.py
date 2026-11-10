@@ -71,6 +71,18 @@ leaves in the images are GnuTLS's own definitions of that shape:
 nettle_tls10_prf, nettle_tls12_prf, nettle_write_be32, mpn_get_base256,
 mpn_set_base256 and mpz_seed_sizeinbase_256_u.
 
+The name list was derived on 3.8.13 and is reused unchanged for 3.7.11.
+Checked against the 3.7.11 source tree (gnutls-3.7.11.tar.xz, sha256
+90e33750...): the names on it that 3.7.11 itself defines are in GnuTLS's
+bundled Nettle code (lib/nettle/backport/block-internal.h, lib/nettle/gost/
+streebog.c), which is Nettle's, plus the gperf `hash` in lib/priority_options.h
+and the `static inline is_zero_limb` in lib/nettle/int/dsa-compute-k.c. Those
+two are exactly the ones 3.8.13 also defines, where the object-level
+subtraction above found no GnuTLS body for them: both are static
+single-caller helpers, and cl inlines them. 3.7.11 is built with the same cl
+and flags. So the 3.7.11 exclusion removes no GnuTLS function that the
+3.8.13 one keeps.
+
 Counts, kept + removed (the baseline's measured MSVC runtime) + excluded
 (Nettle and GMP by name) = image total, from provenance.json:
 
@@ -372,7 +384,10 @@ def _recipe(version):
                     "/INCREMENTAL:NO /OPT:NOREF /OPT:NOICF, exports "
                     "^(gnutls|_gnutls); build-tree shim headers: force-included "
                     "_Thread_local/__attribute__/CRAU_MAYBE_UNUSED definitions "
-                    "and dirent.h",
+                    "and dirent.h"
+                    + ("; GnuTLS 3.7.x also a force-included ssize_t typedef "
+                       "(the SDK's SSIZE_T) with ac_cv_type_ssize_t=yes"
+                       if version.startswith("3.7.") else ""),
         notes="Nettle, hogweed and GMP code linked in statically is removed "
               "by name (Recipe.exclude_functions) because the Nettle and GMP "
               "families carry it; libtasn1 and libunistring are GnuTLS's "
@@ -381,7 +396,11 @@ def _recipe(version):
               "file is edited, but GnuTLS does not compile with cl as it is: "
               "two build-tree headers (a force-included one defining "
               "_Thread_local as __declspec(thread) and __attribute__(x) and "
-              "CRAU_MAYBE_UNUSED as nothing, and a dirent.h) are added for "
+              "CRAU_MAYBE_UNUSED as nothing, and a dirent.h"
+              + ("; for 3.7.x also a ssize_t typedef, because its configure "
+                 "finds no ssize_t under cl" if version.startswith("3.7.")
+                 else "")
+              + ") are added for "
               "the make phase, so the image is NOT byte-identical to a build "
               "of unmodified upstream, and without __attribute__((constructor)) "
               "its init functions are not run at load. C only (no accelerated "

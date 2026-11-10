@@ -1,7 +1,7 @@
 {
   "GnuTLS_3.7.11_msvc143_x64_libgnutls.dll": {
     "architecture": "x64",
-    "build_flags": "/O2 /MD /Z7, GnuTLS's own configure run under MSYS2 bash with automake's compile/ar-lib wrappers around cl/lib, --disable-shared --enable-static --disable-hardware-acceleration and the options of the Linux/MinGW recipes; GMP 6.3.0 (generic C) and Nettle 3.10.2 built with cl as static libraries; libgnutls linked from the libtool archive with /WHOLEARCHIVE /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF, exports ^(gnutls|_gnutls); build-tree shim headers: force-included _Thread_local/__attribute__/CRAU_MAYBE_UNUSED definitions and dirent.h",
+    "build_flags": "/O2 /MD /Z7, GnuTLS's own configure run under MSYS2 bash with automake's compile/ar-lib wrappers around cl/lib, --disable-shared --enable-static --disable-hardware-acceleration and the options of the Linux/MinGW recipes; GMP 6.3.0 (generic C) and Nettle 3.10.2 built with cl as static libraries; libgnutls linked from the libtool archive with /WHOLEARCHIVE /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF, exports ^(gnutls|_gnutls); build-tree shim headers: force-included _Thread_local/__attribute__/CRAU_MAYBE_UNUSED definitions and dirent.h; GnuTLS 3.7.x also a force-included ssize_t typedef (the SDK's SSIZE_T) with ac_cv_type_ssize_t=yes",
     "built_artifact": "libgnutls-30.dll",
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x64",
     "component": "libgnutls.dll",
@@ -27,7 +27,7 @@
     "is_blob": false,
     "license": "LGPL-2.1-or-later",
     "mcrit": "data/GnuTLS/x64/mcrit/GnuTLS_3.7.11_msvc143_x64_libgnutls.dll.mcrit",
-    "notes": "Nettle, hogweed and GMP code linked in statically is removed by name (Recipe.exclude_functions) because the Nettle and GMP families carry it; libtasn1 and libunistring are GnuTLS's bundled copies and stay in. Sources are sha256-pinned and were checked against the upstream GPG signatures. No upstream file is edited, but GnuTLS does not compile with cl as it is: two build-tree headers (a force-included one defining _Thread_local as __declspec(thread) and __attribute__(x) and CRAU_MAYBE_UNUSED as nothing, and a dirent.h) are added for the make phase, so the image is NOT byte-identical to a build of unmodified upstream, and without __attribute__((constructor)) its init functions are not run at load. C only (no accelerated assembly).",
+    "notes": "Nettle, hogweed and GMP code linked in statically is removed by name (Recipe.exclude_functions) because the Nettle and GMP families carry it; libtasn1 and libunistring are GnuTLS's bundled copies and stay in. Sources are sha256-pinned and were checked against the upstream GPG signatures. No upstream file is edited, but GnuTLS does not compile with cl as it is: two build-tree headers (a force-included one defining _Thread_local as __declspec(thread) and __attribute__(x) and CRAU_MAYBE_UNUSED as nothing, and a dirent.h; for 3.7.x also a ssize_t typedef, because its configure finds no ssize_t under cl) are added for the make phase, so the image is NOT byte-identical to a build of unmodified upstream, and without __attribute__((constructor)) its init functions are not run at load. C only (no accelerated assembly).",
     "num_functions": 4265,
     "num_functions_before_exclusion": 5219,
     "removed_runtime_functions": [
@@ -229,7 +229,7 @@
   },
   "GnuTLS_3.7.11_msvc143_x86_libgnutls.dll": {
     "architecture": "x86",
-    "build_flags": "/O2 /MD /Z7, GnuTLS's own configure run under MSYS2 bash with automake's compile/ar-lib wrappers around cl/lib, --disable-shared --enable-static --disable-hardware-acceleration and the options of the Linux/MinGW recipes; GMP 6.3.0 (generic C) and Nettle 3.10.2 built with cl as static libraries; libgnutls linked from the libtool archive with /WHOLEARCHIVE /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF, exports ^(gnutls|_gnutls); build-tree shim headers: force-included _Thread_local/__attribute__/CRAU_MAYBE_UNUSED definitions and dirent.h",
+    "build_flags": "/O2 /MD /Z7, GnuTLS's own configure run under MSYS2 bash with automake's compile/ar-lib wrappers around cl/lib, --disable-shared --enable-static --disable-hardware-acceleration and the options of the Linux/MinGW recipes; GMP 6.3.0 (generic C) and Nettle 3.10.2 built with cl as static libraries; libgnutls linked from the libtool archive with /WHOLEARCHIVE /DEBUG /Brepro /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF, exports ^(gnutls|_gnutls); build-tree shim headers: force-included _Thread_local/__attribute__/CRAU_MAYBE_UNUSED definitions and dirent.h; GnuTLS 3.7.x also a force-included ssize_t typedef (the SDK's SSIZE_T) with ac_cv_type_ssize_t=yes",
     "built_artifact": "libgnutls-30.dll",
     "compiler": "Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35229 for x86",
     "component": "libgnutls.dll",
@@ -255,7 +255,7 @@
     "is_blob": false,
     "license": "LGPL-2.1-or-later",
     "mcrit": "data/GnuTLS/x86/mcrit/GnuTLS_3.7.11_msvc143_x86_libgnutls.dll.mcrit",
-    "notes": "Nettle, hogweed and GMP code linked in statically is removed by name (Recipe.exclude_functions) because the Nettle and GMP families carry it; libtasn1 and libunistring are GnuTLS's bundled copies and stay in. Sources are sha256-pinned and were checked against the upstream GPG signatures. No upstream file is edited, but GnuTLS does not compile with cl as it is: two build-tree headers (a force-included one defining _Thread_local as __declspec(thread) and __attribute__(x) and CRAU_MAYBE_UNUSED as nothing, and a dirent.h) are added for the make phase, so the image is NOT byte-identical to a build of unmodified upstream, and without __attribute__((constructor)) its init functions are not run at load. C only (no accelerated assembly).",
+    "notes": "Nettle, hogweed and GMP code linked in statically is removed by name (Recipe.exclude_functions) because the Nettle and GMP families carry it; libtasn1 and libunistring are GnuTLS's bundled copies and stay in. Sources are sha256-pinned and were checked against the upstream GPG signatures. No upstream file is edited, but GnuTLS does not compile with cl as it is: two build-tree headers (a force-included one defining _Thread_local as __declspec(thread) and __attribute__(x) and CRAU_MAYBE_UNUSED as nothing, and a dirent.h; for 3.7.x also a ssize_t typedef, because its configure finds no ssize_t under cl) are added for the make phase, so the image is NOT byte-identical to a build of unmodified upstream, and without __attribute__((constructor)) its init functions are not run at load. C only (no accelerated assembly).",
     "num_functions": 4297,
     "num_functions_before_exclusion": 5250,
     "removed_runtime_functions": [
