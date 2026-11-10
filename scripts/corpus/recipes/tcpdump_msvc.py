@@ -113,3 +113,15 @@ RECIPES = {
     "tcpdump_4.99.3_msvc": _tcpdump_msvc(
         "4.99.3", "ad75a6ed3dc0d9732945b2e5483cb41dc8b4b528a169315e499c6861952e73b3"),
 }
+
+# Added in the final sweep: the five 4.99 releases with no MSVC image yet
+# (4.99.0 was first left out as 88% of 4.99.3; 4.99.1, .2, .4 and .6 were
+# skipped on every axis as 95% or more of a built neighbour). Same recipe,
+# same tarballs as the MinGW and ELF legs of each version, unpatched.
+for _v, _sha in (
+        ("4.99.0", "8cf2f17a9528774a7b41060323be8b73f76024f7778f59c34efa65d49d80b842"),
+        ("4.99.1", "79b36985fb2703146618d87c4acde3e068b91c553fb93f021a337f175fd10ebe"),
+        ("4.99.2", "f4304357d34b79d46f4e17e654f1f91f9ce4e3d5608a1badbd53295a26fb44d5"),
+        ("4.99.4", "0232231bb2f29d6bf2426e70a08a7e0c63a0d59a9b44863b7f5e2357a6e49fea"),
+        ("4.99.6", "5839921a0f67d7d8fa3dacd9cd41e44c89ccb867e8a6db216d62628c7fd14b09")):
+    RECIPES["tcpdump_%s_msvc" % _v] = _tcpdump_msvc(_v, _sha)
