@@ -87,7 +87,7 @@ import subprocess
 import tempfile
 
 from . import config, export, package, recipes
-from .baseline import crt_glue, is_glue
+from .baseline import crt_glue, is_glue, is_vendored
 from .reprocess import _read_archive, _write_archive, _export_path
 from .smdaify import _recompute_statistics
 
@@ -109,6 +109,25 @@ def _filter_is_off_for():
     """
     return {recipe.family for recipe in recipes.all_recipes().values()
             if not recipe.drop_crt_glue}
+
+
+def _vendored_by():
+    """Map family -> the corpus families its recipes declare it vendors.
+
+    Read from the recipes for the same reason _filter_is_off_for is: a recipe
+    that starts or stops vendoring should not need this file changed too. A
+    family with two recipes that disagree gets the union, which is the safe
+    direction - the filter still needs a symbol *and* a PicHash to match, so
+    a family named by only one of them removes nothing from the other's
+    artefacts unless the function really is there.
+    """
+    vendored = {}
+    for recipe in recipes.all_recipes().values():
+        for artifact in recipe.artifacts:
+            family = artifact.family or recipe.family
+            vendored.setdefault(family, set()).update(recipe.vendors)
+    return {family: sorted(names) for family, names in vendored.items()
+            if names}
 
 
 def _artifacts(families=None):
@@ -212,9 +231,27 @@ def _usable_baseline(toolchain_id):
     return glue
 
 
-def _glue_offsets(report, toolchain_id):
+def _glue_offsets(report, toolchain_id, vendors=()):
+    """Offsets this pass would remove, runtime and vendored together.
+
+    Both passes are applied here because this command exists to bring
+    committed reports in line with what the pipeline would produce now, and
+    since smdaify gained the vendored pass that includes it. Leaving it out
+    would make `refilter` quietly unable to retro-apply a newly declared
+    vendored library - the one job it has.
+
+    One consequence worth knowing, because it is not obvious from here: the
+    vendored pass needs no toolchain at all - it is read out of committed
+    exports - but the caller skips an artefact whose CRT baseline this host
+    cannot measure, so retro-applying a newly declared vendored library to an
+    MSVC-built family still needs a Windows host. Splitting the skip per pass
+    would be the fix if that ever bites; it has not, because a recipe that
+    declares a vendored library is rebuilt by CI anyway and the pipeline
+    applies both passes there.
+    """
     return [offset for offset, function in report.xcfg.items()
-            if is_glue(function, toolchain_id)]
+            if is_glue(function, toolchain_id)
+            or is_vendored(function, vendors)]
 
 
 def _corrected_archive(report_dict, report, offsets):
@@ -379,6 +416,7 @@ def refilter(families=None, dry_run=False):
     failures = []
     unavailable = set()
     examined = 0
+    vendored_by = _vendored_by()
     from smda.common.SmdaReport import SmdaReport
 
     for family, slug, entry, archive in _artifacts(families):
@@ -404,7 +442,8 @@ def refilter(families=None, dry_run=False):
         try:
             member, report_dict = _read_archive(archive)
             report = SmdaReport.fromDict(report_dict)
-            offsets = _glue_offsets(report, toolchain_id)
+            offsets = _glue_offsets(report, toolchain_id,
+                                     vendored_by.get(family, ()))
         except (OSError, RuntimeError, ValueError, KeyError, TypeError,
                 AttributeError, subprocess.CalledProcessError) as error:
             # 7z runs with check=True, so a corrupt or unreadable archive

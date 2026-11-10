@@ -132,6 +132,24 @@ class Recipe:
     # Drop MinGW C runtime glue that every DLL links in, so it is not
     # mis-attributed to this family. See corpus.baseline.
     drop_crt_glue: bool = True
+    # Corpus families whose code this project vendors - an amalgamated
+    # dependency copied into the upstream tree rather than linked. Functions
+    # that match one of those families by symbol *and* PicHash are dropped,
+    # so they keep the family they belong to instead of this one.
+    #
+    # This is drop_crt_glue's neighbour, for the case a probe cannot reach: a
+    # probe is built from a source this repository controls, and somebody
+    # else's amalgamated copy is not. metsrv is the case it was added for - it
+    # carries a 1996 zlib PPP fork, and under MSVC three of its functions come
+    # out shape-identical to data/libzlib's MSVC build.
+    #
+    # Declare this only where upstream genuinely vendors the other project,
+    # and name a family that is in data/: a family with no exports raises
+    # rather than filtering against nothing. It removes only functions at or
+    # above config.MIN_CROSS_FAMILY_INSTRUCTIONS, so import thunks and
+    # one-line wrappers in the vendored family's own reports cannot take a
+    # host project's code with them. See corpus.baseline.vendored_functions.
+    vendors: List[str] = field(default_factory=list)
     # Minimum share of functions that must carry a recovered symbol before the
     # build is accepted. Lower it only for projects that genuinely cannot keep
     # symbols; 0 disables the check.

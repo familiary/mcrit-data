@@ -53,11 +53,13 @@ linked .so to measure or to remove.
 """
 
 import functools
+import json
 import logging
 import os
 import subprocess
 import tempfile
 
+from . import config
 from .toolchain import get_toolchain
 
 
@@ -646,6 +648,159 @@ __declspec(dllexport) void probe_cxx_runtime(const char *text)
         std::cerr << error.what() << std::endl;
     }
 }
+"""
+
+
+# The C++ exception-handling surface, appended to _PROBE_CXX so both the DLL
+# and the EXE variant carry it.
+#
+# Why it is needed, and why it is shaped the way it is. The module comment
+# above says a probe has to *use* the runtime rather than merely link against
+# it; the EH entry points are the sharpest case of that, and the reason is not
+# the linker but the disassembler. `nm` on the plain C++ probe shows
+# `T __cxa_init_primary_exception` sitting in the image - the body is linked -
+# but nothing calls it, so SMDA recovers no function there and the baseline
+# never learns the name. is_glue needs a name and a PicHash, so the body went
+# on being attributed to whichever project linked it.
+#
+# Measured: 7-Zip's committed mingw13 x64 artefacts carry
+# `__cxa_init_primary_exception` at PicHash 5951751902645931248, which is also
+# what every data/MinGW release from GCC 8.2 to 12.2 carries, and what this
+# probe now captures. Before this block the x64 baseline had no entry for the
+# name at all.
+#
+# The calls are guarded by a volatile zero, which matters twice: the probe is
+# compiled and disassembled and never run, so calling a raw ABI entry point
+# with a null type_info costs nothing, and the guard is what stops the
+# optimiser folding the calls away. The declarations are deliberately the ABI
+# spellings rather than anything from a header - `__cxa_allocate_exception`
+# takes std::size_t, which is `unsigned int` on i686 and `unsigned long long`
+# on x86_64, and getting that wrong is a compile error on one architecture
+# only (it was, on the first attempt).
+#
+# The std:: side above the declarations is there for the bodies that *are*
+# reachable from ordinary C++: exception_ptr, nested exceptions, rethrow,
+# dynamic_cast, bad_alloc and stoi. Between them they add
+# `std::__exception_ptr::exception_ptr::__cxa_exception_type() const` on both
+# architectures and `___cxa_bad_cast` on i686.
+_PROBE_CXX += """
+#include <exception>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <typeinfo>
+#include <vector>
+
+struct ProbeEhError : std::runtime_error {
+    explicit ProbeEhError(const std::string &what) : std::runtime_error(what) {}
+    ~ProbeEhError() override;
+};
+ProbeEhError::~ProbeEhError() = default;
+
+struct ProbeEhBase { virtual ~ProbeEhBase(); };
+ProbeEhBase::~ProbeEhBase() = default;
+struct ProbeEhDerived : ProbeEhBase { ~ProbeEhDerived() override; };
+ProbeEhDerived::~ProbeEhDerived() = default;
+
+extern volatile int probe_eh_zero;
+
+__declspec(dllexport) void probe_eh_runtime(const char *text)
+{
+    std::string value(text ? text : "");
+    // exception_ptr: this is what pulls __cxa_init_primary_exception and
+    // __cxa_allocate_dependent_exception in as *called* bodies. They are
+    // linked without it, but nothing reaches them, so SMDA never recovers a
+    // function there and the baseline never learns the name.
+    std::exception_ptr captured = std::make_exception_ptr(ProbeEhError(value));
+    try {
+        std::rethrow_exception(captured);
+    } catch (const ProbeEhError &error) {
+        std::cerr << error.what() << std::endl;
+    }
+    try {
+        try {
+            throw ProbeEhError(value);
+        } catch (...) {
+            captured = std::current_exception();
+            std::throw_with_nested(std::logic_error(value));
+        }
+    } catch (const std::exception &outer) {
+        try {
+            std::rethrow_if_nested(outer);
+        } catch (const std::exception &inner) {
+            std::cerr << outer.what() << inner.what() << std::endl;
+        }
+    }
+    // __cxa_rethrow / _Unwind_Resume_or_Rethrow
+    try {
+        try {
+            throw ProbeEhError(value);
+        } catch (const ProbeEhError &) {
+            throw;
+        }
+    } catch (const std::exception &error) {
+        std::cerr << error.what() << std::endl;
+    }
+    // __cxa_bad_cast, __cxa_bad_typeid, typeid on a null reference
+    ProbeEhDerived derived;
+    ProbeEhBase *base = probe_eh_zero ? nullptr : &derived;
+    try {
+        ProbeEhDerived &back = dynamic_cast<ProbeEhDerived &>(*base);
+        std::cerr << typeid(back).name() << std::endl;
+    } catch (const std::bad_cast &error) {
+        std::cerr << error.what() << std::endl;
+    }
+    // bad_alloc and the array-new-length path
+    try {
+        std::vector<std::string> huge;
+        huge.reserve(static_cast<size_t>(-1) / 2);
+    } catch (const std::bad_alloc &error) {
+        std::cerr << error.what() << std::endl;
+    }
+    // stoi: invalid_argument and out_of_range out of libstdc++ rather than
+    // from this translation unit.
+    try {
+        std::cerr << std::stoi(value) << std::endl;
+    } catch (const std::exception &error) {
+        std::cerr << error.what() << std::endl;
+    }
+    // uncaught_exceptions / terminate handler reference
+    std::cerr << std::uncaught_exceptions() << std::endl;
+    if (probe_eh_zero) {
+        std::set_terminate(std::get_terminate());
+    }
+}
+
+// Reached-by-call declarations for the libstdc++ EH entry points that are
+// linked into any C++ image but that nothing in a probe happens to call, so
+// SMDA never recovers a function there and the baseline never learns the
+// name. The calls are guarded by a volatile zero: the probe is compiled and
+// disassembled, never run, and the guard is what keeps the compiler from
+// folding the call away.
+extern "C" {
+void *__cxa_allocate_exception(std::size_t);
+void *__cxa_init_primary_exception(void *, void *, void (*)(void *));
+void *__cxa_allocate_dependent_exception(void);
+void __cxa_free_dependent_exception(void *);
+void *__cxa_current_exception_type(void);
+void __cxa_call_unexpected(void *);
+void __cxa_bad_typeid(void);
+}
+
+__declspec(dllexport) void probe_eh_reached(void *p)
+{
+    if (probe_eh_zero) {
+        void *raw = __cxa_allocate_exception(1);
+        __cxa_init_primary_exception(raw, p, nullptr);
+        void *dep = __cxa_allocate_dependent_exception();
+        __cxa_free_dependent_exception(dep);
+        __cxa_current_exception_type();
+        __cxa_call_unexpected(p);
+        __cxa_bad_typeid();
+    }
+}
+
+volatile int probe_eh_zero = 0;
 """
 
 
@@ -3081,6 +3236,7 @@ def crt_glue(toolchain_id):
     # that defines them is only ever compiled by the native gcc.
     for name in [name for name in glue
                  if name.startswith(("probe_atl_", "_probe_atl_",
+                                     "probe_eh_", "_probe_eh_",
                                      "probe_stdio_", "_probe_stdio_",
                                      "probe_libc_", "_probe_libc_",
                                      "probe_msvcrt_", "_probe_msvcrt_",
@@ -3089,6 +3245,19 @@ def crt_glue(toolchain_id):
                                      "ProbeInterface", "ProbeImplementation",
                                      "ProbeArray", "ProbeEh"))]:
         glue.pop(name, None)
+    # And by containment, for the one shape a prefix cannot catch: a library
+    # template instantiated on a probe's own type carries the library's name
+    # first and the probe's inside it, e.g.
+    # `void std::__exception_ptr::__dest_thunk<ProbeEhError>(void*)`. That is
+    # a name no real artefact can have, so leaving it in the baseline is dead
+    # weight rather than a hazard - but a baseline entry that can never match
+    # anything is exactly the kind of thing that later reads as a mistake.
+    for name in [name for name in glue
+                 if "Probe" in name and "probe" not in name.split("Probe")[0]]:
+        if any(marker in name for marker in ("ProbeEh", "ProbeArray",
+                                             "ProbeInterface",
+                                             "ProbeImplementation")):
+            glue.pop(name, None)
     return glue
 
 
@@ -3097,3 +3266,139 @@ def is_glue(function, toolchain_id):
     if not function.function_name:
         return False
     return function.pic_hash in glue.get(function.function_name, ())
+
+
+# ---------------------------------------------------------------------------
+# Vendored libraries
+#
+# crt_glue above answers "is this function the compiler's?". This answers the
+# neighbouring question "is this function another project's?", which the deep
+# cross-family check keeps finding and which no probe can reach: a probe is
+# built from a source this repository controls, and an amalgamated dependency
+# copied into somebody's tree is not.
+#
+# The case it was written for: metsrv carries an amalgamated zlib 1.0.4P - a
+# 1996 PPP fork - and compiling it with MSVC makes three of its functions
+# byte-identical in shape to data/libzlib's MSVC build, so `putShortMSB`,
+# `deflateInit_` and `inflateInit_` turned up under MSVC, Meterpreter and
+# libzlib at once. That is a true finding: a statically linked dependency
+# wearing the host project's name is exactly what the check looks for.
+#
+# The measurement comes out of the corpus rather than a probe, for the reason
+# the rest of this module builds probes: it has to be measured, not listed. A
+# hand-kept list of "zlib's functions" is the kind that acquires a gap, and
+# the pair that matters is (symbol, PicHash) under a specific compiler - which
+# is precisely what data/libzlib's committed reports already are. So a recipe
+# names the corpus family it vendors and the filter is read from that family's
+# exports, pinned in git like everything else here.
+# ---------------------------------------------------------------------------
+
+_VENDORED_CACHE = {}
+
+
+class VendoredFamilyMissing(Exception):
+    """A recipe named a family that has no committed exports to measure."""
+
+
+def _normalise_symbol(name):
+    """Strip the leading underscores the 32-bit cdecl ABI adds.
+
+    The same rule validate._same_symbol uses, and for the same reason - and
+    this filter is the one place it is load-bearing rather than tidy:
+    data/MSVC's copy of the colliding function is `_putShortMSB` while
+    libzlib's and metsrv's are `putShortMSB`.
+    """
+    return name.lstrip("_")
+
+
+def vendored_functions(families):
+    """Map (normalised symbol, PicHash) -> instructions for vendored families.
+
+    Read from each family's committed ``.mcrit`` exports. Only functions of
+    at least ``config.MIN_CROSS_FAMILY_INSTRUCTIONS`` instructions are
+    included, and that floor is the whole difference between this filter
+    working and it quietly deleting other people's code.
+
+    Without it the filter is sourced from everything in the vendored family's
+    reports, which is not only that library: data/libzlib's exports contain
+    `time`, `wcstombs`, `zcfree` and `zlibVersion` at one to three
+    instructions each, because an import thunk is a function too. Dropping
+    those from a host project as "vendored zlib" would be wrong twice over -
+    they are not zlib's code, and they are not even bodies. The floor is the
+    census's own, so what this removes is exactly the class of function that
+    could be mistaken across families, and nothing smaller.
+    """
+    from . import validate
+
+    families = tuple(sorted(set(families or ())))
+    if not families:
+        return {}
+    if families in _VENDORED_CACHE:
+        return _VENDORED_CACHE[families]
+
+    floor = config.MIN_CROSS_FAMILY_INSTRUCTIONS
+    pairs = {}
+    for family in families:
+        root = os.path.join(config.DATA_DIR, family)
+        if not os.path.isdir(root):
+            raise VendoredFamilyMissing(
+                "recipe declares it vendors %r, but data/%s does not exist"
+                % (family, family))
+        exports = list(validate._iter_data_files(".mcrit", root))
+        if not exports:
+            # An empty filter silently removes nothing, which is the trap
+            # probe_failures exists to catch for the probes: the build goes
+            # green and the artefact is filtered against nothing at all.
+            raise VendoredFamilyMissing(
+                "recipe declares it vendors %r, but data/%s has no .mcrit "
+                "exports to measure a filter from" % (family, family))
+        for path in exports:
+            for name, pichash, instructions in _export_functions(path):
+                if instructions >= floor:
+                    pairs[(_normalise_symbol(name), pichash)] = instructions
+    LOGGER.info("vendored filter from %s: %d (symbol, PicHash) pair(s) at >= "
+                "%d instructions", ", ".join(families), len(pairs), floor)
+    _VENDORED_CACHE[families] = pairs
+    return pairs
+
+
+def _export_functions(path):
+    """Yield (symbol, PicHash, instructions) for the named functions in one export."""
+    with open(path, encoding="utf-8") as handle:
+        try:
+            export = json.load(handle)
+        except ValueError:
+            return
+    compressed = export.get("content", {}).get("is_compressed")
+    for blob in export.get("function_entries", {}).values():
+        if compressed:
+            from mcrit.libs.utility import decompress_decode
+
+            entries = json.loads(decompress_decode(blob))
+        else:
+            entries = blob
+        for entry in entries.values():
+            name = entry.get("function_name")
+            pichash = entry.get("pichash")
+            if name and pichash:
+                yield name, pichash, entry.get("num_instructions") or 0
+
+
+def is_vendored(function, families):
+    """Whether this function is a declared vendored library's rather than ours.
+
+    Both the symbol and the PicHash have to match, exactly as ``is_glue``
+    requires, so a project that happens to define a function of the same name
+    keeps it - and so does one whose copy of the real thing has diverged. That
+    is what keeps metsrv's 1996 PPP fork: `deflateOutputPending` and
+    `inflateIncomp` are not in modern zlib at all, and of its 55 zlib-named
+    functions only the three that are shape-identical to data/libzlib's MSVC
+    build are removed.
+    """
+    if not function.function_name:
+        return False
+    pairs = vendored_functions(families)
+    if not pairs:
+        return False
+    return (_normalise_symbol(function.function_name),
+            function.pic_hash) in pairs

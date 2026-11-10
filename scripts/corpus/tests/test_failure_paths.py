@@ -1693,12 +1693,12 @@ class MinimumFunctionsTest(unittest.TestCase):
         self.assertIn("only 7 functions", str(caught.exception))
 
     def test_the_default_floor_admits_eight(self):
-        report, _ = self._run(8)
+        report, _, _ = self._run(8)
         self.assertEqual(report.num_functions, 8)
 
     def test_an_override_admits_exactly_its_own_value(self):
         """Obfuscator's case: seven functions, all seven of them real."""
-        report, _ = self._run(7, min_functions=7)
+        report, _, _ = self._run(7, min_functions=7)
         self.assertEqual(report.num_functions, 7)
 
     def test_an_override_does_not_admit_anything_below_it(self):
@@ -1716,7 +1716,7 @@ class MinimumFunctionsTest(unittest.TestCase):
     def test_an_override_above_the_default_is_used_as_given(self):
         """Not clamped to MIN_USEFUL_FUNCTIONS in either direction."""
         self.assertRaises(Exception, self._run, 20, 32)
-        report, _ = self._run(32, min_functions=32)
+        report, _, _ = self._run(32, min_functions=32)
         self.assertEqual(report.num_functions, 32)
 
     def test_none_means_the_shared_constant(self):
@@ -2273,6 +2273,153 @@ end
         with self.assertRaises(decrypt_msf.DecryptError) as caught:
             decrypt_msf.decrypt(b"msf" + bytes([2, 1, 1]) + bytes(17), ciphers)
         self.assertIn("16-byte block", str(caught.exception))
+
+
+class _VendoredFunction(object):
+    """Enough of an SmdaFunction for the vendored filter."""
+
+    def __init__(self, function_name, pic_hash):
+        self.function_name = function_name
+        self.pic_hash = pic_hash
+
+
+class VendoredLibraryTest(TempCase):
+    """Dropping a vendored library's functions so they keep its own family.
+
+    The case: metsrv carries an amalgamated zlib 1.0.4P, and compiling it with
+    MSVC makes three of its functions shape-identical to data/libzlib's MSVC
+    build, so they appear under MSVC, Meterpreter and libzlib at once. That is
+    a true cross-family finding and no probe can answer it, because a probe is
+    built from a source this repository controls.
+    """
+
+    def setUp(self):
+        super(VendoredLibraryTest, self).setUp()
+        from corpus import baseline
+
+        baseline._VENDORED_CACHE.clear()
+        self.addCleanup(baseline._VENDORED_CACHE.clear)
+
+    def _family(self, family, entries):
+        """Write one uncompressed .mcrit for a family.
+
+        entries is [(function_name, pichash, num_instructions), ...].
+        """
+        export = {
+            "content": {"is_compressed": False},
+            "sample_entries": {family: {"family": family}},
+            "function_entries": {
+                family: {
+                    str(index): {"function_name": name, "pichash": pichash,
+                                 "num_instructions": size}
+                    for index, (name, pichash, size) in enumerate(entries)
+                }
+            },
+        }
+        self.write(os.path.join(self.data, family, "x86", "mcrit",
+                                "%s.mcrit" % family), json.dumps(export))
+
+    def test_the_instruction_floor_keeps_import_thunks_out(self):
+        """The floor is the whole difference between this working and not.
+
+        data/libzlib's exports hold `time`, `wcstombs`, `zcfree` and
+        `zlibVersion` at one to three instructions, because an import thunk is
+        a function too. Sourcing the filter from everything in the vendored
+        family would drop those out of a host project as "vendored zlib",
+        which is wrong twice over: they are not that library's code, and they
+        are not even bodies. Measured on the real corpus before this floor
+        existed, that is exactly what it did.
+        """
+        from corpus import baseline, config
+
+        self._family("libzlib", [("putShortMSB", "aaaa", 20),
+                                 ("time", "bbbb", 1),
+                                 ("wcstombs", "cccc", 1),
+                                 ("zcfree", "dddd", 2)])
+        with mock.patch.object(config, "DATA_DIR", self.data):
+            pairs = baseline.vendored_functions(["libzlib"])
+        self.assertEqual(sorted(name for name, _ in pairs), ["putShortMSB"])
+        self.assertGreaterEqual(config.MIN_CROSS_FAMILY_INSTRUCTIONS, 2)
+
+    def test_a_leading_underscore_does_not_hide_a_match(self):
+        """The 32-bit cdecl ABI decorates the name; the function is the same.
+
+        Not a tidiness point: data/MSVC's copy of the colliding function is
+        `_putShortMSB` where libzlib's and metsrv's are `putShortMSB`.
+        """
+        from corpus import baseline, config
+
+        self._family("libzlib", [("putShortMSB", "aaaa", 20)])
+        with mock.patch.object(config, "DATA_DIR", self.data):
+            self.assertTrue(baseline.is_vendored(
+                _VendoredFunction("_putShortMSB", "aaaa"), ["libzlib"]))
+
+    def test_the_same_name_with_another_shape_is_kept(self):
+        """A diverged copy stays with the project that diverged it.
+
+        This is what keeps metsrv's 1996 PPP fork: both passes need the symbol
+        *and* the PicHash, so of its 55 zlib-named functions only the three
+        that match data/libzlib's MSVC build are removed, and
+        `deflateOutputPending` - which modern zlib does not have - is not one
+        of them.
+        """
+        from corpus import baseline, config
+
+        self._family("libzlib", [("deflate", "aaaa", 40)])
+        with mock.patch.object(config, "DATA_DIR", self.data):
+            self.assertFalse(baseline.is_vendored(
+                _VendoredFunction("deflate", "ffff"), ["libzlib"]))
+
+    def test_declaring_nothing_filters_nothing(self):
+        """The regression guard: every recipe but one declares no vendors."""
+        from corpus import baseline, config
+
+        self._family("libzlib", [("putShortMSB", "aaaa", 20)])
+        with mock.patch.object(config, "DATA_DIR", self.data):
+            self.assertEqual(baseline.vendored_functions([]), {})
+            self.assertFalse(baseline.is_vendored(
+                _VendoredFunction("putShortMSB", "aaaa"), []))
+
+    def test_a_family_that_is_not_there_is_refused(self):
+        """An empty filter removes nothing and says nothing, which is the trap.
+
+        probe_failures exists because a probe that will not build leaves an
+        artefact filtered against nothing while the run goes green. A
+        mistyped family name would do the same here, so it raises instead.
+        """
+        from corpus import baseline, config
+
+        with mock.patch.object(config, "DATA_DIR", self.data):
+            with self.assertRaises(baseline.VendoredFamilyMissing):
+                baseline.vendored_functions(["libzlib"])
+
+    def test_a_family_with_no_exports_is_refused_too(self):
+        from corpus import baseline, config
+
+        os.makedirs(os.path.join(self.data, "libzlib"))
+        with mock.patch.object(config, "DATA_DIR", self.data):
+            with self.assertRaises(baseline.VendoredFamilyMissing) as caught:
+                baseline.vendored_functions(["libzlib"])
+        self.assertIn("no .mcrit", str(caught.exception))
+
+    def test_smdaify_reports_the_two_removals_apart(self):
+        """Runtime and vendored removals are recorded as different things.
+
+        A reader has to be able to tell them apart: a runtime function belongs
+        to the compiler, a vendored one to another project in this corpus.
+        """
+        from corpus import smdaify
+
+        report = mock.Mock()
+        kept = _VendoredFunction("DllMain", "1111")
+        dropped = _VendoredFunction("putShortMSB", "aaaa")
+        report.xcfg = {0: kept, 16: dropped}
+        with mock.patch.object(smdaify, "is_vendored",
+                               side_effect=lambda f, v: f is dropped):
+            with mock.patch.object(smdaify, "_recompute_statistics"):
+                removed = smdaify._drop_vendored(report, ["libzlib"])
+        self.assertEqual(removed, ["putShortMSB"])
+        self.assertEqual(list(report.xcfg), [0])
 
 
 class HarvestedCompilerFieldTest(unittest.TestCase):

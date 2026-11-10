@@ -12,7 +12,7 @@ import logging
 import os
 
 from . import config
-from .baseline import is_glue
+from .baseline import is_glue, is_vendored
 
 
 LOGGER = logging.getLogger(__name__)
@@ -147,6 +147,26 @@ def _drop_crt_glue(report, toolchain_id):
         _recompute_statistics(report)
         LOGGER.info("dropped %d compiler runtime functions: %s",
                     len(removed), ", ".join(sorted(removed)))
+    return removed
+
+
+def _drop_vendored(report, vendors):
+    """Remove a vendored library's functions so they keep its family.
+
+    The same symbol-and-PicHash rule as _drop_crt_glue, for the same reason:
+    a project that defines a function of the same name, or whose copy of the
+    real one has diverged, keeps it. See corpus.baseline.is_vendored.
+    """
+    removed = []
+    for offset, function in list(report.xcfg.items()):
+        if is_vendored(function, vendors):
+            removed.append(function.function_name)
+            del report.xcfg[offset]
+    report._sorted_functions = None
+    if removed:
+        _recompute_statistics(report)
+        LOGGER.info("dropped %d vendored (%s) functions: %s", len(removed),
+                    ", ".join(sorted(vendors)), ", ".join(sorted(removed)))
     return removed
 
 
@@ -305,7 +325,8 @@ def _is_direct_target(instruction):
 def smdaify(binary_path, family, version, component, is_library=True,
             toolchain_id=None, drop_crt_glue=True, filename=None,
             min_named_ratio=0.5, is_blob=False, bitness=None,
-            base_addr=0x400000, pdb_path="", min_functions=None):
+            base_addr=0x400000, pdb_path="", min_functions=None,
+            vendors=()):
     """Disassemble ``binary_path`` and label it the way the corpus expects.
 
     ``min_functions`` is the recipe's replacement for
@@ -321,6 +342,9 @@ def smdaify(binary_path, family, version, component, is_library=True,
         # compiler runtime was linked in, so neither pass applies.
         min_named_ratio = 0
         drop_crt_glue = False
+        # Nor does the vendored filter: it matches on a symbol, and a blob
+        # has none.
+        vendors = ()
     else:
         report = disassemble(binary_path, pdb_path=pdb_path)
     if report.status != "ok":
@@ -336,6 +360,9 @@ def smdaify(binary_path, family, version, component, is_library=True,
     removed = []
     if drop_crt_glue and toolchain_id:
         removed = _drop_crt_glue(report, toolchain_id)
+    # After the runtime pass, so a function that is both is counted once and
+    # attributed to the compiler, which is the stronger claim.
+    removed_vendored = _drop_vendored(report, vendors) if vendors else []
 
     if is_blob:
         recovered = report.statistics.num_instructions if report.statistics else 0
@@ -364,4 +391,4 @@ def smdaify(binary_path, family, version, component, is_library=True,
     if is_blob:
         # Records how the report was produced, matching the aPLib entries.
         report.is_buffer = True
-    return report, removed
+    return report, removed, removed_vendored
