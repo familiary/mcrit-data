@@ -137,8 +137,12 @@ When using these with MCRIT, you probably want to have as few as possible / the 
 | Golang    | 2026-09-01 | 1.26.8 | [x86](data/Golang/x86/mcrit/golang_1.26.8_x86.mcrit) / [x64](data/Golang/x64/mcrit/golang_1.26.8_x64.mcrit) | [x86](data/Golang/x86/smda/golang_1.26.8_x86.7z) / [x64](data/Golang/x64/smda/golang_1.26.8_x64.7z) |
 | Golang | 2026-10-19 | 1.27.3 | [x86 PE](data/Golang/x86/mcrit/golang_1.27.3_x86.mcrit) / [x64 PE](data/Golang/x64/mcrit/golang_1.27.3_x64.mcrit) | [x86 PE](data/Golang/x86/smda/golang_1.27.3_x86.7z) / [x64 PE](data/Golang/x64/smda/golang_1.27.3_x64.7z) |
 | Golang | 2026-10-19 | 1.27.3 | [x86 ELF](data/Golang/x86/mcrit/golang_1.27.3_linux_x86.mcrit) / [x64 ELF](data/Golang/x64/mcrit/golang_1.27.3_linux_x64.mcrit) | [x86 ELF](data/Golang/x86/smda/golang_1.27.3_linux_x86.7z) / [x64 ELF](data/Golang/x64/smda/golang_1.27.3_linux_x64.7z) |
+| Golang | 2026-10-19 | 1.27.3 cgo | [x86 PE](data/Golang/x86/mcrit/golang_1.27.3-cgo_x86.mcrit) / [x64 PE](data/Golang/x64/mcrit/golang_1.27.3-cgo_x64.mcrit) | [x86 PE](data/Golang/x86/smda/golang_1.27.3-cgo_x86.7z) / [x64 PE](data/Golang/x64/smda/golang_1.27.3-cgo_x64.7z) |
+| Golang | 2026-10-19 | 1.27.3 cgo | [x86 ELF](data/Golang/x86/mcrit/golang_1.27.3-cgo_linux_x86.mcrit) / [x64 ELF](data/Golang/x64/mcrit/golang_1.27.3-cgo_linux_x64.mcrit) | [x86 ELF](data/Golang/x86/smda/golang_1.27.3-cgo_linux_x86.7z) / [x64 ELF](data/Golang/x64/smda/golang_1.27.3-cgo_linux_x64.7z) |
+| Golang | 2026-10-19 | 1.27.3 race | [x64 PE](data/Golang/x64/mcrit/golang_1.27.3-race_x64.mcrit) | [x64 PE](data/Golang/x64/smda/golang_1.27.3-race_x64.7z) |
+| Golang | 2026-10-19 | 1.27.3 race | [x64 ELF](data/Golang/x64/mcrit/golang_1.27.3-race_linux_x64.mcrit) | [x64 ELF](data/Golang/x64/smda/golang_1.27.3-race_linux_x64.7z) |
 
-Go 1.27.3 PE/ELF coverage, source pins, counts and analyzer limits: [build record](data/Golang/1.27.3/README.md) / [provenance](data/Golang/1.27.3/provenance.json).
+Go 1.27.3 PE/ELF coverage, source pins, counts and analyzer limits: [build record](data/Golang/1.27.3/README.md) / [provenance](data/Golang/1.27.3/provenance.json). The `cgo` and `race` rows are the same generated driver built with `CGO_ENABLED=1` and with `-race` (`scripts/golang/build_variant.sh`, [record](data/Golang/1.27.3/variants.json)).
 
 ### Microsoft Visual Studio<a id='msvc'></a>
 

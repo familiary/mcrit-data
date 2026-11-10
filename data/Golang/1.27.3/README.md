@@ -76,3 +76,19 @@ The generator retains exported non-generic functions and methods from importable
 This is the default, non-cgo, non-race build for PE/ELF x86/x64. It does not claim every Go build mode, generic instantiation, CPU tuning level or platform. Only one compiler version is added; existing versions are not rebuilt. Unnamed bodies are retained without assigning a source identity.
 
 The manifest enumerates positive-sized `nm` text entries absent from the retained report (excluding intentionally removed driver entries). These compiled symbols are not claimed as recovered functions. SMDA reports analysis failures listed above. SMDA 5.0.2 contains the upstream mask-bound fix for [smda#363](https://github.com/danielplohmann/smda/issues/363), merged in [smda#380](https://github.com/danielplohmann/smda/pull/380). Older Windows reports still await regeneration; the presence of that fix does not establish perfect recovery of this version. Entry-name agreement is checked separately from body accuracy. No analyzer gap is hidden or fixed by modifying source.
+
+## cgo and race variants
+
+The coverage limits above name cgo and the race runtime. Both are built here from the same generated driver, Go 1.27.3 tarball and flags, with `scripts/golang/build_variant.sh` on an ubuntu-24.04 runner (run 42779778768): `CGO_ENABLED=1` (gcc 13 for Linux, the mingw-w64 gcc 13 for Windows), and `CGO_ENABLED=1 -race` on the two targets with a race runtime, linux/amd64 and windows/amd64. The coverage driver's `main.main` is removed before export as in the default references, with the statistics recomputed by `corpus.smdaify._recompute_statistics` (`scripts/golang/drop_driver.py`). Records with binary, report and export digests: [variants.json](variants.json).
+
+| Target | Kept | Driver removed | Recovered image total | Distinct PicHashes (10+) | Shared with the default 1.27.3 image |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| cgo windows/386 | 20674 | 1 | 20675 | 15566 | 15565 |
+| cgo windows/amd64 | 20123 | 1 | 20124 | 13965 | 13964 |
+| cgo linux/386 | 20834 | 1 | 20835 | 15710 | 5886 |
+| cgo linux/amd64 | 20840 | 1 | 20841 | 14125 | 13963 |
+| race windows/amd64 | 21419 | 1 | 21420 | 15536 | 1821 |
+| race linux/amd64 | 22230 | 1 | 22231 | 15993 | 1881 |
+
+On Windows no standard-library package of this driver has a cgo implementation, so the cgo images differ from the default ones only by one PicHash (and their binary digests); they are filed because they are not identical. On Linux cgo links `runtime/cgo` and the cgo halves of `net` and `os/user`; the 32-bit Linux PicHashes follow the image layout, which is why that pair shares fewer. The race images instrument every function and share about an eighth with the default build. Plugins, msan/asan and wasm stay out of scope as above.
+
