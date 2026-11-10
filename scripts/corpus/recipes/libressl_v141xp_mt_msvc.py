@@ -2,6 +2,7 @@
 """
 
 from ..recipe import Artifact, BuildStep, Recipe, Source
+from ._libressl_static_crt import STATIC_CRT_X64, STATIC_CRT_X86
 from .libressl_v141xp_msvc import _CHECK, _NORMALISE, _SHA256, _VERSION
 
 _POSIX_WIN_SHA256 = "b81e707758abf8db73410f07aed7c916fbec80116147614c289cf6ab108b382c"
@@ -60,13 +61,40 @@ _COMMON = ('-T v141_xp -DCMAKE_GENERATOR_INSTANCE=C:/BT/vs15 '
            '-DCMAKE_SHARED_LINKER_FLAGS_RELEASE='
            '"/INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF /OPT:NOICF"')
 
+_BUILD_FLAGS = (
+    "v141_xp platform toolset (MSVC 14.16.27023, cl 19.16.27054; Windows 7.1A "
+    "SDK, UCRT 10.0.10240) through the Visual Studio 15 2017 generator; /MT "
+    "/O2 /Ob2 /DNDEBUG /Zi /Urestrict, /W4 /MP /GS from upstream and MSBuild, "
+    "/Oy- on x86 added by MSBuild; /INCREMENTAL:NO /DEBUG /Brepro /OPT:NOREF "
+    "/OPT:NOICF at link, /SUBSYSTEM 5.01 (x86) / 5.02 (x64); no /GL, no "
+    "/LTCG; x64 MASM assembly (generator name Win64), x86 C only; build-tree "
+    "edit: sleep() removed from crypto/compat/posix_win.c and its export "
+    "line from crypto/CMakeLists.txt")
+
+_NOTES = (
+    "The configuration tracker #61 describes for the static LibreSSL 3.1.0 "
+    "libraries: static C runtime (/MT, what USE_STATIC_MSVC_RUNTIMES=ON "
+    "selects) and sleep() removed from crypto/compat/posix_win.c. The image "
+    "is NOT byte-identical to a build of unmodified upstream: the recipe "
+    "deletes that function (87 bytes of source) and, because the image is a "
+    "DLL, the line of crypto/CMakeLists.txt that exports it; nothing else in "
+    "the tree is touched and no consumer project is fetched or built. SMDA "
+    "cannot read a .lib archive, so the image is a DLL (crypto-46, ssl-48, "
+    "tls-20) carrying the /MT-compiled objects, not the .lib itself. The "
+    "statically linked C runtime is not counted as LibreSSL: the glue "
+    "baseline removes what its probes link and the rest is removed by name "
+    "(exclude_functions; kept + removed + excluded = image total, see the "
+    "recipe docstring). The stock /MD build of the same tarball is the "
+    "libcrypto/libssl/libtls row of this version.")
+
 _CMAKE_X64 = ('cmake -S . -B build-x64 -G "Visual Studio 15 2017 Win64" '
               + _COMMON)
 _CMAKE_X86 = ('cmake -S . -B build-x86 -G "Visual Studio 15 2017" -A Win32 '
               + _COMMON)
 
-RECIPES = {
-    "LibreSSL_3.1.0_msvc_v141xp_mt": Recipe(
+
+def _recipe(arch, exclude):
+    return Recipe(
         family="LibreSSL",
         version=_VERSION,
         upstream="https://www.libressl.org/",
@@ -79,8 +107,7 @@ RECIPES = {
             BuildStep(_CHECK),
             BuildStep(_DROP_SLEEP),
             BuildStep(_DROP_SLEEP_EXPORT),
-            BuildStep('if "{arch}"=="x64" ' + _CMAKE_X64),
-            BuildStep('if "{arch}"=="x86" ' + _CMAKE_X86),
+            BuildStep(_CMAKE_X64 if arch == "x64" else _CMAKE_X86),
             BuildStep("cmake --build build-{arch} --config Release "
                       "--target crypto ssl tls -- /m /v:n"),
             BuildStep(_NORMALISE),
@@ -94,10 +121,14 @@ RECIPES = {
             Artifact(path="build-{arch}/libtls.dll", component="libtls-mt",
                      pdb="build-{arch}/libtls.pdb"),
         ],
-        toolchains=["msvc141_x86", "msvc141_x64"],
-        build_flags="DRAFT /MT",
-        notes="DRAFT: /MT-compiled objects linked into DLLs; sleep() removed "
-              "from crypto/compat/posix_win.c by the recipe; NOT byte-identical "
-              "to a build of unmodified upstream.",
-    ),
+        toolchains=["msvc141_%s" % arch],
+        exclude_functions=list(exclude),
+        build_flags=_BUILD_FLAGS,
+        notes=_NOTES,
+    )
+
+
+RECIPES = {
+    "LibreSSL_3.1.0_msvc_v141xp_mt_x86": _recipe("x86", STATIC_CRT_X86),
+    "LibreSSL_3.1.0_msvc_v141xp_mt_x64": _recipe("x64", STATIC_CRT_X64),
 }
