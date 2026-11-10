@@ -27,8 +27,41 @@ are in v0.58.1 on x64 (4,536 of 6,042 on Linux, 4,425 of 5,917 on MinGW) and
 the same version 92-97% per program. Counts, kept + removed = image total
 (removed is the Go glue filter): v0.52.3 frpc x64 Linux 5,438 + 11,141, frps
 8,683 + 11,645; x86 Linux 5,303 + 11,189 and 8,591 + 11,689; MinGW x64 5,148 +
-11,021 and 8,312 + 11,518; MinGW x86 5,176 + 11,297 and 8,440 + 11,793. Releases from v0.65 need go 1.24.0 in
-go.mod and would build here too.
+11,021 and 8,312 + 11,518; MinGW x86 5,176 + 11,297 and 8,440 + 11,793.
+
+Four more versions, built on the Linux runner (runs 42774823191 and
+42776975484, scratch branch scratch/s4-go-linux), all four targets each:
+
+  * 0.52.3-go1.20.14 and 0.58.1-go1.22.12: the same two tags compiled by the
+    Go release their go.mod names (the last patch of go1.20 and go1.22,
+    pinned with GOTOOLCHAIN), beside the go1.24.7 images. The runtime is
+    removed either way, but the compiler that lays out frp's own code is a
+    different one: of the go1.24.7 image's distinct PicHashes (10+
+    instructions) the go1.20.14 build shares 4.2 to 5.3 percent on x64,
+    12 to 13 percent on Linux x86 and none on MinGW x86; go1.22.12 shares
+    49 to 54 percent on x64 and 23 percent on x86.
+  * 0.65.0: the first release of the go 1.24 band (go.mod go 1.24.0), built
+    with go1.24.7; against v0.58.1 it shares 72 to 84 percent on x64 and 28
+    to 34 percent on x86.
+  * 0.72.0: the newest release (go 1.26.0), built with go1.26.10; its
+    dashboard moved to web/frpc and web/frps behind `go:embed dist`, which
+    upstream does not commit either, so it is built with upstream's own
+    `noweb` tag as its Makefile does (no file added). Against v0.65.0 it
+    shares 25 to 29 percent on x64 and 11 to 14 percent on x86.
+
+Kept + removed = total (Linux x64 / Linux x86 / MinGW x64 / MinGW x86):
+
+    0.52.3-go1.20.14 frpc 5909+9120 / 5769+9142 / 5791+9177 / 5650+9197
+                     frps 9160+9660 / 9016+9678 / 9019+9739 / 8872+9730
+    0.58.1-go1.22.12 frpc 6039+9970 / 5540+10006 / 5746+9878 / 5409+10119
+                     frps 9982+10522 / 9507+10563 / 9555+10421 / 9350+10673
+    0.65.0           frpc 6745+11055 / 6256+11106 / 6154+10936 / 5853+11211
+                     frps 11409+11588 / 10949+11639 / 10685+11465 / 10521+11743
+    0.72.0           frpc 7624+11914 / 7143+11950 / 6617+11773 / 6374+12076
+                     frps 11980+12501 / 11530+12538 / 10829+12355 / 10734+12666
+
+The releases between v0.65.0 and v0.72.0 (v0.66.0 to v0.71.1) are not built;
+the family carries the two ends of the go 1.24-1.26 band.
 
 frps embeds its dashboard from assets/frps/static, which upstream does not
 commit (`make file` copies in a separately npm-built tree); `go:embed
