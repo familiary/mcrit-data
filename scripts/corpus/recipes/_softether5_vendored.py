@@ -1330,7 +1330,7 @@ MINGW_NAMES = {
 }
 
 
-def patterns(mingw=False, prefix="", optional_prefix=""):
+def patterns(mingw=False, prefix="", optional_prefix="", libraries=None):
     """One anchored alternation per library, for Recipe.exclude_functions.
 
     With ``mingw`` the MinGW additions are folded into their library's
@@ -1341,10 +1341,14 @@ def patterns(mingw=False, prefix="", optional_prefix=""):
     the names of this table with that underscore and nothing beyond it.
     ``optional_prefix`` makes the same underscore optional, for the MSVC
     recipe, whose one definition serves the x86 images (decorated) and the
-    x64 images (not).
+    x64 images (not). ``libraries`` limits the table to the named libraries
+    (the MSVC recipe builds without liboqs and the OQS provider, so only
+    BLAKE2 is in its images).
     """
     out = []
     for k in NAMES:
+        if libraries is not None and k not in libraries:
+            continue
         names = list(NAMES[k])
         if mingw:
             names += [n for n in MINGW_NAMES.get(k, ()) if n not in names]

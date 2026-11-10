@@ -92,7 +92,8 @@ class RecipeWiringTest(unittest.TestCase):
             if recipe.toolchains[0].startswith("msvc"):
                 # one recipe serves x86 (C names decorated with "_") and x64
                 self.assertEqual(recipe.exclude_functions,
-                                 v5.patterns(optional_prefix="_"))
+                                 v5.patterns(optional_prefix="_",
+                                             libraries=("BLAKE2",)))
                 continue
             mingw = recipe.toolchains[0].startswith("mingw")
             prefix = "_" if recipe.toolchains[0] == "mingw_x86" else ""
