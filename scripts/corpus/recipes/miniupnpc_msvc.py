@@ -124,9 +124,9 @@ def _steps(version):
         objs = list(_OBJS_19)
         if version >= "1.9.20150917":
             objs.insert(4, "minissdpc")
-        if version >= "1.9.20151008":
+        if version >= "1.9.20150917":
             # upnpdev.c (freeUPNPDevlist, which miniupnpc.def exports) joins
-            # Makefile.mingw's OBJS in 1.9.20151008.
+            # Makefile.mingw's OBJS in 1.9.20150917, with minissdpc.c.
             objs.append("upnpdev")
     elif version == "2.2.0":
         objs = _OBJS + ["addr_is_reserved"]
